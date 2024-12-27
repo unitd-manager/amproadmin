@@ -42,6 +42,54 @@ function Inventory() {
   // });
   // //navigate
   // const navigate = useNavigate();
+  const [progress, setProgress] = useState('');
+
+  const processDirectory = async (directoryHandle, parentPath, formData) => {
+    const entries = Array.from(directoryHandle.values()); // Get all entries as an array
+    const promises = entries.map(async (entry) => {
+        const currentPath = parentPath ? `${parentPath}/${entry.name}` : entry.name;
+
+        if (entry.kind === 'file') {
+            const file = await entry.getFile();
+            formData.append('files', file, currentPath); // Include the folder path in the file name
+        } else if (entry.kind === 'directory') {
+            await processDirectory(entry, currentPath, formData);
+        }
+    });
+
+    await Promise.all(promises); // Process all entries concurrently
+};
+
+const uploadFolder = async (formData) => {
+    setProgress('Uploading folder...');
+    try {
+        const response = await api.post('/inventory/upload-folder', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        console.log('Upload response:', response.data);
+        setProgress('Upload complete!');
+    } catch (error) {
+        console.error('Error uploading folder:', error.message);
+        setProgress('Upload failed!');
+    }
+};
+  const handleFolderSelect = async () => {
+      try {
+          const directoryHandle = await window.showDirectoryPicker();
+          const formData = new FormData();
+
+          // Recursively process the directory and append files to FormData
+          await processDirectory(directoryHandle, '', formData);
+
+          // Send the FormData to the backend
+          await uploadFolder(formData);
+      } catch (error) {
+          console.error('Error selecting or uploading folder:', error);
+      }
+  };
+
+
+
   // // Get All inventories
   const getAllinventories = () => {
     setLoading(false);
@@ -150,17 +198,21 @@ function Inventory() {
       arr.push({
         ProductCode: rows[x][0],
         ProductName: rows[x][1],
-        AlternativeProductName: rows[x][2],
-        Price: rows[x][3],
-        Unit: rows[x][4],
-        Category: rows[x][5],
-        Stock: rows[x][6],
-        FirstImage: rows[x][7],
-        SecondImage: rows[x][8],
-        ThirdImage: rows[x][9],
-        Keyword: rows[x][10],
-        Brand: rows[x][11],
-        Gst: rows[x][12],
+        DepartmentName: rows[x][2],
+        CategoryName: rows[x][3],
+        SubCategoryName: rows[x][4],
+        BrandName: rows[x][5],
+        SupplierName: rows[x][6],
+        PurchaseUOM: rows[x][7],
+        SalesUOM: rows[x][8],
+        PcsPerCarton: rows[x][9],
+        PurchaseUnitCost: rows[x][10],
+        RetailPrice: rows[x][11],
+        WholesalePrice: rows[x][12],
+        CartonPrice: rows[x][13],
+        DisplayOrder: rows[x][14],
+        ModelNo: rows[x][15],
+        Qty: rows[x][16],
       });
     }
 
@@ -199,7 +251,10 @@ function Inventory() {
       <ToastContainer></ToastContainer>
       <div className=" pt-xs-25">
         <BreadCrumbs />
-
+        <div>
+            <button type='submit' onClick={handleFolderSelect}>Select and Upload Folder</button>
+            <p>{progress}</p>
+        </div>
         <CommonTable
           loading={loading}
           title="Inventory List"
