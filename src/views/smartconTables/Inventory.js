@@ -42,53 +42,34 @@ function Inventory() {
   // });
   // //navigate
   // const navigate = useNavigate();
-  const [progress, setProgress] = useState('');
+  const [files, setFiles] = useState([]);
 
-  const processDirectory = async (directoryHandle, parentPath, formData) => {
-    const entries = Array.from(directoryHandle.values()); // Get all entries as an array
-    const promises = entries.map(async (entry) => {
-        const currentPath = parentPath ? `${parentPath}/${entry.name}` : entry.name;
-
-        if (entry.kind === 'file') {
-            const file = await entry.getFile();
-            formData.append('files', file, currentPath); // Include the folder path in the file name
-        } else if (entry.kind === 'directory') {
-            await processDirectory(entry, currentPath, formData);
-        }
-    });
-
-    await Promise.all(promises); // Process all entries concurrently
-};
-
-const uploadFolder = async (formData) => {
-    setProgress('Uploading folder...');
-    try {
-        const response = await api.post('/inventory/upload-folder', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        console.log('Upload response:', response.data);
-        setProgress('Upload complete!');
-    } catch (error) {
-        console.error('Error uploading folder:', error.message);
-        setProgress('Upload failed!');
-    }
-};
-  const handleFolderSelect = async () => {
-      try {
-          const directoryHandle = await window.showDirectoryPicker();
-          const formData = new FormData();
-
-          // Recursively process the directory and append files to FormData
-          await processDirectory(directoryHandle, '', formData);
-
-          // Send the FormData to the backend
-          await uploadFolder(formData);
-      } catch (error) {
-          console.error('Error selecting or uploading folder:', error);
-      }
+  const handleFileChange = (event) => {
+    const fileList = event.target.files;
+    const filesArray = Array.from(fileList).map((file) => ({
+      file,
+      relativePath: file.webkitRelativePath, // Get the relative path (e.g., subfolder/file.jpg)
+    }));
+    setFiles(filesArray);
   };
 
+  const handleUpload = async () => {
+    const formData = new FormData();
 
+    // Append files and their relative paths
+    files.forEach(({ file, relativePath }) => {
+      formData.append("files", file, relativePath); // Pass relativePath as the file name
+    });
+
+    api
+      .post('/inventory/upload-folder',{formData})
+      .then(() => {
+        alert("Folder uploaded successfully!");
+      })
+      .catch(() => {
+        alert("Failed to upload folder.");
+      });
+  };
 
   // // Get All inventories
   const getAllinventories = () => {
@@ -252,9 +233,9 @@ const uploadFolder = async (formData) => {
       <div className=" pt-xs-25">
         <BreadCrumbs />
         <div>
-            <button type='submit' onClick={handleFolderSelect}>Select and Upload Folder</button>
-            <p>{progress}</p>
-        </div>
+      <input type="file" webkitdirectory="true" multiple onChange={handleFileChange} />
+      <button type='submit' onClick={handleUpload}>Upload Folder</button>
+    </div>
         <CommonTable
           loading={loading}
           title="Inventory List"
@@ -377,3 +358,61 @@ const uploadFolder = async (formData) => {
 }
 
 export default Inventory;
+
+// import React, { useState } from "react";
+// import JSZip from "jszip";
+// import api from "../../constants/api";
+
+// const UploadZippedDirectory = () => {
+//   const [files, setFiles] = useState([]);
+
+//   const handleFileChange = (event) => {
+//     const fileList = event.target.files;
+//     const filesArray = Array.from(fileList).map((file) => ({
+//       file,
+//       relativePath: file.webkitRelativePath,
+//     }));
+//     setFiles(filesArray);
+//   };
+
+//   const handleUpload = async () => {
+//     const zip = new JSZip();
+
+//     // Add files to the zip
+//     files.forEach(({ file, relativePath }) => {
+//       zip.file(relativePath, file);
+//     });
+
+//     // Generate the zip file
+//     const zipBlob = await zip.generateAsync({ type: "blob" });
+
+//     // Create FormData
+//     const formData = new FormData();
+//     formData.append("zippedDirectory", zipBlob, "directory.zip");
+
+//     // Send to the backend
+//     try {
+//       const response = await api.post("/inventory/upload-folder", {
+//         body: formData,
+//       });
+
+//       if (response.ok) {
+//         alert("Zipped directory uploaded successfully!");
+//       } else {
+//         alert("Failed to upload zipped directory.");
+//       }
+//     } catch (error) {
+//       console.error("Error uploading zipped directory:", error);
+//       alert("An error occurred.");
+//     }
+//   };
+
+//   return (
+//     <div>
+//       <input type="file" webkitdirectory="true" multiple onChange={handleFileChange} />
+//       <button type="submit" onClick={handleUpload}>Upload Zipped Directory</button>
+//     </div>
+//   );
+// };
+
+// export default UploadZippedDirectory;
