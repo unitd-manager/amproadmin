@@ -71,9 +71,9 @@ function PayslipGeneratedReports() {
     {
       name: 'CPF(Employee)', selector: 'cpf_employee',
     },
-    {
-      name: 'Reimbursement', selector: 'reimbursement',
-    },
+    // {
+    //   name: 'Reimbursement', selector: 'reimbursement',
+    // },
     {
       name: 'Allowance', selector: 'total_allowance',
     },
@@ -145,13 +145,14 @@ function PayslipGeneratedReports() {
               <option value="2021">2021</option>
               <option value="2022">2022</option>
               <option value="2023">2023</option>
+              <option value="2024">2024</option>
             </Input>
             </FormGroup>
           </Col>
-          <Col md="2">
+          <Col md="2" className="mt-3">
             {' '}
             <Button
-              color="dark"
+              color="primary" className="shadow-none"
               onClick={() => {
                 getPaySlip();
               }}
@@ -210,7 +211,7 @@ function PayslipGeneratedReports() {
                       <td>{element.ot_amount}</td>
                       <td>{element.cpf_employer}</td>
                       <td>{element.cpf_employee}</td>
-                      <td>{element.reimbursement}</td>
+                      {/* <td>{element.reimbursement}</td> */}
                       <td>{element.total_allowance}</td>
                       <td>{element.total_deductions}</td>
                       <td>{element.net_total}</td>
