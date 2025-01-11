@@ -121,7 +121,7 @@ const Cards = () => {
         <ToastContainer></ToastContainer>
         <CommonTable
           loading={loading}
-          title="Employee    List"
+          title="Employee List"
           Button={
             <>
               <Row>
