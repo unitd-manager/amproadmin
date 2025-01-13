@@ -1,0 +1,1 @@
+{"version":3,"sources":["layouts/theme/LightTheme.js"],"names":["LightTheme"],"mappings":"sIAAA,+BAOeA,UAJI,WACjB,OAAO","file":"static/js/106.e88066ff.chunk.js","sourcesContent":["import React from 'react';\nimport '../../assets/scss/style.scss';\n\nconst LightTheme = () => {\n  return <></>;\n};\n\nexport default LightTheme;\n"],"sourceRoot":""}
