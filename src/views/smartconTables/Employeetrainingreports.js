@@ -74,7 +74,7 @@ const Employeertrainingeports = () => {
 
     {
       name: 'Employee',
-      selector: 'first_name',
+      selector: 'employee_name',
       sortable: true,
       grow: 0,
       wrap: true,
@@ -113,7 +113,7 @@ const Employeertrainingeports = () => {
                   <tr key={element.title}>
                     <td>{index + 1}</td>
                     <td>{element.training_title}</td>
-                    <td>{element.first_name}</td>
+                    <td>{element.employee_name}</td>
                     <td>{moment(element.from_date).format('YYYY-MM-DD')}</td>
                     <td>{moment(element.to_date).format('YYYY-MM-DD')}</td>
                   </tr>
