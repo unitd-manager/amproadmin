@@ -133,6 +133,13 @@ const EmployeeSalary = () => {
       grow: 0,
       wrap: true,
     },
+    {
+      name: 'Status',
+      selector: 'status',
+      sortable: true,
+      grow: 0,
+      wrap: true,
+    },
 
   ];
   return (
@@ -159,7 +166,7 @@ const EmployeeSalary = () => {
                 </Input>
                 </FormGroup>
             </Col>
-            <Col md="1">
+            <Col md="1" className='mt-3'>
               <Button color="primary" className="shadow-none" onClick={() => handleSearch()}>Go</Button>
             </Col>
             </Row>
@@ -198,14 +205,16 @@ const EmployeeSalary = () => {
             </tr>
           </thead>
           <tbody>
+            {console.log(displayEmployees)}
             {displayEmployees &&
               displayEmployees.map((element, index) => {
+                // console.log(`${index+1} element.date_of_birth length: ${element.date_of_birth.length} string: ${element.date_of_birth}`)
                 return (
                   <tr key={element.employee_id}>
                     <td>{index + 1}</td>
                     <td>{element.employee_name}</td>
                     <td>{element.nric_no}</td>
-                    <td>{(element.date_of_birth)?moment(element.date_of_birth).format('DD-MM-YYYY'):''}</td>
+                    <td>{(element.date_of_birth)? moment(new Date(element.date_of_birth)).format('DD-MM-YYYY'):''}</td>
                     <td>{element.age}</td>
                     <td>{element.designation}</td>
                     <td>{element.department}</td>
@@ -213,6 +222,7 @@ const EmployeeSalary = () => {
                     <td>{element.total_allowance}</td>
                     <td>{element.total_deductions}</td> 
                     <td>{element.net_total}</td> 
+                    <td>{element.status}</td> 
                   </tr>
                 );
               })}

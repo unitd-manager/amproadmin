@@ -186,6 +186,11 @@ const BlogEdit = Loadable(lazy(() => import('../views/EditData/BlogEdit')));
 const EnquiryEdit = Loadable(lazy(() => import('../views/EditData/EnquiryEdit')));
 const SalesOrderEdit = Loadable(lazy(() => import('../views/EditData/SalesOrderEdit')));
 
+
+const LoanEdit = Loadable(lazy(() => import('../views/EditData/LoanEdit')));
+const LeavesEdit = Loadable(lazy(() => import('../views/EditData/LeavesEdit')));
+const JobInformationEdit = Loadable(lazy(() => import('../views/EditData/JobInformationEdit')));
+const TrainingEdit = Loadable(lazy(() => import('../views/EditData/TrainingEdit')));
 const EnquiryDetailsTable = Loadable(
   lazy(() => import('../views/detailTable/EnquiryDetails')),
 );
@@ -198,6 +203,29 @@ const InvoiceByYearTable = Loadable(lazy(() => import('../views/Reports/InvoiceB
 // const TaskEdit= Loadable(lazy(() => import ('..')))
 const PurchaseOrderTable = Loadable(lazy(() => import('../views/smartconTables/PurchaseOrder')));
 const SupportNewTable = Loadable(lazy(() => import('../views/smartconTables/SupportNew')));
+
+// PayrollHR
+const LeaveTable = Loadable(lazy(() => import('../views/smartconTables/Leave')));
+const LeaveDetailsTable = Loadable(lazy(() => import('../views/detailTable/LeaveDetails')));
+const LoanTable = Loadable(lazy(() => import('../views/smartconTables/Loan')));
+const LoanDeatilsTable = Loadable(lazy(() => import('../views/detailTable/LoanDetails')));
+const TrainingTable = Loadable(lazy(() => import('../views/smartconTables/Training')));
+const TrainingDetailsTable = Loadable(lazy(() => import('../views/detailTable/TrainingDetails')));
+const JobInformationTable = Loadable(lazy(() => import('../views/smartconTables/JobInformation')));
+const JobInformationDetailsTable = Loadable(
+  lazy(() => import('../views/detailTable/JobInformationDetails')),
+);
+const PayrollManagementTable = Loadable(
+  lazy(() => import('../views/smartconTables/PayrollManagement')),
+);
+const Employee = Loadable(lazy(() => import('../views/smartconTables/Employee')));
+const EmployeeDetailsTable = Loadable(lazy(() => import('../views/detailTable/EmployeeDetails')));
+const EmployeeEdit = Loadable(
+  lazy(() => import('../views/EditData/EmployeeEdit')),
+);
+const PayrollManagementDetails = Loadable(
+  lazy(() => import('../views/detailTable/PayrollManagementDetails')),
+);
 
 //Reports
 const CpfSummaryReports=Loadable(lazy(() => import('../views/smartconTables/CpfSummaryReports')))
@@ -268,6 +296,15 @@ const Routernew = () => {
             name="SalesOrderEditdata"
             element={<SalesOrderEdit />}
           ></Route>
+             <Route
+            path="/JobInformationEdit/:id"
+            name="clienttdata"
+            element={<JobInformationEdit />}
+          ></Route>
+                    <Route path="/LoanEdit/:id" name="clienttdata" element={<LoanEdit />}></Route>
+                    <Route path="/LeavesEdit/:id" name="clienttdata" element={<LeavesEdit />}></Route>
+                    <Route path="/TrainingEdit/:id" name="clienttdata" element={<TrainingEdit />}></Route>
+
 
           {/* Supplier Modal */}
           
@@ -428,6 +465,49 @@ const Routernew = () => {
           <Route path="/PurchaseGstReport" name="purchasegstreportdata" element={<PurchaseGstReport />}></Route>
           <Route path="/Supplier" name="supplierdata" element={<SupplierTable />}></Route>
           <Route path="/salesOrder" name="supplierdata" element={<SalesOrderTable />}></Route>
+
+          <Route path="/Leave" name="clienttdata" element={<LeaveTable />}></Route>
+          <Route path="/LeaveDetails" name="clienttdata" element={<LeaveDetailsTable />}></Route>
+          <Route path="/Loan" name="clienttdata" element={<LoanTable />}></Route>
+          <Route path="/LoanDetails" name="clienttdata" element={<LoanDeatilsTable />}></Route>
+          <Route
+            path="/TrainingDetails"
+            name="clienttdata"
+            element={<TrainingDetailsTable />}
+          ></Route>
+          <Route path="/Training" name="clienttdata" element={<TrainingTable />}></Route>
+          <Route
+            path="/JobInformation"
+            name="clienttdata"
+            element={<JobInformationTable />}
+          ></Route>
+          <Route
+            path="/JobInformationDetails"
+            name="clienttdata"
+            element={<JobInformationDetailsTable />}
+          ></Route>
+
+<Route path="/Employee" name="clienttdata" element={<Employee />}></Route>
+          <Route
+            path="/EmployeeDetails"
+            name="clienttdata"
+            element={<EmployeeDetailsTable />}
+          ></Route>
+          <Route
+            path="/EmployeeEdit/:id"
+            name="clienttdata"
+            element={<EmployeeEdit />}
+          ></Route>
+          <Route
+            path="/PayrollManagement"
+            name="clienttdata"
+            element={<PayrollManagementTable />}
+          ></Route>
+          <Route
+            path="/PayrollManagementDetails/:id"
+            name="clienttdata"
+            element={<PayrollManagementDetails />}
+          ></Route>
         
         </Route>
 

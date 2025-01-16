@@ -1,0 +1,1 @@
+{"version":3,"sources":["webpack://src/views/apps/notes/notes.scss"],"names":[],"mappings":"AAAA,UACE,WAAY","file":"114.fac04692.chunk.css","sourcesContent":[".noteText {\n  width: 263px;\n}\n"]}

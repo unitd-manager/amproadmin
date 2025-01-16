@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import * as Icon from 'react-feather';
-import { Row, Col, Button } from 'reactstrap';
+import { Row,Col,Button } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'datatables.net-dt/js/dataTables.dataTables';
 import 'datatables.net-dt/css/jquery.dataTables.min.css';
@@ -16,23 +16,21 @@ import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
 import message from '../../components/Message';
 
+
 const PurchaseOrder = () => {
   //All state variable
   const [purchaseOrder, setPurchaseOrder] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const[loading,setLoading]=useState(false);
   //Getting data from purchaseorder
   const getpurchaseorder = () => {
-    setLoading(true);
-    api
-      .get('/purchaseorder/TabPurchaseOrder')
-      .then((res) => {
-        setPurchaseOrder(res.data.data);
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-        message('Unable to get Purchase Data');
-      });
+    setLoading(true)
+    api.get('/purchaseorder/TabPurchaseOrder').then((res) => {
+      setPurchaseOrder(res.data.data);
+      setLoading(false)
+    }).catch(()=>{
+      setLoading(false)
+      message('Unable to get Purchase Data')
+    })
   };
   useEffect(() => {
     setTimeout(() => {
@@ -41,18 +39,16 @@ const PurchaseOrder = () => {
         pageLength: 20,
         processing: true,
         dom: 'Bfrtip',
-        buttons: [
-          {
-            extend: 'print',
-            text: 'Print',
-            className: 'shadow-none btn btn-primary',
-          },
-        ],
+        buttons: [ {
+          extend: 'print',
+          text: "Print",
+          className:"shadow-none btn btn-primary",
+      }],
       });
     }, 1000);
     getpurchaseorder();
   }, []);
-  //Structure of purchaseorder list view
+//Structure of purchaseorder list view
   const columns = [
     {
       name: '#',
@@ -83,18 +79,14 @@ const PurchaseOrder = () => {
       grow: 2,
       wrap: true,
     },
-    {
-      name: 'Po Value',
-      selector: 'po_value',
-      sortable: true,
-      grow: 0,
-    },
+   
     {
       name: 'Status',
       selector: 'status',
       sortable: true,
       width: 'auto',
       grow: 3,
+
     },
     {
       name: 'PO Date',
@@ -102,6 +94,7 @@ const PurchaseOrder = () => {
       sortable: true,
       width: 'auto',
       grow: 3,
+
     },
     {
       name: 'Supplier Invoice Code',
@@ -109,6 +102,7 @@ const PurchaseOrder = () => {
       sortable: true,
       width: 'auto',
       grow: 3,
+
     },
     {
       name: 'Creation Date',
@@ -116,41 +110,39 @@ const PurchaseOrder = () => {
       sortable: true,
       width: 'auto',
       grow: 3,
+
     },
   ];
   return (
     <div className="MainDiv">
       <div className=" pt-xs-25">
-        <BreadCrumbs />
+        <BreadCrumbs/>
 
         <CommonTable
-          loading={loading}
+        loading={loading}
           title="Purchase Order List"
           Button={
             <>
-              <Row>
-                <Col md="6">
-                  <Link to="/purchaseorderDetail">
-                    <Button color="primary" className="shadow-none">
-                      New
-                    </Button>
-                  </Link>
-                </Col>
-                <Col md="6">
-                  <a
-                    href="http://43.228.126.245/smartco-api/storage/excelsheets/PurchaseOrder.xlsx"
-                    download
-                  >
-                    <Button color="primary" className="shadow-none">
-                      Sample
-                    </Button>
-                  </a>
-                </Col>
-              </Row>
+            <Row>
+              <Col md="6">
+            <Link to="/purchaseorderDetails">
+              <Button color="primary" className="shadow-none">
+                New
+              </Button>
+            </Link>
+            </Col>
+            <Col md="6">
+            <a href="http://43.228.126.245/pyramidapi/storage/excelsheets/PurchaseOrder.xlsx" download>
+             <Button color="primary" className="shadow-none" >
+               Sample
+             </Button>
+             </a>
+             </Col>
+             </Row>
             </>
           }
         >
-          <thead>
+                    <thead>
             <tr>
               {columns.map((cell) => {
                 return <td key={cell.name}>{cell.name}</td>;
@@ -164,30 +156,20 @@ const PurchaseOrder = () => {
                   <tr key={element.purchase_order_id}>
                     <td>{index + 1}</td>
                     <td>
-                      <Link to={`/purchaseorderEdit/${element.purchase_order_id}`}>
-                        <Icon.Edit2 />
+                      <Link to={`/purchaseorderEdit/${element.purchase_order_id}`}><Icon.Edit2 />
                       </Link>
                     </td>
                     <td>{element.po_code}</td>
-                    <td>{element.title}</td>
-                    <td>{element.po_value}</td>
+                    <td>{element.title ? element.title :element.title_field}</td>
                     <td>{element.status}</td>
-                    <td>
-                      {element.purchase_order_date
-                        ? moment(element.purchase_order_date).format('YYYY-MM-DD')
-                        : ''}
-                    </td>
+                    <td>{element.purchase_order_date? moment(element.purchase_order_date).format('YYYY-MM-DD'):''}</td>
                     <td>{element.supplier_inv_code}</td>
-                    <td>
-                      {element.creation_date
-                        ? moment(element.creation_date).format('YYYY-MM-DD')
-                        : ''}
-                    </td>
+                    <td>{element.creation_date? moment(element.creation_date).format('YYYY-MM-DD'):''}</td>
                   </tr>
                 );
               })}
           </tbody>
-        </CommonTable>
+          </CommonTable>
       </div>
     </div>
   );

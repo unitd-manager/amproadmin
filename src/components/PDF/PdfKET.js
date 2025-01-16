@@ -4,14 +4,13 @@ import pdfMake from 'pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 import { Button } from 'reactstrap';
 import api from '../../constants/api';
-import message from '../Message';
 import PdfFooter from './PdfFooter';
 import PdfHeader from './PdfHeader';
 
 const PdfKET = () => {
   const { id } = useParams();
   const [hfdata, setHeaderFooterData] = React.useState();
-  const [job, setJob] = useState();
+  const [job, setJob] = useState([]);
 
   React.useEffect(() => {
     api.get('/setting/getSettingsForCompany').then((res) => {
@@ -33,7 +32,7 @@ const PdfKET = () => {
         console.log(job);
       })
       .catch(() => {
-        message('Job information Data Not Found', 'info');
+        //message('Job information Data Not Found', 'info');
       });
   };
 
@@ -165,7 +164,7 @@ const PdfKET = () => {
               [
                 {
                   text: `Company Name:
-                  Cubosale Pte ltd`,
+                  ${job.company_name ? job.company_name : ''}`,
                   border: [false, false, false, true],
                   style: 'tableBody',
                 },
@@ -204,11 +203,35 @@ const PdfKET = () => {
                 },
               ],
               [
+                // job.nric_no && {
+                //   text: `Employee NRIC:
+                //   ${job.nric_no ? job.nric_no : ''}`,
+                //   border: [false, false, false, true],
+                //   style: 'tableBody',
+                // },
+
+                // job.fin_no && {
+                //   text: `Employee FIN:
+                // ${job.fin_no ? job.fin_no : ''}`,
+                //   border: [false, false, false, true],
+                //   style: 'tableBody',
+                // },
                 {
-                  text: `Employee NRIC/FIN:
-                  ${job.nric_no ? job.nric_no : ''}`,
-                  border: [false, false, false, true],
-                  style: 'tableBody',
+                  stack: [
+                    job.nric_no && {
+                        text: `Employee NRIC:
+                        ${job.nric_no ? job.nric_no : ''}`,
+                        border: [false, false, false, true],
+                        style: 'tableBody',
+                      },
+      
+                      job.fin_no && {
+                        text: `Employee FIN:
+                      ${job.fin_no ? job.fin_no : ''}`,
+                        border: [false, false, false, true],
+                        style: 'tableBody',
+                      },
+                  ],
                 },
 
                 {
@@ -397,7 +420,7 @@ const PdfKET = () => {
                     job.salary_payment_dates ? job.salary_payment_dates : ''
                   } \n
                     Date(s) of Overtime Payment:${
-                      job.overtime_payment_date ? job.overtime_payment_date : ''
+                      job.overtime_payment_dates ? job.overtime_payment_dates : ''
                     }`,
                   border: [false, false, false, true],
                   fillColor: '#f5f5f5',
@@ -413,7 +436,10 @@ const PdfKET = () => {
                       text: 'Hourly',
                       listType: job.overtime_payment_date === 'hourly' ? 'square' : 'circle',
                     },
-                    { text: 'Daily', listType: job.overtime_payment_date === 'daily' ? 'square' : 'circle' },
+                    {
+                      text: 'Daily',
+                      listType: job.overtime_payment_date === 'daily' ? 'square' : 'circle',
+                    },
                     {
                       text: 'Weekly',
                       listType: job.overtime_payment_date === 'weekly' ? 'square' : 'circle',
