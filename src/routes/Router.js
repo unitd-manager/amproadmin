@@ -148,6 +148,7 @@ const SubCategoryDetailsTable = Loadable(
   lazy(() => import('../views/detailTable/SubCategoryDetails')),
 );
 const SupplierTable = Loadable(lazy(() => import('../views/smartconTables/Supplier')));
+const SalesOrderTable = Loadable(lazy(() => import('../views/smartconTables/salesOrder')));
 const ValuelistTable = Loadable(lazy(() => import('../views/smartconTables/Valuelist')));
 const ValuelistDetailsTable = Loadable(lazy(() => import('../views/detailTable/ValuelistDetails')));
 const PurchaseOrderDetailTable = Loadable(lazy(() => import('../views/detailTable/PurchaseOrderDetail')));
@@ -183,6 +184,8 @@ const SettingEdit = Loadable(lazy(() => import('../views/EditData/SettingEdit'))
 const UserGroupEdit = Loadable(lazy(() => import('../views/EditData/UserGroupEdit')));
 const BlogEdit = Loadable(lazy(() => import('../views/EditData/BlogEdit')));
 const EnquiryEdit = Loadable(lazy(() => import('../views/EditData/EnquiryEdit')));
+const SalesOrderEdit = Loadable(lazy(() => import('../views/EditData/SalesOrderEdit')));
+
 const EnquiryDetailsTable = Loadable(
   lazy(() => import('../views/detailTable/EnquiryDetails')),
 );
@@ -237,7 +240,7 @@ const Routernew = () => {
           <Route path="/CustomerEdit/:id" name="customerdata" element={<CustomerEdit />}></Route>
           <Route path="/BlogEdit/:id" name="blogdata" element={<BlogEdit />}></Route>
           <Route path="/InventoryEdit/:id" name="inventorydata" element={<InventoryEdit />}></Route>
-                   <Route path="/SupplierEdit/:id" name="supplierdata" element={<SupplierEdit />}></Route>
+          <Route path="/SupplierEdit/:id" name="supplierdata" element={<SupplierEdit />}></Route>
           <Route path="/sectionEdit/:id" name="sectiondata" element={<SectionEdit />}></Route>
          
           
@@ -259,6 +262,11 @@ const Routernew = () => {
             path="/EnquiryEdit/:id"
             name="enquiryeditdata"
             element={<EnquiryEdit />}
+          ></Route>
+           <Route
+            path="/SalesOrderEdit/:id"
+            name="SalesOrderEditdata"
+            element={<SalesOrderEdit />}
           ></Route>
 
           {/* Supplier Modal */}
@@ -419,6 +427,7 @@ const Routernew = () => {
           <Route path="/IR8AReport" name="ir8areportdata" element={<IR8AReport />}></Route>
           <Route path="/PurchaseGstReport" name="purchasegstreportdata" element={<PurchaseGstReport />}></Route>
           <Route path="/Supplier" name="supplierdata" element={<SupplierTable />}></Route>
+          <Route path="/salesOrder" name="supplierdata" element={<SalesOrderTable />}></Route>
         
         </Route>
 
