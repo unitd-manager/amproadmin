@@ -119,6 +119,8 @@ const TestTable = Loadable(lazy(() => import('../views/smartconTables/Test')));
 const EmployeetrainingreportsTable = Loadable(lazy(() => import('../views/smartconTables/Employeetrainingreports')));
 const StatementofAccountsReport = Loadable(lazy(() => import('../views/Reports/StatementofAccountsReport')));
 const AgingReportsTable = Loadable(lazy(() => import('../views/smartconTables/AgingReports')));
+const InvoiceTable = Loadable(lazy(() => import('../views/smartconTables/Invoice')));
+
 const InvoiceByMonth = Loadable(lazy(() => import('../views/smartconTables/InvoiceByMonth')));
 const EmployeeSalaryReport = Loadable(lazy(() => import('../views/smartconTables/EmployeeSalaryReport')));
 const PayslipGeneratedReports = Loadable(lazy(() => import('../views/smartconTables/PayslipGeneratedReports')));
@@ -148,6 +150,7 @@ const SubCategoryDetailsTable = Loadable(
   lazy(() => import('../views/detailTable/SubCategoryDetails')),
 );
 const SupplierTable = Loadable(lazy(() => import('../views/smartconTables/Supplier')));
+const SalesOrderTable = Loadable(lazy(() => import('../views/smartconTables/salesOrder')));
 const ValuelistTable = Loadable(lazy(() => import('../views/smartconTables/Valuelist')));
 const ValuelistDetailsTable = Loadable(lazy(() => import('../views/detailTable/ValuelistDetails')));
 const PurchaseOrderDetailTable = Loadable(lazy(() => import('../views/detailTable/PurchaseOrderDetail')));
@@ -161,6 +164,8 @@ const UserGroupTable = Loadable(lazy(() => import('../views/smartconTables/UserG
 const UserGroupDetails = Loadable(lazy(() => import('../views/detailTable/UserGroupDetails')));
 const Support = Loadable(lazy(() => import('../views/smartconTables/Support')));
 const StaffDetails = Loadable(lazy(() => import('../views/detailTable/StaffDetails')));
+const SalesOrderDetails = Loadable(lazy(() => import('../views/detailTable/SalesOrderDetails')));
+
 const PurchaseOrderEdit = Loadable(lazy(() => import('../views/EditData/PurchaseOrderEdit')));
 //SupplierModal
 
@@ -170,6 +175,8 @@ const SupportDetails = Loadable(lazy(() => import('../views/detailTable/SupportD
 
 const ProductEdit = Loadable(lazy(() => import('../views/EditData/ProductEdit')));
 const StaffEdit = Loadable(lazy(() => import('../views/EditData/StaffEdit')));
+const InvoiceEdit = Loadable(lazy(() => import('../views/EditData/InvoiceEdit')));
+
 const OrdersEdit = Loadable(lazy(() => import('../views/EditData/OrdersEdit')));
 const ContentEdit = Loadable(lazy(() => import('../views/EditData/ContentEdit')));
 const CustomerEdit = Loadable(lazy(() => import('../views/EditData/CustomerEdit')));
@@ -183,6 +190,8 @@ const SettingEdit = Loadable(lazy(() => import('../views/EditData/SettingEdit'))
 const UserGroupEdit = Loadable(lazy(() => import('../views/EditData/UserGroupEdit')));
 const BlogEdit = Loadable(lazy(() => import('../views/EditData/BlogEdit')));
 const EnquiryEdit = Loadable(lazy(() => import('../views/EditData/EnquiryEdit')));
+const SalesOrderEdit = Loadable(lazy(() => import('../views/EditData/SalesOrderEdit')));
+
 
 const LoanEdit = Loadable(lazy(() => import('../views/EditData/LoanEdit')));
 const LeavesEdit = Loadable(lazy(() => import('../views/EditData/LeavesEdit')));
@@ -265,7 +274,7 @@ const Routernew = () => {
           <Route path="/CustomerEdit/:id" name="customerdata" element={<CustomerEdit />}></Route>
           <Route path="/BlogEdit/:id" name="blogdata" element={<BlogEdit />}></Route>
           <Route path="/InventoryEdit/:id" name="inventorydata" element={<InventoryEdit />}></Route>
-                   <Route path="/SupplierEdit/:id" name="supplierdata" element={<SupplierEdit />}></Route>
+          <Route path="/SupplierEdit/:id" name="supplierdata" element={<SupplierEdit />}></Route>
           <Route path="/sectionEdit/:id" name="sectiondata" element={<SectionEdit />}></Route>
          
           
@@ -279,6 +288,8 @@ const Routernew = () => {
           ></Route>
           <Route path="/CategoryEdit/:id" name="categorydata" element={<CategoryEdit />}></Route>
           <Route path="/StaffEdit/:id" name="staffdata" element={<StaffEdit />}></Route>
+          <Route path="/InvoiceEdit/:id" name="invoicedata" element={<InvoiceEdit />}></Route>
+
           <Route path="/SupportEdit/:id" name="supportdata" element={<SupportEdit />}></Route>
           <Route path="/SettingEdit/:id" name="settingdata" element={<SettingEdit />}></Route>
           <Route path="/UserGroupEdit/:id" name="usergroupdata" element={<UserGroupEdit />}></Route>
@@ -288,6 +299,11 @@ const Routernew = () => {
             name="enquiryeditdata"
             element={<EnquiryEdit />}
           ></Route>
+           <Route
+            path="/SalesOrderEdit/:id"
+            name="SalesOrderEditdata"
+            element={<SalesOrderEdit />}
+          ></Route>
              <Route
             path="/JobInformationEdit/:id"
             name="clienttdata"
@@ -296,6 +312,7 @@ const Routernew = () => {
                     <Route path="/LoanEdit/:id" name="clienttdata" element={<LoanEdit />}></Route>
                     <Route path="/LeavesEdit/:id" name="clienttdata" element={<LeavesEdit />}></Route>
                     <Route path="/TrainingEdit/:id" name="clienttdata" element={<TrainingEdit />}></Route>
+                    <Route path="/Invoice" name="clienttdata" element={<InvoiceTable />}></Route>
 
 
           {/* Supplier Modal */}
@@ -392,6 +409,7 @@ const Routernew = () => {
           <Route path="/Staff" name="staffdata" element={<StaffTable />}></Route>
           <Route path="/ProductDetails" name="productDetaildata" element={<ProductDetailsTable />}></Route>
           <Route path="/StaffDetails" name="staffDetaildata" element={<StaffDetails />}></Route>
+          <Route path="/SalesOrderDetails" name="salesOrderDetaildata" element={<SalesOrderDetails />}></Route>
           <Route path="/Product" name="productdata" element={<ProductTable />}></Route>
           <Route path="/Orders" name="ordersdata" element={<FinanceTable />}></Route>
           <Route
@@ -456,6 +474,7 @@ const Routernew = () => {
           <Route path="/IR8AReport" name="ir8areportdata" element={<IR8AReport />}></Route>
           <Route path="/PurchaseGstReport" name="purchasegstreportdata" element={<PurchaseGstReport />}></Route>
           <Route path="/Supplier" name="supplierdata" element={<SupplierTable />}></Route>
+          <Route path="/salesOrder" name="supplierdata" element={<SalesOrderTable />}></Route>
 
           <Route path="/Leave" name="clienttdata" element={<LeaveTable />}></Route>
           <Route path="/LeaveDetails" name="clienttdata" element={<LeaveDetailsTable />}></Route>
