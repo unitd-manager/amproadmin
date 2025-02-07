@@ -100,7 +100,7 @@ const SalesOrderEdit = () => {
 
     // Get Line Item
   const getLineItem = () => {
-    api.post('/salesOrder/getQuoteLineItemsById', { sales_order_id: id }).then((res) => {
+    api.post('/invoice/getInvoiceItemsById', { invoice_id: id }).then((res) => {
       setLineItem(res.data.data);
       //setAddLineItemModal(true);
     });
@@ -163,7 +163,7 @@ const handleInputs = (e) => {
 
 const getSettingById = () => {
   api
-    .post('/salesorder/getSalesorderById', { sales_order_id: id })
+    .post('/invoice/getInvoicesById', { invoice_id: id })
     .then((res) => {
       setSettingDetails(res.data.data[0]);
     })
@@ -206,7 +206,7 @@ const generateInvoice = async () => {
     const invoiceCode = await generateCodes(); // Generate the code
     console.log('Invoice Code:', invoiceCode); // Debugging line
     const payload = {
-      sales_order_id: id, // Sales order ID from context
+      invoice_id: id, // Sales order ID from context
       company_id: settingdetails?.company_id, // Company ID from `settingdetails`
       invoice_code: invoiceCode, // Generated invoice code
     };
@@ -240,7 +240,7 @@ const generateDelivery = async () => {
     const deliveryCode = await generateDeliveryCodes(); // Generate the code
     console.log('Delivery Code:', deliveryCode); // Debugging line
     const payload = {
-      sales_order_id: id, // Sales order ID from context
+      invoice_id: id, // Sales order ID from context
       company_id: settingdetails?.company_id, // Company ID from `settingdetails`
       delivery_code: deliveryCode, // Generated invoice code
     };
@@ -352,8 +352,8 @@ useEffect(() => {
                   <Input
                     type="text"
                     onChange={handleInputs}
-                    value={settingdetails && settingdetails.tran_no}
-                    name="tran_no"
+                    value={settingdetails && settingdetails.invoice_code}
+                    name="invoice_code"
                   ></Input>
                 </FormGroup>
               </Col>
@@ -363,8 +363,8 @@ useEffect(() => {
                   <Input
                     type="date"
                     onChange={handleInputs}
-                    value={settingdetails && settingdetails.tran_date}
-                    name="tran_date"
+                    value={settingdetails && settingdetails.invoice_date}
+                    name="invoice_date"
                   />
                 </FormGroup>
               </Col>

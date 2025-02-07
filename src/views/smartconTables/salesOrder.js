@@ -14,18 +14,18 @@ import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
 
-const SalesOrder = () => {
-  // State variables
-  const [salesorder, setSalesOrder] = useState(null);
+const Test = () => {
+  //All state variable
+  const [supplier, setSupplier] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Fetching sales orders
-  const getsalesorder = () => {
+  //getting data from supplier
+  const getSupplier = () => {
     setLoading(true);
     api
       .get('/salesorder/getsalesorder')
       .then((res) => {
-        setSalesOrder(res.data.data);
+        setSupplier(res.data.data);
         $('#example').DataTable({
           pagingType: 'full_numbers',
           pageLength: 20,
@@ -47,12 +47,17 @@ const SalesOrder = () => {
   };
 
   useEffect(() => {
-    getsalesorder();
+    getSupplier();
   }, []);
-
-  // Table columns
+  //structure of supplier list view
   const columns = [
-    { name: '#', selector: 'salesorder_id', grow: 0, wrap: true, width: '4%' },
+    {
+      name: '#',
+      selector: 'sales_order_id',
+      grow: 0,
+      wrap: true,
+      width: '4%',
+    },
     {
       name: 'Edit',
       selector: 'edit',
@@ -62,15 +67,72 @@ const SalesOrder = () => {
       button: true,
       sortable: false,
     },
-    { name: 'Tran No', selector: 'company_name', sortable: true, grow: 0, wrap: true },
-    { name: 'Tran Date', selector: 'email', sortable: true, grow: 2, wrap: true },
-    { name: 'Customer', selector: 'mobile', sortable: true, grow: 0 },
-    { name: 'Status', selector: 'mobile', sortable: true, grow: 0 },
-    { name: 'Printed', selector: 'mobile', sortable: true, grow: 0 },
-    { name: 'Sub Total', selector: 'mobile', sortable: true, grow: 0 },
-    { name: 'Net Total', selector: 'mobile', sortable: true, grow: 0 },
-    { name: 'Tax', selector: 'mobile', sortable: true, grow: 0 },
-    { name: 'Created By', selector: 'mobile', sortable: true, grow: 0 },
+    {
+      name: 'Tran NO',
+      selector: 'traan_no',
+      sortable: true,
+      grow: 0,
+      wrap: true,
+    },
+    {
+      name: 'Tran Date',
+      selector: 'tran_date',
+      sortable: true,
+      grow: 0,
+      wrap: true,
+    },
+    {
+      name: 'Customer',
+      selector: 'company_name',
+      sortable: true,
+      grow: 0,
+      wrap: true,
+    },
+    {
+      name: 'Status',
+      
+      sortable: true,
+      grow: 0,
+      wrap: true,
+    },
+    {
+      name: 'Printed',
+      
+      sortable: true,
+      grow: 0,
+      wrap: true,
+    },
+    {
+      name: 'Sub Total',
+      
+      sortable: true,
+      grow: 0,
+      wrap: true,
+    },
+    {
+      name: 'Tax',
+      
+      sortable: true,
+      grow: 0,
+      wrap: true,
+    },
+
+    {
+      name: 'Net Total',
+      
+      sortable: true,
+      grow: 0,
+      wrap: true,
+    },
+
+    {
+      name: 'Created By',
+      selector: 'company_name',
+      sortable: true,
+      grow: 0,
+      wrap: true,
+    },
+   
   ];
 
   return (
@@ -82,7 +144,7 @@ const SalesOrder = () => {
           loading={loading}
           title="Sales Order List"
           Button={
-            <Link to="/salesorderDetails">
+            <Link to="/SalesOrderDetails">
               <Button color="primary" className="shadow-none">
                 Add New
               </Button>
@@ -91,26 +153,35 @@ const SalesOrder = () => {
         >
           <thead>
             <tr>
-              {columns.map((cell) => (
-                <td key={cell.name}>{cell.name}</td>
-              ))}
+              {columns.map((cell) => {
+                return <td key={cell.name}>{cell.name}</td>;
+              })}
             </tr>
           </thead>
           <tbody>
-            {salesorder &&
-              salesorder.map((element, index) => (
-                <tr key={element.salesorder_id}>
-                  <td>{index + 1}</td>
-                  <td>
-                    <Link to={`/salesorderEdit/${element.salesorder_id}`}>
-                      <Icon.Edit2 />
-                    </Link>
-                  </td>
-                  <td>{element.company_name}</td>
-                  <td>{element.email}</td>
-                  <td>{element.mobile}</td>
-                </tr>
-              ))}
+            {supplier &&
+              supplier.map((element, index) => {
+                return (
+                  <tr key={element.sales_order_id}>
+                    <td>{index + 1}</td>
+                    <td>
+                      <Link to={`/salesorderEdit/${element.sales_order_id}`}>
+                        <Icon.Edit2 />
+                      </Link>
+                    </td>
+                    <td>{element.tran_no}</td>
+                    <td>{element.tran_date}</td>
+                    <td>{element.company_name}</td>
+                    <td>{element.status}</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+
+                  </tr>
+                );
+              })}
           </tbody>
         </CommonTable>
       </div>
@@ -118,4 +189,4 @@ const SalesOrder = () => {
   );
 };
 
-export default SalesOrder;
+export default Test;

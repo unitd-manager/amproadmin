@@ -171,8 +171,6 @@ const getSettingById = () => {
       message('setting Data Not Found', 'info');
     });
 };
-
-
 //Update Setting
 const editSettingData = () => {
 
@@ -222,41 +220,6 @@ const generateInvoice = async () => {
 
 
 
-const generateDeliveryCodes = () => {
-  return api
-    .post('/commonApi/getCodeValues', { type: 'delivery' })
-    .then((res) => {
-      console.log('Generated Code:', res.data.data); // Debugging line
-      return res.data.data;
-    })
-    .catch((error) => {
-      message('Failed to generate code', 'error');
-      throw error;
-    });
-};
-
-const generateDelivery = async () => {
-  try {
-    const deliveryCode = await generateDeliveryCodes(); // Generate the code
-    console.log('Delivery Code:', deliveryCode); // Debugging line
-    const payload = {
-      sales_order_id: id, // Sales order ID from context
-      company_id: settingdetails?.company_id, // Company ID from `settingdetails`
-      delivery_code: deliveryCode, // Generated invoice code
-    };
-    console.log('Payload:', payload); // Debugging line
-
-    const response = await api.post('/salesOrder/generateDeliveryFromSalesOrder', payload);
-    message(response.data.message, 'success');
-    console.log('Generated Delivery ID:', response.data.delivery_id);
-  } catch (error) {
-    message(error.response?.data?.message || 'Failed to generate invoice', 'error');
-  }
-};
-
-
-
-
 useEffect(() => {
   getSettingById();
       getLineItem();
@@ -267,8 +230,9 @@ useEffect(() => {
   return (
     <div>
       
-      <Form>     
-        <ComponentCardV2>
+      <Form>
+     
+             <ComponentCardV2>
                         <Row>
                           <Col>
                             <Button
@@ -277,7 +241,6 @@ useEffect(() => {
                                 editSettingData();
                                 setTimeout(() => {
                                   navigate('/salesOrder');
-                                  window.location.reload();
                                 }, 1100);
                               }}
                             >
@@ -326,17 +289,15 @@ useEffect(() => {
       )}
     </Col>
     <Col>
-    {settingdetails?.status !== 'Closed' && (
-
         <Button
           color="primary"
           onClick={() => {
-            generateDelivery();
+            generateInvoice();
           }}
         >
           Delivery Order
         </Button>
-          )}
+      
     </Col>
   </Row>
 </ComponentCardV2>
@@ -359,12 +320,12 @@ useEffect(() => {
               </Col>
               <Col md="4">
                 <FormGroup>
-                  <Label>Tran Date</Label>
+                  <Label>Status</Label>
                   <Input
-                    type="date"
+                    type="textarea"
                     onChange={handleInputs}
-                    value={settingdetails && settingdetails.tran_date}
-                    name="tran_date"
+                    value={settingdetails && settingdetails.status}
+                    name="status"
                   />
                 </FormGroup>
               </Col>
@@ -378,31 +339,16 @@ useEffect(() => {
         <Tab toggle={toggle} tabs={tabs} />
             <TabContent className="p-4" activeTab={activeTab}>
               <TabPane tabId="1">
-                <Customer
-                 settingdetails={settingdetails}
-                 handleInputs={handleInputs}
-                 setSettingDetails={setSettingDetails}
-                ></Customer>
+                <Customer></Customer>
        </TabPane>
           <TabPane tabId="2">
-            <Currency
-             setSettingDetails={setSettingDetails}
-            settingdetails={settingdetails}
-            handleInputs={handleInputs}
-            ></Currency>
+            <Currency></Currency>
      </TabPane>
           <TabPane tabId="3">
-            <Shipping
-            settingdetails={settingdetails}
-            handleInputs={handleInputs}
-            setSettingDetails={setSettingDetails}
-            ></Shipping>
+            <Shipping></Shipping>
           </TabPane>
           <TabPane tabId="4">
-            <SalesMan
-             settingdetails={settingdetails}
-             handleInputs={handleInputs}
-             ></SalesMan>
+            <SalesMan></SalesMan>
           </TabPane>
 
             <TabPane tabId="5">
