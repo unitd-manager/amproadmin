@@ -1,1 +1,0 @@
-{"version":3,"sources":["webpack://src/views/form-editor/editor.scss"],"names":[],"mappings":"AAAA,YACE,gBAAiB,CAClB,aAEC,cAAe,CACf,QAAS","file":"62.f9dc0936.chunk.css","sourcesContent":[".edi-height {\n  min-height: 200px;\n}\n.demo-editor {\n  padding: 0 15px;\n  margin: 0;\n}\n"]}
