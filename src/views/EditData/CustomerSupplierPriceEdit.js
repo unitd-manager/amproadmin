@@ -1,4 +1,5 @@
-import React from "react";
+/*eslint-disable*/
+import React, { useState, useEffect } from "react";
 import {
   Container,
   Row,
@@ -9,33 +10,52 @@ import {
   Card,
   CardBody,
   CardTitle,
+  Nav,
+  NavItem,
+  NavLink,
+  TabContent,
+  TabPane,
 } from "reactstrap";
+import classnames from "classnames";
 import { FaTrash } from "react-icons/fa";
+import { useParams } from 'react-router-dom';
+import api from "../../constants/api";
 
 const ProductContactPricePage = () => {
-  const productData = [
-    {
-      SNo: 1,
-      ProductCode: "100170",
-      ProductName: "AMPRO BRAND MUSTARD OIL 250ML",
-      PurchaseUnitCost: "0.9147",
-      PcsPerCarton: 24,
-      WholeSalePrice: "1.55",
-      CartonPrice: 36,
-      MarginPerc: "69.454",
-    },
-    {
-      SNo: 2,
-      ProductCode: "100172",
-      ProductName: "AMPRO BRAND MUSTARD OIL 1LIT",
-      PurchaseUnitCost: "4.3839",
-      PcsPerCarton: 12,
-      WholeSalePrice: "5.40",
-      CartonPrice: 63.6,
-      MarginPerc: "23.178",
-    },
-    // Add more product rows as needed
-  ];
+      const { id } = useParams();
+  const [activeTab, setActiveTab] = useState("1");
+  const [productData, setProductData] = useState([]);
+  const [contactDetails, setContactDetails] = useState({
+    ContactCode: "",
+    ContactName: "",
+  });
+
+  const toggleTab = (tab) => {
+    if (activeTab !== tab) {
+      setActiveTab(tab);
+    }
+  };
+
+  // Fetch product data
+  useEffect(() => {
+    api
+      .post("/customersupplier/getPriceproducts",{customer_supplier_price_id:id}) // Replace with your API endpoint
+      .then((response) => {
+        setProductData(response.data.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching product data:", error);
+      });
+
+    api
+      .post("/customersupplier/getCustomerContact",{customer_supplier_price_id:id}) // Replace with your API endpoint
+      .then((response) => {
+        setContactDetails(response.data.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching contact details:", error);
+      });
+  }, []);
 
   return (
     <Container fluid>
@@ -47,11 +67,11 @@ const ProductContactPricePage = () => {
           <Row className="mb-3">
             <Col md="6">
               <label>Contact Code</label>
-              <Input type="text" value="VINAJURONG" readOnly />
+              <Input type="text" value={contactDetails.ContactCode} readOnly />
             </Col>
             <Col md="6">
               <label>Contact Name</label>
-              <Input type="text" value="VINAYAGA TRADING & SUPERMART PTE LTD" readOnly />
+              <Input type="text" value={contactDetails.ContactName} readOnly />
             </Col>
           </Row>
         </CardBody>
@@ -59,44 +79,55 @@ const ProductContactPricePage = () => {
 
       <Card>
         <CardBody>
-          <h5 className="mb-3">Products</h5>
-          <Table bordered responsive>
-            <thead>
-              <tr>
-                <th>SNo</th>
-                <th>Product Code</th>
-                <th>Product Name</th>
-                <th>Purchase Unit Cost</th>
-                <th>Pcs Per Carton</th>
-                <th>Whole Sale Price</th>
-                <th>Carton Price</th>
-                <th>Margin %</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {productData.map((product) => (
-                <tr key={product.SNo}>
-                  <td>{product.SNo}</td>
-                  <td>{product.ProductCode}</td>
-                  <td>{product.ProductName}</td>
-                  <td>{product.PurchaseUnitCost}</td>
-                  <td>{product.PcsPerCarton}</td>
-                  <td>{product.WholeSalePrice}</td>
-                  <td>{product.CartonPrice}</td>
-                  <td>{product.MarginPerc}</td>
-                  <td>
-                    <Button color="danger" size="sm">
-                      <FaTrash />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-          <Button color="primary" className="rounded-circle p-2">
-            +
-          </Button>
+          <Nav tabs>
+            <NavItem>
+              <NavLink
+                className={classnames({ active: activeTab === "1" })}
+                onClick={() => toggleTab("1")}
+              >
+                Product
+              </NavLink>
+            </NavItem>
+          </Nav>
+
+          <TabContent activeTab={activeTab}>
+            <TabPane tabId="1">
+              <Table bordered responsive>
+                <thead>
+                  <tr>
+                    <th>SNo</th>
+                    <th>Product Code</th>
+                    <th>Product Name</th>
+                    <th>Purchase Unit Cost</th>
+                    <th>Pcs Per Carton</th>
+                    <th>Whole Sale Price</th>
+                    <th>Carton Price</th>
+                    <th>Margin %</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {productData.map((product, index) => (
+                    <tr key={index}>
+                      <td>{index + 1}</td>
+                      <td>{product.ProductCode}</td>
+                      <td>{product.ProductName}</td>
+                      <td>{product.PurchaseUnitCost}</td>
+                      <td>{product.PcsPerCarton}</td>
+                      <td>{product.WholeSalePrice}</td>
+                      <td>{product.CartonPrice}</td>
+                      <td>{product.MarginPerc}</td>
+                      <td>
+                        <Button color="danger" size="sm">
+                          <FaTrash />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </TabPane>
+          </TabContent>
         </CardBody>
       </Card>
     </Container>
@@ -104,3 +135,4 @@ const ProductContactPricePage = () => {
 };
 
 export default ProductContactPricePage;
+

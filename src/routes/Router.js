@@ -137,6 +137,10 @@ const FinanceTable = Loadable(lazy(() => import('../views/smartconTables/Orders'
 
 // Admin
 
+
+const GoodsReceived = Loadable(lazy(() => import('../views/smartconTables/GoodsReceived')));
+const CustomerSupplierPrice = Loadable(lazy(() => import('../views/smartconTables/CustomerSupplierPrice')));
+
 const Content = Loadable(lazy(() => import('../views/smartconTables/Content')));
 const Customer = Loadable(lazy(() => import('../views/smartconTables/Customer')));
 const ContentDetailsTable = Loadable(lazy(() => import('../views/detailTable/ContentDetails')));
@@ -145,6 +149,8 @@ const SubCategoryTable = Loadable(lazy(() => import('../views/smartconTables/Sub
 const BlogDetailsTable = Loadable(lazy(() => import('../views/detailTable/BlogDetails')));
 const SupplierDetailsTable = Loadable(lazy(() => import('../views/detailTable/SupplierDetails')));
 
+const CustomerSupplierPriceDetailTable = Loadable(lazy(() => import('../views/detailTable/CustomerSupplierPriceDetails')));
+const GoodsReceivedDetailTable = Loadable(lazy(() => import('../views/detailTable/GoodsReceivedDetails')));
 
 const SubCategoryDetailsTable = Loadable(
   lazy(() => import('../views/detailTable/SubCategoryDetails')),
@@ -168,6 +174,8 @@ const SalesOrderDetails = Loadable(lazy(() => import('../views/detailTable/Sales
 
 const PurchaseOrderEdit = Loadable(lazy(() => import('../views/EditData/PurchaseOrderEdit')));
 //SupplierModal
+const CustomerSupplierPriceEdit = Loadable(lazy(() => import('../views/EditData/CustomerSupplierPriceEdit')));
+const GoodsReceivedEdit = Loadable(lazy(() => import('../views/EditData/GoodsReceivedEdit')));
 
 const SupportDetails = Loadable(lazy(() => import('../views/detailTable/SupportDetails')));
 
@@ -266,6 +274,10 @@ const Routernew = () => {
             name="enquirydata"
             element={<EnquiryDetailsTable />}
             ></Route>
+
+<Route path="/CustomerSupplierPriceDetails" name="blogDetaildata" element={<CustomerSupplierPriceDetailTable />}></Route>
+          <Route path="/GoodsReceivedDetails" name="supplierDetaildata" element={<GoodsReceivedDetailTable />}></Route>
+        
       {/* Table Edit's */}
        
           <Route path="/ProductEdit/:id" name="productdata" element={<ProductEdit />}></Route>
@@ -276,6 +288,9 @@ const Routernew = () => {
           <Route path="/InventoryEdit/:id" name="inventorydata" element={<InventoryEdit />}></Route>
           <Route path="/SupplierEdit/:id" name="supplierdata" element={<SupplierEdit />}></Route>
           <Route path="/sectionEdit/:id" name="sectiondata" element={<SectionEdit />}></Route>
+         
+          <Route path="/CustomerSupplierPriceEdit/:id" name="productdata" element={<CustomerSupplierPriceEdit />}></Route>
+          <Route path="/GoodsReceivedEdit/:id" name="orderdata" element={<GoodsReceivedEdit />}></Route>
          
           
           
@@ -447,6 +462,9 @@ const Routernew = () => {
           <Route path="/UserGroup" name="usergroupdata" element={<UserGroupTable />}></Route>
           <Route path="/UserGroupDetails" name="usergroupdetailsdata" element={<UserGroupDetails />}></Route>
         
+          <Route path="/CustomerSupplierPrice" name="contentdata" element={<CustomerSupplierPrice />}></Route>
+          <Route path="/GoodsReceived" name="customerdata" element={<GoodsReceived />}></Route>
+
           <Route path="/Content" name="contentdata" element={<Content />}></Route>
           <Route path="/Customer" name="customerdata" element={<Customer />}></Route>
           <Route
@@ -459,6 +477,9 @@ const Routernew = () => {
             name="customerdetailsdata"
             element={<CustomerDetailsTable />}
           ></Route>
+<Route path="/PurchaseorderDetails" name="clienttdata" element={<PurchaseOrderDetailTable />}></Route>
+
+
           <Route path="/test" name="testdata" element={<TestTable />}></Route>
           <Route path="/Support" name="supportdata" element={<Support />}></Route>
           <Route path="/SupportNew" name="supportnewdata" element={<SupportNewTable />}></Route>
