@@ -20,15 +20,21 @@ import AttachmentModalV2 from '../../components/Tender/AttachmentModalV2';
 import ProductDetail from '../../components/ProductTable/ProductDetail';
 import creationdatetime from '../../constants/creationdatetime';
 import AppContext from '../../context/AppContext';
+import ContactPriceButton from '../../components/ProductTable/ContactPriceButton';
 
 const ProductUpdate = () => {
   // All state variables
   const [productDetails, setProductDetails] = useState();
-  const [categoryLinked, setCategoryLinked] = useState([]);
+  const [categorydropdown, setCategoryDropdown] = useState([]);
+  const [departmentdropdown, setDepartmentDropdown] = useState([]);
+  const [subcategorydropdown, setSubCategoryDropdown] = useState([]);
+  const [branddropdown, setBrandDropdown] = useState([]);
+  const [supplierdropdown, setSupplierDropdown] = useState([]);
   const [productDescription, setProductDescription] = useState('');
   const [RoomName, setRoomName] = useState('');
   const [fileTypes, setFileTypes] = useState('');
   const [attachmentModal, setAttachmentModal] = useState(false);
+  const [modal, setModal] = useState(false);
   const [attachmentData, setDataForAttachment] = useState({
     modelType: '',
   });
@@ -52,6 +58,9 @@ const ProductUpdate = () => {
   const toggle = (tab) => {
     if (activeTab !== tab) setActiveTab(tab);
   };
+  const toggletype = () => {
+    setModal(!modal);
+  };
   //Description Modal
   const convertHtmlToDraft = (existingQuoteformal) => {
     const contentBlock = htmlToDraft(existingQuoteformal && existingQuoteformal);
@@ -74,6 +83,7 @@ const ProductUpdate = () => {
         message('Product Data Not Found', 'info');
       });
   };
+  
   //Edit Product
   const editProductData = () => {
     if (productDetails.title !== '') {
@@ -98,12 +108,59 @@ const ProductUpdate = () => {
     api
       .get('/product/getCategory')
       .then((res) => {
-        setCategoryLinked(res.data.data);
+        setCategoryDropdown(res.data.data);
       })
       .catch(() => {
         message('Unable to get categories', 'error');
       });
   };
+
+  // getting data from SubCategory
+  const getSubCategory = () => {
+    api
+      .get('/product/getSubCategory')
+      .then((res) => {
+        setSubCategoryDropdown(res.data.data);
+      })
+      .catch(() => {
+        message('Unable to get Subcategories', 'error');
+      });
+  };
+
+  // getting data from Category
+  const getBrand = () => {
+    api
+      .get('/product/getBrand')
+      .then((res) => {
+        setBrandDropdown(res.data.data);
+      })
+      .catch(() => {
+        message('Unable to get Brand', 'error');
+      });
+  };
+
+  // getting data from Department
+  const getDepartment = () => {
+    api
+      .get('/product/getDepartment')
+      .then((res) => {
+        setDepartmentDropdown(res.data.data);
+      })
+      .catch(() => {
+        message('Unable to get Department', 'error');
+      });
+  };
+// getting data from SubCategory
+const getSupplier = () => {
+  api
+    .get('/product/getSupplier')
+    .then((res) => {
+      setSupplierDropdown(res.data.data);
+    })
+    .catch(() => {
+      message('Unable to get supplier', 'error');
+    });
+};
 
   //Attachments
   const dataForAttachment = () => {
@@ -117,6 +174,10 @@ const ProductUpdate = () => {
   useEffect(() => {
     getCategory();
     getProductById();
+    getDepartment();
+    getSubCategory();
+    getBrand();
+    getSupplier();
   }, [id]);
 
   return (
@@ -130,7 +191,11 @@ const ProductUpdate = () => {
           <ProductDetail
             productDetails={productDetails}
             handleInputs={handleInputs}
-            categoryLinked={categoryLinked}
+            categorydropdown={categorydropdown}
+            departmentdropdown={departmentdropdown}
+            subcategorydropdown={subcategorydropdown}
+            branddropdown={branddropdown}
+            supplierdropdown={supplierdropdown}
           ></ProductDetail>
           {/* Product Details Form */}
           <Row>
@@ -153,10 +218,10 @@ const ProductUpdate = () => {
                   toggle('2');
                 }}
               >
-               Product Color
+               Contact Price Button
               </NavLink>
             </NavItem>
-            <NavItem>
+             {/* <NavItem>
               <NavLink
                 className={activeTab === '3' ? 'active' : ''}
                 onClick={() => {
@@ -168,9 +233,9 @@ const ProductUpdate = () => {
             </NavItem> */}
             <NavItem>
               <NavLink
-                className={activeTab === '2' ? 'active' : ''}
+                className={activeTab === '3' ? 'active' : ''}
                 onClick={() => {
-                  toggle('2');
+                  toggle('3');
                 }}
               >
                 Attachments
@@ -213,6 +278,21 @@ const ProductUpdate = () => {
               </ComponentCard>
         </TabPane>
 
+        <TabPane tabId="2">
+        <ComponentCard title="Contact Price Button">
+        <Col md="3" className="addNew">
+                    <Button color="primary" className="shadow-none" onClick={toggletype.bind(null)}>
+                        Add New
+                    </Button>
+                  </Col>
+              </ComponentCard>
+              <ContactPriceButton
+                projectId={id}
+                addPurchaseOrderModal={modal}
+                setAddPurchaseOrderModal={setModal}
+              ></ContactPriceButton>
+        </TabPane>
+
         {/* Customer Details Form */}
         {/* <TabPane tabId="2">
           <ComponentCard title="Product Color">
@@ -228,7 +308,7 @@ const ProductUpdate = () => {
           ></ProductSize>
           </ComponentCard>
         </TabPane> */}
-        <TabPane tabId="2">
+        <TabPane tabId="3">
         <ComponentCard title="Attachments">
             <Row>
               <Col xs="12" md="3" className="mb-3">
