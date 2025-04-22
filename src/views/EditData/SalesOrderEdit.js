@@ -317,6 +317,11 @@ useEffect(() => {
              handleInputs={handleInputs}
              ></SalesMan>
           </TabPane>
+          <TabPane tabId="6">
+            <PdfPickingList
+            id={id}
+            ></PdfPickingList>
+          </TabPane>
          
         </TabContent>
       </ComponentCard>
@@ -404,11 +409,7 @@ useEffect(() => {
             
               ></QuoteLineItem>
             )}
-          <TabPane tabId="6">
-            <PdfPickingList
-            id={id}
-            ></PdfPickingList>
-          </TabPane>
+  
          
       </ComponentCard>
       </>
