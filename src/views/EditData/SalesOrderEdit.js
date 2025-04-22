@@ -26,6 +26,7 @@ import Shipping from '../../components/SalesOrder/Shipping';
 import SalesMan from '../../components/SalesOrder/SalesMan';
 import QuoteLineItem from '../../components/SalesOrder/QuoteLineItem';
 import EditLineItemModal from '../../components/SalesOrder/EditLineItemModal';
+import PdfPickingList from '../../components/PDF/PdfPick';
 
 
 const SalesOrderEdit = () => {
@@ -60,6 +61,7 @@ const SalesOrderEdit = () => {
       { id: '2', name: 'Currency' },
       { id: '3', name: 'Shipping' },
       { id: '4', name: 'Sales Man' },
+       { id: '6', name: 'Pdf Pick' },
      
     ];
     const toggle = (tab) => {
@@ -402,6 +404,12 @@ useEffect(() => {
             
               ></QuoteLineItem>
             )}
+          <TabPane tabId="6">
+            <PdfPickingList
+            id={id}
+            ></PdfPickingList>
+          </TabPane>
+         
       </ComponentCard>
       </>
     </div>
