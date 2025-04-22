@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {  Form,  TabContent,TabPane,  Row, Col, FormGroup, Label, Input,Button,Table,Tooltip} from 'reactstrap';
+import {  Form,  TabContent,TabPane,  Row, Col, FormGroup, Label, Input,Button,Table} from 'reactstrap';
 import { ToastContainer } from 'react-toastify';
 import * as Icon from 'react-feather';
 import Swal from 'sweetalert2';
@@ -60,7 +60,6 @@ const SalesOrderEdit = () => {
       { id: '2', name: 'Currency' },
       { id: '3', name: 'Shipping' },
       { id: '4', name: 'Sales Man' },
-       { id: '5', name: 'Sales order Items' },
      
     ];
     const toggle = (tab) => {
@@ -71,12 +70,12 @@ const SalesOrderEdit = () => {
   //   navigate('/SalesOrder');
   // };
 
-  const [hoveredRowIndex, setHoveredRowIndex] = useState(null);
+  // const [hoveredRowIndex, setHoveredRowIndex] = useState(null);
 
-  // Function to handle tooltip toggle
-  const toggleTooltip = (index) => {
-    setHoveredRowIndex(index === hoveredRowIndex ? null : index);
-  };
+  // // Function to handle tooltip toggle
+  // const toggleTooltip = (index) => {
+  //   setHoveredRowIndex(index === hoveredRowIndex ? null : index);
+  // };
 
   
   const [addLineItemModal, setAddLineItemModal] = useState(false);
@@ -112,22 +111,34 @@ const SalesOrderEdit = () => {
       name: '#',
     },
     {
-      name: 'Title',
+      name: 'Product Name',
     },
     {
-      name: 'Description',
+      name: 'Product Code',
+    },
+    {
+      name: 'Carton Qty',
+    },
+    {
+      name: 'Loose Qty',
     },
     {
       name: 'Qty',
     },
     {
-      name: 'Unit Price',
+      name: 'Carton Price',
     },
     {
-      name: 'Amount',
+      name: 'Price',
     },
     {
-      name: 'Updated By',
+      name: 'Total',
+    },
+    {
+      name: 'Discount',
+    },
+    {
+      name: 'Gross Total',
     },
     {
       name: 'Action',
@@ -187,76 +198,6 @@ const editSettingData = () => {
  
 };
 
-
-const generateCodes = () => {
-  return api
-    .post('/commonApi/getCodeValues', { type: 'invoice' })
-    .then((res) => {
-      console.log('Generated Code:', res.data.data); // Debugging line
-      return res.data.data;
-    })
-    .catch((error) => {
-      message('Failed to generate code', 'error');
-      throw error;
-    });
-};
-
-const generateInvoice = async () => {
-  try {
-    const invoiceCode = await generateCodes(); // Generate the code
-    console.log('Invoice Code:', invoiceCode); // Debugging line
-    const payload = {
-      sales_order_id: id, // Sales order ID from context
-      company_id: settingdetails?.company_id, // Company ID from `settingdetails`
-      invoice_code: invoiceCode, // Generated invoice code
-    };
-    console.log('Payload:', payload); // Debugging line
-
-    const response = await api.post('/salesOrder/generateInvoiceFromSalesOrder', payload);
-    message(response.data.message, 'success');
-    console.log('Generated Invoice ID:', response.data.invoice_id);
-  } catch (error) {
-    message(error.response?.data?.message || 'Failed to generate invoice', 'error');
-  }
-};
-
-
-
-const generateDeliveryCodes = () => {
-  return api
-    .post('/commonApi/getCodeValues', { type: 'delivery' })
-    .then((res) => {
-      console.log('Generated Code:', res.data.data); // Debugging line
-      return res.data.data;
-    })
-    .catch((error) => {
-      message('Failed to generate code', 'error');
-      throw error;
-    });
-};
-
-const generateDelivery = async () => {
-  try {
-    const deliveryCode = await generateDeliveryCodes(); // Generate the code
-    console.log('Delivery Code:', deliveryCode); // Debugging line
-    const payload = {
-      sales_order_id: id, // Sales order ID from context
-      company_id: settingdetails?.company_id, // Company ID from `settingdetails`
-      delivery_code: deliveryCode, // Generated invoice code
-    };
-    console.log('Payload:', payload); // Debugging line
-
-    const response = await api.post('/salesOrder/generateDeliveryFromSalesOrder', payload);
-    message(response.data.message, 'success');
-    console.log('Generated Delivery ID:', response.data.delivery_id);
-  } catch (error) {
-    message(error.response?.data?.message || 'Failed to generate invoice', 'error');
-  }
-};
-
-
-
-
 useEffect(() => {
   getSettingById();
       getLineItem();
@@ -310,36 +251,6 @@ useEffect(() => {
       </Form>
       <ToastContainer></ToastContainer>
      
-     
-      <ComponentCardV2>
-  <Row>
-    <Col>
-      {settingdetails?.status !== 'Closed' && (
-        <Button
-          color="primary"
-          onClick={() => {
-            generateInvoice();
-          }}
-        >
-          Generate Invoice
-        </Button>
-      )}
-    </Col>
-    <Col>
-    {settingdetails?.status !== 'Closed' && (
-
-        <Button
-          color="primary"
-          onClick={() => {
-            generateDelivery();
-          }}
-        >
-          Delivery Order
-        </Button>
-          )}
-    </Col>
-  </Row>
-</ComponentCardV2>
 
       <Form>
         <FormGroup>
@@ -404,9 +315,13 @@ useEffect(() => {
              handleInputs={handleInputs}
              ></SalesMan>
           </TabPane>
-
-            <TabPane tabId="5">
-            <Row>
+         
+        </TabContent>
+      </ComponentCard>
+      <>
+      <ComponentCard title="Products">
+       
+      <Row>
                 <Col md="6">
                 <Button
                   className="shadow-none"
@@ -414,14 +329,13 @@ useEffect(() => {
                   to=""
                   onClick={addQuoteItemsToggle.bind(null)}
                 >
-                  Add Sales Items 
+                  Add Sale Items 
                 </Button>
               </Col>
             </Row>
             <br />
-            <Row>
-              <div className="container">
-                <Table id="example" className="display border border-secondary rounded">
+          
+       <Table id="example" className="display border border-secondary rounded">
                   <thead>
                     <tr>
                       {columns1.map((cell) => {
@@ -435,30 +349,16 @@ useEffect(() => {
                         return (
                           <tr key={e.project_quote_id}>
                             <td>{index + 1}</td>
-                            <td data-label="Title">{e.title}</td>
-                            <td data-label="Description">{e.description}</td>
+                            <td data-label="Product Name">{e.product_name}</td>
+                            <td data-label="Product Code">{e.product_code}</td>
+                            <td data-label="Carton Qty">{e.carton_qty}</td>
+                            <td data-label="Loose Qty">{e.loose_qty}</td>
                             <td data-label="Quantity">{e.quantity}</td>
-                            <td data-label="Unit Price">{e.unit_price}</td>
-                            <td data-label="Amount">{e.amount}</td>
-                            <td data-label="Updated By">
-              <Icon.Eye
-                id={`tooltip-${index}`}
-                onMouseOver={() => toggleTooltip(index)} // Pass index to toggle function
-              />
-              <Tooltip
-                placement="top"
-                isOpen={hoveredRowIndex === index} // Check if current row index matches hoveredRowIndex
-                target={`tooltip-${index}`}
-                toggle={() => toggleTooltip(index)}
-              >
-                <span className="tooltiptext">
-                  {e.modification_date
-                    ? `Modified by ${e.modified_by} on ${e.modification_date}`
-                    : `Created by ${e.created_by} on ${e.creation_date}`}
-                </span>
-              </Tooltip>
-            </td>
-                            
+                            <td data-label="carton Price">{e.carton_price}</td>
+                            <td data-label="Price">{e.wholesale_price}</td>
+                            <td data-label="Total">{e.total}</td>
+                            <td data-label="Discount">{e.discount_value}</td>
+                            <td data-label="Gross Total">{e.gross_total}</td> 
                             <td data-label="Actions">
                               <span
                                 className="addline"
@@ -483,11 +383,7 @@ useEffect(() => {
                       })}
                   </tbody>
                 </Table>
-              </div>
-            </Row>
-            
-
-            {/* End View Line Item Modal */}
+               {/* End View Line Item Modal */}
             <EditLineItemModal
               editLineModal={editLineModal}
               setEditLineModal={setEditLineModal}
@@ -506,10 +402,8 @@ useEffect(() => {
             
               ></QuoteLineItem>
             )}
-          </TabPane>
-         
-        </TabContent>
       </ComponentCard>
+      </>
     </div>
   );
 };

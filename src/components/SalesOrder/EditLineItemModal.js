@@ -1,17 +1,17 @@
-import React, { useState,useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
-  Row,
-  Col,
   Modal,
   ModalHeader,
   ModalBody,
-  FormGroup,
-  Label,
+  ModalFooter,
+  Row,
+  Col,
   Input,
   Button,
-  ModalFooter,
+  Label,
 } from 'reactstrap';
 import PropTypes from 'prop-types';
+import Select from 'react-select';
 import { useParams } from 'react-router-dom';
 import api from '../../constants/api';
 import message from '../Message';
@@ -19,212 +19,223 @@ import creationdatetime from '../../constants/creationdatetime';
 import AppContext from '../../context/AppContext';
 
 
-const EditLineItemModal = ({ editLineModal, setEditLineModal, FetchLineItemData,insertquote }) => {
+const EditLineItemModal = ({ editLineModal, setEditLineModal, FetchLineItemData, insertquote }) => {
   EditLineItemModal.propTypes = {
     editLineModal: PropTypes.bool,
     setEditLineModal: PropTypes.func,
     FetchLineItemData: PropTypes.object,
-    insertquote:PropTypes.bool,
-  
+    insertquote: PropTypes.func,
   };
-const {id}=useParams();
-  const [lineItemData, setLineItemData] = useState(null);
-  const [totalAmount, setTotalAmount] = useState();
+
+  const { id } = useParams();
   const { loggedInuser } = useContext(AppContext);
+  const [lineItemData, setLineItemData] = useState({});
+  const [productOptions, setProductOptions] = useState([]);
 
-  const handleData = (e) => {
-    setLineItemData({ ...lineItemData, [e.target.name]: e.target.value });
-  };
-  const handleCalc = (Qty, UnitPrice, TotalPrice) => {
-    if (!Qty) Qty = 0;
-    if (!UnitPrice) UnitPrice = 0;
-    if (!TotalPrice) TotalPrice = 0;
-
-    setTotalAmount(parseFloat(Qty) * parseFloat(UnitPrice));
-  };
-
-  const UpdateData = () => {
-    lineItemData.quote_id=id;
-    //lineItemData.amount=totalAmount;
-    lineItemData.modification_date = creationdatetime;
-    lineItemData.modified_by = loggedInuser.first_name;
-    lineItemData.amount = parseFloat(lineItemData.quantity) * parseFloat(lineItemData.unit_price) 
-    const hasChanges = JSON.stringify(lineItemData) !== JSON.stringify(FetchLineItemData);
-    api
-      .post('/salesOrder/edit-TabQuoteLine', lineItemData)
-      .then((res) => {
-        console.log('edit Line Item', res.data.data);
-        message('Edit Line Item Updated Successfully.', 'success');
-        window.location.reload();
-        if (hasChanges) {
-          insertquote();
-        }
-       
-      })
-      .catch(() => {
-      });
-  };
-  const [unitdetails, setUnitDetails] = useState();
- //Api call for getting Unit From Valuelist
- const getUnit = () => {
-  api
-    .get('/salesOrder/getUnitFromValueList')
-    .then((res) => {
-      setUnitDetails(res.data.data);
-    })
-    .catch(() => {
-      message('Staff Data Not Found', 'info');
+  useEffect(() => {
+    api.get('/product/getProducts').then((res) => {
+      const items = res.data.data.map((item) => ({
+        value: item.product_id,
+        label: item.product_name,
+        product_code: item.product_code,
+        carton_price: item.carton_price,
+        wholesale_price: item.wholesale_price,
+        pcs_per_carton: item.pcs_per_carton,
+      }));
+      setProductOptions(items);
     });
-};
-  React.useEffect(() => {
-    getUnit();
   }, []);
 
-  React.useEffect(() => {
-    setLineItemData(FetchLineItemData);
+  useEffect(() => {
+    if (FetchLineItemData) setLineItemData(FetchLineItemData);
   }, [FetchLineItemData]);
 
+  
+  const recalculate = (data) => {
+    const cartonQty = parseFloat(data.carton_qty) || 0;
+    const looseQty = parseFloat(data.loose_qty) || 0;
+    const pcsPerCarton = parseFloat(data.pcs_per_carton) || 0;
+    const cartonPrice = parseFloat(data.carton_price) || 0;
+    const wholesalePrice = parseFloat(data.wholesale_price) || 0;
+    const discount = parseFloat(data.discount) || 0;
+
+    const quantity = cartonQty * pcsPerCarton + looseQty;
+    const cartonTotal = cartonQty * cartonPrice;
+    const looseTotal = looseQty * wholesalePrice;
+    const total = cartonTotal + looseTotal;
+    const grossTotal = total - discount;
+
+    setLineItemData((prev) => ({
+      ...prev,
+      quantity,
+      total: total.toFixed(2),
+      gross_total: grossTotal.toFixed(2),
+    }));
+  };
+
+  const handleProductChange = (selected) => {
+    const updated = {
+      ...lineItemData,
+      title: selected.Label,
+      product_id: selected.value,
+      product_name: selected.label,
+      product_code: selected.product_code,
+      carton_price: selected.carton_price,
+      wholesale_price: selected.wholesale_price,
+      pcs_per_carton: selected.pcs_per_carton || 0,
+    };
+    setLineItemData(updated);
+    recalculate(updated);
+  };
+
+  const handleChange = (e) => {
+    const updated = { ...lineItemData, [e.target.name]: e.target.value };
+    setLineItemData(updated);
+    recalculate(updated);
+  };
+
+
+  const UpdateData = () => {
+    const updatedData = {
+      ...lineItemData,
+      quote_id: id,
+      modification_date: creationdatetime,
+      modified_by: loggedInuser.first_name,
+    };
+
+    api
+      .post('/salesOrder/edit-TabQuoteLine', updatedData)
+      .then(() => {
+        message('Edit Line Item Updated Successfully.', 'success');
+        window.location.reload();
+        insertquote();
+      })
+      .catch(() => {
+        message('Update Failed', 'error');
+      });
+  };
+
   return (
-    <>
-      <Modal isOpen={editLineModal}>
-        <ModalHeader>Line Items</ModalHeader>
-        <ModalBody>
-          <FormGroup>
-            <Row>
-              <Label dir="rtl" style={{ textAlign: 'left' }}>
-                Title
-              </Label>
-              <Col sm="10">
-                <Input
-                  type="text"
-                  name="title"
-                  defaultValue={lineItemData && lineItemData.title}
-                  onChange={handleData}
-                />
-              </Col>
-            </Row>
-          </FormGroup>
-          <FormGroup>
-            <Row>
-              <Label dir="rtl" style={{ textAlign: 'left' }}>
-                Description
-              </Label>
-              <Col sm="10">
-                <Input
-                  type="textarea"
-                  name="description"
-                  defaultValue={lineItemData && lineItemData.description}
-                  onChange={handleData}
-                />
-              </Col>
-            </Row>
-          </FormGroup>
-          <FormGroup>
-            <Row>
-              <Label dir="rtl" style={{ textAlign: 'left' }}>
-                Qty
-              </Label>
-              <Col sm="10">
-                <Input
-                  type="text"
-                  name="quantity"
-                  defaultValue={lineItemData && lineItemData.quantity}
-                  onChange={(e)=>{handleData(e);
-                    handleCalc(e.target.value, lineItemData.unit_price,lineItemData.amount
-                      )}}
-                 
-                />
-              </Col>
-            </Row>
-          </FormGroup>
-          <FormGroup>
-            <Row>
-          
-              <Label dir="rtl" style={{ textAlign: 'left' }}>
-                Unit
-              </Label>
-              <Col sm="10">
-                <Input
-                  type="select"
-                  name="unit"
-                  defaultValue={lineItemData && lineItemData.unit}
-                  onChange={handleData}
-                >
-                <option defaultValue="selected">Please Select</option>
-                  {unitdetails &&
-                    unitdetails.map((ele) => {
-                      return (
-                        <option key={ele.value} value={ele.value}>
-                          {ele.value}
-                        </option>
-                      );
-                    })}
-                </Input>
-              </Col>
-            </Row>
-          </FormGroup>
-          <FormGroup>
-            <Row>
-              <Label dir="rtl" style={{ textAlign: 'left' }}>
-                Unit Price
-              </Label>
-              <Col sm="10">
-                <Input
-                  type="text"
-                  name="unit_price"
-                  defaultValue={lineItemData && lineItemData.unit_price}
-                  onChange={(e)=>{handleData(e);
-                    handleCalc(lineItemData.quantity,e.target.value,lineItemData.amount)
-                  }}
-                />
-                 
-              </Col>
-            </Row>
-          </FormGroup>
-          <FormGroup>
-            <Row>
-              <Label dir="rtl" style={{ textAlign: 'left' }}>
-                Amount
-              </Label>
-              <Col sm="10">
-                <Input
-                  type="text"
-                  name="amount"
-                  value={totalAmount || lineItemData && lineItemData.amount}
-                  onChange={(e)=>{handleData(e);
-                    handleCalc(lineItemData.quantity,lineItemData.unit_price,e.target.value)
-                  }}
-                  disabled
-                />
-              </Col>
-            </Row>
-          </FormGroup>
-        </ModalBody>
-        <ModalFooter>
-          <Button
-            color="primary"
-            className="shadow-none"
-            type="button"
-            onClick={() => {
-              UpdateData();
-              setEditLineModal(false);
-            }}
-          >
-            Save & Continue
-          </Button>
-          <Button
-            color="secondary"
-            className="shadow-none"
-            onClick={() => {
-              setEditLineModal(false);
-            }}
-          >
-            {' '}
-            Cancel{' '}
-          </Button>
-        </ModalFooter>
-      </Modal>
-    </>
+    <Modal isOpen={editLineModal} size="lg">
+      <ModalHeader>Edit Sales Item</ModalHeader>
+      <ModalBody>
+        <Row className="mb-3">
+          <Col md="6">
+            <Label>Product</Label>
+            <Select
+              value={
+                lineItemData.product_id
+                  ? {
+                      value: lineItemData.product_id,
+                      label: lineItemData.product_name,
+                    }
+                  : null
+              }
+              options={productOptions}
+              onChange={handleProductChange}
+            />
+          </Col>
+          <Col md="6">
+            <Label>Product Code</Label>
+            <Input
+              type="text"
+              name="product_code"
+              value={lineItemData.product_code || ''}
+              onChange={handleChange}
+            />
+          </Col>
+        </Row>
+
+        <Row className="mb-3">
+          <Col md="4">
+            <Label>Carton Qty</Label>
+            <Input
+              type="number"
+              name="carton_qty"
+              value={lineItemData.carton_qty || ''}
+              onChange={handleChange}
+            />
+          </Col>
+          <Col md="4">
+            <Label>Loose Qty</Label>
+            <Input
+              type="number"
+              name="loose_qty"
+              value={lineItemData.loose_qty || ''}
+              onChange={handleChange}
+            />
+          </Col>
+          <Col md="4">
+            <Label>Total Qty</Label>
+            <Input
+              type="number"
+              name="quantity"
+              value={lineItemData.quantity || ''}
+              disabled
+            />
+          </Col>
+        </Row>
+
+        <Row className="mb-3">
+          <Col md="4">
+            <Label>Carton Price</Label>
+            <Input
+              type="number"
+              name="carton_price"
+              value={lineItemData.carton_price || ''}
+              onChange={handleChange}
+            />
+          </Col>
+          <Col md="4">
+            <Label>Loose Price</Label>
+            <Input
+              type="number"
+              name="wholesale_price"
+              value={lineItemData.wholesale_price || ''}
+              onChange={handleChange}
+            />
+          </Col>
+          <Col md="4">
+            <Label>Total</Label>
+            <Input
+              type="number"
+              name="total"
+              value={lineItemData.total || ''}
+              disabled
+            />
+          </Col>
+        </Row>
+
+        <Row className="mb-3">
+          <Col md="6">
+            <Label>Discount</Label>
+            <Input
+              type="number"
+              name="discount_value"
+              value={lineItemData.discount_value || ''}
+              onChange={handleChange}
+            />
+          </Col>
+          <Col md="6">
+            <Label>Gross Total</Label>
+            <Input
+              type="number"
+              name="gross_total"
+              value={lineItemData.gross_total || ''}
+              disabled
+            />
+          </Col>
+        </Row>
+      </ModalBody>
+      <ModalFooter>
+        <Button color="primary" onClick={UpdateData}>
+          Save & Continue
+        </Button>
+        <Button color="secondary" onClick={() => setEditLineModal(false)}>
+          Cancel
+        </Button>
+      </ModalFooter>
+    </Modal>
   );
 };
 
