@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useContext } from 'react';
 import {
   Row,
   Col,
@@ -6,28 +6,36 @@ import {
   Input,
   Button,
   Modal,
-  ModalHeader,
-  ModalBody,
   ModalFooter,
+  ModalBody,
+  NavItem, NavLink, Nav, TabPane, TabContent
   
 } from 'reactstrap';
 import PropTypes from 'prop-types';
 import random from 'random';
 import Select from 'react-select';
+import message from '../Message';
 import api from '../../constants/api';
+import ComponentCard from '../ComponentCard';
+import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
+import AppContext from '../../context/AppContext';
+import creationdatetime from '../../constants/creationdatetime';
 
-export default function ContactPriceButton ({  addPurchaseOrderModal, setAddPurchaseOrderModal }){
+export default function ContactPriceButton ({  addPurchaseOrderModal, setAddPurchaseOrderModal, ProductId, productDetails }){
   ContactPriceButton.propTypes = {
     addPurchaseOrderModal: PropTypes.bool,
-    
     setAddPurchaseOrderModal: PropTypes.func,
+    ProductId: PropTypes.bool,
+    productDetails: PropTypes.any
   };
 
- 
-  
-  
+  const [activeTab, setActiveTab] = useState('1');
+  const toggle = (tab) => {
+    if (activeTab !== tab) setActiveTab(tab);
+  };
   //const [ItemCode, setItemcode] = useState();
   const [getProductValue, setProductValue] = useState();
+  const [getsupplier, setSupplier] = useState();
   const [addMoreItem, setMoreItem] = useState([
     {
       id: random.int(1, 99).toString(),
@@ -80,6 +88,7 @@ export default function ContactPriceButton ({  addPurchaseOrderModal, setAddPurc
   };
 
   
+  
   //getting maximum of itemcode
   // const getMaxItemcode = () => {
   //   api.get('/product/getMaxItemCode').then((res) => {
@@ -93,14 +102,24 @@ export default function ContactPriceButton ({  addPurchaseOrderModal, setAddPurc
       const items = res.data.data;
       const finaldat = [];
       items.forEach((item) => {
-        finaldat.push({ value: item.product_id, label: item.title });
+        finaldat.push({ value: item.contact_id, label: item.contact_id });
       });
       setProductValue(finaldat);
     });
   };
 
-  // Materials Purchased
+  // Get supplier
 
+ const getSupplier = () => {
+    api.get('/contact/getContact').then((res) => {
+      const items = res.data.data;
+      const finalsubdat = []; 
+      items.forEach((item) => {
+        finalsubdat.push({ value: item.contact_id, label: item.contact_id });
+      });
+      setSupplier(finalsubdat);
+    });
+  };
 
   
 
@@ -122,7 +141,129 @@ export default function ContactPriceButton ({  addPurchaseOrderModal, setAddPurc
     copyDeliverOrderProducts[index] = updatedObject;
     setMoreItem(copyDeliverOrderProducts);
   }
+  const ProductLineItemById = () => {
+    api
+      .post('/product/getCSProductByProductId', { product_id: ProductId })
+      .then((res) => {
+        const existingItems = res.data.data.map((item) => ({
+          ...item,
+          newItem: false, // mark existing records
+        }));
+        setMoreItem(existingItems);
+      })
+      .catch(() => {
+        message('Order Data Not Found', 'info');
+      });
+  };
 
+//Api call for Insert Vehicle Insurance Data
+const EditCSProductLineItems = () => {
+  
+  addMoreItem.forEach((item) => {
+  api
+    .post('/product/EditCSProductLineItems', item)
+    .then(() => {
+      message('Line Item Edited Successfully', 'sucess');
+    })
+    .catch(() => {
+      message('Cannot Edit Line Items', 'error');
+    });
+  }) 
+};
+
+const [purchaserequesteditdetails, setPurchaseRequestEditDetails] = useState();
+    // get staff details
+   const { loggedInuser } = useContext(AppContext);
+
+  
+    function updateSupplierState(index, property, e) {
+    const copyDeliverOrderProducts = [...purchaserequesteditdetails];
+    const updatedObject = { ...copyDeliverOrderProducts[index], [property]: e.target.value };
+    
+//   const quantity = parseFloat(updatedObject.goods_received_qty) || 0;
+//   const unitPrice = parseFloat(updatedObject.unit_price) || 0;
+  // const totalCost = parseFloat(updatedObject.total_cost);
+//   updatedObject.total_cost = quantity * unitPrice;
+  updatedObject.modification_date = creationdatetime;
+  updatedObject.modified_by = loggedInuser.first_name;
+  copyDeliverOrderProducts[index] = updatedObject;
+    setPurchaseRequestEditDetails(copyDeliverOrderProducts);
+  }
+
+  
+
+  //Api call for getting Vehicle Insurance Data By ID
+  const PurchaseRequestLineItemById = () => {
+      api
+        .post('/product/getCSSupplierProductByProductId', {product_id: ProductId})
+        .then((res) => {
+          setPurchaseRequestEditDetails(res.data.data);
+        })
+        .catch(() => {
+          message('Order Data Not Found', 'info');
+        });
+    };
+
+  //Api call for Insert Vehicle Insurance Data
+  const editPurchaseRequestItems = () => {
+    
+    purchaserequesteditdetails.forEach((item) => {
+    api
+      .post('/product/EditCSProductLineItemsBYSupplierID', item)
+      .then(() => {
+        message('Line Item Edited Successfully', 'sucess');
+      })
+      .catch(() => {
+        message('Cannot Edit Line Items', 'error');
+      });
+    }) 
+  };
+
+  // const AddNewCustomerLineItem = () => {
+  //   setPurchaseRequestEditDetails([
+  //     ...purchaserequesteditdetails,
+  //     {
+  //       id: random.int(0, 9999).toString(),
+  //       itemId: '',
+  //       unit: '',
+  //       qty: '',
+  //       price: '',
+  //       mrp: '',
+  //       gst: 0,
+  //       description: '',
+  //     },
+  //   ]);
+  // };
+
+   const AddNewCustomerLineItem = () => {
+
+        api
+          .post('/content/insertContent', purchaserequesteditdetails)
+          .then(() => {
+            setPurchaseRequestEditDetails([
+              ...purchaserequesteditdetails,
+              {
+                id: random.int(0, 9999).toString(),
+                itemId: '',
+                unit: '',
+                qty: '',
+                price: '',
+                mrp: '',
+                gst: 0,
+                description: '',
+              },
+            ]);
+          })
+          .catch(() => {
+            message('Network connection error.', 'error');
+          });
+      };
+  
+
+  // useEffect for Vehicle Insurance
+  useEffect(() => {
+    PurchaseRequestLineItemById();
+  }, [ProductId]);
 
 
   //Insert Product Data
@@ -131,6 +272,8 @@ export default function ContactPriceButton ({  addPurchaseOrderModal, setAddPurc
 
   useEffect(() => {
     getCustomer();
+    getSupplier();
+    ProductLineItemById();
     //getMaxItemcode();
   }, []);
   useEffect(() => {
@@ -186,9 +329,59 @@ export default function ContactPriceButton ({  addPurchaseOrderModal, setAddPurc
   return (
     <>
       <Modal size="xl" isOpen={addPurchaseOrderModal}>
-        <ModalHeader>Add Product</ModalHeader>
+           
+            <ComponentCard>
+                  <Nav tabs>
+                    <NavItem>
+                      <NavLink
+                        className={activeTab === '1' ? 'active' : ''}
+                        onClick={() => {
+                          toggle('1');
+                        }}
+                      >
+                        Customer
+                      </NavLink>
+                    </NavItem>
+                   <NavItem>
+                      <NavLink
+                        className={activeTab === '2' ? 'active' : ''}
+                        onClick={() => {
+                          toggle('2');
+                        }}
+                      >
+                       Supplier
+                      </NavLink>
+                    </NavItem>
+                     {/* <NavItem>
+                      <NavLink
+                        className={activeTab === '3' ? 'active' : ''}
+                        onClick={() => {
+                          toggle('3');
+                        }}
+                      >
+                        Product Size
+                      </NavLink>
+                    </NavItem> */}
+                    <NavItem>
+                      <NavLink
+                        className={activeTab === '3' ? 'active' : ''}
+                        onClick={() => {
+                          toggle('3');
+                        }}
+                      >
+                        Product Group
+                      </NavLink>
+                    </NavItem>
+                  </Nav>
+              
+                  <TabContent activeTab={activeTab}>
+              
+                {/* Delivery address Form */}
+                <TabPane tabId="1">
 
-        <ModalBody>
+                  <BreadCrumbs heading={productDetails && productDetails.title} />
+               
+               
           <FormGroup>
             <Row>
               <Col md="12" className="mb-4">
@@ -310,7 +503,7 @@ export default function ContactPriceButton ({  addPurchaseOrderModal, setAddPurc
               </tbody>
             </table>
           </FormGroup>
-        </ModalBody>
+      
         <ModalFooter>
           <Button
             color="primary"
@@ -320,6 +513,7 @@ export default function ContactPriceButton ({  addPurchaseOrderModal, setAddPurc
               // insertlineItem(res.data.data.insertId);
             
                getCustomer();
+               EditCSProductLineItems();
                
              
     
@@ -337,7 +531,185 @@ export default function ContactPriceButton ({  addPurchaseOrderModal, setAddPurc
             Cancel
           </Button>
         </ModalFooter>
+        
+                      
+                </TabPane>
+        
+                <TabPane tabId="2">
+
+                <ModalBody>
+          
+          <FormGroup>
+            <Row>
+              <Col md="12" className="mb-4">
+                <Row>
+                  <Col md="2">
+                    <Button
+                      color="primary"
+                      className="shadow-none"
+                      onClick={() => {
+                        AddNewCustomerLineItem();
+                      }}
+                    >
+                      Add Item
+                    </Button>
+                  </Col>
+                  
+                </Row>
+                <br />
+                {/* <Row>
+                  <FormGroup className="mt-3">
+                    {' '}
+                    Total Amount : {getTotalOfPurchase() || 0}{' '}
+                  </FormGroup>
+                </Row> */}
+              </Col>
+            </Row>
+
+           
+            <table className="lineitem">
+              <thead>
+                <tr>
+                  <th scope="col">Code <span className="required"> *</span></th>
+                  <th scope="col">Name</th>
+                  <th scope="col">WholeSale Price</th>
+                  <th scope="col">Carton Price</th>
+                  <th scope="col">Fixed Price</th>
+                  <th scope="col">Action</th>
+                </tr>
+              </thead>
+              <tbody> 
+                {purchaserequesteditdetails &&
+                  purchaserequesteditdetails.map((item, index)  => {
+                    return (
+                      <tr key={item.id}>  
+                       <td data-label="Title">
+                      <Select
+                          key={item.contact_id}
+                          defaultValue={{ value: item.contact_id, label: item.contact_id }}
+                          onChange={(e) => {
+                            onchangeItem(e, item.contact_id);
+                          }}
+                          options={getsupplier}
+                        />
+                        <Input
+                          value={item.contact_id}
+                          type="hidden"
+                          name="contact_id"
+                          onChange={(e) => updateState(index, 'contact_id', e)}
+                        ></Input>  
+                        </td>                 
+                        <td data-label="Title">
+                          <Input
+                            defaultValue={item.contact_id}
+                            type="text"
+                            name="contact_id"
+                            onChange={(e) => updateSupplierState(index, 'contact_id', e)}
+                            
+                          />
+                        </td>
+                        <td data-label="Unit">
+                          <Input
+                            defaultValue={item.name}
+                            type="text"
+                            name="name"
+                            onChange={(e) => updateSupplierState(index, 'name', e)}
+                           
+                          />
+                        </td>
+                        <td data-label="wholesale_price">
+                          <Input
+                            defaultValue={item.wholesale_price}
+                            type="number"
+                            name="wholesale_price"
+                            onChange={(e) => updateSupplierState(index, 'wholesale_price', e)}
+                          />
+                        </td> 
+                        <td data-label="carton_price">
+                          <Input
+                            defaultValue={item.carton_price}
+                            type="number"
+                            name="carton_price"
+                            onChange={(e) => updateSupplierState(index, 'carton_price', e)}
+                          />
+                        </td>
+                        <td data-label="carton_price">
+                          <Input
+                            defaultValue={item.fixed_price}
+                            type="number"
+                            name="fixed_price"
+                            onChange={(e) => updateSupplierState(index, 'fixed_price', e)}
+                          />
+                        </td>  
+                        <td data-label="carton_price">
+                          <Input
+                            defaultValue={item.fixed_price}
+                            type="number"
+                            name="fixed_price"
+                            onChange={(e) => updateSupplierState(index, 'fixed_price', e)}
+                          />
+                        </td>                  
+                      </tr>
+                    );
+                  })}
+              </tbody>
+              </table>
+            
+          </FormGroup>
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            color="primary"
+            type="button"
+            onClick={() => {
+              editPurchaseRequestItems();
+              
+              // setTimeout(() => {
+              //   window.location.reload()
+              // }, 100);
+            }}
+          >
+            Submit
+          </Button>
+          <Button
+            color="secondary"
+            onClick={() => {
+              setMoreItem(false);
+            }}
+          >
+            ancel
+          </Button>
+        </ModalFooter>
+                
+                
+                </TabPane>
+        
+                {/* Customer Details Form */}
+                {/* <TabPane tabId="2">
+                  <ComponentCard title="Product Color">
+                  <ProductColor
+                   projectId={id}
+                  ></ProductColor>
+                  </ComponentCard>
+                </TabPane>
+                <TabPane tabId="3">
+                  <ComponentCard title="Product Size">
+                  <ProductSize
+                    projectId={id}
+                  ></ProductSize>
+                  </ComponentCard>
+                </TabPane> */}
+                <TabPane tabId="3">
+               
+
+                 
+                </TabPane>
+                </TabContent>
+                </ComponentCard>
+        
       </Modal>
+      
+
 
      
     </>

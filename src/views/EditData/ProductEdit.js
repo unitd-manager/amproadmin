@@ -264,9 +264,10 @@ const getSupplier = () => {
                   </Col>
               </ComponentCard>
               <ContactPriceButton
-                projectId={id}
+                ProductId={id}
                 addPurchaseOrderModal={modal}
                 setAddPurchaseOrderModal={setModal}
+                productDetails={productDetails}
               ></ContactPriceButton>
         </TabPane>
 
