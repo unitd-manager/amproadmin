@@ -4,19 +4,22 @@ import pdfFonts from 'pdfmake/build/vfs_fonts';
 import { Button } from 'reactstrap';
 import PropTypes from 'prop-types';
 import moment from 'moment';
+import { AlignCenter } from 'react-feather';
 import api from '../../constants/api';
 import message from '../Message';
-import PdfFooter from './PdfFooter'; // Assuming you have a footer component
-import PdfHeader from './PdfHeader'; // Assuming you have a header component
+import PdfFooter from './PdfFooter';
+import PdfHeader from './PdfHeader';
+
 
 const PrintPerfoma = ({ id }) => {
-    PrintPerfoma.propTypes = {
+  PrintPerfoma.propTypes = {
     id: PropTypes.any,
   };
 
   const [salesOrder, setSalesOrder] = useState({});
   const [lineItems, setLineItems] = useState();
   const [hfdata, setHeaderFooterData] = useState();
+  const [gTotal, setGtotal] = useState(0);
 
   useEffect(() => {
     api.get('/setting/getSettingsForCompany').then((res) => {
@@ -43,6 +46,11 @@ const PrintPerfoma = ({ id }) => {
       .post('/salesOrder/getQuoteLineItemsById', { sales_order_id: id })
       .then((res) => {
         setLineItems(res.data.data);
+        let grandTotal = 0;
+        res.data.data.forEach((elem) => {
+          grandTotal += elem.total;
+        });
+        setGtotal(grandTotal);
       })
       .catch(() => {
         message('Sales Order Line Items Not Found', 'info');
@@ -67,67 +75,128 @@ const PrintPerfoma = ({ id }) => {
       ],
     ];
 
-    lineItems.forEach((item, index) => {
+    lineItems?.forEach((item, index) => {
       productItems.push([
         { text: `${index + 1}`, style: 'tableBody' },
         { text: `${item.product_code || ''}`, style: 'tableBody' },
-        { text: `${item.title || ''}`, style: 'tableBody' },
-        { text: `${item.carton_qty || ''}`, style: 'tableBody' },
-        { text: `${item.unit_price || ''}`, style: 'tableBody' },
-        { text: `${item.cost || ''}`, style: 'tableBody' },
+        { text: `${item.product_name || ''}`, style: 'tableBody' },
+        { text: `${item.quantity || ''}`, style: 'tableBody' },
+        { text: `${item.wholesale_price || ''}`, style: 'tableBody' },
+        { text: `${item.total || ''}`, style: 'tableBody' },
       ]);
     });
 
+    const gst = gTotal * 0.07;
+    const totalWithGst = gTotal + gst;
+
     const dd = {
       pageSize: 'A4',
-      pageMargins: [40, 150, 40, 80], // Adjust margins as needed
-      header: PdfHeader({ findCompany }), // Assuming your header needs company info
-      footer: PdfFooter, // Assuming you have a standard footer
+      pageMargins: [40, 150, 40, 80],
+      header: PdfHeader({ findCompany }),
+      footer: PdfFooter,
       content: [
         {
-          text: findCompany('company_name') || 'AMPRO PTE LTD', // Fallback if not found
+          text: findCompany('company_name') || 'AMPRO PTE LTD',
           style: 'header',
           alignment: 'center',
           margin: [0, 0, 0, 10],
         },
-        
         {
-            columns: [
-              {
-                width: '50%',
-                stack: [
-                  { text: 'Bill To:', bold: true },
-                  { text: salesOrder.customer_address || '', margin: [0, 2, 0, 10] },
-                ],
-              },
-              {
-                width: '50%',
-                table: {
-                  widths: ['30%', '5%', '65%'],
-                  body: [
-                    ['Sales Order No', ':', salesOrder.sales_order_id || ''],
-                    ['Date', ':', salesOrder.tran_date ? moment(salesOrder.tran_date).format('DD-MM-YYYY') : ''],
-                    ['Terms', ':', salesOrder.terms || ''],
-                    ['Order No', ':', '1 of 1'],
-                    ['GST Reg No', ':', salesOrder.agent_name || ''],
-                  ],
+          columns: [
+            {
+              width: '60%',
+              stack: [
+                { text: 'Bill To:', bold: true },
+                { text: '', margin: [8, 0, 0, 0] },
+                { text: salesOrder.company_name || '', bold: true, margin: [8, 0, 0, 0] },
+                { text: salesOrder.address_street || '', margin: [8, 0, 0, 0] },
+                { text: salesOrder.address_down || '', margin: [8, 0, 0, 0] },
+                { text: salesOrder.address_country || '', margin: [8, 0, 0, 0] },
+                { text: salesOrder.address_po_code || '', margin: [8, 0, 0, 0] },
+                { text: '', margin: [8, 0, 0, 0] },
+                { text: 'TEL: 6789098765', margin: [8, 5, 0, 0] },
+              ],
+            },
+            {
+              width: '40%',
+              stack: [
+                { text: 'Sales Order', style: 'subheader', margin: [0, 0, 0, 5] }, // heading
+                {
+                  table: {
+                    widths: ['30%', '5%', '65%'],
+                    body: [
+                      ['Sales Order No', ':', salesOrder.tran_no || ''],
+                      ['Date', ':', salesOrder.tran_date ? moment(salesOrder.tran_date).format('DD-MM-YYYY') : ''],
+                      ['Terms', ':', salesOrder.terms || ''],
+                      ['Order No', ':', '1 of 1'],
+                      ['GST Reg No', ':', salesOrder.agent_name || ''],
+                    ],
+                  },
+                  layout: 'noBorders',
+                  style: 'textSize',
                 },
-                layout: 'noBorders',
-                style: 'textSize',
-              },
-            ],
-            columnGap: 10,
-            margin: [0, 0, 0, 15],
-          },
-          
+              ],
+            },
+          ],
+          columnGap: 10,
+          margin: [0, 0, 0, 15],
+        },
         {
           layout: 'lightHorizontalLines',
           table: {
             headerRows: 1,
-            widths: ['auto', '*', 'auto', 'auto', 'auto', 'auto'], // Adjust column widths
+            widths: ['auto', '*', 'auto', 'auto', 'auto', 'auto'],
             body: productItems,
           },
         },
+        {
+          table: {
+            widths: ['*', 'auto'],
+            body: [
+              [
+                { text: 'Subtotal', alignment: 'right', bold: true, fontSize: 10 },
+                { text: gTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right' },
+              ],
+              [
+                { text: 'GST (7%)', alignment: 'right', bold: true, fontSize: 10 },
+                { text: gst.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right' },
+              ],
+              [
+                { text: 'Total', alignment: 'right', bold: true, fontSize: 10 },
+                { text: totalWithGst.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right' },
+              ],
+            ],
+          },
+          layout: 'noBorders',
+          margin: [0, 10, 0, 0],
+        },
+       
+        {
+          margin: [0, 80, 0, 0], // space from totals
+          columns: [
+            {
+              width: '70%',
+              stack: [
+                { text: 'Received By:', bold: true, margin: [0, 0, 0, 10] },
+                { text: '___________________________', margin: [0, 0, 0, 10] },
+                { text: 'Company Stamp and Signature', italics: true },
+              ],
+              style: 'textSize',
+            },
+            {
+              width: '30%',
+              alignment: 'left',
+              stack: [
+                { text: 'AMPRO PTE LTD', bold: true, AlignCenter },
+                { text: '___________________________', margin: [0, 0, 0, 10] },
+                { text: '(Authorised Signature)', italics: true },
+                { text: 'Name:', margin: [0, 10, 0, 0] },
+              ],
+              style: 'textSize',
+            },
+          ],
+        }
+        
       ],
       styles: {
         header: {
