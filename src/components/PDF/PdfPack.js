@@ -3,19 +3,19 @@ import pdfMake from 'pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 import { Button } from 'reactstrap';
 import PropTypes from 'prop-types';
-import moment from 'moment';
 import api from '../../constants/api';
 import message from '../Message';
 import PdfFooter from './PdfFooter'; // Assuming you have a footer component
 import PdfHeader from './PdfHeader'; // Assuming you have a header component
+import moment from 'moment';
 
-const PrintPerfoma = ({ id }) => {
-    PrintPerfoma.propTypes = {
+const PdfInvoiceSummary = ({ id }) => {
+  PdfInvoiceSummary.propTypes = {
     id: PropTypes.any,
   };
 
   const [salesOrder, setSalesOrder] = useState({});
-  const [lineItems, setLineItems] = useState();
+  const [lineItems, setLineItems] = useState([]);
   const [hfdata, setHeaderFooterData] = useState();
 
   useEffect(() => {
@@ -31,7 +31,7 @@ const PrintPerfoma = ({ id }) => {
 
   const fetchSalesOrderData = () => {
     api
-      .post('/salesorder/getSalesorderById', { sales_order_id: id })
+      .post('/salesorder/getSalesOrderById', { sales_order_id: id })
       .then((res) => {
         setSalesOrder(res.data.data[0] || {});
       })
@@ -40,9 +40,9 @@ const PrintPerfoma = ({ id }) => {
       });
 
     api
-      .post('/salesOrder/getQuoteLineItemsById', { sales_order_id: id })
+      .post('/salesorder/getSalesOrderLineItems', { sales_order_id: id })
       .then((res) => {
-        setLineItems(res.data.data);
+        setLineItems(res.data.data || []);
       })
       .catch(() => {
         message('Sales Order Line Items Not Found', 'info');
@@ -58,23 +58,23 @@ const PrintPerfoma = ({ id }) => {
   const GetPdf = () => {
     const productItems = [
       [
-        { text: 'No', style: 'tableHead' },
-        { text: 'Product Code', style: 'tableHead' },
-        { text: 'Description', style: 'tableHead' },
-        { text: 'QTY', style: 'tableHead' },
-        { text: 'Unit Price', style: 'tableHead' },
-        { text: 'Amount', style: 'tableHead' },
+        { text: 'S.No', style: 'tableHead' },
+        { text: 'Product Name', style: 'tableHead' },
+        { text: 'Uom', style: 'tableHead' },
+        { text: 'LQty', style: 'tableHead' },
+        { text: 'FocQty', style: 'tableHead' },
+        { text: 'CQty', style: 'tableHead' },
       ],
     ];
 
     lineItems.forEach((item, index) => {
       productItems.push([
         { text: `${index + 1}`, style: 'tableBody' },
-        { text: `${item.product_code || ''}`, style: 'tableBody' },
         { text: `${item.title || ''}`, style: 'tableBody' },
-        { text: `${item.carton_qty || ''}`, style: 'tableBody' },
-        { text: `${item.unit_price || ''}`, style: 'tableBody' },
-        { text: `${item.cost || ''}`, style: 'tableBody' },
+        { text: `${item.uom || ''}`, style: 'tableBody' },
+        { text: `${item.l_qty || ''}`, style: 'tableBody' },
+        { text: `${item.foc_qty || ''}`, style: 'tableBody' },
+        { text: `${item.quantity || ''}`, style: 'tableBody' },
       ]);
     });
 
@@ -85,41 +85,38 @@ const PrintPerfoma = ({ id }) => {
       footer: PdfFooter, // Assuming you have a standard footer
       content: [
         {
-          text: findCompany('company_name') || 'AMPRO PTE LTD', // Fallback if not found
+          text: findCompany('company_name') || 'Ampro PTE LTD', // Fallback if not found
           style: 'header',
           alignment: 'center',
-          margin: [0, 0, 0, 10],
         },
-        
         {
-            columns: [
-              {
-                width: '50%',
-                stack: [
-                  { text: 'Bill To:', bold: true },
-                  { text: salesOrder.customer_address || '', margin: [0, 2, 0, 10] },
-                ],
-              },
-              {
-                width: '50%',
-                table: {
-                  widths: ['30%', '5%', '65%'],
-                  body: [
-                    ['Sales Order No', ':', salesOrder.sales_order_id || ''],
-                    ['Date', ':', salesOrder.tran_date ? moment(salesOrder.tran_date).format('DD-MM-YYYY') : ''],
-                    ['Terms', ':', salesOrder.terms || ''],
-                    ['Order No', ':', '1 of 1'],
-                    ['GST Reg No', ':', salesOrder.agent_name || ''],
-                  ],
-                },
-                layout: 'noBorders',
-                style: 'textSize',
-              },
-            ],
-            columnGap: 10,
-            margin: [0, 0, 0, 15],
-          },
-          
+          columns: [
+            {
+              text: `Date: ${moment().format('DD-MM-YYYY')}`,
+              style: 'textSize',
+            },
+            {
+              text: `Sales Order Code: ${salesOrder.tran_no || ''}`,
+              style: 'textSize',
+              alignment: 'right',
+            },
+          ],
+          margin: [0, 0, 0, 5],
+        },
+        {
+          columns: [
+            {
+              text: `Customer Code: ${salesOrder.customer_code || ''}`,
+              style: 'textSize',
+            },
+            {
+              text: `Customer Name: ${salesOrder.customer_name || ''}`,
+              style: 'textSize',
+              alignment: 'right',
+            },
+          ],
+          margin: [0, 0, 0, 15],
+        },
         {
           layout: 'lightHorizontalLines',
           table: {
@@ -128,14 +125,26 @@ const PrintPerfoma = ({ id }) => {
             body: productItems,
           },
         },
+        {
+          columns: [
+            {
+              text: `Total for Invoice No: ${salesOrder.invoice_code || salesOrder.sales_order_code || ''}`, // Assuming invoice_code or using sales_order_code as fallback
+              style: 'boldText',
+              alignment: 'right',
+              margin: [0, 10, 10, 0],
+            },
+            {
+              text: `Total: ${salesOrder.total_amount || ''}`, // Adjust field name for total amount
+              style: 'boldText',
+              alignment: 'right',
+              margin: [10, 10, 0, 0],
+            },
+          ],
+        },
       ],
       styles: {
         header: {
           fontSize: 18,
-          bold: true,
-        },
-        subheader: {
-          fontSize: 14,
           bold: true,
         },
         tableHead: {
@@ -149,6 +158,10 @@ const PrintPerfoma = ({ id }) => {
         textSize: {
           fontSize: 10,
         },
+        boldText: {
+          fontSize: 10,
+          bold: true,
+        },
       },
     };
 
@@ -159,10 +172,10 @@ const PrintPerfoma = ({ id }) => {
   return (
     <>
       <Button type="button" className="btn btn-dark mr-2" onClick={GetPdf}>
-        Print Picking List
+        Print Invoice Summary
       </Button>
     </>
   );
 };
 
-export default PrintPerfoma;
+export default PdfInvoiceSummary;

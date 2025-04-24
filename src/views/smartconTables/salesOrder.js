@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import * as Icon from 'react-feather';
-import { Button } from 'reactstrap';
+import { Button, Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'datatables.net-dt/js/dataTables.dataTables';
 import 'datatables.net-dt/css/jquery.dataTables.min.css';
@@ -10,35 +10,41 @@ import 'datatables.net-buttons/js/buttons.flash';
 import 'datatables.net-buttons/js/buttons.html5';
 import 'datatables.net-buttons/js/buttons.print';
 import { Link } from 'react-router-dom';
+import message from '../../components/Message';
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
 
 const Test = () => {
-  //All state variable
   const [supplier, setSupplier] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
-  //getting data from supplier
+  const [loading, setLoading] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const toggleDropdown = () => setDropdownOpen((prevState) => !prevState);
+
   const getSupplier = () => {
     setLoading(true);
     api
       .get('/salesorder/getsalesorder')
       .then((res) => {
         setSupplier(res.data.data);
-        $('#example').DataTable({
-          pagingType: 'full_numbers',
-          pageLength: 20,
-          processing: true,
-          dom: 'Bfrtip',
-          buttons: [
-            {
-              extend: 'print',
-              text: 'Print',
-              className: 'shadow-none btn btn-primary',
-            },
-          ],
-        });
+        setTimeout(() => {
+          $('#example').DataTable({
+            destroy: true, // destroy if already initialized
+            pagingType: 'full_numbers',
+            pageLength: 20,
+            processing: true,
+            dom: 'Bfrtip',
+            buttons: [
+              {
+                extend: 'print',
+                text: 'Print',
+                className: 'shadow-none btn btn-primary',
+              },
+            ],
+          });
+        }, 500);
         setLoading(false);
       })
       .catch(() => {
@@ -49,8 +55,15 @@ const Test = () => {
   useEffect(() => {
     getSupplier();
   }, []);
-  //structure of supplier list view
+
   const columns = [
+    {
+      name: '',
+      selector: 'checkbox',
+      cell: () => <input type="checkbox" />,
+      grow: 0,
+      width: '3%',
+    },
     {
       name: '#',
       selector: 'sales_order_id',
@@ -69,7 +82,7 @@ const Test = () => {
     },
     {
       name: 'Tran NO',
-      selector: 'traan_no',
+      selector: 'tran_no',
       sortable: true,
       grow: 0,
       wrap: true,
@@ -90,98 +103,217 @@ const Test = () => {
     },
     {
       name: 'Status',
-      
+      selector: 'status',
       sortable: true,
       grow: 0,
       wrap: true,
     },
     {
       name: 'Printed',
-      
+      selector: 'printed',
       sortable: true,
       grow: 0,
       wrap: true,
     },
     {
       name: 'Sub Total',
-      
+      selector: 'sub_total',
       sortable: true,
       grow: 0,
       wrap: true,
     },
     {
       name: 'Tax',
-      
+      selector: 'tax',
       sortable: true,
       grow: 0,
       wrap: true,
     },
-
     {
       name: 'Net Total',
-      
+      selector: 'net_total',
       sortable: true,
       grow: 0,
       wrap: true,
     },
-
     {
       name: 'Created By',
-      selector: 'company_name',
+      selector: 'created_by',
       sortable: true,
       grow: 0,
       wrap: true,
     },
-   
   ];
 
+
+  const generateCodes = () => {
+    return api
+      .post('/commonApi/getCodeValues', { type: 'invoice' })
+      .then((res) => {
+        console.log('Generated Code:', res.data.data); // Debugging line
+        return res.data.data;
+      })
+      .catch((error) => {
+        message('Failed to generate code', 'error');
+        throw error;
+      });
+  };
+  
+  const generateInvoice = async () => {
+    if (!selectedOrder) {
+      message('Please select a sales order first', 'error');
+      return;
+    }
+    try {
+      const invoiceCode = await generateCodes();
+      const payload = {
+        sales_order_id: selectedOrder.sales_order_id,
+        company_id: selectedOrder.company_id,
+        invoice_code: invoiceCode,
+      };
+      const response = await api.post('/salesOrder/generateInvoiceFromSalesOrder', payload);
+      message(response.data.message, 'success');
+      console.log('Generated Invoice ID:', response.data.invoice_id);
+    } catch (error) {
+      message(error.response?.data?.message || 'Failed to generate invoice', 'error');
+    }
+  };
+  
+  const generateDeliveryCodes = async () => {
+    try {
+      const res = await api
+        .post('/commonApi/getCodeValues', { type: 'delivery' });
+      console.log('Generated Code:', res.data.data); // Debugging line
+      return res.data.data;
+    } catch (error) {
+      message('Failed to generate code', 'error');
+      throw error;
+    }
+  };
+  
+  const generateDelivery = async () => {
+    if (!selectedOrder) {
+      message('Please select a sales order first', 'error');
+      return;
+    }
+    try {
+      const deliveryCode = await generateDeliveryCodes(); // Generate the code
+      console.log('Delivery Code:', deliveryCode); // Debugging line
+      const payload = {
+        sales_order_id: selectedOrder.sales_order_id,
+        company_id: selectedOrder.company_id,
+        delivery_code: deliveryCode, // Generated invoice code
+      };
+      console.log('Payload:', payload); // Debugging line
+  
+      const response = await api.post('/salesOrder/generateDeliveryFromSalesOrder', payload);
+      message(response.data.message, 'success');
+      console.log('Generated Delivery ID:', response.data.delivery_id);
+    } catch (error) {
+      message(error.response?.data?.message || 'Failed to generate invoice', 'error');
+    }
+  };
+
+
+  const repeatSalesOrder = async () => {
+    if (!selectedOrder) {
+      message('Please select a sales order first', 'error');
+      return;
+    }
+  
+    try {
+      // Generate new sales order code
+      const newSalesOrderCode = await api
+        .post('/commonApi/getCodeValues', { type: 'salesorder' })
+        .then((res) => res.data.data);
+  
+      const todayDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+  
+      const payload = {
+        ...selectedOrder,
+        original_sales_order_id: selectedOrder.sales_order_id,
+        tran_no: newSalesOrderCode,      // Insert new code
+        tran_date: todayDate,            // Insert today date
+      };
+  
+      // Remove fields that shouldn't be duplicated
+      delete payload.sales_order_id;
+      delete payload.created_by;
+  
+      const response = await api.post('/salesOrder/insertSalesOrder', payload);
+      message(response.data.message || 'Sales order repeated successfully', 'success');
+      getSupplier(); // Refresh list
+    } catch (error) {
+      message(error.response?.data?.message || 'Failed to repeat sales order', 'error');
+    }
+  };
+  
   return (
     <div className="MainDiv">
-      <div className=" pt-xs-25">
+      <div className="pt-xs-25">
         <BreadCrumbs />
-
         <CommonTable
           loading={loading}
           title="Sales Order List"
           Button={
-            <Link to="/SalesOrderDetails">
-              <Button color="primary" className="shadow-none">
-                Add New
-              </Button>
-            </Link>
+            <Dropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
+            
+              <DropdownToggle color="primary" caret className="shadow-none">
+              <Button color="primary" tag={Link} to="/SalesOrderDetails" className="shadow-none">
+      New Transaction
+    </Button>
+              </DropdownToggle>
+              <DropdownMenu>
+                <DropdownItem onClick={() => { generateInvoice();}}>Convert To Sales Invoice</DropdownItem>
+                <DropdownItem onClick={() => { generateDelivery();}}>Convert To Delivery Order</DropdownItem>
+                <DropdownItem onClick={repeatSalesOrder}>Repeat Sales Order</DropdownItem>
+                <DropdownItem>Print Pick List</DropdownItem>
+                <DropdownItem>Print Packing</DropdownItem>
+                <DropdownItem>Print Quotation</DropdownItem>
+                <DropdownItem>Tracking Images</DropdownItem>
+                <DropdownItem>Print With Cost</DropdownItem>
+                <DropdownItem>Updated Weight Info</DropdownItem>
+                <DropdownItem>Print Performa</DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
           }
         >
           <thead>
             <tr>
-              {columns.map((cell) => {
-                return <td key={cell.name}>{cell.name}</td>;
-              })}
+              {columns.map((col) => (
+                <td key={col.name}>{col.name}</td>
+              ))}
             </tr>
           </thead>
           <tbody>
             {supplier &&
-              supplier.map((element, index) => {
-                return (
-                  <tr key={element.sales_order_id}>
-                    <td>{index + 1}</td>
-                    <td>
-                      <Link to={`/salesorderEdit/${element.sales_order_id}`}>
-                        <Icon.Edit2 />
-                      </Link>
-                    </td>
-                    <td>{element.tran_no}</td>
-                    <td>{element.tran_date}</td>
-                    <td>{element.company_name}</td>
-                    <td>{element.status}</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+              supplier.map((element, index) => (
+                <tr key={element.sales_order_id}>
+                  <td>
+  <input
+    type="checkbox"
+    checked={selectedOrder?.sales_order_id === element.sales_order_id}
+    onChange={() => setSelectedOrder(element)}
+  />
+</td>
 
-                  </tr>
-                );
-              })}
+                  <td>{index + 1}</td>
+                  <td>
+                    <Link to={`/salesorderEdit/${element.sales_order_id}`}>
+                      <Icon.Edit2 />
+                    </Link>
+                  </td>
+                  <td>{element.tran_no}</td>
+                  <td>{element.tran_date}</td>
+                  <td>{element.company_name}</td>
+                  <td>{element.status}</td>
+                  <td>{element.printed || 'No'}</td>
+                  <td>{element.sub_total || ''}</td>
+                  <td>{element.tax || ''}</td>
+                  <td>{element.net_total || ''}</td>
+                  <td>{element.created_by || ''}</td>
+                </tr>
+              ))}
           </tbody>
         </CommonTable>
       </div>

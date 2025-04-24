@@ -9,13 +9,13 @@ import message from '../Message';
 import PdfFooter from './PdfFooter'; // Assuming you have a footer component
 import PdfHeader from './PdfHeader'; // Assuming you have a header component
 
-const PrintPerfoma = ({ id }) => {
-    PrintPerfoma.propTypes = {
+const PdfPickingList = ({ id }) => {
+  PdfPickingList.propTypes = {
     id: PropTypes.any,
   };
 
   const [salesOrder, setSalesOrder] = useState({});
-  const [lineItems, setLineItems] = useState();
+  const [lineItems, setLineItems] = useState([]);
   const [hfdata, setHeaderFooterData] = useState();
 
   useEffect(() => {
@@ -40,9 +40,9 @@ const PrintPerfoma = ({ id }) => {
       });
 
     api
-      .post('/salesOrder/getQuoteLineItemsById', { sales_order_id: id })
+      .post('/salesorder/getQuoteLineItemsById', { sales_order_id: id })
       .then((res) => {
-        setLineItems(res.data.data);
+        setLineItems(res.data.data || []);
       })
       .catch(() => {
         message('Sales Order Line Items Not Found', 'info');
@@ -58,23 +58,19 @@ const PrintPerfoma = ({ id }) => {
   const GetPdf = () => {
     const productItems = [
       [
-        { text: 'No', style: 'tableHead' },
-        { text: 'Product Code', style: 'tableHead' },
-        { text: 'Description', style: 'tableHead' },
-        { text: 'QTY', style: 'tableHead' },
-        { text: 'Unit Price', style: 'tableHead' },
-        { text: 'Amount', style: 'tableHead' },
+        { text: 'S.No', style: 'tableHead' },
+        { text: 'Product Name', style: 'tableHead' },
+        { text: 'Uom', style: 'tableHead' },
+        { text: 'CQty', style: 'tableHead' },
       ],
     ];
 
     lineItems.forEach((item, index) => {
       productItems.push([
         { text: `${index + 1}`, style: 'tableBody' },
-        { text: `${item.product_code || ''}`, style: 'tableBody' },
         { text: `${item.title || ''}`, style: 'tableBody' },
+        { text: `${item.qty || ''}`, style: 'tableBody' },
         { text: `${item.carton_qty || ''}`, style: 'tableBody' },
-        { text: `${item.unit_price || ''}`, style: 'tableBody' },
-        { text: `${item.cost || ''}`, style: 'tableBody' },
       ]);
     });
 
@@ -85,46 +81,31 @@ const PrintPerfoma = ({ id }) => {
       footer: PdfFooter, // Assuming you have a standard footer
       content: [
         {
-          text: findCompany('company_name') || 'AMPRO PTE LTD', // Fallback if not found
+          text: findCompany('company_name') || 'Ampro PTE LTD', // Fallback if not found
           style: 'header',
+          alignment: 'center',
+        },
+        {
+          text: 'Picking List',
+          style: 'subheader',
           alignment: 'center',
           margin: [0, 0, 0, 10],
         },
-        
         {
-            columns: [
-              {
-                width: '50%',
-                stack: [
-                  { text: 'Bill To:', bold: true },
-                  { text: salesOrder.customer_address || '', margin: [0, 2, 0, 10] },
-                ],
-              },
-              {
-                width: '50%',
-                table: {
-                  widths: ['30%', '5%', '65%'],
-                  body: [
-                    ['Sales Order No', ':', salesOrder.sales_order_id || ''],
-                    ['Date', ':', salesOrder.tran_date ? moment(salesOrder.tran_date).format('DD-MM-YYYY') : ''],
-                    ['Terms', ':', salesOrder.terms || ''],
-                    ['Order No', ':', '1 of 1'],
-                    ['GST Reg No', ':', salesOrder.agent_name || ''],
-                  ],
-                },
-                layout: 'noBorders',
-                style: 'textSize',
-              },
-            ],
-            columnGap: 10,
-            margin: [0, 0, 0, 15],
-          },
-          
+          text: `Selected Sales Order: ${salesOrder.tran_no || ''}`,
+          style: 'textSize',
+          margin: [0, 0, 0, 5],
+        },
+        {
+          text: `Print Date: ${moment().format('DD-MM-YYYY')}`,
+          style: 'textSize',
+          margin: [0, 0, 0, 15],
+        },
         {
           layout: 'lightHorizontalLines',
           table: {
             headerRows: 1,
-            widths: ['auto', '*', 'auto', 'auto', 'auto', 'auto'], // Adjust column widths
+            widths: ['auto', '*', 'auto', 'auto'], // Adjust column widths
             body: productItems,
           },
         },
@@ -165,4 +146,4 @@ const PrintPerfoma = ({ id }) => {
   );
 };
 
-export default PrintPerfoma;
+export default PdfPickingList;

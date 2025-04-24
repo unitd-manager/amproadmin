@@ -13,6 +13,8 @@ import ComponentCard from '../../components/ComponentCard';
 import message from '../../components/Message';
 import api from '../../constants/api';
 import ProductEditButtons from '../../components/Product/ProductEditButtons';
+import ProductUOM from '../../components/Product/ProductUom';
+import ProductVariation from '../../components/Product/ProductVariation';
 import ViewFileComponentV2 from '../../components/ProjectModal/ViewFileComponentV2';
 import AttachmentModalV2 from '../../components/Tender/AttachmentModalV2';
 import ProductDetail from '../../components/ProductTable/ProductDetail';
@@ -208,7 +210,8 @@ const getSupplier = () => {
                 Product Description
               </NavLink>
             </NavItem>
-           <NavItem>
+            
+            {/* <NavItem>
               <NavLink
                 className={activeTab === '2' ? 'active' : ''}
                 onClick={() => {
@@ -238,6 +241,26 @@ const getSupplier = () => {
                 Attachments
               </NavLink>
             </NavItem>
+            <NavItem>
+  <NavLink
+    className={activeTab === '3' ? 'active' : ''}
+    onClick={() => {
+      toggle('3');
+    }}
+  >
+    Product UOM
+  </NavLink>
+</NavItem>
+<NavItem>
+  <NavLink
+    className={activeTab === '4' ? 'active' : ''}
+    onClick={() => {
+      toggle('4');
+    }}
+  >
+    Product Variation
+  </NavLink>
+</NavItem>
           </Nav>
         </Row>
         {/* Delivery address Form */}
@@ -318,6 +341,17 @@ const getSupplier = () => {
             <ViewFileComponentV2 moduleId={id} roomName="Product" recordType="RelatedPicture" />
           </ComponentCard>
         </TabPane>
+        <TabPane tabId="3">
+  <ComponentCard title="Product UOM">
+    <ProductUOM productId={id} />
+  </ComponentCard>
+</TabPane>
+<TabPane tabId="4">
+  <ComponentCard title="Product Variation">
+    <ProductVariation productId={id} />
+  </ComponentCard>
+</TabPane>
+
       </TabContent>
       </FormGroup>
       </Form>

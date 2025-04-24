@@ -51,6 +51,22 @@ const QuoteLineItem = ({
   ]);
     //get staff details
     const { loggedInuser } = useContext(AppContext);
+    const [getProductValue, setProductValue] = useState();
+    const getProduct = () => {
+      api.get('/product/getProducts').then((res) => {
+        const items = res.data.data;
+        const finaldat = items.map((item) => ({
+          value: item.product_id,
+          label: item.product_name,
+          product_code: item.product_code,
+          carton_price: item.carton_price,
+          wholesale_price: item.wholesale_price,
+          pcs_per_carton: item.pcs_per_carton,
+        }));
+        setProductValue(finaldat);
+      });
+    };
+    
 
   //Add new line item
   const AddNewLineItem = () => {
@@ -133,46 +149,28 @@ const QuoteLineItem = ({
           setUnitDetails(finaldat)
         })
     }
-    //onchange function
-    const onchangeItem = (selectedValue) => {
-      const updatedItems = addLineItem.map((item) => {
-        if (item.unit === selectedValue.value) {  // Compare with selectedValue.value
-          return {
-            ...item,
-            unit: selectedValue.value,  // Update the unit with the selected option's value
-            value: selectedValue.value  // Update the value with the selected option's value
-          };
-        }
-        return item;
-      });
-    
-      setAddLineItem(updatedItems);
+  
+    const onchangeItem1 = (selected, itemId) => {
+      setAddLineItem((prevItems) =>
+        prevItems.map((el) =>
+          el.id === itemId
+            ? {
+                ...el,
+                title: selected.label,
+                item_title: selected.label,
+                product_id: selected.value.toString(),
+                product_name: selected.label,
+                product_code: selected.product_code,
+                carton_price: selected.carton_price,
+                wholesale_price: selected.wholesale_price,
+                pcs_per_carton: selected.pcs_per_carton || 0,
+              }
+            : el
+        )
+      );
     };
-
-  //Invoice Items Calculation
-  const calculateTotal = () => {
-    let totalValue = 0;
-    const result = [];
-    $('.lineitem tbody tr').each(function input() {
-      const allValues = {};
-      $(this)
-        .find('input')
-        .each(function output() {
-          const fieldName = $(this).attr('name');
-          allValues[fieldName] = $(this).val();
-          allValues.amount = allValues.quantity * allValues.unit_price;
-        });
-      result.push(allValues);
-    });
-    result.forEach((e) => {
-      if (e.amount) {
-        totalValue += parseFloat(e.amount);
-      }
-    });
-    console.log(result);
-    setAddLineItem(result);
-    setTotalAmount(totalValue);
-  };
+    
+ 
   // Clear row value
   const ClearValue = (ind) => {
     setAddLineItem((current) =>
@@ -187,6 +185,7 @@ const QuoteLineItem = ({
   };
   React.useEffect(() => {
     getUnit();
+    getProduct();
   }, []);
   return (
     <>
@@ -227,13 +226,16 @@ const QuoteLineItem = ({
                     <table className="lineitem">
                       <thead>
                         <tr>
-                          <th scope="col">Title </th>
-                          <th scope="col">Description</th>
-                          <th scope="col">Unit </th>
+                          <th scope="col">Product Name </th>
+                          <th scope="col">Product Code</th>
+                          <th scope="col">Carton Qty</th>
+                          <th scope="col">Loose Qty</th>
                           <th scope="col">Qty</th>
-                          <th scope="col">UnitPrice</th>
-                          <th scope="col">Amount</th>
-                          <th scope="col">Remark</th>
+                          <th scope="col">Carton Price</th>
+                          <th scope="col">Price</th>
+                          <th scope="col">Total</th>
+                          <th scope="col">Discount</th>
+                          <th scope="col">Gross Total</th>
                           <th scope="col"></th>
                         </tr>
                       </thead>
@@ -242,39 +244,132 @@ const QuoteLineItem = ({
                           addLineItem.map((item) => {
                             return (
                               <tr key={item.id}>
-                                <td data-label="Title">
-                                  <Input Value={item.title} type="text" name="title" />
+                                  <td data-label="title">
+                        <Select
+                          key={item.id}
+                          defaultValue={{ value: item.product_id, label: item.product_name }}
+                          onChange={(e) => {
+                            onchangeItem1(e, item.id);
+                          }}
+                          options={getProductValue}
+                        />
+                        <Input value={item.product_id} type="hidden" name="product_id"></Input>
+                        <Input value={item.product_name} type="hidden" name="title"></Input>
+                        
+                      </td>
+                                <td data-label="Product Name">
+                                  <Input value={item.product_code} type="text" name="product_code" />
                                 </td>
-                                <td data-label="Description">
-                                  <Input Value={item.description} type="text" name="description" />
-                                </td>
-                                <td data-label="Unit">
-                                  <Select
-                                    name="unit"
-                                    onChange={(selectedOption) => {
-                                      onchangeItem(selectedOption);
-                                    }}
-                                    options={unitdetails}
-                                  />
-                                </td>
-                                <td data-label="Qty">
-                                  <Input Value={item.quantity} type="number" name="quantity" />
-                                </td>
-                                <td data-label="Unit Price">
+                                <Input
+  type="number"
+  name="carton_qty"
+  value={item.carton_qty}
+  onChange={(e) => {
+    const cartonQty = parseFloat(e.target.value) || 0;
+    const pcsPerCarton = item.pcs_per_carton || 0;
+    const cartonPrice = parseFloat(item.carton_price) || 0;
+    const discount = parseFloat(item.discount) || 0;
+
+    const quantity = cartonQty * pcsPerCarton;
+    const total = cartonQty * cartonPrice;
+    const grosstotal = total - discount;
+
+    setAddLineItem((prevItems) =>
+      prevItems.map((el) =>
+        el.id === item.id
+          ? {
+              ...el,
+              carton_qty: cartonQty,
+              quantity,
+              total: total.toFixed(2),
+              gross_total: grosstotal.toFixed(2),
+            }
+          : el
+      )
+    );
+  }}
+/>
+
+
+
+<td data-label="Loose Qty">
+  <Input
+    type="number"
+    name="loose_qty"
+    value={item.loose_qty}
+    onChange={(e) => {
+      const looseQty = parseFloat(e.target.value) || 0;
+      const cartonQty = parseFloat(item.carton_qty) || 0;
+      const pcsPerCarton = parseFloat(item.pcs_per_carton) || 0;
+      const cartonPrice = parseFloat(item.carton_price) || 0;
+      const wholesalePrice = parseFloat(item.wholesale_price) || 0;
+      const discount = parseFloat(item.discount) || 0;
+
+      const quantity = cartonQty * pcsPerCarton + looseQty;
+      const cartonTotal = cartonQty * cartonPrice;
+      const looseTotal = looseQty * wholesalePrice;
+      const total = cartonTotal + looseTotal;
+      const grossTotal = total - discount;
+
+      setAddLineItem((prevItems) =>
+        prevItems.map((el) =>
+          el.id === item.id
+            ? {
+                ...el,
+                loose_qty: looseQty,
+                quantity,
+                total: total.toFixed(2),
+                gross_total: grossTotal.toFixed(2),
+              }
+            : el
+        )
+      );
+    }}
+  />
+</td>
+
+                                <td data-label="Quantity">
                                   <Input
-                                    Value={item.unit_price}
-                                    onBlur={() => {
-                                      calculateTotal();
-                                    }}
+                                    value={item.quantity}
+                                  
                                     type="number"
-                                    name="unit_price"
+                                    name="quantity"
                                   />
                                 </td>
-                                <td data-label="Amount">
-                                  <Input Value={item.amount} type="text" name="amount" disabled />
+                                <td data-label="Carton Price">
+                                  <Input value={item.carton_price} type="text" name="carton_price" />
                                 </td>
-                                <td data-label="Remarks">
-                                  <Input Value={item.remarks} type="text" name="remarks" />
+                                <td data-label="wholesale price">
+                                  <Input value={item.wholesale_price} type="text" name="wholesale_price" />
+                                </td>
+                                <td data-label="total">
+                                  <Input value={item.total} type="text" name="total" />
+                                </td>
+                                <Input
+  value={item.discount}
+  type="number"
+  name="discount_value"
+  onChange={(e) => {
+    const discount = parseFloat(e.target.value) || 0;
+    const total = parseFloat(item.total) || 0;
+    const grosstotal = total - discount;
+
+    setAddLineItem((prevItems) =>
+      prevItems.map((el) =>
+        el.id === item.id
+          ? {
+              ...el,
+              discount,
+              gross_total: grosstotal.toFixed(2),
+            }
+          : el
+      )
+    );
+  }}
+/>
+
+                                <td data-label="gross_total">
+                                  <Input Value={item.gross_total} type="text" name="gross_total" />
                                 </td>
                                 <td data-label="Action">
                                   <Input type="hidden" name="id" Value={item.id}></Input>

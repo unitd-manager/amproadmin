@@ -59,10 +59,13 @@ const PrintPerfoma = ({ id }) => {
     const productItems = [
       [
         { text: 'No', style: 'tableHead' },
-        { text: 'Product Code', style: 'tableHead' },
         { text: 'Description', style: 'tableHead' },
-        { text: 'QTY', style: 'tableHead' },
-        { text: 'Unit Price', style: 'tableHead' },
+        { text: 'Uom', style: 'tableHead' },
+        { text: 'CTN', style: 'tableHead' },
+        { text: 'PCS', style: 'tableHead' },
+        { text: 'F.O.C', style: 'tableHead' },
+        { text: 'C/PRI', style: 'tableHead' },
+        { text: 'U/PRI', style: 'tableHead' },
         { text: 'Amount', style: 'tableHead' },
       ],
     ];
@@ -70,11 +73,14 @@ const PrintPerfoma = ({ id }) => {
     lineItems.forEach((item, index) => {
       productItems.push([
         { text: `${index + 1}`, style: 'tableBody' },
-        { text: `${item.product_code || ''}`, style: 'tableBody' },
         { text: `${item.title || ''}`, style: 'tableBody' },
+        { text: `${item.qty || ''}`, style: 'tableBody' },
         { text: `${item.carton_qty || ''}`, style: 'tableBody' },
-        { text: `${item.unit_price || ''}`, style: 'tableBody' },
-        { text: `${item.cost || ''}`, style: 'tableBody' },
+        { text: `${index + 1}`, style: 'tableBody' },
+        { text: `${item.title || ''}`, style: 'tableBody' },
+        { text: `${item.qty || ''}`, style: 'tableBody' },
+        { text: `${item.carton_qty || ''}`, style: 'tableBody' },
+        { text: `${item.carton_qty || ''}`, style: 'tableBody' },
       ]);
     });
 
@@ -90,13 +96,18 @@ const PrintPerfoma = ({ id }) => {
           alignment: 'center',
           margin: [0, 0, 0, 10],
         },
-        
+        {
+          text: 'Sole Distributors : Danish Food,Dekko Food,Pran Food',
+          style: 'subheader',
+          alignment: 'center',
+          margin: [0, 0, 0, 20],
+        },
         {
             columns: [
               {
                 width: '50%',
                 stack: [
-                  { text: 'Bill To:', bold: true },
+                  { text: 'Customer Address:', bold: true },
                   { text: salesOrder.customer_address || '', margin: [0, 2, 0, 10] },
                 ],
               },
@@ -105,11 +116,11 @@ const PrintPerfoma = ({ id }) => {
                 table: {
                   widths: ['30%', '5%', '65%'],
                   body: [
-                    ['Sales Order No', ':', salesOrder.sales_order_id || ''],
-                    ['Date', ':', salesOrder.tran_date ? moment(salesOrder.tran_date).format('DD-MM-YYYY') : ''],
+                    ['Tran No', ':', salesOrder.tran_no || ''],
+                    ['Tran Date', ':', salesOrder.tran_date ? moment(salesOrder.tran_date).format('DD-MM-YYYY') : ''],
                     ['Terms', ':', salesOrder.terms || ''],
-                    ['Order No', ':', '1 of 1'],
-                    ['GST Reg No', ':', salesOrder.agent_name || ''],
+                    ['Page', ':', '1 of 1'],
+                    ['Agent Name', ':', salesOrder.agent_name || ''],
                   ],
                 },
                 layout: 'noBorders',
@@ -124,7 +135,7 @@ const PrintPerfoma = ({ id }) => {
           layout: 'lightHorizontalLines',
           table: {
             headerRows: 1,
-            widths: ['auto', '*', 'auto', 'auto', 'auto', 'auto'], // Adjust column widths
+            widths: ['auto', '*', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto'], // Adjust column widths
             body: productItems,
           },
         },
