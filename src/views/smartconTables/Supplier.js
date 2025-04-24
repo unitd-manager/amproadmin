@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import * as Icon from 'react-feather';
 import { Button } from 'reactstrap';
+import { Link, useParams } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'datatables.net-dt/js/dataTables.dataTables';
 import 'datatables.net-dt/css/jquery.dataTables.min.css';
@@ -9,19 +10,20 @@ import 'datatables.net-buttons/js/buttons.colVis';
 import 'datatables.net-buttons/js/buttons.flash';
 import 'datatables.net-buttons/js/buttons.html5';
 import 'datatables.net-buttons/js/buttons.print';
-import { Link } from 'react-router-dom';
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
 
-const Test = () => {
-  //All state variable
+const Supplier = () => {
+  //Const Variables
   const [supplier, setSupplier] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  //getting data from supplier
+  // Navigation and Parameter Constants
+  const { id } = useParams();
+
+  // get supplier
   const getSupplier = () => {
-    setLoading(true);
     api
       .get('/supplier/getSupplier')
       .then((res) => {
@@ -48,12 +50,11 @@ const Test = () => {
 
   useEffect(() => {
     getSupplier();
-  }, []);
-  //structure of supplier list view
+  }, [id]);
+  //  stucture of Section list view
   const columns = [
     {
       name: '#',
-      selector: 'supplier_id',
       grow: 0,
       wrap: true,
       width: '4%',
@@ -67,25 +68,40 @@ const Test = () => {
       button: true,
       sortable: false,
     },
+
     {
-      name: 'Name',
-      selector: 'company_name',
+      name: 'Supplier Code',
+      selector: 'supplier_code',
       sortable: true,
       grow: 0,
       wrap: true,
     },
     {
-      name: 'Website',
-      selector: 'email',
+      name: 'Supplier name',
+      selector: 'company_name',
       sortable: true,
       grow: 2,
       wrap: true,
     },
     {
-      name: 'Telehone',
-      selector: 'mobile',
+      name: 'Address',
+      selector: 'address_street',
       sortable: true,
       grow: 0,
+    },
+    {
+      name: 'Phone No',
+      selector: 'phone',
+      sortable: true,
+      width: 'auto',
+      grow: 3,
+    },
+    {
+      name: 'Email',
+      selector: 'email',
+      sortable: true,
+      grow: 2,
+      width: 'auto',
     },
   ];
 
@@ -93,6 +109,7 @@ const Test = () => {
     <div className="MainDiv">
       <div className=" pt-xs-25">
         <BreadCrumbs />
+        {/* Section Add new button */}
 
         <CommonTable
           loading={loading}
@@ -119,21 +136,32 @@ const Test = () => {
                   <tr key={element.supplier_id}>
                     <td>{index + 1}</td>
                     <td>
-                      <Link to={`/SupplierEdit/${element.supplier_id}`}>
+                      <Link to={`/SectionEdit/${element.supplier_id}`}>
                         <Icon.Edit2 />
                       </Link>
                     </td>
-                    <td>{element.company_name}</td>
+                    <td>
+  <Link to={`/SupplierEdit/${element.supplier_id}`}>
+    {element.supplier_code}
+  </Link>
+</td>
+<td>
+  <Link to={`/SupplierEdit/${element.supplier_id}`}>
+    {element.company_name}
+  </Link>
+</td>
+                    <td>{element.address_street}</td>
+                    <td>{element.phone}</td>
                     <td>{element.email}</td>
-                    <td>{element.mobile}</td>
                   </tr>
                 );
               })}
           </tbody>
         </CommonTable>
+        {/* setion table */}
       </div>
     </div>
   );
 };
 
-export default Test;
+export default Supplier;
