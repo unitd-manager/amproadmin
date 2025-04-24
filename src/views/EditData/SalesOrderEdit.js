@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import {  Form,  TabContent,TabPane,  Row, Col, FormGroup, Label, Input,Button,Table} from 'reactstrap';
+import {  Form,  TabContent,TabPane,  Row, Col, FormGroup, Label, Input,Button} from 'reactstrap';
 import { ToastContainer } from 'react-toastify';
-import * as Icon from 'react-feather';
+// import * as Icon from 'react-feather';
 import Swal from 'sweetalert2';
-
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'datatables.net-dt/js/dataTables.dataTables';
 import 'datatables.net-dt/css/jquery.dataTables.min.css';
@@ -24,38 +23,20 @@ import Customer from '../../components/SalesOrder/Customer';
 import Currency from '../../components/SalesOrder/Currency';
 import Shipping from '../../components/SalesOrder/Shipping';
 import SalesMan from '../../components/SalesOrder/SalesMan';
-import QuoteLineItem from '../../components/SalesOrder/QuoteLineItem';
-import EditLineItemModal from '../../components/SalesOrder/EditLineItemModal';
+// import QuoteLineItem from '../../components/SalesOrder/QuoteLineItem';
+// import EditLineItemModal from '../../components/SalesOrder/EditLineItemModal';
+import SalesOrderProducts from '../../components/SalesOrder/SalesOrderProducts';
+
 import PdfPickingList from '../../components/PDF/PdfPick';
 
 
 const SalesOrderEdit = () => {
    const { id } = useParams();
  
-  // const [supplierStatus, setSupplierStatus] = useState();
   const [activeTab, setActiveTab] = useState('1');
 
-
-  //navigation and params
-  // const { id } = useParams();
   const navigate = useNavigate();
-  // const applyChanges = () => {};
 
-  // const getSupplierStatus = () => {
-  //   api
-  //     .get('/supplier/getValueList')
-  //     .then((res) => {
-  //       setSupplierStatus(res.data.data);
-  //     })
-  //     .catch(() => {
-  //       message('Status Data Not Found', 'info');
-  //     });
-  // };
-  // useEffect(() => {
-  //     getSupplierStatus();
-  // }, []);
-
-    // Start for tab refresh navigation #Renuka 1-06-23
     const tabs = [
       { id: '1', name: 'Customer' },
       { id: '2', name: 'Currency' },
@@ -67,19 +48,6 @@ const SalesOrderEdit = () => {
     const toggle = (tab) => {
       setActiveTab(tab);
     };
-  // Navigate back to the list
-  // const backToList = () => {
-  //   navigate('/SalesOrder');
-  // };
-
-  // const [hoveredRowIndex, setHoveredRowIndex] = useState(null);
-
-  // // Function to handle tooltip toggle
-  // const toggleTooltip = (index) => {
-  //   setHoveredRowIndex(index === hoveredRowIndex ? null : index);
-  // };
-
-  
   const [addLineItemModal, setAddLineItemModal] = useState(false);
   const [lineItem, setLineItem] = useState();
   const [viewLineModal, setViewLineModal] = useState(false);
@@ -89,9 +57,9 @@ const SalesOrderEdit = () => {
   
 
 
-    const addQuoteItemsToggle = () => {
-    setAddLineItemModal(!addLineItemModal);
-  };
+  //   const addQuoteItemsToggle = () => {
+  //   setAddLineItemModal(!addLineItemModal);
+  // };
 
    const viewLineToggle = () => {
     setViewLineModal(!viewLineModal);
@@ -106,46 +74,6 @@ const SalesOrderEdit = () => {
       //setAddLineItemModal(true);
     });
   };
-
-
-  const columns1 = [
-    {
-      name: '#',
-    },
-    {
-      name: 'Product Name',
-    },
-    {
-      name: 'Product Code',
-    },
-    {
-      name: 'Carton Qty',
-    },
-    {
-      name: 'Loose Qty',
-    },
-    {
-      name: 'Qty',
-    },
-    {
-      name: 'Carton Price',
-    },
-    {
-      name: 'Price',
-    },
-    {
-      name: 'Total',
-    },
-    {
-      name: 'Discount',
-    },
-    {
-      name: 'Gross Total',
-    },
-    {
-      name: 'Action',
-    },
-  ];
 
 
   const deleteRecord = (deleteID) => {
@@ -166,8 +94,6 @@ const SalesOrderEdit = () => {
       }
     });
   };
-
-
   const [settingdetails, setSettingDetails] = useState();
 //setting data in settingDetails
 const handleInputs = (e) => {
@@ -184,11 +110,8 @@ const getSettingById = () => {
       message('setting Data Not Found', 'info');
     });
 };
-
-
 //Update Setting
 const editSettingData = () => {
-
     api
       .post('/salesorder/editSalesOrder', settingdetails)
       .then(() => {
@@ -197,19 +120,13 @@ const editSettingData = () => {
       .catch(() => {
         message('Unable to edit record.', 'error');
       });
- 
 };
-
 useEffect(() => {
   getSettingById();
       getLineItem();
-
 }, [id]);
-
-
-  return (
-    <div>
-      
+ return (
+    <div>   
       <Form>     
         <ComponentCardV2>
                         <Row>
@@ -252,8 +169,6 @@ useEffect(() => {
                       </ComponentCardV2>
       </Form>
       <ToastContainer></ToastContainer>
-     
-
       <Form>
         <FormGroup>
           <ComponentCard title="Setting Details" creationModificationDate={settingdetails}>
@@ -327,90 +242,20 @@ useEffect(() => {
       </ComponentCard>
       <>
       <ComponentCard title="Products">
-       
-      <Row>
-                <Col md="6">
-                <Button
-                  className="shadow-none"
-                  color="primary"
-                  to=""
-                  onClick={addQuoteItemsToggle.bind(null)}
-                >
-                  Add Sale Items 
-                </Button>
-              </Col>
-            </Row>
-            <br />
-          
-       <Table id="example" className="display border border-secondary rounded">
-                  <thead>
-                    <tr>
-                      {columns1.map((cell) => {
-                        return <td key={cell.name}>{cell.name}</td>;
-                      })}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {lineItem &&
-                      lineItem.map((e, index) => {
-                        return (
-                          <tr key={e.project_quote_id}>
-                            <td>{index + 1}</td>
-                            <td data-label="Product Name">{e.product_name}</td>
-                            <td data-label="Product Code">{e.product_code}</td>
-                            <td data-label="Carton Qty">{e.carton_qty}</td>
-                            <td data-label="Loose Qty">{e.loose_qty}</td>
-                            <td data-label="Quantity">{e.quantity}</td>
-                            <td data-label="carton Price">{e.carton_price}</td>
-                            <td data-label="Price">{e.wholesale_price}</td>
-                            <td data-label="Total">{e.total}</td>
-                            <td data-label="Discount">{e.discount_value}</td>
-                            <td data-label="Gross Total">{e.gross_total}</td> 
-                            <td data-label="Actions">
-                              <span
-                                className="addline"
-                                onClick={() => {
-                                  setEditLineModelItem(e);
-                                  setEditLineModal(true);
-                                }}
-                              >
-                                <Icon.Edit2 />
-                              </span>
-                              <span
-                                className="addline"
-                                onClick={() => {
-                                  deleteRecord(e.sales_order_item_id);
-                                }}
-                              >
-                                <Icon.Trash2 />
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-                </Table>
-               {/* End View Line Item Modal */}
-            <EditLineItemModal
-              editLineModal={editLineModal}
-              setEditLineModal={setEditLineModal}
-              FetchLineItemData={editLineModelItem}
-              getLineItem={getLineItem}
-              setViewLineModal={setViewLineModal}
-            
-              //insertquote={insertquote}
-            ></EditLineItemModal>
-            {addLineItemModal && (
-              <QuoteLineItem
-                //projectInfo={tenderId}
-                addLineItemModal={addLineItemModal}
-                setAddLineItemModal={setAddLineItemModal}
-                quoteLine={id}
-            
-              ></QuoteLineItem>
-            )}
-  
-         
+      <SalesOrderProducts
+  addLineItemModal={addLineItemModal}
+  setAddLineItemModal={setAddLineItemModal}
+  lineItem={lineItem}
+  setEditLineModelItem={setEditLineModelItem}
+  setEditLineModal={setEditLineModal}
+  editLineModal={editLineModal}
+  editLineModelItem={editLineModelItem}
+  getLineItem={getLineItem}
+  deleteRecord={deleteRecord}
+  id={id}
+  setViewLineModal={setViewLineModal}
+/>
+
       </ComponentCard>
       </>
     </div>
