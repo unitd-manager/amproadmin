@@ -73,7 +73,7 @@ const PrintPerfoma = ({ id }) => {
     lineItems.forEach((item, index) => {
       productItems.push([
         { text: `${index + 1}`, style: 'tableBody' },
-        { text: `${item.title || ''}`, style: 'tableBody' },
+        { text: `${item.product_name || ''}`, style: 'tableBody' },
         { text: `${item.qty || ''}`, style: 'tableBody' },
         { text: `${item.carton_qty || ''}`, style: 'tableBody' },
         { text: `${index + 1}`, style: 'tableBody' },
@@ -108,23 +108,37 @@ const PrintPerfoma = ({ id }) => {
                 width: '50%',
                 stack: [
                   { text: 'Customer Address:', bold: true },
-                  { text: salesOrder.customer_address || '', margin: [0, 2, 0, 10] },
+                  { text: '', margin: [8, 0, 0, 0] },
+                  { text: salesOrder.company_name || '', margin: [8, 0, 0, 0] },
+                  { text: salesOrder.address_street || '', margin: [8, 0, 0, 0] },
+                  { text: salesOrder.address_down || '', margin: [8, 0, 0, 0] },
+                  { text: salesOrder.address_country || '', margin: [8, 0, 0, 0] },
+                  { text: salesOrder.address_po_code || '', margin: [8, 0, 0, 0] },
+                  { text: '', margin: [8, 0, 0, 0] },
+                  { text: 'TEL: 6789098765', margin: [8, 5, 0, 0] },
                 ],
+                layout: 'Borders',
+              style: 'textSize',
               },
+              
               {
                 width: '50%',
-                table: {
-                  widths: ['30%', '5%', '65%'],
-                  body: [
-                    ['Tran No', ':', salesOrder.tran_no || ''],
-                    ['Tran Date', ':', salesOrder.tran_date ? moment(salesOrder.tran_date).format('DD-MM-YYYY') : ''],
-                    ['Terms', ':', salesOrder.terms || ''],
-                    ['Page', ':', '1 of 1'],
-                    ['Agent Name', ':', salesOrder.agent_name || ''],
-                  ],
-                },
-                layout: 'noBorders',
-                style: 'textSize',
+                stack: [
+                  {
+                    table: {
+                      widths: ['30%', '5%', '65%'],
+                      body: [
+                        ['TRAN NO', ':', salesOrder.tran_no || ''],
+                        ['TRAN DATE', ':', salesOrder.tran_date ? moment(salesOrder.tran_date).format('DD-MM-YYYY') : ''],
+                        ['TERMS', ':', salesOrder.terms || ''],
+                        ['PAGE', ':',salesOrder.order_no || '' ],
+                        ['AGENT NAME', ':', salesOrder.gst_reg_no || ''],
+                      ],
+                    },
+                    layout: 'Borders',
+                    style: 'textSize',
+                  },
+                ],
               },
             ],
             columnGap: 10,

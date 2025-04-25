@@ -104,11 +104,11 @@ const PrintPerfoma = ({ id }) => {
         {
           columns: [
             {
-              width: '60%',
+              width: '50%',
               stack: [
                 { text: 'Bill To:', bold: true },
                 { text: '', margin: [8, 0, 0, 0] },
-                { text: salesOrder.company_name || '', bold: true, margin: [8, 0, 0, 0] },
+                { text: salesOrder.company_name || '', margin: [8, 0, 0, 0] },
                 { text: salesOrder.address_street || '', margin: [8, 0, 0, 0] },
                 { text: salesOrder.address_down || '', margin: [8, 0, 0, 0] },
                 { text: salesOrder.address_country || '', margin: [8, 0, 0, 0] },
@@ -118,7 +118,7 @@ const PrintPerfoma = ({ id }) => {
               ],
             },
             {
-              width: '40%',
+              width: '50%',
               stack: [
                 { text: 'Sales Order', style: 'subheader', margin: [0, 0, 0, 5] }, // heading
                 {
@@ -128,8 +128,8 @@ const PrintPerfoma = ({ id }) => {
                       ['Sales Order No', ':', salesOrder.tran_no || ''],
                       ['Date', ':', salesOrder.tran_date ? moment(salesOrder.tran_date).format('DD-MM-YYYY') : ''],
                       ['Terms', ':', salesOrder.terms || ''],
-                      ['Order No', ':', '1 of 1'],
-                      ['GST Reg No', ':', salesOrder.agent_name || ''],
+                      ['Order No', ':',salesOrder.order_no || '' ],
+                      ['GST Reg No', ':', salesOrder.gst_reg_no || ''],
                     ],
                   },
                   layout: 'noBorders',
@@ -142,7 +142,15 @@ const PrintPerfoma = ({ id }) => {
           margin: [0, 0, 0, 15],
         },
         {
-          layout: 'lightHorizontalLines',
+          layout: {
+            hLineWidth: () => 1,
+            vLineWidth: () => 1,
+            hLineColor: () => '#000',
+            vLineColor: () => '#000',
+            fillColor: (rowIndex) => {
+              return rowIndex === 0 ? '#f2f2f2' : null; // light gray header
+            },
+          },
           table: {
             headerRows: 1,
             widths: ['auto', '*', 'auto', 'auto', 'auto', 'auto'],

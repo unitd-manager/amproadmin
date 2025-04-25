@@ -109,7 +109,7 @@ const Supplier = () => {
     <div className="MainDiv">
       <div className=" pt-xs-25">
         <BreadCrumbs />
-        {/* Section Add new button */}
+        {/* Supplier Add new button */}
 
         <CommonTable
           loading={loading}
