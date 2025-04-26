@@ -18,6 +18,7 @@ const Supplier = () => {
   //Const Variables
   const [supplier, setSupplier] = useState(null);
   const [loading, setLoading] = useState(false);
+  
 
   // Navigation and Parameter Constants
   const { id } = useParams();
@@ -136,7 +137,7 @@ const Supplier = () => {
                   <tr key={element.supplier_id}>
                     <td>{index + 1}</td>
                     <td>
-                      <Link to={`/SectionEdit/${element.supplier_id}`}>
+                      <Link to={`/SupplierEdit/${element.supplier_id}`}>
                         <Icon.Edit2 />
                       </Link>
                     </td>

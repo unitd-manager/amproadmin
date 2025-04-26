@@ -74,13 +74,13 @@ const PrintPerfoma = ({ id }) => {
       productItems.push([
         { text: `${index + 1}`, style: 'tableBody' },
         { text: `${item.product_name || ''}`, style: 'tableBody' },
-        { text: `${item.qty || ''}`, style: 'tableBody' },
-        { text: `${item.carton_qty || ''}`, style: 'tableBody' },
-        { text: `${index + 1}`, style: 'tableBody' },
-        { text: `${item.title || ''}`, style: 'tableBody' },
-        { text: `${item.qty || ''}`, style: 'tableBody' },
-        { text: `${item.carton_qty || ''}`, style: 'tableBody' },
-        { text: `${item.carton_qty || ''}`, style: 'tableBody' },
+        { text: `${item.quantity || ''}`, style: 'tableBody' },
+        { text: `${item.wholesale_price || ''}`, style: 'tableBody' },
+        { text: `${item.quantity || ''}`, style: 'tableBody' },
+        { text: `${item.total || ''}`, style: 'tableBody' },
+        { text: `${item.quantity || ''}`, style: 'tableBody' },
+        { text: `${item.quantity || ''}`, style: 'tableBody' },
+        { text: `${item.quantity || ''}`, style: 'tableBody' },
       ]);
     });
 
