@@ -3,16 +3,21 @@ import { Row, Col, Form, FormGroup, Label, Input, Button } from 'reactstrap';
 import PropTypes from 'prop-types';
 import ComponentCard from '../ComponentCard';
 
-export default function SupplierDetails({  handleInputs ,supplier ,allCountries , supplierStatus , status , setEditPurchaseOrderLinked}) {
+export default function SupplierDetails({  handleInputs ,supplier ,allCountries , status , setEditPurchaseOrderLinked, taxfromvaluelist,
+  pricegroupfromvaluelist,contacttypefromvaluelist, areafromvaluelist, currencyfromvaluelist, termsfromvaluelist
+}) {
   SupplierDetails.propTypes = {
     handleInputs: PropTypes.func,
     supplier: PropTypes.object,
     allCountries: PropTypes.object,
-    supplierStatus: PropTypes.object,
+    taxfromvaluelist: PropTypes.object,
     status: PropTypes.object,
-    setEditPurchaseOrderLinked: PropTypes.bool
-
-
+    setEditPurchaseOrderLinked: PropTypes.bool,
+    pricegroupfromvaluelist: PropTypes.object,
+    contacttypefromvaluelist: PropTypes.object,
+    areafromvaluelist: PropTypes.object,
+    currencyfromvaluelist: PropTypes.object,
+    termsfromvaluelist: PropTypes.object,
   };
 
   return (
@@ -20,10 +25,10 @@ export default function SupplierDetails({  handleInputs ,supplier ,allCountries 
     <FormGroup>
   <ComponentCard title="Supplier Details">
     <Row>
-      <Col md="4">
+    <Col md="3">
         <FormGroup>
           <Label>
-            Name <span className="required"> *</span>
+            Supplier Code <span className="required"> *</span>
           </Label>
           <Input
             type="text"
@@ -32,7 +37,41 @@ export default function SupplierDetails({  handleInputs ,supplier ,allCountries 
             name="company_name"/>
         </FormGroup>
       </Col>
-      <Col md="4">
+      <Col md="3">
+        <FormGroup>
+          <Label>
+           Supplier Name <span className="required"> *</span>
+          </Label>
+          <Input
+            type="text"
+            onChange={handleInputs}
+            value={supplier && supplier.company_name}
+            name="company_name"/>
+        </FormGroup>
+      </Col>
+      <Col md="3">
+        <FormGroup>
+          <Label>Phone Number</Label>
+          <Input
+            type="text"
+            onChange={handleInputs}
+            value={supplier && supplier.phone}
+            name="email" />
+        </FormGroup>
+      </Col>
+      <Col md="3">
+        <FormGroup>
+          <Label>Hand Phone Number</Label>
+          <Input
+            type="text"
+            onChange={handleInputs}
+            value={supplier && supplier.hand_phone_no}
+            name="hand_phone_no" />
+        </FormGroup>
+      </Col>
+      </Row>
+      <Row>
+      <Col md="3">
         <FormGroup>
           <Label>Email</Label>
           <Input
@@ -42,9 +81,9 @@ export default function SupplierDetails({  handleInputs ,supplier ,allCountries 
             name="email" />
         </FormGroup>
       </Col>
-      <Col md="4">
+      <Col md="3">
         <FormGroup>
-          <Label>Fax</Label>
+          <Label>Fax No</Label>
           <Input
             type="text"
             onChange={handleInputs}
@@ -52,19 +91,27 @@ export default function SupplierDetails({  handleInputs ,supplier ,allCountries 
             name="fax"  />
         </FormGroup>
       </Col>
-      </Row>
-      <Row>
-      <Col md="4">
+      <Col md="3">
         <FormGroup>
-          <Label>Mobile</Label>
+          <Label>WebSite</Label>
           <Input
             type="text"
             onChange={handleInputs}
-            value={supplier && supplier.mobile}
-            name="mobile"  />
+            value={supplier && supplier.webSite}
+            name="webSite"  />
         </FormGroup>
       </Col>
-      <Col md="4">
+      <Col md="3">
+        <FormGroup>
+          <Label>Company RegNo </Label>
+          <Input
+            type="text"
+            onChange={handleInputs}
+            value={supplier && supplier.company_reg_no}
+            name="company_reg_no"  />
+        </FormGroup>
+      </Col>
+      {/* <Col md="4">
       <FormGroup>
         <Label>Status</Label>
         <Input
@@ -84,56 +131,178 @@ export default function SupplierDetails({  handleInputs ,supplier ,allCountries 
             })}
         </Input>
       </FormGroup>
-    </Col>
-      <Col md="4">
+    </Col> */}
+    </Row>
+    <Row>
+      <Col md="3">
         <FormGroup>
-          <Label>GST NO</Label>
-          <Input
-            type="text"
+          <Label>Tax</Label>
+           <Input
+            type="select"
+            name="tax"
             onChange={handleInputs}
-            value={supplier && supplier.gst_no}
-            name="gst_no"  />
+            value={supplier && supplier.tax}
+            >
+            <option defaultValue="selected">
+                Please Select
+            </option>
+                {taxfromvaluelist && taxfromvaluelist.map((ele) => {
+                    return <option key={ele.value} value={ele.value}>{ele.value}</option>;
+                })}
+            </Input>
+        </FormGroup>
+      </Col>
+      <Col md="3">
+        <FormGroup>
+          <Label>Price group</Label>
+          <Input
+            type="select"
+            name="price_group"
+            onChange={handleInputs}
+            value={supplier && supplier.price_group}
+            >
+            <option defaultValue="selected">
+                Please Select
+            </option>
+                {pricegroupfromvaluelist && pricegroupfromvaluelist.map((ele) => {
+                    return <option key={ele.value} value={ele.value}>{ele.value}</option>;
+                })}
+            </Input>
+        </FormGroup>
+      </Col>
+      <Col md="3">
+        <FormGroup>
+          <Label>Contact Type</Label>
+          <Input
+            type="select"
+            name="contact_type"
+            onChange={handleInputs}
+            value={supplier && supplier.contact_type}
+            >
+            <option defaultValue="selected">
+                Please Select
+            </option>
+                {contacttypefromvaluelist && contacttypefromvaluelist.map((ele) => {
+                    return <option key={ele.value} value={ele.value}>{ele.value}</option>;
+                })}
+            </Input>
+        </FormGroup>
+      </Col>
+      <Col md="3">
+        <FormGroup>
+          <Label>Area</Label>
+          <Input
+            type="select"
+            name="staff_type"
+            onChange={handleInputs}
+            value={supplier && supplier.area}
+            >
+            <option defaultValue="selected">
+                Please Select
+            </option>
+                {areafromvaluelist && areafromvaluelist.map((ele) => {
+                    return <option key={ele.value} value={ele.value}>{ele.value}</option>;
+                })}
+            </Input>
         </FormGroup>
       </Col>
       </Row>
       <Row>
-      <Col md="4">
+      <Col md="3">
         <FormGroup>
-          <Label>Payment Details</Label>
+          <Label>Currency</Label>
           <Input
-            type="text"
+            type="select"
+            name="staff_type"
             onChange={handleInputs}
-            value={supplier && supplier.payment_details}
-            name="payment_details" />
+            value={supplier && supplier.currency}
+            >
+            <option defaultValue="selected">
+                Please Select
+            </option>
+                {currencyfromvaluelist && currencyfromvaluelist.map((ele) => {
+                    return <option key={ele.value} value={ele.value}>{ele.value}</option>;
+                })}
+            </Input>
         </FormGroup>
       </Col>
-      <Col md="4">
+      <Col md="3">
         <FormGroup>
           <Label>Terms</Label>
           <Input
-            type="text"
+            type="select"
+            name="staff_type"
             onChange={handleInputs}
             value={supplier && supplier.terms}
-            name="terms" />
+            >
+            <option defaultValue="selected">
+                Please Select
+            </option>
+                {termsfromvaluelist && termsfromvaluelist.map((ele) => {
+                    return <option key={ele.value} value={ele.value}>{ele.value}</option>;
+                })}
+            </Input>
         </FormGroup>
       </Col>
-      <Col md="4">
+      <Col md="3">
         <FormGroup>
-          <Label>Contact Person</Label>
+          <Label>Credit Limit</Label>
           <Input
             type="text"
             onChange={handleInputs}
-            value={supplier && supplier.contact_person}
-            name="contact_person"  />
+            value={supplier && supplier.credit_limit}
+            name="credit_limit" />
         </FormGroup>
       </Col>
+      <Col md="3">
+        <FormGroup>
+          <Label>Remarks</Label>
+          <Input
+            type="text"
+            onChange={handleInputs}
+            value={supplier && supplier.remarks}
+            name="remarks" />
+        </FormGroup>
+      </Col>
+      <Col md="3">
+        <FormGroup>
+          <Label>Cheque Print Name</Label>
+          <Input
+            type="text"
+            onChange={handleInputs}
+            value={supplier && supplier.cheque_print_name}
+            name="cheque_print_name" />
+        </FormGroup>
+      </Col>
+      <Col md="3">
+              <Label>Is Active</Label>
+              <FormGroup>
+                <Input
+                  type="radio"
+                  name="is_active"
+                  value="1"
+                  onChange={handleInputs}
+                  defaultChecked={supplier && supplier.is_active === 1 && true}
+                />
+                <Label>Yes</Label>
+      
+                <Input
+                  type="radio"
+                  name="published"
+                  value="0"
+                  onChange={handleInputs}
+                  defaultChecked={supplier && supplier.is_active === 0 && true}
+                />
+                <Label>No</Label>
+              </FormGroup>
+            </Col>
     </Row>
   </ComponentCard>
 </FormGroup>
 <FormGroup>
   <ComponentCard title="Address">
     <Row>
-      <Col md="4">
+      <Col md="3">
         <FormGroup>
           <Label>
             Address 1 
@@ -145,7 +314,7 @@ export default function SupplierDetails({  handleInputs ,supplier ,allCountries 
             name="address_flat"  />
         </FormGroup>
       </Col>
-      <Col md="4">
+      <Col md="3">
         <FormGroup>
           <Label>Address 2</Label>
           <Input
@@ -155,19 +324,29 @@ export default function SupplierDetails({  handleInputs ,supplier ,allCountries 
             name="address_street"  />
         </FormGroup>
       </Col>
-      <Col md="4">
+      <Col md="3">
         <FormGroup>
-          <Label>State/Zip</Label>
+          <Label>Address 3</Label>
           <Input
             type="text"
             onChange={handleInputs}
-            value={supplier && supplier.address_state}
-            name="address_state" />
+            value={supplier && supplier.address_street}
+            name="address_state"  />
+        </FormGroup>
+      </Col>
+      <Col md="3">
+        <FormGroup>
+          <Label>Portal</Label>
+          <Input
+            type="text"
+            onChange={handleInputs}
+            value={supplier && supplier.address_po_code}
+            name="address_po_code" />
         </FormGroup>
       </Col>
       </Row>
       <Row>
-      <Col md="4">
+      <Col md="3">
         <FormGroup>
         <Label>Country</Label>
           <Input
@@ -182,7 +361,7 @@ export default function SupplierDetails({  handleInputs ,supplier ,allCountries 
   </Input>
         </FormGroup>
       </Col>
-      <Col md="4">
+      <Col md="3">
         <FormGroup>
           <Label>Pin Code</Label>
           <Input

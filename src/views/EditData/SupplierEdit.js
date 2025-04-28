@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Form, FormGroup, Button } from 'reactstrap';
-import { ToastContainer } from 'react-toastify';
+import { Row, Col, Form, FormGroup, Button, TabContent, TabPane } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'datatables.net-dt/js/dataTables.dataTables';
 import 'datatables.net-dt/css/jquery.dataTables.min.css';
@@ -11,28 +10,46 @@ import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../form-editor/editor.scss';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
+import Tab from '../../components/ProjectTabs/Tab';
 import ComponentCard from '../../components/ComponentCard';
 import ComponentCardV2 from '../../components/ComponentCardV2';
 import message from '../../components/Message';
 import api from '../../constants/api';
-import PurchaseOrderLinked from '../../components/SupplierModal/Purchaseorderlinked';
-import SupplierTable from '../../components/SupplierModal/SupplierTable';
 import SupplierDetails from '../../components/SupplierModal/SupplierDetails';
+import Loginformation from '../../components/SupplierModal/Loginformation';
+import ContactDetails from '../../components/SupplierModal/ContactDetails';
+import Transaction from '../../components/SupplierModal/Transaction';
 
 const SupplierEdit = () => {
   //all state variables
   const [supplier, setSupplier] = useState();
-  const [purchaseOrder, setPurchaseOrder] = useState();
+  // const [purchaseOrder, setPurchaseOrder] = useState();
   const [allCountries, setAllCountries] = useState();
   const [editPurchaseOrderLinked, setEditPurchaseOrderLinked] = useState(false);
   const [supplierStatus, setSupplierStatus] = useState();
   const [status, setStatus] = useState();
+  const [taxfromvaluelist, setTaxFromValuelist] = useState();
+  const [pricegroupfromvaluelist, setPriceGroupFromValuelist] = useState();
+  const [contacttypefromvaluelist, setContactTypeFromValuelist] = useState();
+  const [currencyfromvaluelist, setCurrencyFromValuelist] = useState();
+  const [areafromvaluelist, setAreaFromValuelist] = useState();
+  const [termsfromvaluelist, setTermsFromValuelist] = useState();
+  const [activeTab, setActiveTab] = useState('1');
+
 
   //navigation and params
   const { id } = useParams();
   const navigate = useNavigate();
   const applyChanges = () => {};
 
+  const tabs = [
+    { id: '1', name: 'Supplier Login Info' },
+    { id: '2', name: 'Contact' },
+    { id: '3', name: 'Transaction' },
+  ];
+  const toggle = (tab) => {
+    setActiveTab(tab);
+  };
   // Get Supplier By Id
   const editSupplierById = () => {
     api
@@ -74,21 +91,87 @@ const SupplierEdit = () => {
         message('Unable to edit record.', 'error');
       });
   };
+//Api call for getting Tax From Valuelist
+const getTaxDrodownFromValuelist = () => {
+  api
+    .get('/supplier/getTaxDrodownFromValuelist')
+    .then((res) => {
+      setTaxFromValuelist(res.data.data);
+    })
+    .catch(() => {
+      message('Staff Data Not Found', 'info');
+    });
+};
+//Api call for getting Price Group From Valuelist
+const getPriceGroupDrodownFromValuelist = () => {
+  api
+    .get('/supplier/getPriceGroupDrodownFromValuelist')
+    .then((res) => {
+      setPriceGroupFromValuelist(res.data.data);
+    })
+    .catch(() => {
+      message('Staff Data Not Found', 'info');
+    });
+};
+//Api call for getting Contact Type From Valuelist
+const getContactTypeDrodownFromValuelist = () => {
+  api
+    .get('/supplier/getContactTypeDrodownFromValuelist')
+    .then((res) => {
+      setContactTypeFromValuelist(res.data.data);
+    })
+    .catch(() => {
+      message('Staff Data Not Found', 'info');
+    });
+};
+//Api call for getting Tax From Valuelist
+const getAreaDrodownFromValuelist = () => {
+  api
+    .get('/supplier/getAreaDrodownFromValuelist')
+    .then((res) => {
+      setAreaFromValuelist(res.data.data);
+    })
+    .catch(() => {
+      message('Staff Data Not Found', 'info');
+    });
+};
+//Api call for getting Currency From Valuelist
+const getCurrencyDrodownFromValuelist = () => {
+  api
+    .get('/supplier/getCurrencyDrodownFromValuelist')
+    .then((res) => {
+      setCurrencyFromValuelist(res.data.data);
+    })
+    .catch(() => {
+      message('Staff Data Not Found', 'info');
+    });
+};
 
+//Api call for getting Tax From Valuelist
+const getTermsDrodownFromValuelist = () => {
+  api
+    .get('/supplier/getTermsDrodownFromValuelist')
+    .then((res) => {
+      setTermsFromValuelist(res.data.data);
+    })
+    .catch(() => {
+      message('Staff Data Not Found', 'info');
+    });
+};
   useEffect(() => {
     editSupplierById();
   }, [id]);
   // Get purchaseOrder By Id
-  const getpurchaseOrder = () => {
-    api
-      .post('/supplier/getPurchaseOrderLinkedss', { supplier_id: id })
-      .then((res) => {
-        setPurchaseOrder(res.data.data);
-      })
-      .catch(() => {
-        message('Supplier not found', 'info');
-      });
-  };
+  // const getpurchaseOrder = () => {
+  //   api
+  //     .post('/supplier/getPurchaseOrderLinkedss', { supplier_id: id })
+  //     .then((res) => {
+  //       setPurchaseOrder(res.data.data);
+  //     })
+  //     .catch(() => {
+  //       message('Supplier not found', 'info');
+  //     });
+  // };
   const suppliereditdetails = () => {
     api
       .get('/geocountry/getCountry')
@@ -111,10 +194,16 @@ const SupplierEdit = () => {
       });
   };
   useEffect(() => {
-    getpurchaseOrder();
+    // getpurchaseOrder();
     suppliereditdetails();
     getSupplierStatus();
     Status();
+    getTaxDrodownFromValuelist();
+    getPriceGroupDrodownFromValuelist();
+    getContactTypeDrodownFromValuelist();
+    getAreaDrodownFromValuelist();
+    getTermsDrodownFromValuelist();
+    getCurrencyDrodownFromValuelist();
   }, []);
 
   return (
@@ -172,16 +261,46 @@ const SupplierEdit = () => {
         supplierStatus={supplierStatus}
         status={status}
         setEditPurchaseOrderLinked={setEditPurchaseOrderLinked}
+        taxfromvaluelist={taxfromvaluelist}
+        pricegroupfromvaluelist={pricegroupfromvaluelist}
+        contacttypefromvaluelist={contacttypefromvaluelist}
+        areafromvaluelist={areafromvaluelist}
+        currencyfromvaluelist={currencyfromvaluelist}
+        termsfromvaluelist={termsfromvaluelist}
+        editPurchaseOrderLinked={editPurchaseOrderLinked}
       ></SupplierDetails>
 
-      <PurchaseOrderLinked
+      {/* <PurchaseOrderLinked
         editPurchaseOrderLinked={editPurchaseOrderLinked}
         setEditPurchaseOrderLinked={setEditPurchaseOrderLinked}
-      ></PurchaseOrderLinked>
-      <ComponentCard>
+      ></PurchaseOrderLinked> */}
+
+      {/* <ComponentCard>
         <ToastContainer></ToastContainer>
         <SupplierTable purchaseOrder={purchaseOrder}></SupplierTable>
-      </ComponentCard>
+      </ComponentCard> */}
+
+       <ComponentCard title="More Details">
+              {/* Replace toggle and tabs with your implementation */}
+              <Tab toggle={toggle} tabs={tabs} />
+                  <TabContent className="p-4" activeTab={activeTab}>
+                <TabPane tabId="1">
+                  <Loginformation
+                  id={id}>
+                  </Loginformation>
+                  
+                </TabPane>
+                <TabPane tabId="2">
+                  <ContactDetails
+                ></ContactDetails>
+                 
+                </TabPane>
+                <TabPane tabId="3">
+                <Transaction></Transaction>
+                </TabPane>
+               
+              </TabContent>
+            </ComponentCard>
     </>
   );
 };
