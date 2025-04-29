@@ -17,6 +17,7 @@ const PrintPerfoma = ({ id }) => {
   const [salesOrder, setSalesOrder] = useState({});
   const [lineItems, setLineItems] = useState();
   const [hfdata, setHeaderFooterData] = useState();
+  const [gTotal, setGtotal] = useState(0);
 
   useEffect(() => {
     api.get('/setting/getSettingsForCompany').then((res) => {
@@ -43,11 +44,19 @@ const PrintPerfoma = ({ id }) => {
       .post('/salesOrder/getQuoteLineItemsById', { sales_order_id: id })
       .then((res) => {
         setLineItems(res.data.data);
+        let grandTotal = 0;
+        res.data.data.forEach((elem) => {
+          grandTotal += elem.total;
+        });
+        setGtotal(grandTotal);
       })
       .catch(() => {
         message('Sales Order Line Items Not Found', 'info');
       });
   };
+
+  const gst = gTotal * 0.07;
+    const totalWithGst = gTotal + gst;
 
   useEffect(() => {
     if (id) {
@@ -152,6 +161,27 @@ const PrintPerfoma = ({ id }) => {
             widths: ['auto', '*', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto'], // Adjust column widths
             body: productItems,
           },
+        },
+        {
+          table: {
+            widths: ['*', 'auto'],
+            body: [
+              [
+                { text: 'Subtotal', alignment: 'right', bold: true, fontSize: 10 },
+                { text: gTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right' },
+              ],
+              [
+                { text: 'GST (7%)', alignment: 'right', bold: true, fontSize: 10 },
+                { text: gst.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right' },
+              ],
+              [
+                { text: 'Total', alignment: 'right', bold: true, fontSize: 10 },
+                { text: totalWithGst.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right' },
+              ],
+            ],
+          },
+          layout: 'Borders',
+          margin: [0, 10, 0, 0],
         },
       ],
       styles: {
