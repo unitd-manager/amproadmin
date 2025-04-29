@@ -3,14 +3,14 @@ import pdfMake from 'pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 import { Button } from 'reactstrap';
 import PropTypes from 'prop-types';
+import moment from 'moment';
 import api from '../../constants/api';
 import message from '../Message';
 import PdfFooter from './PdfFooter'; // Assuming you have a footer component
 import PdfHeader from './PdfHeader'; // Assuming you have a header component
-import moment from 'moment';
 
-const PdfInvoiceSummary = ({ id }) => {
-  PdfInvoiceSummary.propTypes = {
+const PdfPackingList = ({ id }) => {
+  PdfPackingList.propTypes = {
     id: PropTypes.any,
   };
 
@@ -40,7 +40,7 @@ const PdfInvoiceSummary = ({ id }) => {
       });
 
     api
-      .post('/salesorder/getSalesOrderLineItems', { sales_order_id: id })
+      .post('/salesorder/getQuoteLineItemsById', { sales_order_id: id })
       .then((res) => {
         setLineItems(res.data.data || []);
       })
@@ -67,16 +67,39 @@ const PdfInvoiceSummary = ({ id }) => {
       ],
     ];
 
+    let totalLooseQty = 0;
+    let totalFocQty = 0;
+    let totalCQty = 0;
+    let totalQuantity = 0; // To store the sum of all quantities
+
     lineItems.forEach((item, index) => {
+      const lQty = parseFloat(item.loose_qty || 0);
+      const fQty = parseFloat(item.foc_qty || 0);
+      const cQty = parseFloat(item.carton_qty || 0);
+      const quantity = parseFloat(item.quantity || 0); // Assuming 'quantity' represents the base quantity
+
       productItems.push([
         { text: `${index + 1}`, style: 'tableBody' },
-        { text: `${item.title || ''}`, style: 'tableBody' },
-        { text: `${item.uom || ''}`, style: 'tableBody' },
-        { text: `${item.l_qty || ''}`, style: 'tableBody' },
-        { text: `${item.foc_qty || ''}`, style: 'tableBody' },
+        { text: `${item.product_name || ''}`, style: 'tableBody' },
         { text: `${item.quantity || ''}`, style: 'tableBody' },
+        { text: lQty.toFixed(2), style: 'tableBody' },
+        { text: fQty.toFixed(2), style: 'tableBody' },
+        { text: cQty.toFixed(2), style: 'tableBody' },
       ]);
+      totalLooseQty += lQty;
+      totalFocQty += fQty;
+      totalCQty += cQty;
+      totalQuantity += quantity; // Accumulate the base quantity
     });
+
+    productItems.push([
+      { text: '', style: 'tableBody' },
+      { text: 'Total', style: 'boldText', alignment: 'right' },
+      { text: '', style: 'tableBody' },
+      { text: totalLooseQty.toFixed(2), style: 'boldText' },
+      { text: totalFocQty.toFixed(2), style: 'boldText' },
+      { text: totalCQty.toFixed(2), style: 'boldText' },
+    ]);
 
     const dd = {
       pageSize: 'A4',
@@ -110,7 +133,7 @@ const PdfInvoiceSummary = ({ id }) => {
               style: 'textSize',
             },
             {
-              text: `Customer Name: ${salesOrder.customer_name || ''}`,
+              text: `Customer Name: ${salesOrder.contact_person || ''}`,
               style: 'textSize',
               alignment: 'right',
             },
@@ -128,13 +151,13 @@ const PdfInvoiceSummary = ({ id }) => {
         {
           columns: [
             {
-              text: `Total for Invoice No: ${salesOrder.invoice_code || salesOrder.sales_order_code || ''}`, // Assuming invoice_code or using sales_order_code as fallback
+              text: `Total for Invoice No: ${salesOrder.invoice_code || salesOrder.tran_no || ''}`, // Assuming invoice_code or using sales_order_code as fallback
               style: 'boldText',
               alignment: 'right',
               margin: [0, 10, 10, 0],
             },
             {
-              text: `Total: ${salesOrder.total_amount || ''}`, // Adjust field name for total amount
+              text: `Total Quantity: ${totalQuantity.toFixed(2)}`, // Display the total quantity
               style: 'boldText',
               alignment: 'right',
               margin: [10, 10, 0, 0],
@@ -172,10 +195,10 @@ const PdfInvoiceSummary = ({ id }) => {
   return (
     <>
       <Button type="button" className="btn btn-dark mr-2" onClick={GetPdf}>
-        Print Invoice Summary
+        Print Pack
       </Button>
     </>
   );
 };
 
-export default PdfInvoiceSummary;
+export default PdfPackingList;

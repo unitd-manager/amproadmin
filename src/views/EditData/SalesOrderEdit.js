@@ -29,6 +29,8 @@ import SalesOrderProducts from '../../components/SalesOrder/SalesOrderProducts';
 
 import SalesOrderPrintWithCost from '../../components/PDF/SalesOrderPrintWithCost';
 import PdfPickingList from '../../components/PDF/PdfPick';
+import PdfPackingList from '../../components/PDF/PdfPack';
+import PdfSalesQuote from '../../components/PDF/PdfSalesOrderQuote';
 import PrintPerfoma from '../../components/PDF/PrintPerfoma';
 
 
@@ -44,6 +46,12 @@ const SalesOrderEdit = () => {
       { id: '2', name: 'Currency' },
       { id: '3', name: 'Shipping' },
       { id: '4', name: 'Sales Man' },
+       { id: '5', name: 'Pdf Pick' },
+       { id: '6', name: 'Pdf Pack' },
+       { id: '10', name: 'Pdf quote' },
+
+
+     
        { id: '6', name: 'Pdf Pick' },
        { id: '7', name: 'Pdf Pick' },
     ];
@@ -234,11 +242,21 @@ useEffect(() => {
              handleInputs={handleInputs}
              ></SalesMan>
           </TabPane>
-          <TabPane tabId="6">
+          <TabPane tabId="5">
             <PdfPickingList
             id={id}
             ></PdfPickingList>
           </TabPane>
+          <TabPane tabId="6">
+            <PdfPackingList
+            id={id}
+            ></PdfPackingList>
+          </TabPane>
+          <TabPane tabId="10">
+            <PdfSalesQuote
+            id={id}
+            ></PdfSalesQuote>
+            </TabPane>
           <TabPane tabId="7">
           <SalesOrderPrintWithCost
           id={id}

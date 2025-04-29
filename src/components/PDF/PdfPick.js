@@ -7,7 +7,6 @@ import moment from 'moment';
 import api from '../../constants/api';
 import message from '../Message';
 import PdfFooter from './PdfFooter'; // Assuming you have a footer component
-import PdfHeader from './PdfHeader'; // Assuming you have a header component
 
 const PdfPickingList = ({ id }) => {
   PdfPickingList.propTypes = {
@@ -64,31 +63,31 @@ const PdfPickingList = ({ id }) => {
         { text: 'CQty', style: 'tableHead' },
       ],
     ];
-
+  
     lineItems.forEach((item, index) => {
+      const cQty = parseFloat(item.carton_qty || 0);
       productItems.push([
         { text: `${index + 1}`, style: 'tableBody' },
-        { text: `${item.title || ''}`, style: 'tableBody' },
-        { text: `${item.qty || ''}`, style: 'tableBody' },
-        { text: `${item.carton_qty || ''}`, style: 'tableBody' },
+        { text: `${item.product_name || ''}`, style: 'tableBody' },
+        { text: `${item.quantity || ''}`, style: 'tableBody' },
+        { text: cQty.toFixed(2), style: 'tableBody' },
       ]);
     });
-
+  
     const dd = {
       pageSize: 'A4',
       pageMargins: [40, 150, 40, 80], // Adjust margins as needed
-      header: PdfHeader({ findCompany }), // Assuming your header needs company info
       footer: PdfFooter, // Assuming you have a standard footer
       content: [
         {
           text: findCompany('company_name') || 'Ampro PTE LTD', // Fallback if not found
           style: 'header',
-          alignment: 'center',
+          alignment: 'left',
         },
         {
           text: 'Picking List',
           style: 'subheader',
-          alignment: 'center',
+          alignment: 'left',
           margin: [0, 0, 0, 10],
         },
         {
@@ -97,8 +96,9 @@ const PdfPickingList = ({ id }) => {
           margin: [0, 0, 0, 5],
         },
         {
-          text: `Print Date: ${moment().format('DD-MM-YYYY')}`,
+          text: `Print Date: ${moment().format('DD-MM-YYYY HH:mm:ss')}`,
           style: 'textSize',
+          alignment: 'right',
           margin: [0, 0, 0, 15],
         },
         {
@@ -122,21 +122,41 @@ const PdfPickingList = ({ id }) => {
         tableHead: {
           bold: true,
           fontSize: 10,
-          color: 'black',
+          color: 'white',
+          fillColor: 'black',
+          alignment: 'center',
+          padding: 5,
+          wordWrap: 'break-word', // Allow wrapping of text in header
         },
         tableBody: {
           fontSize: 9,
+          padding: 5,
+          wordWrap: 'break-word', // Wrap text in body for long words
         },
         textSize: {
           fontSize: 10,
         },
+        boldText: {
+          fontSize: 10,
+          bold: true,
+        },
+      },
+      layout: {
+        hLineWidth: () => 1, // Horizontal line width
+        vLineWidth: () => 1, // Vertical line width
+        hLineColor: () => '#000000', // Color of horizontal lines
+        vLineColor: () => '#000000', // Color of vertical lines
+        paddingLeft: () => 5, // Padding for left side
+        paddingRight: () => 5, // Padding for right side
+        paddingTop: () => 5, // Padding for top side
+        paddingBottom: () => 5, // Padding for bottom side
       },
     };
-
+  
     pdfMake.vfs = pdfFonts.pdfMake.vfs;
     pdfMake.createPdf(dd, null, null, pdfFonts.pdfMake.vfs).open();
   };
-
+  
   return (
     <>
       <Button type="button" className="btn btn-dark mr-2" onClick={GetPdf}>
