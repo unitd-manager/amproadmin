@@ -83,6 +83,7 @@ export default function SectionDetail({section,valuelist,handleInputs}) {
           <option value="Payroll">Payroll</option>
           <option value="Master Payroll">Master Payroll</option>
           <option value="Employee">Employee</option>
+          <option value="Main">Main</option>
           </Input>
       </Col>
       <Col md="4">
