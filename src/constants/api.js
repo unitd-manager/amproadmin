@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-baseURL: 'https://ampro.zaitunsoftsolutions.com:2004',
+baseURL: 'http://amproadmin.zaitunsoftsolutions.com:2003',
 // baseURL: 'http://localhost:2003',
 });
 

@@ -71,60 +71,60 @@ const InvoiceData = () => {
         },
 
     {
-      name: 'Invoice Code',
+      name: 'Tran No',
       selector: 'invoice_code',
       sortable: true,
       grow: 0,
       wrap: true,
     },
     {
-      name: 'Project Name',
-      selector: 'project_title',
+      name: 'Tran Date',
+      selector: 'invoice_date',
       sortable: true,
       grow: 0,
     },
     {
-      name: 'Client Name',
+      name: 'Customr',
       selector: 'company_name',
       sortable: true,
       grow: 2,
       wrap: true,
     },
     {
-      name: 'Invoice Date',
+      name: 'Print Status',
       selector: 'invoice_date',
       sortable: true,
       grow: 0,
     },
     {
-      name: 'Amount',
+      name: 'Sub Total',
       selector: 'invoice_amount',
       sortable: true,
       width: 'auto',
       grow: 3,
     },
     {
-      name: 'Due Date',
+      name: 'Tax',
       selector: 'invoice_due_date',
       sortable: true,
       grow: 2,
       width: 'auto',
     },
     {
-      name: 'Age',
+      name: 'Net Total',
       selector: 'age',
       sortable: true,
       grow: 2,
       wrap: true,
     },
     {
-      name: 'Status',
+      name: 'Paid Amount',
       selector: 'status',
       sortable: true,
       width: 'auto',
     },
     {
-      name: 'Type',
+      name: 'Balance Amount',
       selector: 'invoice_type',
       sortable: true,
       width: 'auto',
@@ -155,7 +155,7 @@ const InvoiceData = () => {
                                           </Link>
                                         </td>
                     <td>{element.invoice_code}</td>
-                    <td>{element.project_title}</td>
+                    <td>{(element.invoice_date)? moment(element.invoice_date).format('DD-MM-YYYY'):''}</td>
                     <td>{element.company_name}</td>
                     {/* <td>{moment(element.invoice_date).format('YYYY-MM-DD')}</td> */}
                     <td>{(element.invoice_date)? moment(element.invoice_date).format('DD-MM-YYYY'):''}</td>
