@@ -68,12 +68,23 @@ export default function SectionDetail({section,valuelist,handleInputs}) {
           name="groups"
         >
           <option defaultValue="selected">Please Select</option>
-          <option value="Reports">Reports</option>
-          <option value="Home">Home</option>
-          <option value="Admin">Admin</option>
-          <option value="Main">Main</option>
+          <option value="Master Inv">Master Inv</option>
+          <option value="Product">Product</option>
+          <option value="Purchase">Purchase</option>
+          <option value="Sales">Sales</option>
+          <option value="Stock">Stock</option>
+          <option value="Scheduling">Scheduling</option>
+          <option value="Analysis">Analysis</option>
+          <option value="Finance">Finance</option>
+          <option value="Transaction">Transaction</option>
+          <option value="Master Ecom">Master Ecom</option>
+          <option value="Route Optimizationion">Master Optimization</option>
+          <option value="Route">Route</option>
           <option value="Payroll">Payroll</option>
-        </Input>
+          <option value="Master Payroll">Master Payroll</option>
+          <option value="Employee">Employee</option>
+          <option value="Main">Main</option>
+          </Input>
       </Col>
       <Col md="4">
         <FormGroup>
