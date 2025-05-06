@@ -84,12 +84,12 @@ const PrintPerfoma = ({ id }) => {
         { text: `${index + 1}`, style: 'tableBody' },
         { text: `${item.product_name || ''}`, style: 'tableBody' },
         { text: `${item.quantity || ''}`, style: 'tableBody' },
+        { text: `${item.carton_qty || ''}`, style: 'tableBody' },
+        { text: `${item.loose_qty || ''}`, style: 'tableBody' },
+        { text: `${item.foc || ''}`, style: 'tableBody' },
+        { text: `${item.carton_price || ''}`, style: 'tableBody' },
         { text: `${item.wholesale_price || ''}`, style: 'tableBody' },
-        { text: `${item.quantity || ''}`, style: 'tableBody' },
         { text: `${item.total || ''}`, style: 'tableBody' },
-        { text: `${item.quantity || ''}`, style: 'tableBody' },
-        { text: `${item.quantity || ''}`, style: 'tableBody' },
-        { text: `${item.quantity || ''}`, style: 'tableBody' },
       ]);
     });
 
@@ -100,34 +100,92 @@ const PrintPerfoma = ({ id }) => {
       footer: PdfFooter, // Assuming you have a standard footer
       content: [
         {
-          text: findCompany('company_name') || 'AMPRO PTE LTD', // Fallback if not found
-          style: 'header',
-          alignment: 'center',
-          margin: [0, 0, 0, 10],
+          columns: [
+            { width: '*', text: '' }, // left spacer
+            {
+              width: 'auto',
+              table: {
+                widths: ['auto'],
+                body: [
+                  [
+                    {
+                      text: 'Sole Distributors : Danish Food, Dekko Food, Pran Food',
+                      style: 'textSize',
+                      alignment: 'center',
+                      margin: [5, 5, 5, 5],
+                      bold: true,
+                    },
+                  ],
+                ],
+              },
+              layout: {
+                hLineWidth: () => 0.5,
+                vLineWidth: () => 0.5,
+                hLineColor: () => '#000000',
+                vLineColor: () => '#000000',
+              },
+            },
+            { width: '*', text: '' } // right spacer
+          ],
+          margin: [0, 0, 0, 15]
         },
-        {
-          text: 'Sole Distributors : Danish Food,Dekko Food,Pran Food',
-          style: 'subheader',
-          alignment: 'center',
-          margin: [0, 0, 0, 20],
-        },
+        
         {
             columns: [
+              // {
+              //   width: '50%',
+              //   stack: [
+              //     { text: 'Customer Address:', bold: true },
+              //     { text: '', margin: [8, 0, 0, 0] },
+              //     { text: salesOrder.company_name || '', margin: [8, 0, 0, 0] },
+              //     { text: salesOrder.address_street || '', margin: [8, 0, 0, 0] },
+              //     { text: salesOrder.address_down || '', margin: [8, 0, 0, 0] },
+              //     { text: salesOrder.address_country || '', margin: [8, 0, 0, 0] },
+              //     { text: salesOrder.address_po_code || '', margin: [8, 0, 0, 0] },
+              //     { text: '', margin: [8, 0, 0, 0] },
+              //     { text: 'TEL: 6789098765', margin: [8, 5, 0, 0] },
+              //   ],
+              //   layout: 'Borders',
+              // style: 'textSize',
+              // },
               {
                 width: '50%',
-                stack: [
-                  { text: 'Customer Address:', bold: true },
-                  { text: '', margin: [8, 0, 0, 0] },
-                  { text: salesOrder.company_name || '', margin: [8, 0, 0, 0] },
-                  { text: salesOrder.address_street || '', margin: [8, 0, 0, 0] },
-                  { text: salesOrder.address_down || '', margin: [8, 0, 0, 0] },
-                  { text: salesOrder.address_country || '', margin: [8, 0, 0, 0] },
-                  { text: salesOrder.address_po_code || '', margin: [8, 0, 0, 0] },
-                  { text: '', margin: [8, 0, 0, 0] },
-                  { text: 'TEL: 6789098765', margin: [8, 5, 0, 0] },
-                ],
-                layout: 'Borders',
-              style: 'textSize',
+                table: {
+                  widths: ['*'],
+                  body: [
+                    [
+                      { text: 'Customer Address:', bold: true }
+                    ],
+                    [
+                      {
+                        text: [
+                          salesOrder.company_name || '', '\n',
+                          salesOrder.address_street || '', '\n',
+                          salesOrder.address_down || '', '\n',
+                          salesOrder.address_country || '', '\n',
+                          salesOrder.address_po_code || '', '\n',
+                          'TEL: 6789098765', '\n', '\n','\n',
+                        ],
+                        margin: [8, 4, 0, 4],
+                        layout: {
+                          // Full borders for the Customer Address row
+                          hLineWidth: (i, node) => (i === 0 || i === node.table.body.length ? 0.5 : 0), // Border on top and bottom
+                          vLineWidth: (i, node) => (i === 0 || i === node.table.widths.length ? 0.5 : 0), // Border on left and right
+                          hLineColor: () => '#000000',
+                          vLineColor: () => '#000000',
+                        }
+                      }
+                    ]
+                  ]
+                },
+                layout: {
+                  // Outside borders for other rows
+                  hLineWidth: (i, node) => (i === 0 || i === node.table.body.length ? 0.5 : 0), // Top and bottom borders
+                  vLineWidth: (i, node) => (i === 0 || i === node.table.widths.length ? 0.5 : 0), // Left and right borders
+                  hLineColor: () => '#000000',
+                  vLineColor: () => '#000000'
+                },
+                style: 'textSize'
               },
               
               {
@@ -135,27 +193,66 @@ const PrintPerfoma = ({ id }) => {
                 stack: [
                   {
                     table: {
-                      widths: ['30%', '5%', '65%'],
+                      widths: ['30%', '65%'],
                       body: [
-                        ['TRAN NO', ':', salesOrder.tran_no || ''],
-                        ['TRAN DATE', ':', salesOrder.tran_date ? moment(salesOrder.tran_date).format('DD-MM-YYYY') : ''],
-                        ['TERMS', ':', salesOrder.terms || ''],
-                        ['PAGE', ':',salesOrder.order_no || '' ],
-                        ['AGENT NAME', ':', salesOrder.gst_reg_no || ''],
-                      ],
+                        [
+                          { text: 'TRAN NO', margin: [5, 3, 5, 3] },
+                          { text: salesOrder.tran_no || '', margin: [5, 3, 5, 3] }
+                        ],
+                        [
+                          { text: 'TRAN DATE', margin: [5, 3, 5, 3] },
+                          { text: salesOrder.tran_date ? moment(salesOrder.tran_date).format('DD-MM-YYYY') : '', margin: [5, 3, 5, 3] }
+                        ],
+                        [
+                          { text: 'TERMS', margin: [5, 3, 5, 3] },
+                          { text: salesOrder.terms || '', margin: [5, 3, 5, 3] }
+                        ],
+                        [
+                          { text: 'PAGE', margin: [5, 3, 5, 3] },
+                          { text: salesOrder.order_no || '', margin: [5, 3, 5, 3] }
+                        ],
+                        [
+                          { text: 'AGENT NAME', margin: [5, 3, 5, 3] },
+                          { text: salesOrder.gst_reg_no || '', margin: [5, 3, 5, 3] }
+                        ],
+                      ]
                     },
-                    layout: 'Borders',
+                    layout: {
+                      hLineWidth(i, node) {
+                        return i === 0 || i === node.table.body.length ? 0.5 : 0;
+                      },
+                      vLineWidth(i, node) {
+                        return i === 0 || i === node.table.widths.length ? 0.5 : 0;
+                      },
+                      hLineColor() {
+                        return '#000000';
+                      },
+                      vLineColor() {
+                        return '#000000';
+                      }
+                    },
+                    
+                    
                     style: 'textSize',
-                  },
-                ],
+                  }
+                ]
               },
+              
             ],
             columnGap: 10,
             margin: [0, 0, 0, 15],
           },
           
         {
-          layout: 'lightHorizontalLines',
+          layout: {
+            hLineWidth: () => 1,
+            vLineWidth: () => 1,
+            hLineColor: () => '#000',
+            vLineColor: () => '#000',
+            fillColor: (rowIndex) => {
+              return rowIndex === 0 ? '#f2f2f2' : null; // light gray header
+            },
+          },
           table: {
             headerRows: 1,
             widths: ['auto', '*', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto'], // Adjust column widths
@@ -164,25 +261,71 @@ const PrintPerfoma = ({ id }) => {
         },
         {
           table: {
-            widths: ['*', 'auto'],
+            widths: ['60%', '20%', '20%'],
             body: [
               [
-                { text: 'Subtotal', alignment: 'right', bold: true, fontSize: 10 },
-                { text: gTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right' },
+                {
+                  text: 'Remarks:\n',
+                  bold: true,
+                  colSpan: 1,
+                  rowSpan: 3,
+                  margin: [5, 5, 5, 5],
+                },
+                { text: 'Subtotal   :', bold: true, alignment: 'center', margin: [5, 5, 5, 5] },
+                { text: gTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right', margin: [5, 5, 5, 5] }
               ],
               [
-                { text: 'GST (7%)', alignment: 'right', bold: true, fontSize: 10 },
-                { text: gst.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right' },
+                {}, // empty cell due to rowspan
+                { text: 'GST (7%)   :', bold: true, alignment: 'center', margin: [5, 5, 5, 5] },
+                { text: gst.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right', margin: [5, 5, 5, 5] }
               ],
               [
-                { text: 'Total', alignment: 'right', bold: true, fontSize: 10 },
-                { text: totalWithGst.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right' },
-              ],
-            ],
+                {}, // empty cell due to rowspan
+                { text: 'Net Total  :', bold: true, alignment: 'center', margin: [5, 5, 5, 5] },
+                { text: totalWithGst.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right', margin: [5, 5, 5, 5] }
+              ]
+            ]
           },
-          layout: 'Borders',
-          margin: [0, 10, 0, 0],
+          layout: {
+            hLineWidth: (i, node) => (i === 0 || i === node.table.body.length ? 0.5 : 0),
+            vLineWidth: (i, node) => (i === 0 || i === node.table.widths.length ? 0.5 : 0),
+            hLineColor: () => '#000000',
+            vLineColor: () => '#000000',
+          },
+          style: 'textSize',
+          margin: [0, 0, 0, 10],
         },
+        {
+          text: 'E. & O. E.',
+          alignment: 'center', // or 'right' or 'center' as needed
+          margin: [0, 5, 0, 0],
+          style: 'textSize'
+        },
+         {
+                  margin: [0, 80, 0, 0], // space from totals
+                  columns: [
+                    {
+                      width: '50%',
+                      
+                      stack: [
+                        { text: '________________________________________________', margin: [0, 0, 0, 10]},
+                        { text: 'Good Received in Good condition', italics: true, alignment: 'center',fontSize: 8 },
+                        { text: 'Customer Authorised Signature and' , italics: true, alignment: 'center', fontSize: 8},
+                        { text: 'company stamp', italics: true, alignment: 'center', fontSize: 8 },
+                      ],
+                      style: 'textSize',
+                    },
+                    {
+                      width: '50%',
+                      alignment: 'left',
+                      stack: [
+                        { text: '________________________________________________', margin: [0, 0, 0, 10]},
+                        { text: 'for AMPRO PTE LTD', alignment: 'center', fontSize: 8  },
+                      ],
+                      style: 'textSize',
+                    },
+                  ],
+                },
       ],
       styles: {
         header: {
