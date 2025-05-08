@@ -112,48 +112,48 @@ const Test = () => {
     }
   };
 
-  const generateDelivery = async () => {
-    if (!selectedOrder) {
-      message('Please select a sales order first', 'error');
-      return;
-    }
-    try {
-      const deliveryCode = await api.post('/commonApi/getCodeValues', { type: 'delivery' }).then((res) => res.data.data);
-      const payload = {
-        sales_order_id: selectedOrder.sales_order_id,
-        company_id: selectedOrder.company_id,
-        delivery_code: deliveryCode,
-      };
-      const response = await api.post('/salesOrder/generateDeliveryFromSalesOrder', payload);
-      message(response.data.message, 'success');
-    } catch (error) {
-      message(error.response?.data?.message || 'Failed to generate invoice', 'error');
-    }
-  };
+  // const generateDelivery = async () => {
+  //   if (!selectedOrder) {
+  //     message('Please select a sales order first', 'error');
+  //     return;
+  //   }
+  //   try {
+  //     const deliveryCode = await api.post('/commonApi/getCodeValues', { type: 'delivery' }).then((res) => res.data.data);
+  //     const payload = {
+  //       sales_order_id: selectedOrder.sales_order_id,
+  //       company_id: selectedOrder.company_id,
+  //       delivery_code: deliveryCode,
+  //     };
+  //     const response = await api.post('/salesOrder/generateDeliveryFromSalesOrder', payload);
+  //     message(response.data.message, 'success');
+  //   } catch (error) {
+  //     message(error.response?.data?.message || 'Failed to generate invoice', 'error');
+  //   }
+  // };
 
-  const repeatSalesOrder = async () => {
-    if (!selectedOrder) {
-      message('Please select a sales order first', 'error');
-      return;
-    }
-    try {
-      const newSalesOrderCode = await api.post('/commonApi/getCodeValues', { type: 'salesorder' }).then((res) => res.data.data);
-      const todayDate = new Date().toISOString().split('T')[0];
-      const payload = {
-        ...selectedOrder,
-        original_sales_order_id: selectedOrder.sales_order_id,
-        tran_no: newSalesOrderCode,
-        tran_date: todayDate,
-      };
-      delete payload.sales_order_id;
-      delete payload.created_by;
-      const response = await api.post('/salesOrder/insertSalesOrder', payload);
-      message(response.data.message || 'Sales order repeated successfully', 'success');
-      getSupplier();
-    } catch (error) {
-      message(error.response?.data?.message || 'Failed to repeat sales order', 'error');
-    }
-  };
+  // const repeatSalesOrder = async () => {
+  //   if (!selectedOrder) {
+  //     message('Please select a sales order first', 'error');
+  //     return;
+  //   }
+  //   try {
+  //     const newSalesOrderCode = await api.post('/commonApi/getCodeValues', { type: 'salesorder' }).then((res) => res.data.data);
+  //     const todayDate = new Date().toISOString().split('T')[0];
+  //     const payload = {
+  //       ...selectedOrder,
+  //       original_sales_order_id: selectedOrder.sales_order_id,
+  //       tran_no: newSalesOrderCode,
+  //       tran_date: todayDate,
+  //     };
+  //     delete payload.sales_order_id;
+  //     delete payload.created_by;
+  //     const response = await api.post('/salesOrder/insertSalesOrder', payload);
+  //     message(response.data.message || 'Sales order repeated successfully', 'success');
+  //     getSupplier();
+  //   } catch (error) {
+  //     message(error.response?.data?.message || 'Failed to repeat sales order', 'error');
+  //   }
+  // };
 
   return (
     <div className="MainDiv">
@@ -186,14 +186,14 @@ const Test = () => {
               </DropdownToggle>
               <DropdownMenu>
                 <DropdownItem onClick={generateInvoice}>Convert To Sales Invoice</DropdownItem>
-                <DropdownItem onClick={generateDelivery}>Convert To Delivery Order</DropdownItem>
-                <DropdownItem onClick={repeatSalesOrder}>Repeat Sales Order</DropdownItem>
+                {/* <DropdownItem onClick={generateDelivery}>Convert To Delivery Order</DropdownItem> */}
+                {/* <DropdownItem onClick={repeatSalesOrder}>Repeat Sales Order</DropdownItem> */}
                 <DropdownItem>Print Pick List</DropdownItem>
                 <DropdownItem>Print Packing</DropdownItem>
                 <DropdownItem>Print Quotation</DropdownItem>
-                <DropdownItem>Tracking Images</DropdownItem>
+                {/* <DropdownItem>Tracking Images</DropdownItem> */}
                 <DropdownItem>Print With Cost</DropdownItem>
-                <DropdownItem>Updated Weight Info</DropdownItem>
+                {/* <DropdownItem>Updated Weight Info</DropdownItem> */}
                 <DropdownItem>Print Performa</DropdownItem>
               </DropdownMenu>
             </Dropdown>
