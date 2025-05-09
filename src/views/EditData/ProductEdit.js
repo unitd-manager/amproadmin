@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Row, Col, Form, FormGroup, Button, TabContent, NavItem, NavLink, Nav, TabPane } from 'reactstrap';
+import { Row, Col, Form, FormGroup, Button, TabContent, TabPane } from 'reactstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Editor } from 'react-draft-wysiwyg';
 import draftToHtml from 'draftjs-to-html';
@@ -9,6 +9,7 @@ import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import '../form-editor/editor.scss';
 import * as Icon from 'react-feather';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
+import Tab from '../../components/ProjectTabs/Tab';
 import ComponentCard from '../../components/ComponentCard';
 import message from '../../components/Message';
 import api from '../../constants/api';
@@ -20,7 +21,7 @@ import AttachmentModalV2 from '../../components/Tender/AttachmentModalV2';
 import ProductDetail from '../../components/ProductTable/ProductDetail';
 import creationdatetime from '../../constants/creationdatetime';
 import AppContext from '../../context/AppContext';
-import ContactPriceButton from '../../components/ProductTable/ContactPriceButton';
+// import ContactPriceButton from '../../components/ProductTable/ContactPriceButton';
 
 const ProductUpdate = () => {
   // All state variables
@@ -34,7 +35,7 @@ const ProductUpdate = () => {
   const [RoomName, setRoomName] = useState('');
   const [fileTypes, setFileTypes] = useState('');
   const [attachmentModal, setAttachmentModal] = useState(false);
-  const [modal, setModal] = useState(false);
+  // const [modal, setModal] = useState(false);
   const [attachmentData, setDataForAttachment] = useState({
     modelType: '',
   });
@@ -55,12 +56,20 @@ const ProductUpdate = () => {
       [type]: draftToHtml(convertToRaw(e.getCurrentContent())),
     });
   };
+
+  const tabs = [
+    { id: '1', name: 'Product Description'},
+    { id: '2', name: 'Image'},
+    { id: '3', name: 'Product UOM'},
+    { id: '4', name: 'Product Variation'},
+    // { id: '5', name: 'Contact Price Button'},
+  ];
   const toggle = (tab) => {
     if (activeTab !== tab) setActiveTab(tab);
   };
-  const toggletype = () => {
-    setModal(!modal);
-  };
+  // const toggletype = () => {
+  //   setModal(!modal);
+  // };
   //Description Modal
   const convertHtmlToDraft = (existingQuoteformal) => {
     const contentBlock = htmlToDraft(existingQuoteformal && existingQuoteformal);
@@ -93,8 +102,10 @@ const ProductUpdate = () => {
         .post('/product/edit-Product', productDetails)
         .then(() => {
           message('Record edited successfully', 'success');
+          setTimeout(() => {
+            window.location.reload();
+          }, 700);
         })
-
         .catch(() => {
           message('Unable to edit record.', 'error');
         });
@@ -185,7 +196,7 @@ const getSupplier = () => {
       <BreadCrumbs heading={productDetails && productDetails.title} />
       <Form>
         <FormGroup>
-        <TabContent className="p-4" activeTab={activeTab}>
+           
           <ProductEditButtons id={id} editProductData={editProductData} navigate={navigate} />
           {/* Product Details Form */}
           <ProductDetail
@@ -197,75 +208,14 @@ const getSupplier = () => {
             branddropdown={branddropdown}
             supplierdropdown={supplierdropdown}
           ></ProductDetail>
-          {/* Product Details Form */}
-          <Row>
-          <Nav tabs>
-            <NavItem>
-              <NavLink
-                className={activeTab === '1' ? 'active' : ''}
-                onClick={() => {
-                  toggle('1');
-                }}
-              >
-                Product Description
-              </NavLink>
-            </NavItem>
-            
-            {/* <NavItem>
-              <NavLink
-                className={activeTab === '2' ? 'active' : ''}
-                onClick={() => {
-                  toggle('2');
-                }}
-              >
-               Contact Price Button
-              </NavLink>
-            </NavItem>
-             {/* <NavItem>
-              <NavLink
-                className={activeTab === '3' ? 'active' : ''}
-                onClick={() => {
-                  toggle('3');
-                }}
-              >
-                Product Size
-              </NavLink>
-            </NavItem> */}
-            <NavItem>
-              <NavLink
-                className={activeTab === '3' ? 'active' : ''}
-                onClick={() => {
-                  toggle('3');
-                }}
-              >
-                Attachments
-              </NavLink>
-            </NavItem>
-            <NavItem>
-  <NavLink
-    className={activeTab === '3' ? 'active' : ''}
-    onClick={() => {
-      toggle('3');
-    }}
-  >
-    Product UOM
-  </NavLink>
-</NavItem>
-<NavItem>
-  <NavLink
-    className={activeTab === '4' ? 'active' : ''}
-    onClick={() => {
-      toggle('4');
-    }}
-  >
-    Product Variation
-  </NavLink>
-</NavItem>
-          </Nav>
-        </Row>
+     
+      </FormGroup>
+      </Form>
         {/* Delivery address Form */}
-        <TabPane tabId="1">
-        <ComponentCard title="Product Description">
+        <ComponentCard title="More Details">
+        <Tab toggle={toggle} tabs={tabs} />
+         <TabContent className="p-4" activeTab={activeTab}>
+          <TabPane tabId="1">
                 <Editor
                   editorState={productDescription}
                   wrapperClassName="demo-wrapper mb-0"
@@ -275,24 +225,8 @@ const getSupplier = () => {
                     setProductDescription(e);
                   }}
                 />
-              </ComponentCard>
         </TabPane>
 
-        <TabPane tabId="2">
-        <ComponentCard title="Contact Price Button">
-        <Col md="3" className="addNew">
-                    <Button color="primary" className="shadow-none" onClick={toggletype.bind(null)}>
-                        Add New
-                    </Button>
-                  </Col>
-              </ComponentCard>
-              <ContactPriceButton
-                ProductId={id}
-                addPurchaseOrderModal={modal}
-                setAddPurchaseOrderModal={setModal}
-                productDetails={productDetails}
-              ></ContactPriceButton>
-        </TabPane>
 
         {/* Customer Details Form */}
         {/* <TabPane tabId="2">
@@ -309,8 +243,7 @@ const getSupplier = () => {
           ></ProductSize>
           </ComponentCard>
         </TabPane> */}
-        <TabPane tabId="3">
-        <ComponentCard title="Attachments">
+        <TabPane tabId="2">
             <Row>
               <Col xs="12" md="3" className="mb-3">
                 <Button
@@ -339,24 +272,35 @@ const getSupplier = () => {
               mediaType={attachmentData.modelType}
             />
             <ViewFileComponentV2 moduleId={id} roomName="Product" recordType="RelatedPicture" />
-          </ComponentCard>
         </TabPane>
         <TabPane tabId="3">
-  <ComponentCard title="Product UOM">
     <ProductUOM productId={id} />
-  </ComponentCard>
 </TabPane>
 <TabPane tabId="4">
-  <ComponentCard title="Product Variation">
+ 
     <ProductVariation productId={id} />
-  </ComponentCard>
 </TabPane>
 
+{/* <TabPane tabId="5">
+        <Col md="3" className="addNew">
+                    <Button color="primary" className="shadow-none" onClick={toggletype.bind(null)}>
+                        Add New
+                    </Button>
+                  </Col>
+              <ContactPriceButton
+                ProductId={id}
+                addPurchaseOrderModal={modal}
+                setAddPurchaseOrderModal={setModal}
+                productDetails={productDetails}
+              ></ContactPriceButton> 
+        </TabPane> */}
       </TabContent>
-      </FormGroup>
-      </Form>
+      </ComponentCard>
+     
+    
     
     </>
+
   );
 };
 export default ProductUpdate;

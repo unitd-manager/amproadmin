@@ -40,7 +40,9 @@ const SupplierEdit = () => {
   //navigation and params
   const { id } = useParams();
   const navigate = useNavigate();
-  const applyChanges = () => {};
+  const applyChanges = () => {
+    navigate('/Supplier');
+  };
 
   const tabs = [
     { id: '1', name: 'Supplier Login Info' },
@@ -233,7 +235,9 @@ const getTermsDrodownFromValuelist = () => {
                   className="shadow-none"
                   onClick={() => {
                     editSupplierData();
-                   
+                    setTimeout(() => {
+                      window.location.reload();
+                    }, 1100);
                   }}
                 >
                   Apply
@@ -286,7 +290,10 @@ const getTermsDrodownFromValuelist = () => {
                   <TabContent className="p-4" activeTab={activeTab}>
                 <TabPane tabId="1">
                   <Loginformation
-                  id={id}>
+                  id={id}
+                  logInfo={supplier}
+                  handleInputs={handleInputs}
+                  >
                   </Loginformation>
                   
                 </TabPane>

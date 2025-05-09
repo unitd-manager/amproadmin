@@ -253,8 +253,8 @@ export default function ProductDetail({ productDetails, handleInputs,categorydro
                   <Input
                     type="text"
                     onChange={handleInputs}
-                    value={productDetails && productDetails.product_weight }
-                    name="product_weight "
+                    value={productDetails && productDetails.product_weight}
+                    name="product_weight"
                   />
                 </FormGroup>
               </Col>
@@ -421,7 +421,7 @@ export default function ProductDetail({ productDetails, handleInputs,categorydro
                     name="show_on_purchase"
                     value="1"
                     type="radio"
-                    efaultChecked={productDetails && productDetails.show_on_purchase === 1 && true}
+                    defaultChecked={productDetails && productDetails.show_on_purchase === 1 && true}
                     onChange={handleInputs}
                   />
                   &nbsp; &nbsp;
@@ -436,7 +436,6 @@ export default function ProductDetail({ productDetails, handleInputs,categorydro
                   />
                 </FormGroup>
               </Col>
-
               <Col md="3">
                 <Label>Show On Sales</Label>
                 <FormGroup>
@@ -511,8 +510,9 @@ export default function ProductDetail({ productDetails, handleInputs,categorydro
                   />
                 </FormGroup>
               </Col>
+              
               <Col md="3">
-                <Label>ECommerce</Label>
+                <Label>Ecommerce</Label>
                 <FormGroup>
                   <Label>Yes</Label>
                   &nbsp;

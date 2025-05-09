@@ -33,8 +33,8 @@ export default function SupplierDetails({  handleInputs ,supplier ,allCountries 
           <Input
             type="text"
             onChange={handleInputs}
-            value={supplier && supplier.company_name}
-            name="company_name"/>
+            value={supplier && supplier.supplier_code}
+            name="supplier_code"/>
         </FormGroup>
       </Col>
       <Col md="3">
