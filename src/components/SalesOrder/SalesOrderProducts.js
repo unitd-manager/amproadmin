@@ -223,7 +223,17 @@ const saveBillDiscount = async (value) => {
         <strong>Uom: </strong> {selectedProduct.unit || '0.00'}&nbsp;&nbsp;
         <strong>Pieces/Carton:</strong> {selectedProduct.pcs_per_carton || '0.00'}&nbsp;&nbsp;
         <strong>Purchase UnitCost:</strong> {selectedProduct.purchase_unit_cost || '0.00'}&nbsp;&nbsp;
-        <strong>Profit%:</strong> {selectedProduct.profit_percent || '0.00'}&nbsp;&nbsp;
+        <strong>Profit%:</strong>{' '}
+{selectedProduct?.purchase_unit_cost > 0
+  ? (
+      ((parseFloat(selectedProduct.whole_price || 0) -
+        parseFloat(selectedProduct.purchase_unit_cost || 0)) /
+        parseFloat(selectedProduct.purchase_unit_cost || 1)) *
+      100
+    ).toFixed(2)
+  : '0.00'}
+%
+        &nbsp;&nbsp;
         <strong>Wholesale Price:</strong> {selectedProduct.whole_price || '0.00'}&nbsp;&nbsp;
         <strong>Carton Price:</strong> {selectedProduct.Cprice || '0.00'}
       </p>
