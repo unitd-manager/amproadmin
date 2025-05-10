@@ -1,75 +1,165 @@
-import React, { useState } from 'react';
-import { Row, Col, Form, FormGroup, Label, Input, Table } from 'reactstrap';
+import React, { useState, useEffect, useContext } from 'react';
+import { Row, Col, Form, FormGroup, Label, Input, Table, Modal, ModalHeader, ModalBody, ModalFooter, Button} from 'reactstrap';
+import { ToastContainer } from 'react-toastify';
+import Swal from 'sweetalert2';
 import { FaEdit, FaTrash, FaPlusCircle } from 'react-icons/fa'; // Imported add icon
-import PropTypes from 'prop-types';
+import {  useParams } from 'react-router-dom';
 import ComponentCard from '../ComponentCard';
+import api from '../../constants/api';
+import message from '../Message';
+import creationdatetime from '../../constants/creationdatetime';
+import AppContext from '../../context/AppContext';
 
-export default function ContactDetails({
-  handleEdit,
-  handleDelete,
-}) {
-  const [contactList, setContactList] = useState([
-    {
-      id: 1,
-      contact_person: 'John Doe',
-      email: 'john@example.com',
-      phone: '1234567890',
-      hand_phone_no: '9876543210',
-      fax: '111222333',
-    },
-    {
-      id: 2,
-      contact_person: 'Jane Smith',
-      email: 'jane@example.com',
-      phone: '2233445566',
-      hand_phone_no: '6655443322',
-      fax: '444555666',
-    },
-    {
-      id: 3,
-      contact_person: 'Robert Brown',
-      email: 'robert@example.com',
-      phone: '3344556677',
-      hand_phone_no: '7766554433',
-      fax: '777888999',
-    },
-  ]);
+const ContactDetails = () => { 
+  // const [contactList, setContactList] = useState([
+  //   {
+  //     id: 1,
+  //     contact_person: 'John Doe',
+  //     email: 'john@example.com',
+  //     phone: '1234567890',
+  //     hand_phone_no: '9876543210',
+  //     fax: '111222333',
+  //   },
+  //   {
+  //     id: 2,
+  //     contact_person: 'Jane Smith',
+  //     email: 'jane@example.com',
+  //     phone: '2233445566',
+  //     hand_phone_no: '6655443322',
+  //     fax: '444555666',
+  //   },
+  //   {
+  //     id: 3,
+  //     contact_person: 'Robert Brown',
+  //     email: 'robert@example.com',
+  //     phone: '3344556677',
+  //     hand_phone_no: '7766554433',
+  //     fax: '777888999',
+  //   },
+  // ]);
 
-  const [newContact, setNewContact] = useState({
-    contact_person: '',
-    phone: '',
-    fax: '',
-    email: '',
-    hand_phone_no: '',
-  });
+  // const [newContact, setNewContact] = useState({
+  //   contact_person: '',
+  //   phone: '',
+  //   fax: '',
+  //   email: '',
+  //   hand_phone_no: '',
+  // });
 
+  const [contactList, setContactList] = useState([])
+  const [newContact, setNewContact] = useState({})
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedContact, setSelectedContact] = useState(null);
+  const { id } = useParams();
+  const { loggedInuser } = useContext(AppContext);
+  const toggleEditModal = () => setEditModalOpen(!editModalOpen);
   const handleInputChange = (e) => {
     setNewContact({ ...newContact, [e.target.name]: e.target.value });
   };
 
-  const handleAddContact = () => {
-    if (!newContact.contact_person) {
-      alert('Please enter Contact Person Name!');
-      return;
+  const getContactDetails = () => {
+    api
+      .post('/supplier/getContactBySupplierId', { supplier_id: id })
+      .then((res) => {
+        setContactList(res.data.data);
+      })
+      .catch(() => {
+        message('Contact Data Not Found', 'info');
+      });
+  };
+  
+  const insertContact = () => {
+    if (newContact.first_name !== '') {
+      const contactToInsert = {
+        ...newContact,
+        creation_date: creationdatetime,
+        created_by: loggedInuser.first_name,
+        supplier_id: id,
+      };
+  
+      api.post('/contact/insertContact', contactToInsert)
+        .then((res) => {
+          message('Contact inserted successfully.', 'success');
+  
+          // Get the ID returned from backend, fallback if not available
+          const insertedContact = {
+            ...contactToInsert,
+            id: res.data.insertId || Math.random(), // Use actual ID if available
+          };
+  
+          // Add to contactList immediately
+          setContactList(prevList => [...prevList, insertedContact]);
+  
+          // Clear the input fields
+          setNewContact({
+            first_name: '',
+            phone: '',
+            fax: '',
+            email: '',
+            hand_phone_no: '',
+          });
+        })
+        .catch(() => {
+          message('Network connection error.', 'error');
+        });
+    } else {
+      message('Please fill all required fields', 'warning');
     }
-    const newEntry = { ...newContact, id: contactList.length + 1 };
-    setContactList([...contactList, newEntry]);
-    setNewContact({
-      contact_person: '',
-      phone: '',
-      fax: '',
-      email: '',
-      hand_phone_no: '',
+  };
+  
+  
+   
+    const handleUpdateContact = () => {
+      if (selectedContact.first_name && selectedContact.email) {
+        api.post('/contact/editContact', selectedContact)
+          .then(() => {
+            message('Contact updated successfully.', 'success');
+            toggleEditModal();
+            getContactDetails(); // Refresh contact list
+          })
+          .catch(() => {
+            message('Failed to update contact.', 'error');
+          });
+      } else {
+        message('Please fill required fields', 'warning');
+      }
+    };
+
+      const handleDelete = (ContactId) => {
+    Swal.fire({
+      title: `Are you sure? `,
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        api
+          .post('contact/deleteContact', { contact_id: ContactId })
+          .then(() => {
+            Swal.fire('Deleted!', 'Contact has been deleted.', 'success');
+            setTimeout(() => {
+              window.location.reload();
+            }, 300);
+          })
+          .catch(() => {
+            message('Unable to Delete Contact', 'info');
+          });
+      }
     });
   };
 
-  ContactDetails.propTypes = {
-    handleEdit: PropTypes.func,
-    handleDelete: PropTypes.func,
-  };
+
+useEffect(() => {
+    getContactDetails();
+  }, [id]);
+  
 
   return (
     <Form>
+      <ToastContainer />
       <FormGroup>
         <ComponentCard title="Contact Person Details">
           <Row>
@@ -79,8 +169,8 @@ export default function ContactDetails({
                 <Input
                   type="text"
                   onChange={handleInputChange}
-                  value={newContact.contact_person}
-                  name="contact_person"
+                  value={newContact.first_name}
+                  name="first_name"
                 />
               </FormGroup>
             </Col>
@@ -134,13 +224,21 @@ export default function ContactDetails({
             </Col>
             <Col className="text-end">
               <FaPlusCircle
-                onClick={handleAddContact}
+                //onClick={handleAddContact}
+                onClick={() => {
+                  insertContact();
+                  setTimeout(() => {
+                  
+                }, 800);
+                }}
                 size={50} // ← Big size
                 style={{ color: '#0d6efd', cursor: 'pointer' }}
                 title="Add Contact"
               />
             </Col>
           </Row>
+            
+                    
 
 
           {/* Table to show contact persons */}
@@ -161,19 +259,22 @@ export default function ContactDetails({
                   {contactList.length > 0 ? (
                     contactList.map((c) => (
                       <tr key={c.id}>
-                        <td>{c.contact_person}</td>
+                        <td>{c.first_name}</td>
                         <td>{c.email}</td>
                         <td>{c.phone}</td>
-                        <td>{c.hand_phone_no}</td>
+                        <td>{c.hand_phone_no }</td>
                         <td>{c.fax}</td>
                         <td className="text-center">
-                          <FaEdit
-                            style={{ cursor: 'pointer', marginRight: '10px', color: '#0d6efd' }}
-                            onClick={() => handleEdit(c)}
-                          />
+                        <FaEdit
+  style={{ cursor: 'pointer', marginRight: '10px', color: '#0d6efd' }}
+  onClick={() => {
+    setSelectedContact(c);
+    setEditModalOpen(true);
+  }}
+/>
                           <FaTrash
                             style={{ cursor: 'pointer', color: 'red' }}
-                            onClick={() => handleDelete(c)}
+                            onClick={() => handleDelete(c.contact_id)}
                           />
                         </td>
                       </tr>
@@ -189,8 +290,82 @@ export default function ContactDetails({
               </Table>
             </Col>
           </Row>
+          <Modal isOpen={editModalOpen} toggle={toggleEditModal}>
+  <ModalHeader toggle={toggleEditModal}>Edit Contact</ModalHeader>
+  <ModalBody>
+    <Form>
+      <FormGroup>
+        <Label>Contact Person Name</Label>
+        <Input
+          type="text"
+          name="first_name"
+          value={selectedContact?.first_name || ''}
+          onChange={(e) =>
+            setSelectedContact({ ...selectedContact, first_name: e.target.value })
+          }
+        />
+      </FormGroup>
+      <FormGroup>
+        <Label>Email</Label>
+        <Input
+          type="email"
+          name="email"
+          value={selectedContact?.email || ''}
+          onChange={(e) =>
+            setSelectedContact({ ...selectedContact, email: e.target.value })
+          }
+        />
+      </FormGroup>
+      <FormGroup>
+        <Label>Phone</Label>
+        <Input
+          type="text"
+          name="phone"
+          value={selectedContact?.phone || ''}
+          onChange={(e) =>
+            setSelectedContact({ ...selectedContact, phone: e.target.value })
+          }
+        />
+      </FormGroup>
+      <FormGroup>
+        <Label>Hand Phone No</Label>
+        <Input
+          type="text"
+          name="hand_phone_no"
+          value={selectedContact?.hand_phone_no || ''}
+          onChange={(e) =>
+            setSelectedContact({ ...selectedContact, hand_phone_no: e.target.value })
+          }
+        />
+      </FormGroup>
+      <FormGroup>
+        <Label>Fax</Label>
+        <Input
+          type="text"
+          name="fax"
+          value={selectedContact?.fax || ''}
+          onChange={(e) =>
+            setSelectedContact({ ...selectedContact, fax: e.target.value })
+          }
+        />
+      </FormGroup>
+    </Form>
+  </ModalBody>
+  <ModalFooter>
+    <Button color="primary" onClick={handleUpdateContact}>
+      Save Changes
+    </Button>
+    <Button color="secondary" onClick={toggleEditModal}>
+      Cancel
+    </Button>
+  </ModalFooter>
+</Modal>
+
         </ComponentCard>
       </FormGroup>
     </Form>
   );
 }
+
+
+export default ContactDetails;

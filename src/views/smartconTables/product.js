@@ -57,133 +57,22 @@ const SectionDetails = () => {
     getSection();
   }, [id]);
 
-  // useEffect(() => {
-  //   getSection();
-  // }, [id]);
-  //  stucture of Section list view
-  // const columns = [
-  //   {
-  //     name: '#',
-  //     grow: 0,
-  //     wrap: true,
-  //     width: '4%',
-  //   },
-  //   {
-  //     name: 'Edit',
-  //     selector: 'edit',
-  //     cell: () => <Icon.Edit2 />,
-  //     grow: 0,
-  //     width: 'auto',
-  //     button: true,
-  //     sortable: false,
-  //   },
+  
 
-  //   {
-  //     name: 'Product Code',
-  //     selector: 'product_code',
-  //     sortable: true,
-  //     grow: 0,
-  //     wrap: true,
-  //   },
-  //   {
-  //     name: 'Product Name',
-  //     selector: 'title',
-  //     sortable: true,
-  //     grow: 1,
-  //     wrap: true,
-  //   },
-  //   {
-  //     name: 'Department',
-  //     selector: 'department',
-  //     sortable: true,
-  //     grow: 1,
-  //   },
-  //   {
-  //     name: 'Product Name2',
-  //     selector: 'unit',
-  //     sortable: true,
-  //     width: 'auto',
-  //     grow: 1,
-  //   },
-  //   {
-  //     name: 'UOM',
-  //     selector: 'unit',
-  //     sortable: true,
-  //     width: 'auto',
-  //     grow: 1,
-  //   },
-  //   {
-  //     name: 'Part No',
-  //     selector: 'part_no',
-  //     sortable: true,
-    
-  //     width: 'auto',
-  //   },
-  //   {
-  //     name: 'Unit Cost',
-  //     selector: 'unit_cost',
-  //     sortable: true,
-     
-  //     width: 'auto',
-  //   },
-  //   {
-  //     name: 'Retail Price',
-  //     selector: 'published',
-  //     sortable: true,
-     
-  //     width: 'auto',
-  //   },
-  //   {
-  //     name: 'Ecommerce Price',
-  //     selector: 'ecommerce_price',
-  //     sortable: true,
-  //     width: 'auto',
-  //   },
-  //   {
-  //     name: 'WholeSale Price',
-  //     selector: 'wholesale_price',
-  //     sortable: true,
-  //     width: 'auto',
-  //   },
-  //   {
-  //     name: 'Carton Price',
-  //     selector: 'carton_price',
-  //     sortable: true,
-  //     width: 'auto',
-  //   },
-  //   {
-  //     name: 'Carton Qty',
-  //     selector: 'carton_qty',
-  //     sortable: true,
-  //     width: 'auto',
-  //   },
-  //   {
-  //     name: 'Loose Qty',
-  //     selector: 'loose_qty',
-  //     sortable: true,
-  //     width: 'auto',
-  //   },
-  //   {
-  //     name: 'Quantity',
-  //     selector: 'qty',
-  //     sortable: true,
-  //     width: 'auto',
-  //   },
-  // ];
   const columns = [
     {
       name: '#',
       selector: 'id',
       grow: 0,
       wrap: true,
-      width: '5%',
+      width: 'auto',
     },
     {
       name: 'Edit',
       selector: 'edit',
       cell: () => <Icon.Edit2 />,
       grow: 0,
-      width: '5%',
+      width: 'auto',
       button: true,
       sortable: false,
     },
@@ -193,7 +82,7 @@ const SectionDetails = () => {
       sortable: true,
       grow: 1,
       wrap: true,
-      width: '10%',
+      width: 'auto',
     },
     {
       name: 'Product Name',
@@ -201,27 +90,27 @@ const SectionDetails = () => {
       sortable: true,
       grow: 2,
       wrap: true,
-      width: '15%',
+      width: 'auto',
     },
     {
       name: 'Department',
       selector: 'department_name ',
       sortable: true,
       grow: 1,
-      width: '10%',
+      width: 'auto',
     },
     {
       name: 'Product Name2',
       selector: 'alternative_product_name ',
       sortable: true,
       grow: 1,
-      width: '10%',
+      width: 'auto',
     },
     {
       name: 'UOM',
       selector: 'unit',
       sortable: true,
-      width: '10%',
+      width: 'auto',
       grow: 1,
     },
     {
@@ -229,63 +118,62 @@ const SectionDetails = () => {
       selector: 'part_number',
       sortable: true,
       grow: 1,
-      width: '10%',
+      width: 'auto',
     },
     {
       name: 'Unit Cost',
       selector: 'purchase_unit_cost ',
       sortable: true,
       grow: 1,
-      width: '10%',
+      width: 'auto',
     },
     {
       name: 'Retail Price',
       selector: 'published',
       sortable: true,
       grow: 1,
-      width: '10%',
+      width: 'auto',
     },
     {
       name: 'Ecommerce Price',
       selector: 'ecommerce_price',
       sortable: true,
       grow: 1,
-      width: '10%',
+      width: 'auto',
     },
     {
       name: 'Wholesale Price',
       selector: 'wholesale_price',
       sortable: true,
       grow: 1,
-      width: '10%',
+      width: 'auto',
     },
     {
       name: 'Carton Price',
       selector: 'carton_price',
       sortable: true,
       grow: 1,
-      width: '10%',
+      width: 'auto',
     },
     {
       name: 'Carton Qty',
       selector: 'carton_qty',
       sortable: true,
       grow: 1,
-      width: '10%',
+      width: 'auto',
     },
     {
       name: 'Loose Qty',
       selector: 'loose_qty',
       sortable: true,
       grow: 1,
-      width: '5%',
+      width: 'auto',
     },
     {
       name: 'Quantity',
       selector: 'qty_in_stock',
       sortable: true,
-      width: '12%',
-    minWidth: '100px',
+      width: 'auto',
     },
   ];
   
@@ -321,13 +209,13 @@ const SectionDetails = () => {
                   <tr key={element.product_id}>
                     <td>{index + 1}</td>
                     <td>
-                      <Link to={`/ProductEdit/${element.product_id}`}>
+                      <Link to={`/ProductEdit/${element.product_id}/?tab=1`}>
                         <Icon.Edit2 />
                       </Link>
                     </td>
                     
                     <td>
-                    <Link to={`/InventoryEdit/${element.inventory_id}`}>
+                    <Link to={`/ProductEdit/${element.product_id}/?tab=1`}>
                       {element.product_code}
                       </Link>
                     </td>

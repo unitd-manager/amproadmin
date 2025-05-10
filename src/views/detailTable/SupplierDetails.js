@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext} from 'react';
 import { Row, Col, Form, FormGroup, Label, Input, Button } from 'reactstrap';
 import { ToastContainer } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
@@ -6,6 +6,8 @@ import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import ComponentCard from '../../components/ComponentCard';
 import api from '../../constants/api';
 import message from '../../components/Message';
+import creationdatetime from '../../constants/creationdatetime';
+import AppContext from '../../context/AppContext';
 
 const SupplierDetails = () => {
   //all state variables
@@ -14,28 +16,48 @@ const SupplierDetails = () => {
   });
   //navigation and params
   const navigate = useNavigate();
+  const { loggedInuser } = useContext(AppContext);
   //supplierData in supplier details
   const handleInputsSupplierForms = (e) => {
     setSupplierForms({ ...supplierForms, [e.target.name]: e.target.value });
   };
   //inserting supplier data
-  const insertSupplier = () => {
-    if (supplierForms.company_name !== '')
-      api.post('/supplier/insert-Supplier', supplierForms)
+ 
+
+  const insertSupplier = (code) => {
+    if (supplierForms.company_name !== '') {
+      supplierForms.supplier_code = code;
+      supplierForms.creation_date = creationdatetime
+      supplierForms.created_by = loggedInuser.first_name;
+      api
+        .post('/supplier/insert-Supplier', supplierForms)
         .then((res) => {
           const insertedDataId = res.data.data.insertId;
           message('Supplier inserted successfully.', 'success');
           setTimeout(() => {
-            navigate(`/SupplierEdit/${insertedDataId}`);
+            navigate(`/SupplierEdit/${insertedDataId}?tab=1`);
           }, 300);
         })
         .catch(() => {
           message('Network connection error.', 'error');
         });
-    else {
-      message('Please fill all required fields.', 'error');
+    } else {
+      message('Please fill all required fields', 'warning');
     }
   };
+
+  const generateCode = () => {
+    api
+      .post('/commonApi/getCodeValues', { type: 'SupplierCode' })
+      .then((res) => {
+        insertSupplier(res.data.data);
+      })
+      .catch(() => {
+        insertSupplier('');
+      });
+  };
+
+
   useEffect(() => {}, []);
   return (
     <div>
@@ -62,10 +84,10 @@ const SupplierDetails = () => {
           <div className="pt-3 mt-3 d-flex align-items-center gap-2">
             <Button color="primary"
               onClick={() => {
-                insertSupplier();
-                setTimeout(() => {
-                  navigate('/SupplierEdit');
-                }, 800);
+                generateCode();
+                // setTimeout(() => {
+                //   navigate('/SupplierEdit');
+                // }, 800);
               }}
               type="button"
               className="btn mr-2 shadow-none"  >

@@ -7,11 +7,11 @@ export default function LogInfo({ logInfo = {}, handleInputs }) {
   const [showPassword, setShowPassword] = useState(false);
 
   // Define default values if not provided
-  const defaultLogInfo = {
-    company_name: 'BANHJKUL',   // <-- Default username
-    password: 'password123',     // <-- Default password
-    ...logInfo, // In case any value is passed from parent
-  };
+  // const defaultLogInfo = {
+  //   company_name: 'BANHJKUL',   // <-- Default username
+  //   password: 'password123',     // <-- Default password
+  //   ...logInfo, // In case any value is passed from parent
+  // };
 
   LogInfo.propTypes = {
     logInfo: PropTypes.object,
@@ -33,8 +33,8 @@ export default function LogInfo({ logInfo = {}, handleInputs }) {
             <Col md="4">
               <Input
                 type="text"
-                name="company_name"
-                value={defaultLogInfo.company_name}
+                name="user_name"
+                value={logInfo.user_name}
                 onChange={handleInputs}
               />
             </Col>
@@ -48,7 +48,7 @@ export default function LogInfo({ logInfo = {}, handleInputs }) {
               <Input
                 type={showPassword ? 'text' : 'password'}
                 name="password"
-                value={defaultLogInfo.password}
+                value={logInfo.password}
                 onChange={handleInputs}
               />
               <FormGroup check className="mt-2">
