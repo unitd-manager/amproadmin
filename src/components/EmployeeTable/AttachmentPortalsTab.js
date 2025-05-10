@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { Row, Col, Form, FormGroup, Button } from 'reactstrap';
 import * as Icon from 'react-feather';
 import PropTypes from 'prop-types';
 import ComponentCard from '../ComponentCard';
 import AttachmentModalV2 from '../Tender/AttachmentModalV2';
 import ViewFileComponentV2 from '../ProjectModal/ViewFileComponentV2';
+import api from '../../constants/api';
+
 
 function AttachmentPortalsTab({
   dataForPicture,
@@ -14,6 +16,7 @@ function AttachmentPortalsTab({
   attachmentModal,
   pictureData,
   attachmentData,
+  // arb,
 }) {
   AttachmentPortalsTab.propTypes = {
     dataForPicture: PropTypes.any,
@@ -23,6 +26,7 @@ function AttachmentPortalsTab({
     attachmentModal: PropTypes.bool,
     pictureData: PropTypes.any,
     attachmentData: PropTypes.any,
+    // arb: PropTypes.any,
   };
   const [roomName, setRoomName] = useState('');
   const [fileTypes, setFileTypes] = useState('');
@@ -34,6 +38,33 @@ function AttachmentPortalsTab({
     recordType: "",
   });
 
+  const getSelectedLanguageFromLocalStorage = () => {
+    return localStorage.getItem('selectedLanguage') || '';
+  };
+
+  const selectedLanguage = getSelectedLanguageFromLocalStorage();
+
+  const [arabic, setArabic] = useState([]);
+
+  const arb = selectedLanguage === 'Arabic';
+
+  //const eng = selectedLanguage === 'English';
+
+  const getArabicCompanyName = () => {
+    api
+      .get('/employeeModule/getTranslationForEmployee')
+      .then((res) => {
+        setArabic(res.data.data);
+      })
+      .catch(() => {
+        // Handle error if needed
+      });
+  };
+  useEffect(() => {
+    
+    getArabicCompanyName();
+    
+  }, []);
   return (
     <div>
       <Row>
@@ -41,7 +72,7 @@ function AttachmentPortalsTab({
           <FormGroup>
             <Row>
               <Col md="6">
-                <ComponentCard title="Picture">
+                <ComponentCard title= {arb ?'صورة':'Picture'}>
                   <Row>
                     <Col xs="12" md="3" className="mb-3">
                       <Button
@@ -75,6 +106,7 @@ function AttachmentPortalsTab({
                     mediaType={pictureData.modelType}
                     update={update}
                     setUpdate={setUpdate}
+                    arb={arb}
                   />
                   <ViewFileComponentV2
                     moduleId={id}
@@ -82,11 +114,13 @@ function AttachmentPortalsTab({
                     recordType="Picture"
                     update={update}
                     setUpdate={setUpdate}
+                    arb={arb}
+                    arabic={arabic}
                   />
                 </ComponentCard>
               </Col>
               <Col md="6">
-                <ComponentCard title="Work Permit">
+                <ComponentCard title={arb ?'تصريح العمل':'Work Permit'}>
                   <Row>
                     <Col xs="12" md="3" className="mb-3">
                       <Button
@@ -127,6 +161,7 @@ function AttachmentPortalsTab({
                     recordType="RelatedPicture"
                     update={update}
                     setUpdate={setUpdate}
+                    arb={arb}
                   />
                 </ComponentCard>
               </Col>
@@ -140,7 +175,7 @@ function AttachmentPortalsTab({
           <FormGroup>
             <Row>
               <Col md="6">
-                <ComponentCard title="WSQ">
+                <ComponentCard title= {arb ?'دبليو اس س':'WSQ'}>
                   <Row>
                     <Col xs="12" md="3" className="mb-3">
                       <Button
@@ -181,11 +216,12 @@ function AttachmentPortalsTab({
                     recordType="RelatedPicture"
                     update={update}
                     setUpdate={setUpdate}
+                    arb={arb}
                   />
                 </ComponentCard>
               </Col>
               <Col md="6">
-                <ComponentCard title="Digital Sign">
+                <ComponentCard title= {arb ?'علامة رقمية':'Digital Sign'}>
                   <Row>
                     <Col xs="12" md="3" className="mb-3">
                       <Button
@@ -226,6 +262,7 @@ function AttachmentPortalsTab({
                     recordType="RelatedPicture"
                     update={update}
                     setUpdate={setUpdate}
+                    arb={arb}
                   />
                 </ComponentCard>
               </Col>
@@ -240,7 +277,7 @@ function AttachmentPortalsTab({
           <FormGroup>
             <Row>
               <Col md="6">
-                <ComponentCard title="CSOC">
+                <ComponentCard title= {arb ?'سي إس أو سي':'CSOC'}>
                   <Row>
                     <Col xs="12" md="3" className="mb-3">
                       <Button
@@ -281,11 +318,12 @@ function AttachmentPortalsTab({
                     recordType="RelatedPicture"
                     update={update}
                     setUpdate={setUpdate}
+                    arb={arb}
                   />
                 </ComponentCard>
               </Col>
               <Col md="6">
-                <ComponentCard title="Other Files">
+                <ComponentCard title= {arb ?'ملفات اخرى':'Other Files'}>
                   <Row>
                     <Col xs="12" md="3" className="mb-3">
                       <Button
@@ -326,6 +364,7 @@ function AttachmentPortalsTab({
                     recordType="RelatedPicture"
                     update={update}
                     setUpdate={setUpdate}
+                    arb={arb}
                   />
                 </ComponentCard>
               </Col>
@@ -337,7 +376,7 @@ function AttachmentPortalsTab({
         {/* Picture and Attachments Form */}
         <Form>
           <FormGroup>
-            <ComponentCard title="Housing / Accommodation">
+            <ComponentCard title= {arb ?'السكن / الإقامة':'Housing / Accommodation'}>
               <Row>
                 <Col xs="12" md="3" className="mb-3">
                   <Button
@@ -366,6 +405,7 @@ function AttachmentPortalsTab({
                 mediaType={attachmentData.modelType}
                 update={update}
                 setUpdate={setUpdate}
+                arb={arb}
               />
               <ViewFileComponentV2
                 moduleId={id}
@@ -373,6 +413,7 @@ function AttachmentPortalsTab({
                 recordType="RelatedPicture"
                 update={update}
                 setUpdate={setUpdate}
+                arb={arb}
               />
             </ComponentCard>
           </FormGroup>

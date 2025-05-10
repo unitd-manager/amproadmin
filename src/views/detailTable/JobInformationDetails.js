@@ -4,13 +4,21 @@ import { ToastContainer } from 'react-toastify';
 import { useNavigate, useParams } from 'react-router-dom';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import ComponentCard from '../../components/ComponentCard';
-import creationdatetime from '../../constants/creationdatetime';
-import AppContext from '../../context/AppContext';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import api from '../../constants/api';
 import message from '../../components/Message';
+import creationdatetime from '../../constants/creationdatetime';
+import AppContext from '../../context/AppContext';
 
 const JobInformationDetails = () => {
+
+  const getSelectedLocationFromLocalStorage = () => {
+    const locations = localStorage.getItem('selectedLocation');
+    const loc=JSON.parse(locations);
+    return locations ? Number(loc) : null;
+  };
+
+  const selectedLocation = getSelectedLocationFromLocalStorage();
   //All state variables
   const [employee, setEmployee] = useState();
   const [jobForms, setJobForms] = useState({
@@ -20,13 +28,37 @@ const JobInformationDetails = () => {
     status: 'current',
   });
   const { loggedInuser } = useContext(AppContext);
+  const getSelectedLanguageFromLocalStorage = () => {
+    return localStorage.getItem('selectedLanguage') || '';
+  };
+
+  const selectedLanguage = getSelectedLanguageFromLocalStorage();
+  const [arabic, setArabic] = useState([]);
+
+
+  const arb =selectedLanguage === 'Arabic'
+
+
+  const getArabicLabels = () => {
+    api
+    .get('/translation/getTranslationForJobInformation')
+    .then((res) => {
+      setArabic(res.data.data);
+    })
+    .catch(() => {
+      // Handle error if needed
+    });   
+};
+
+ console.log(arabic);
   //Navigation and Parameters
   const { id } = useParams();
   const navigate = useNavigate();
   // Gettind data from Job By Id
   const editJobById = () => {
     api
-      .get('/jobinformation/getEmployee')
+      // .get('/jobinformation/getEmployeesite')
+      .post('/jobinformation/getEmployeesite', { site_id: selectedLocation })
       .then((res) => {
         console.log(res.data.data);
         setEmployee(res.data.data);
@@ -39,9 +71,10 @@ const JobInformationDetails = () => {
   };
   //inserting data of job information
   const insertJobInformation = () => {
-    jobForms.creation_date = creationdatetime;
-    jobForms.created_by = loggedInuser.first_name;
     if (jobForms.employee_id !== '') {
+      jobForms.creation_date = creationdatetime;
+      jobForms.created_by= loggedInuser.first_name;
+      jobForms.site_id = selectedLocation;
       api
         .post('/jobinformation/insertjob_information', jobForms)
         .then((res) => {
@@ -56,11 +89,12 @@ const JobInformationDetails = () => {
           message('Unable to edit record.', 'error');
         });
     } else {
-      message('Please fill all required fields', 'warning');
+      message('Please fill all required fields', 'error');
     }
   };
   useEffect(() => {
     editJobById();
+    getArabicLabels();
   }, [id]);
   return (
     <div>
@@ -74,7 +108,11 @@ const JobInformationDetails = () => {
                 <Row>
                   <Col md="10">
                     <FormGroup>
-                      <Label>Employee Name <span className='required'>*</span></Label>
+                    <Label dir="rtl" style={{ textAlign: 'left' }}>
+                Employee Name
+                <span className='required'>*</span>
+              </Label>
+                    
                       <Input
                         type="select"
                         name="employee_id"
@@ -90,7 +128,7 @@ const JobInformationDetails = () => {
                             return (
                               ele.e_count === 0 && (
                                 <option key={ele.employee_id} value={ele.employee_id}>
-                                  {ele.employee_name}
+                                  {arb?ele.employee_name_arb :ele.employee_name}{' '}
                                 </option>
                               )
                             );

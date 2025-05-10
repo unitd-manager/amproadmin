@@ -23,6 +23,7 @@ import AttachmentModalV2 from '../../components/Tender/AttachmentModalV2';
 import ViewFileComponentV2 from '../../components/ProjectModal/ViewFileComponentV2';
 import message from '../../components/Message';
 import api from '../../constants/api';
+import creationdatetime from '../../constants/creationdatetime';
 import Jobinformationedit from '../../components/JobInformation/Jobinformationedit';
 import JobKeyDetails from '../../components/JobInformation/JobKeyDetails';
 import JobLeaveandMedical from '../../components/JobInformation/JobLeaveandMedical';
@@ -33,10 +34,10 @@ import JobInformationSalary from '../../components/JobInformation/JobInformation
 import ViewNote from '../../components/Tender/ViewNote';
 import AddNote from '../../components/Tender/AddNote';
 import JobTermination from '../../components/JobInformation/JobInformationTermination';
-import creationdatetime from '../../constants/creationdatetime';
-import AppContext from '../../context/AppContext';
 import JobBank from '../../components/JobInformation/Job';
-import Tab from '../../components/ProjectTabs/Tab';
+import Tab from '../../components/project/Tab';
+import Tabs from '../../components/project/Tabs';
+import AppContext from '../../context/AppContext';
 
 const JobInformationEdit = () => {
   //All state variable
@@ -46,14 +47,38 @@ const JobInformationEdit = () => {
   const [attachmentData, setDataForAttachment] = useState({
     modelType: '',
   });
-  const { loggedInuser } = useContext(AppContext);
   const [JobInformationEditModal, setJobInformationEditModal] = useState(false);
   const [overTimeRate, setOverTimeRate] = useState('');
   const [allBank, setAllBank] = useState();
   const [roomName, setRoomName] = useState('');
   const [fileTypes, setFileTypes] = useState();
   const [update, setUpdate] = useState(false);
+  const [arabic, setArabic] = useState([]);
+  const getSelectedLanguageFromLocalStorage = () => {
+    return localStorage.getItem('selectedLanguage') || '';
+  };
+  const { loggedInuser } = useContext(AppContext);
 
+const selectedLanguage = getSelectedLanguageFromLocalStorage();
+
+const arb =selectedLanguage === 'Arabic'
+
+  //const eng =selectedLanguage === 'English'
+const getArabicLabels = () => {
+  api
+    .get('/translation/getTranslationForJobInformation')
+    .then((res) => {
+      setArabic(res.data.data);
+    })
+    .catch(() => {
+      // Handle error if needed
+    });
+};
+
+useEffect(() => {
+  getArabicLabels();
+}, []);
+  
   //navigation and parameters
   const { id } = useParams();
   const navigate = useNavigate();
@@ -65,7 +90,7 @@ const JobInformationEdit = () => {
   // Getting data from jobinformation By Id
   const editJobById = () => {
     api
-      .post('/jobinformation/EditjobinformationById', { job_information_id: id })
+      .post('/jobinformation/EditjobinformationById', { job_information_id: parseFloat(id) })
       .then((res) => {
         setJob(res.data.data[0]);
         setOverTimeRate(res.data.data[0].overtime_pay_rate);
@@ -74,7 +99,7 @@ const JobInformationEdit = () => {
         // message('JobInformation Data Not Found', 'info');
       });
   };
-console.log("aswdse",id,job,job && job.employee_name)
+
   //jobinformation data in jobinformationDetails
   const handleInputsJobInformation = (e) => {
     if (e.target.name === 'overtime') {
@@ -171,7 +196,7 @@ console.log("aswdse",id,job,job && job.employee_name)
       // Check if the status is "archive"
       if (!job.termination_date || !job.termination_reason || !job.notice_period_for_termination || !job.resignation_notice_date || !job.departure_date) {
         // If any of the required fields is empty, show a validation error
-        message('Please enter all required termination information for Archive status.', 'warning');
+        message('Please enter all required termination information for Archive status.', 'error');
         return; // Exit the function without making the API request
       }
     }
@@ -184,10 +209,9 @@ console.log("aswdse",id,job,job && job.employee_name)
     //job.overtime_pay_rate = overTimeRate;
     job.deduction4 = parseFloat(job.deduction4);
     if (job.act_join_date && job.working_days && job.basic_pay && job.join_date && job.govt_donation) {
-      
-        job.modified_by = loggedInuser.first_name;
-        job.modification_date = creationdatetime;
-        
+      job.modification_date = creationdatetime;
+      job.modified_by= loggedInuser.first_name;
+
       api
         .post('/jobinformation/edit-jobinformation', job)
         .then(() => {
@@ -199,7 +223,7 @@ console.log("aswdse",id,job,job && job.employee_name)
     } else {
       message(
         'Please fill Employment Start/date,basic pay,working days,join date and govt donation required fields.',
-        'warning',
+        'error',
       );
     }
   };
@@ -233,6 +257,17 @@ console.log("aswdse",id,job,job && job.employee_name)
     { id: '7', name: 'Termination Information' },
     { id: '8', name: 'Attachment' },
     { id: '9', name: 'Add a note' },
+  ];
+  const tabsArb =  [
+    {id:'1',name:'ساعات العمل'},
+    {id:'2',name:'الإجازة والطبية'},
+    {id:'3',name:'تفاصيل الاختبار (KET)'},
+    {id:'4',name:'معلومات الراتب'},
+    {id:'5',name:'معلومات CPF'},
+    {id:'6',name:'المعلومات المصرفية'},
+    {id:'7',name:'معلومات الإنهاء'},
+    {id:'8',name:'مرفق'},
+    {id:'9',name:'أضف ملاحظة'},
   ];
   const toggle = (tab) => {
     setActiveTab(tab);
@@ -281,6 +316,7 @@ console.log("aswdse",id,job,job && job.employee_name)
   useEffect(() => {
     BankDetails();
     editJobById();
+  
   }, [id]);
 
   return (
@@ -292,13 +328,13 @@ console.log("aswdse",id,job,job && job.employee_name)
         {job && job.employee_name}
       </CardTitle>
       <CardTitle>
-        {job && job.fin_no ? null : (
+        {/* {job && job.fin_no ? null : (
           <>
             <Label>NRIC No:</Label>
             {job && job.nric_no}
             <br />
           </>
-        )}
+        )} */}
         {job && job.nric_no && !job.fin_no ? null : (
           <>
             <Label>FIN No:</Label>
@@ -309,6 +345,7 @@ console.log("aswdse",id,job,job && job.employee_name)
 
       <ToastContainer></ToastContainer>
       <Jobinformationedit
+     
         editJobData={editJobData}
         // id={id}
         applyChanges={applyChanges}
@@ -331,28 +368,41 @@ console.log("aswdse",id,job,job && job.employee_name)
           ></JobKeyDetails>
 
           <ComponentCard title="More Details">
-            <Tab toggle={toggle} tabs={tabs} />
+          {/* {eng === true &&
+        <Tab toggle={toggle} tabs={tabs} />
+        } */}
+        { arb === true ?
+        <Tabs toggle={toggle} tabsArb={tabsArb} />:  <Tab toggle={toggle} tabs={tabs} />
+        }
             <TabContent className="p-4" activeTab={activeTab}>
               <TabPane tabId="1">
                 <JobWorkingHours
+                arb={arb}
+                arabic={arabic}
                   handleInputsJobInformation={handleInputsJobInformation}
                   job={job}
                 ></JobWorkingHours>
               </TabPane>
               <TabPane tabId="2">
                 <JobLeaveandMedical
+                  arb={arb}
+                  arabic={arabic}
                   handleInputsJobInformation={handleInputsJobInformation}
                   job={job}
                 ></JobLeaveandMedical>
               </TabPane>
               <TabPane tabId="3">
                 <JobProbation
+                  arb={arb}
+                  arabic={arabic}
                   handleInputsJobInformation={handleInputsJobInformation}
                   job={job}
                 ></JobProbation>
               </TabPane>
               <TabPane tabId="4">
                 <JobInformationSalary
+                  arb={arb}
+                  arabic={arabic}
                   handleInputsJobInformation={handleInputsJobInformation}
                   handleRadioGst={handleRadioGst}
                   job={job}
@@ -361,12 +411,16 @@ console.log("aswdse",id,job,job && job.employee_name)
               </TabPane>
               <TabPane tabId="5">
                 <JobSalary
+                  arb={arb}
+                  arabic={arabic}
                   handleInputsJobInformation={handleInputsJobInformation}
                   job={job}
                 ></JobSalary>
               </TabPane>
               <TabPane tabId="6">
                 <JobBank
+                  arb={arb}
+                  arabic={arabic}
                   handleInputsJobInformation={handleInputsJobInformation}
                   job={job}
                   allBank={allBank}
@@ -374,6 +428,8 @@ console.log("aswdse",id,job,job && job.employee_name)
               </TabPane>
               <TabPane tabId="7">
                 <JobTermination
+                  arb={arb}
+                  arabic={arabic}
                   handleInputsJobInformation={handleInputsJobInformation}
                   job={job}
                 ></JobTermination>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState,useContext } from 'react';
 import { Row, TabContent, TabPane, Form, FormGroup } from 'reactstrap';
 import { ToastContainer } from 'react-toastify';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -15,23 +15,28 @@ import AttachmentPortalsTab from '../../components/EmployeeTable/AttachmentPorta
 import LinkedPortalsTab from '../../components/EmployeeTable/LinkedPortalsTab';
 import LoginDetailsTab from '../../components/EmployeeTable/LoginDetailsTab';
 //import EmployeeButtons from '../../components/Employee/EmployeeButtons';
-import AppContext from '../../context/AppContext';
 import api from '../../constants/api';
 import message from '../../components/Message';
-import Tab from '../../components/ProjectTabs/Tab';
+import Tab from '../../components/project/Tab';
 import ApiButton from '../../components/ApiButton';
 import creationdatetime from '../../constants/creationdatetime';
+import AppContext from '../../context/AppContext';
+
 
 const EmployeeEdit = () => {
   //state variables
   const [activeTab, setActiveTab] = useState('1');
-  const [employeeDetails, setEmployeeDetails] = useState();
+  const [employeeDetails, setEmployeeDetails] = useState({
+    nationality: '',
+  });
+  const { loggedInuser } = useContext(AppContext);
+
   const [contactInformationDetails, setContactInformationDetails] = useState({
     employee_id: '',
     address_area: '',
     address_street: '',
     address_po_code: '',
-    address_country1: '',
+    address_country1: 'Singapore',
     mobile: '',
     phone: '',
     email: '',
@@ -83,11 +88,11 @@ const EmployeeEdit = () => {
   const [pictureData, setDataForPicture] = useState({
     modelType: '',
   });
+  const [Team, setTeam] = useState();
 
   //params and routing
   const { id } = useParams();
   const navigate = useNavigate();
-  const { loggedInuser } = useContext(AppContext);
   // Route Change
   // const applyChanges = () => {};
   // const saveChanges = () => {
@@ -96,12 +101,49 @@ const EmployeeEdit = () => {
   //   },1800)
 
   // };
+
+  const getSelectedLanguageFromLocalStorage = () => {
+    return localStorage.getItem('selectedLanguage') || '';
+  };
+  
+  const selectedLanguage = getSelectedLanguageFromLocalStorage();
+
+  const [arabic, setArabic] = useState([]);
+
+
+  const arb =selectedLanguage === 'Arabic'
+
+  //const eng =selectedLanguage === 'English'
+  
+
+  const getArabicCompanyName = () => {
+      api
+      .get('/employeeModule/getTranslationForEmployee')
+      .then((res) => {
+        setArabic(res.data.data);
+      })
+      .catch(() => {
+        // Handle error if needed
+      });   
+  };
+
+  // let genLabel = '';
+
+  // if (arb === true) {
+  //   genLabel = 'arb_value';
+  // } else {
+  //   genLabel = 'value';
+  // }
   const backToList = () => {
     navigate('/Employee');
   };
   //handle inputs and set data
   const handleInputChange = (e) => {
-    setEmployeeDetails({ ...employeeDetails, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setEmployeeDetails((prevDetails) => ({
+      ...prevDetails,
+      [name]: value,
+    }));
   };
   const handlePassTypeInputs = (e) => {
     setTabPassTypeDetails({ ...tabPassTypeDetails, [e.target.name]: e.target.value });
@@ -138,7 +180,7 @@ const EmployeeEdit = () => {
   // Get Employee data By Employee id
   const getEmployeeById = () => {
     api
-      .post('/employeeModule/getEmployeeById', { employee_id: id })
+      .post('/employeeModule/getEmployeeByID', { employee_id: id })
       .then((res) => {
         setEmployeeDetails(res.data.data[0]);
       })
@@ -156,6 +198,18 @@ const EmployeeEdit = () => {
       .catch(() => {
         //message('contact info Data Not Found', 'info');
       });
+  };
+
+  
+  // Gettind data from Job By Id
+  const getTeams = () => {
+    api
+      .get('/projectteam/getProjectTeam')
+      .then((res) => {
+        console.log(res.data.data);
+        setTeam(res.data.data);
+      })
+      .catch(() => {});
   };
   //get EmergencyContact data
   const getEmergencyContactById = () => {
@@ -228,17 +282,28 @@ const EmployeeEdit = () => {
   // Api calls for Editing
   //edit employeedata
   const editEmployeeData = () => {
-      employeeDetails.modified_by = loggedInuser.first_name;
+    // if (
+    //   employeeDetails.employee_name !== '' &&
+    //   employeeDetails.date_of_birth !== '' &&
+    //   employeeDetails.nationality !== '' &&
+    //   employeeDetails.nationality !== '' // Check if nationality is not "Please Select"
+    // )
+     
       employeeDetails.modification_date = creationdatetime;
+      employeeDetails.modified_by= loggedInuser.first_name;
+
       api
         .post('/employeeModule/edit-Employee', employeeDetails)
         .then(() => {
            message('Record editted successfully', 'success');
-           console.log('message details', employeeDetails)
         })
         .catch(() => {
           message('Unable to edit record.', 'error');
         });
+    
+    //  else {
+    //   message('Please fill the required fields', 'error');
+    // }
   };
 
   //update tab data
@@ -278,258 +343,75 @@ const EmployeeEdit = () => {
 }
   //update tabpasstype data
   const editTabPassTypeData = () => {
-    api
-    .post('/employeeModule/edit-TabPassType', tabPassTypeDetails)
-    .then(() => {
-      //message('Record editted successfully', 'success');
-    })
-    .catch(() => {
-      message('Unable to edit record.', 'error');
-    });
+    // if (tabPassTypeDetails.citizen === 'Citizen') {
+    //   if (tabPassTypeDetails.nric_no !== '') {
+        api
+          .post('/employeeModule/edit-TabPassType', tabPassTypeDetails)
+          .then(() => {
+            // message('Record edited successfully', 'success');
+          })
+          .catch(() => {
+            message('Unable to edit record.', 'error');
+          });
+    //   } else {
+    //     message('Please fill the nricno fields', 'error');
+    //   }
+    // } else if (
+    //   tabPassTypeDetails.citizen === 'DP' ||
+    //   tabPassTypeDetails.citizen === 'EP' ||
+    //   tabPassTypeDetails.citizen === 'SP'
+    // ) {
+    //   if (tabPassTypeDetails.fin_no !== '') {
+    //     api
+    //       .post('/employeeModule/edit-TabPassType', tabPassTypeDetails)
+    //       .then(() => {
+    //         // message('Record edited successfully', 'success');
+    //       })
+    //       .catch(() => {
+    //         message('Unable to edit record.', 'error');
+    //       });
+    //   } else {
+    //     message('Please fill the fin no field', 'error');
+    //   }
+    // } else if (tabPassTypeDetails.citizen === 'WP') {
+    //   if (tabPassTypeDetails.fin_no !== '' && tabPassTypeDetails.work_permit !== '') {
+    //     api
+    //       .post('/employeeModule/edit-TabPassType', tabPassTypeDetails)
+    //       .then(() => {
+    //         // message('Record edited successfully', 'success');
+    //       })
+    //       .catch(() => {
+    //         message('Unable to edit record.', 'error');
+    //       });
+    //   } else {
+    //     message('Please fill the Fin no and Work permit No field', 'error');
+    //   }
+    // } else if (tabPassTypeDetails.citizen === 'PR') {
+    //   if (tabPassTypeDetails.nric_no !== '' && tabPassTypeDetails.spr_year !== '') {
+    //     api
+    //       .post('/employeeModule/edit-TabPassType', tabPassTypeDetails)
+    //       .then(() => {
+    //         // message('Record edited successfully', 'success');
+    //       })
+    //       .catch(() => {
+    //         message('Unable to edit record.', 'error');
+    //       });
+    //   } else {
+    //     message('Please fill the Nric No and Spryear field', 'error');
+    //   }
+    // } else {
+    //   message('Please fill the PassType', 'error');
+    // }
   };
+  
   //update all data
-  // const updateData = async () => {
-  //   if (
-  //     employeeDetails.employee_name !== '' &&
-  //     employeeDetails.date_of_birth !== '' &&
-  //     employeeDetails.gender !== '' &&
-  //     employeeDetails.nationality !== ''
-  //     // Check if nationality is not "Please Select"
-  //   ) {
-  //     if (tabPassTypeDetails.citizen === 'Citizen' ) {
-  //       if (tabPassTypeDetails.nric_no !== '') {
-  //         await editEmployeeData();
-  //         await editTabPassTypeData();
-  //         await editEQData();
-  //         await editECData();
-  //         await editCIData();
-  //       } else {
-  //         message('Please fill the nricno fields', 'warning');
-  //       }
-  //     } else if (
-        
-  //       tabPassTypeDetails.citizen === 'DP' ||
-  //       tabPassTypeDetails.citizen === 'EP' ||
-  //       tabPassTypeDetails.citizen === 'SP'
-  //     ) {
-  //       if (tabPassTypeDetails.fin_no !== '') {
-  //         await editEmployeeData();
-  //   await editTabPassTypeData();
-  //   await editEQData();
-  //   await editECData();
-  //   await editCIData();
-  //       } else {
-  //         message('Please fill the fin no field', 'warning');
-  //       }
-  //     } else if (tabPassTypeDetails.citizen === 'WP') {
-  //       if (tabPassTypeDetails.fin_no !== '' && tabPassTypeDetails.work_permit !== '') {
-  //         await editEmployeeData();
-  //   await editTabPassTypeData();
-  //   await editEQData();
-  //   await editECData();
-  //   await editCIData();
-  //       } else {
-  //         message('Please fill the Fin no and Work permit No field', 'warning');
-  //       }
-  //     } else if ( tabPassTypeDetails.citizen === 'PR') {
-  //       if (tabPassTypeDetails.nric_no !== '' && tabPassTypeDetails.spr_year !== '') {
-  //         await editEmployeeData();
-  //         await editTabPassTypeData();
-  //         await editEQData();
-  //         await editECData();
-  //         await editCIData();
-  //       } else {
-  //         message('Please fill the Nric No and Spryear field', 'warning');
-  //       }
-  //     } else {
-  //       message('Please fill the PassType', 'warning');
-  //     }
-   
-  // } else {
-  //   message('Please fill the required fields', 'warning');
-  // }
-  // };
-  
-  const [isNricAlreadyInserted, setIsNricAlreadyInserted] = useState(false);
-  const [isFinAlreadyInserted, setIsFinAlreadyInserted] = useState(false);
-
   const updateData = async () => {
-    // Check if essential employee details are filled out
-    if (
-      employeeDetails.employee_name !== '' &&
-      employeeDetails.date_of_birth !== '' &&
-      employeeDetails.gender !== '' &&
-      employeeDetails.nationality !== '' &&
-      employeeDetails.nationality !== 'Please Select'
-    ) {
-      // Check if NRIC is not empty
-      if (
-        (tabPassTypeDetails.citizen === 'Citizen' || tabPassTypeDetails.citizen === 'PR') &&
-        tabPassTypeDetails.nric_no === ''
-      ) {
-        message('Please enter the NRIC number.', 'warning');
-        return; // Stop further execution
-      }
-  
-      // Check if Fin number is empty for specific citizenship types
-      if (['DP', 'EP', 'SP'].includes(tabPassTypeDetails.citizen) && tabPassTypeDetails.fin_no === '') {
-        message('Please enter the Fin number.', 'warning');
-        return; // Stop further execution
-      }
-  
-      try {
-        // Additional validation for NRIC
-        if (
-          (tabPassTypeDetails.citizen === 'Citizen' || tabPassTypeDetails.citizen === 'PR') &&
-          tabPassTypeDetails.nric_no !== ''
-        ) {
-          const responseNric = await api.get('/employeemodule/CheckNricNo1');
-          const existingNricNumbers = responseNric.data.data.filter((nric) => nric !== null);
-          const isNricAlreadyExists = existingNricNumbers.some(
-            (nric) =>
-              nric.nric_no === tabPassTypeDetails.nric_no.toLowerCase() &&
-              nric.employee_id !== employeeDetails.employee_id
-          );
-  
-          if (isNricAlreadyExists) {
-            setIsNricAlreadyInserted(true);
-            message('NRIC is already inserted. Please provide a different number.', 'warning');
-            return; // Stop further execution
-          }
-        }
-  
-        // Additional validation for Fin
-        if (['DP', 'EP', 'SP'].includes(tabPassTypeDetails.citizen) && tabPassTypeDetails.fin_no !== '') {
-          const responseFin = await api.get('/employeemodule/CheckFinNo1');
-          const existingFinNumbers = responseFin.data.data.filter((fin) => fin !== null);
-          const isFinAlreadyExists = existingFinNumbers.some(
-            (fin) =>
-              fin.fin_no === tabPassTypeDetails.fin_no.toLowerCase() &&
-              fin.employee_id !== employeeDetails.employee_id
-          );
-  
-          if (isFinAlreadyExists) {
-            setIsFinAlreadyInserted(true);
-            message('Fin is already inserted. Please provide a different number.', 'warning');
-            return; // Stop further execution
-          }
-        }
-  
-        // If both NRIC and Fin validations pass, proceed with updating data
-        setIsNricAlreadyInserted(false);
-        setIsFinAlreadyInserted(false);
-        await editEmployeeData();
-        await editTabPassTypeData();
-        await editEQData();
-        await editECData();
-        await editCIData();
-        message('Success', 'success');
-      } catch (error) {
-        console.error('Error fetching existing NRIC/FIN numbers:', error);
-        message('Unable to check for duplicate NRIC/FIN numbers. Please try again later.', 'error');
-      }
-    } else {
-      message('Please fill the required fields', 'warning');
-    }
+    await editEmployeeData();
+    await editTabPassTypeData();
+    await editEQData();
+    await editECData();
+    await editCIData();
   };
-  
-
-  // const updateData = async () => {
-  //   // Check if essential employee details are filled out
-  //   if (
-  //     employeeDetails.employee_name !== '' &&
-  //     employeeDetails.date_of_birth !== '' &&
-  //     employeeDetails.gender !== '' &&
-  //     employeeDetails.nationality !== '' &&
-  //     employeeDetails.nationality !== 'Please Select' 
-  //   ) 
-  //     {
-  //       // Check if NRIC is not empty
-  //       if ((tabPassTypeDetails.citizen === 'Citizen' || tabPassTypeDetails.citizen === 'PR') && tabPassTypeDetails.nric_no === '') {
-  //         message('Please enter the NRIC number.', 'warning');
-  //         return; // Stop further execution
-  //       }
-  //     try {    
-  //       const response = await api.get('/employeemodule/CheckNricNo1');
-  //       const existingNricNumbers = response.data.data.filter(nric => nric !== null);
-  //       //const isNricAlreadyExists = existingNricNumbers.some(nric => nric.toLowerCase() === tabPassTypeDetails.nric_no.toLowerCase());
-  //       const isNricAlreadyExists = existingNricNumbers.some(
-  //         (nric) =>
-  //           nric.nric_no === tabPassTypeDetails.nric_no.toLowerCase() &&
-  //           nric.employee_id !== employeeDetails.employee_id
-  //       );
-  
-  //       if (isNricAlreadyExists) {
-  //         setIsNricAlreadyInserted(true);
-  //         message('NRIC is already inserted. Please provide a different number.', 'warning');
-  //       } else {
-  //         setIsNricAlreadyInserted(false);
-  //         await editEmployeeData();
-  //         await editTabPassTypeData();
-  //         await editEQData();
-  //         await editECData();
-  //         await editCIData();
-  //         message('Success', 'success');
-  //       }
-      
-  //     } catch (error) {
-  //       console.error('Error fetching existing NRIC numbers:', error);
-  //       message('Unable to check for duplicate NRIC numbers. Please try again later.', 'error');
-  //     }
-  //   } else if ((tabPassTypeDetails.citizen === 'SP' ) && tabPassTypeDetails.fin_no === '') {
-  //     // Additional checks for specific citizenship types
-     
-  //       try {
-  //         const response = await api.get('/employeemodule/CheckFinNo1');
-  //         const existingFinNumbers = response.data.data.filter(fin => fin!== null);
-  //         //const isNricAlreadyExists = existingNricNumbers.some(nric => nric.toLowerCase() === tabPassTypeDetails.nric_no.toLowerCase());
-  //         const isFinAlreadyExists = existingFinNumbers.some(
-  //           (fin) =>
-  //             fin.fin_no === tabPassTypeDetails.fin_no.toLowerCase() &&
-  //             fin.employee_id !== employeeDetails.employee_id
-  //         );
-  //         if (isFinAlreadyExists) {
-  //           setIsFinAlreadyInserted(true);
-  //           message('Fin is already inserted. Please provide a different number.', 'warning');
-  //         } else {
-  //           setIsFinAlreadyInserted(false);
-  //           await editEmployeeData();
-  //           await editTabPassTypeData();
-  //           await editEQData();
-  //           await editECData();
-  //           await editCIData();
-  //           message('Success', 'success');
-  //         }
-  //       } catch (error) {
-  //         console.error('Error fetching existing Fin numbers:', error);
-  //         message('Unable to check for duplicate Fin numbers. Please try again later.', 'error');
-  //       }
-    
-  //   } else if (tabPassTypeDetails.citizen === 'WP') {
-  //     if (tabPassTypeDetails.fin_no !== '' && tabPassTypeDetails.work_permit !== '') {
-  //       await editEmployeeData();
-  //       await editTabPassTypeData();
-  //       await editEQData();
-  //       await editECData();
-  //       await editCIData();
-  //     } else {
-  //       message('Please fill the Fin no and Work permit No field', 'warning');
-  //     }
-  //   } else if (tabPassTypeDetails.citizen === 'PR') {
-  //     if (tabPassTypeDetails.nric_no !== '' && tabPassTypeDetails.spr_year !== '') {
-  //       await editEmployeeData();
-  //       await editTabPassTypeData();
-  //       await editEQData();
-  //       await editECData();
-  //       await editCIData();
-  //     } else {
-  //       message('Please fill the Nric No and Spryear field', 'warning');
-  //     }
-  //   } else {
-  //     message('Please fill the PassType', 'warning');
-  //   }
-  // };
-  
 
   //Attachments
   const dataForAttachment = () => {
@@ -557,7 +439,7 @@ const EmployeeEdit = () => {
       if (result.isConfirmed) {
         api.post('/employeeModule/deleteEmployee', { employee_id: id }).then(() => {
           Swal.fire('Deleted!', 'Your Employee has been deleted.', 'success');
-          window.location.reload();
+          //window.location.reload();
         });
       }
     });
@@ -572,6 +454,8 @@ const EmployeeEdit = () => {
       await getAllCountries();
       await getQualifications();
       await getAllCompanies();
+      await getTeams();
+      await getArabicCompanyName()
     };
     getAlldata();
   }, [id]);
@@ -603,10 +487,13 @@ const EmployeeEdit = () => {
       </Form>
       <Row>
         <EmployeePart
+        team={Team}
           employeeDetails={employeeDetails}
           handleInputChange={handleInputChange}
           allCountries={allCountries}
           companies={companies}
+          arabic={arabic}
+          arb={arb}
         />
       </Row>
       <ComponentCard title="More Details">
@@ -616,6 +503,8 @@ const EmployeeEdit = () => {
             <LoginDetailsTab
               employeeDetails={employeeDetails}
               handleInputChange={handleInputChange}
+              arabic={arabic}
+          arb={arb}
             />
           </TabPane>
           <TabPane tabId="2">
@@ -623,8 +512,8 @@ const EmployeeEdit = () => {
               <TabPassTypeTab
                 tabPassTypeDetails={tabPassTypeDetails}
                 handlePassTypeInputs={handlePassTypeInputs}
-                isNricAlreadyInserted={isNricAlreadyInserted}
-                isFinAlreadyInserted={isFinAlreadyInserted}
+                arabic={arabic}
+          arb={arb}
               />
             </Row>
           </TabPane>
@@ -634,6 +523,8 @@ const EmployeeEdit = () => {
                 educationalQualificationDetails={educationalQualificationDetails}
                 qualifications={qualifications}
                 handleEduInputs={handleEduInputs}
+                arabic={arabic}
+          arb={arb}
               />
             </Row>
           </TabPane>
@@ -642,6 +533,8 @@ const EmployeeEdit = () => {
               <ContactInformationTab
                 contactInformationDetails={contactInformationDetails}
                 handleCiInputs={handleCiInputs}
+                arabic={arabic}
+          arb={arb}
               />
             </Row>
           </TabPane>
@@ -650,6 +543,8 @@ const EmployeeEdit = () => {
               <EmergencyContactTab
                 emergencyContactDetails={emergencyContactDetails}
                 handleEcInputs={handleEcInputs}
+                arabic={arabic}
+          arb={arb}
               />
             </Row>
           </TabPane>
@@ -664,6 +559,8 @@ const EmployeeEdit = () => {
                 setAttachmentModal={setAttachmentModal}
                 pictureData={pictureData}
                 attachmentData={attachmentData}
+                arabic={arabic}
+          arb={arb}
               />
             </Row>
           </TabPane>
@@ -673,6 +570,7 @@ const EmployeeEdit = () => {
                 id={id}
                 employeeDetails={employeeDetails}
                 handleInputChange={handleInputChange}
+                arb={arb}
               />
             </Row>
           </TabPane>

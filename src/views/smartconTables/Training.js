@@ -6,10 +6,6 @@ import 'datatables.net-dt/js/dataTables.dataTables';
 import 'datatables.net-dt/css/jquery.dataTables.min.css';
 import $ from 'jquery';
 import moment from 'moment';
-// import 'datatables.net-buttons/js/buttons.colVis';
-// import 'datatables.net-buttons/js/buttons.flash';
-// import 'datatables.net-buttons/js/buttons.html5';
-// import 'datatables.net-buttons/js/buttons.print';
 import { Link } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import api from '../../constants/api';
@@ -17,14 +13,20 @@ import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
 
 const Training = () => {
-  //All state variable
   const [training, setTraining] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  //Get data from Training table
+  const getSelectedLocationFromLocalStorage = () => {
+    const locations = localStorage.getItem('selectedLocation');
+    const loc = JSON.parse(locations);
+    return locations ? Number(loc) : null;
+  };
+
+  const selectedLocation = getSelectedLocationFromLocalStorage();
+
   const getTraining = () => {
     api
-      .get('/training/getTraining')
+      .post('/training/getTrainingFromLocation', { site_id: selectedLocation })
       .then((res) => {
         setTraining(res.data.data);
         $('#example').DataTable({
@@ -32,13 +34,6 @@ const Training = () => {
           pageLength: 20,
           processing: true,
           dom: 'Bfrtip',
-          // buttons: [
-          //   {
-          //     extend: 'print',
-          //     text: 'Print',
-          //     className: 'shadow-none btn btn-primary',
-          //   },
-          // ],
         });
         setLoading(false);
       })
@@ -50,10 +45,10 @@ const Training = () => {
   useEffect(() => {
     getTraining();
   }, []);
-  //structure of Training list view
+
   const columns = [
     {
-      name: 'id',
+      name: 'ID',
       grow: 0,
       wrap: true,
       width: '4%',
@@ -78,7 +73,6 @@ const Training = () => {
       wrap: true,
       width: '4%',
     },
-
     {
       name: 'Trainer',
       selector: 'trainer',
@@ -93,16 +87,18 @@ const Training = () => {
       grow: 0,
     },
   ];
+
   return (
     <div className="container pt-xs-25">
       <BreadCrumbs />
-      <ToastContainer></ToastContainer>
+      <ToastContainer />
       <CommonTable
         loading={loading}
         title="Training List"
+        module="Training"
         Button={
           <Link to="/TrainingDetails">
-            <Button color="primary" className="shadow-none">
+            <Button color="primary" className="shadow-none mr-2">
               Add New
             </Button>
           </Link>
@@ -110,31 +106,30 @@ const Training = () => {
       >
         <thead>
           <tr>
-            {columns.map((cell) => {
-              return <td key={cell.name}>{cell.name}</td>;
-            })}
+            {columns.map((cell) => (
+              <td key={cell.name}>{cell.name}</td>
+            ))}
           </tr>
         </thead>
         <tbody>
           {training &&
-            training.map((element, index) => {
-              return (
-                <tr key={element.training_id}>
-                  <td>{index + 1}</td>
-                  <td>
-                    <Link to={`/TrainingEdit/${element.training_id}`}>
-                      <Icon.Edit2 />
-                    </Link>
-                  </td>
-                  <td>{element.title}</td>
-                  <td>{element.trainer}</td>
-                  <td>{element.from_date?moment(element.from_date).format('YYYY-MM-DD'):''}</td>
-                </tr>
-              );
-            })}
+            training.map((element, index) => (
+              <tr key={element.training_id}>
+                <td>{index + 1}</td>
+                <td>
+                  <Link to={`/TrainingEdit/${element.training_id}`}>
+                    <Icon.Edit2 />
+                  </Link>
+                </td>
+                <td>{element.title}</td>
+                <td>{element.trainer}</td>
+                <td>{element.from_date ? moment(element.from_date).format('YYYY-MM-DD') : ''}</td>
+              </tr>
+            ))}
         </tbody>
       </CommonTable>
     </div>
   );
 };
+
 export default Training;

@@ -7,34 +7,45 @@ function EducationalQualificationTab({
   educationalQualificationDetails,
   qualifications,
   handleEduInputs,
+  arabic,
+  arb
 }) {
   EducationalQualificationTab.propTypes = {
     educationalQualificationDetails: PropTypes.object,
     handleEduInputs: PropTypes.func,
     qualifications: PropTypes.array,
+    arb: PropTypes.any,
+    arabic: PropTypes.any,
   };
+
+ console.log('ara', arabic);
 
   return (
     <div>
       <Row>
-        <Col md="4">
+      <Col md="4">
           <FormGroup>
-            <Label>Qualification 1</Label>
+          <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Qualification 1</Label>
             <Input
-              name="educational_qualitifcation1"
-              value={
-                educationalQualificationDetails &&
-                educationalQualificationDetails.educational_qualitifcation1
-              }
+            name= {arb ? 'educational_qualitifcation1_arb' : 'educational_qualitifcation1'}
+            value={
+              arb
+                ? (
+                  educationalQualificationDetails && educationalQualificationDetails.educational_qualitifcation1_arb ? educationalQualificationDetails.educational_qualitifcation1_arb :
+                    (educationalQualificationDetails && educationalQualificationDetails.educational_qualitifcation1_arb !== null ? '' : educationalQualificationDetails && educationalQualificationDetails.educational_qualitifcation2)
+                  )
+                : (educationalQualificationDetails && educationalQualificationDetails.educational_qualitifcation1)
+            }
               onChange={handleEduInputs}
               type="select"
             >
-              <option defaultValue="selected">Please Select</option>
+              <option defaultValue="selected">{arb ?'الرجاء التحديد':'Please Select'}</option>
               {qualifications &&
                 qualifications.map((ele) => {
                   return (
                     <option key={ele.valuelist_id} value={ele.valuelist_id}>
-                      {ele.value}
+                      {arb?ele.value_arb:ele.value}
                     </option>
                   );
                 })}
@@ -43,10 +54,19 @@ function EducationalQualificationTab({
         </Col>
         <Col md="4">
           <FormGroup>
-            <Label>Degree</Label>
+          <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Degree</Label>
             <Input
-              name="degree1"
-              value={educationalQualificationDetails && educationalQualificationDetails.degree1}
+            name= {arb ? 'degree1_arb' : 'degree1'}
+            value={
+              arb
+                ? (
+                  educationalQualificationDetails && educationalQualificationDetails.degree1_arb ? educationalQualificationDetails.degree1_arb :
+                    (educationalQualificationDetails && educationalQualificationDetails.degree1_arb !== null ? '' : educationalQualificationDetails && educationalQualificationDetails.degree1)
+                  )
+                : (educationalQualificationDetails && educationalQualificationDetails.degree1)
+            }
+              
               onChange={handleEduInputs}
               type="text"
             />
@@ -54,15 +74,17 @@ function EducationalQualificationTab({
         </Col>
         <Col md="4">
           <FormGroup>
-            <Label>Year of completion</Label>
+          <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Year of completion</Label>
             <Input
               name="year_of_completion1"
-              value={
-                educationalQualificationDetails && moment(educationalQualificationDetails.year_of_completion1).format('YYYY-MM-DD')
-              }
-              max={moment().format('YYYY-MM-DD')}
+              value={moment(
+                educationalQualificationDetails &&
+                  educationalQualificationDetails.year_of_completion1,
+              ).format('YYYY-MM-DD')}
               onChange={handleEduInputs}
               type="date"
+              max={moment().format('YYYY-MM-DD')}
             />
           </FormGroup>
         </Col>
@@ -70,22 +92,27 @@ function EducationalQualificationTab({
       <Row>
         <Col md="4">
           <FormGroup>
-            <Label>Qualification 2</Label>
+          <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Qualification 2</Label>
             <Input
-              name="educational_qualitifcation2"
-              value={
-                educationalQualificationDetails &&
-                educationalQualificationDetails.educational_qualitifcation2
-              }
+            name= {arb ? 'educational_qualitifcation2_arb' : 'educational_qualitifcation2'}
+            value={
+              arb
+                ? (
+                  educationalQualificationDetails && educationalQualificationDetails.educational_qualitifcation2_arb ? educationalQualificationDetails.educational_qualitifcation2_arb :
+                    (educationalQualificationDetails && educationalQualificationDetails.educational_qualitifcation2_arb !== null ? '' : educationalQualificationDetails && educationalQualificationDetails.educational_qualitifcation2)
+                  )
+                : (educationalQualificationDetails && educationalQualificationDetails.educational_qualitifcation2)
+            }
               onChange={handleEduInputs}
               type="select"
             >
-              <option defaultValue="selected">Please Select</option>
+              <option defaultValue="selected">{arb ?'الرجاء التحديد':'Please Select'}</option>
               {qualifications &&
                 qualifications.map((ele) => {
                   return (
                     <option key={ele.valuelist_id} value={ele.valuelist_id}>
-                      {ele.value}
+                      {arb?ele.value_arb:ele.value}
                     </option>
                   );
                 })}
@@ -94,10 +121,18 @@ function EducationalQualificationTab({
         </Col>
         <Col md="4">
           <FormGroup>
-            <Label>Degree</Label>
+          <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Degree</Label>
             <Input
-              name="degree2"
-              value={educationalQualificationDetails && educationalQualificationDetails.degree2}
+            name= {arb ? 'degree2_arb' : 'degree2'}
+            value={
+              arb
+                ? (
+                  educationalQualificationDetails && educationalQualificationDetails.degree2_arb ? educationalQualificationDetails.degree2_arb :
+                    (educationalQualificationDetails && educationalQualificationDetails.degree2_arb !== null ? '' : educationalQualificationDetails && educationalQualificationDetails.degree2)
+                  )
+                : (educationalQualificationDetails && educationalQualificationDetails.degree2)
+            }
               onChange={handleEduInputs}
               type="text"
             />
@@ -105,13 +140,14 @@ function EducationalQualificationTab({
         </Col>
         <Col md="4">
           <FormGroup>
-            <Label>Year of completion</Label>
+          <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Year of completion</Label>
             <Input
               name="year_of_completion2"
-              value={
-                educationalQualificationDetails && moment(educationalQualificationDetails.year_of_completion2).format('YYYY-MM-DD')
-              }
-              max={moment().format('YYYY-MM-DD')}
+              value={moment(
+                educationalQualificationDetails &&
+                  educationalQualificationDetails.year_of_completion2,
+              ).format('YYYY-MM-DD')}
               onChange={handleEduInputs}
               type="date"
             />
@@ -121,22 +157,27 @@ function EducationalQualificationTab({
       <Row>
         <Col md="4">
           <FormGroup>
-            <Label>Qualification 3</Label>
+          <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Qualification 3</Label>
             <Input
-              name="educational_qualitifcation3"
-              value={
-                educationalQualificationDetails &&
-                educationalQualificationDetails.educational_qualitifcation3
-              }
+            name= {arb ? 'educational_qualitifcation3_arb' : 'educational_qualitifcation3'}
+            value={
+              arb
+                ? (
+                  educationalQualificationDetails && educationalQualificationDetails.educational_qualitifcation3_arb ? educationalQualificationDetails.educational_qualitifcation3_arb :
+                    (educationalQualificationDetails && educationalQualificationDetails.educational_qualitifcation3_arb !== null ? '' : educationalQualificationDetails && educationalQualificationDetails.educational_qualitifcation3)
+                  )
+                : (educationalQualificationDetails && educationalQualificationDetails.educational_qualitifcation3)
+            }
               onChange={handleEduInputs}
               type="select"
             >
-              <option defaultValue="selected">Please Select</option>
+              <option defaultValue="selected">{arb ?'الرجاء التحديد':'Please Select'}</option>
               {qualifications &&
                 qualifications.map((ele) => {
                   return (
                     <option key={ele.valuelist_id} value={ele.valuelist_id}>
-                      {ele.value}
+                      {arb?ele.value_arb:ele.value}
                     </option>
                   );
                 })}
@@ -145,10 +186,18 @@ function EducationalQualificationTab({
         </Col>
         <Col md="4">
           <FormGroup>
-            <Label>Degree</Label>
+          <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Degree</Label>
             <Input
-              name="degree3"
-              value={educationalQualificationDetails && educationalQualificationDetails.degree3}
+            name= {arb ? 'degree3_arb' : 'degree3'}
+            value={
+              arb
+                ? (
+                  educationalQualificationDetails && educationalQualificationDetails.degree3_arb ? educationalQualificationDetails.degree3_arb :
+                    (educationalQualificationDetails && educationalQualificationDetails.degree3_arb !== null ? '' : educationalQualificationDetails && educationalQualificationDetails.degree3)
+                  )
+                : (educationalQualificationDetails && educationalQualificationDetails.degree3)
+            }
               onChange={handleEduInputs}
               type="text"
             />
@@ -156,13 +205,14 @@ function EducationalQualificationTab({
         </Col>
         <Col md="4">
           <FormGroup>
-            <Label>Year of completion</Label>
+          <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Year of completion</Label>
             <Input
               name="year_of_completion3"
-              value={
-                educationalQualificationDetails && moment(educationalQualificationDetails.year_of_completion3).format('YYYY-MM-DD')
-              }
-              max={moment().format('YYYY-MM-DD')}
+              value={moment(
+                educationalQualificationDetails &&
+                  educationalQualificationDetails.year_of_completion3,
+              ).format('YYYY-MM-DD')}
               onChange={handleEduInputs}
               type="date"
             />

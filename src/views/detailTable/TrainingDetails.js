@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext} from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Row, Col, Form, FormGroup, Label, Input, Button } from 'reactstrap';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -6,22 +6,28 @@ import { ToastContainer } from 'react-toastify';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import ComponentCard from '../../components/ComponentCard';
 import message from '../../components/Message';
-import AppContext from '../../context/AppContext';
 import api from '../../constants/api';
 import creationdatetime from '../../constants/creationdatetime';
+import AppContext from '../../context/AppContext';
 
 const TrainingDetails = () => {
-  // All State variable
   const [training, setTraining] = useState();
   const [trainingDetails, setTrainingDetails] = useState({
     title: '',
     training_id: '',
   });
-  //Navigation and parameter
+
   const navigate = useNavigate();
   const { loggedInuser } = useContext(AppContext);
 
-  ///getting data from Training
+  const getSelectedLocationFromLocalStorage = () => {
+    const locations = localStorage.getItem('selectedLocation');
+    const loc = JSON.parse(locations);
+    return locations ? Number(loc) : null;
+  };
+
+  const selectedLocation = getSelectedLocationFromLocalStorage();
+
   const getTraining = () => {
     api
       .get('/training/getTraining')
@@ -32,15 +38,16 @@ const TrainingDetails = () => {
         message('Training Data Not Found', 'info');
       });
   };
-  //Setting data in trainingDetails
+console.log(training);
   const handleInputs = (e) => {
     setTrainingDetails({ ...trainingDetails, [e.target.name]: e.target.value });
   };
-  //Insert Training
+
   const insertTrainingDetailData = () => {
     if (trainingDetails.title !== '') {
       trainingDetails.creation_date = creationdatetime;
-        trainingDetails.created_by = loggedInuser.first_name;
+      trainingDetails.created_by = loggedInuser.first_name;
+      trainingDetails.site_id = selectedLocation;
       api
         .post('/training/insertTraining', trainingDetails)
         .then((res) => {
@@ -54,18 +61,18 @@ const TrainingDetails = () => {
           message('Network connection error.', 'error');
         });
     } else {
-      message('Please fill all required fields.', 'warning');
+      message('Please fill all required fields.', 'error');
     }
   };
+
   useEffect(() => {
     getTraining();
-    console.log(training)
   }, []);
 
   return (
     <>
       <BreadCrumbs />
-      <ToastContainer></ToastContainer>
+      <ToastContainer />
       <Row>
         <Col md="6" xs="12">
           <ComponentCard title="Key Details">
@@ -73,11 +80,13 @@ const TrainingDetails = () => {
               <FormGroup>
                 <Row>
                   <Col md="12">
-                    <Label>Title <span style={{ color: 'red' }}>*</span></Label>
+                    <Label>
+                      <span className="required">*</span> Title
+                    </Label>
                     <Input
                       type="text"
                       onChange={handleInputs}
-                      value={trainingDetails && trainingDetails.title}
+                      value={trainingDetails.title}
                       name="title"
                     />
                   </Col>
@@ -89,16 +98,12 @@ const TrainingDetails = () => {
                     <Button
                       className="shadow-none"
                       color="primary"
-                      onClick={() => {
-                        insertTrainingDetailData();
-                      }}
+                      onClick={insertTrainingDetailData}
                     >
                       Save & Continue
                     </Button>
                     <Button
-                      onClick={() => {
-                        navigate(-1);
-                      }}
+                      onClick={() => navigate(-1)}
                       type="button"
                       className="btn btn-dark shadow-none"
                     >

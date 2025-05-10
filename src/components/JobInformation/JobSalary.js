@@ -7,14 +7,17 @@ export default function JobSalary({ handleInputsJobInformation, job }) {
   JobSalary.propTypes = {
     handleInputsJobInformation: PropTypes.any,
     job: PropTypes.any,
-    
+   
   };
+
   return (
     <FormGroup>
         <Row>
           <Col md="4">
             <FormGroup>
-              <Label> CPF Applicable</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                CPF Applicable
+              </Label>
               <br></br>
               <Label>Yes</Label>
               <Input
@@ -38,9 +41,11 @@ export default function JobSalary({ handleInputsJobInformation, job }) {
           </Col>
           <Col md="4">
             <FormGroup>
-              <Label>
-                Govt donation<span className="required"> *</span>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+            <span className="required"> *</span>{' '}
+                Govt donation  
               </Label>
+            
               <Input
                 type="select"
                 value={job && job.govt_donation}
@@ -57,8 +62,11 @@ export default function JobSalary({ handleInputsJobInformation, job }) {
           </Col>
           {job && job.govt_donation === 'pay_cdac' && (
             <Col md="4">
-              <FormGroup>
-                <Label>Pay CDAC</Label>
+              <FormGroup>  
+                <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Pay CDAC   
+              </Label>
+                
                 <Input
                   type="numbers"
                   onChange={handleInputsJobInformation}
@@ -71,7 +79,10 @@ export default function JobSalary({ handleInputsJobInformation, job }) {
           {job && job.govt_donation === 'pay_sinda' && (
             <Col md="4">
               <FormGroup>
-                <Label>Pay SINDA</Label>
+              <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Pay SINDA   
+              </Label>
+               
                 <Input
                   type="numbers"
                   onChange={handleInputsJobInformation}
@@ -84,7 +95,10 @@ export default function JobSalary({ handleInputsJobInformation, job }) {
           {job && job.govt_donation === 'pay_mbmf' && (
             <Col md="4">
               <FormGroup>
-                <Label>Pay MBMF</Label>
+              <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Pay MBMF   
+              </Label>
+                
                 <Input
                   type="numbers"
                   onChange={handleInputsJobInformation}
@@ -97,7 +111,10 @@ export default function JobSalary({ handleInputsJobInformation, job }) {
           {job && job.govt_donation === 'pay_eucf' && (
             <Col md="3">
               <FormGroup>
-                <Label>Pay EUCF</Label>
+              <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Pay EUCF   
+              </Label>
+              
                 <Input
                   type="numbers"
                   onChange={handleInputsJobInformation}
@@ -109,7 +126,10 @@ export default function JobSalary({ handleInputsJobInformation, job }) {
           )}
           <Col md="4">
             <FormGroup>
-              <Label>Income Tax No</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Income Tax No   
+              </Label>
+             
               <Input
                 type="text"
                 onChange={handleInputsJobInformation}
@@ -120,7 +140,10 @@ export default function JobSalary({ handleInputsJobInformation, job }) {
           </Col>
           <Col md="4">
             <FormGroup>
-              <Label>Income Tax Amount</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Income Tax Amount   
+              </Label>
+         
               <Input
                 type="text"
                 onChange={handleInputsJobInformation}
@@ -131,7 +154,10 @@ export default function JobSalary({ handleInputsJobInformation, job }) {
           </Col>
           <Col md="4">
             <FormGroup>
-              <Label>CPF No</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                CPF No   
+              </Label>
+             
               <Input
                 type="text"
                 onChange={handleInputsJobInformation}

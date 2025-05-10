@@ -8,37 +8,45 @@ export default function PreviousEarlierLoan({ loan ,loanDetails}) {
     loan: PropTypes.any,
     loanDetails:PropTypes.any
   };
+  const getSelectedLanguageFromLocalStorage = () => {
+    return localStorage.getItem('selectedLanguage') || '';
+  };
+
+  const selectedLanguage = getSelectedLanguageFromLocalStorage();
+
+  const arb = selectedLanguage === 'Arabic';
+
   let prevloan=[];
   if(loan){
    prevloan=loan.filter((el)=>{
     return (el.loan_id !== loanDetails.loan_id && (new Date(loanDetails.date)>= new Date(el.date) ) )
   })
   console.log('prev loan',prevloan)}
-
+  
   const columns = [
     {
       name: '#',
     },
     {
-      name: 'Type of Loan',
+      name: arb? 'نوع القرض': 'Type of Loan',
     },
     {
-      name: 'Status',
+      name: arb? 'حالة':'Status',
     },
     {
-      name: 'Date',
+      name: arb? 'تاريخ':'Date',
     },
     {
-      name: 'Loan Start Date',
+      name:arb? 'تاريخ بدء القرض': 'Loan Start Date',
     },
     {
-      name: 'Total Loan Amount',
+      name: arb? 'إجمالي مبلغ القرض':'Total Loan Amount',
     },
     {
-      name: 'AmountPayable(permonth)',
+      name:arb? 'المبلغ المستحق (شهريا)': 'AmountPayable(permonth)',
     },
     {
-      name: 'Loan Closing Date',
+      name:arb? 'تاريخ إغلاق القرض': 'Loan Closing Date',
     },
   ];
   return (

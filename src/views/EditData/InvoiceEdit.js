@@ -19,19 +19,13 @@ import message from '../../components/Message';
 import api from '../../constants/api';
 import Tab from '../../components/ProjectTabs/Tab';
 //import ApiButton from '../../components/ApiButton';
-import Customer from '../../components/SalesOrder/Customer';
-import Currency from '../../components/SalesOrder/Currency';
-import Shipping from '../../components/SalesOrder/Shipping';
-import SalesMan from '../../components/SalesOrder/SalesMan';
-// import QuoteLineItem from '../../components/SalesOrder/QuoteLineItem';
-// import EditLineItemModal from '../../components/SalesOrder/EditLineItemModal';
-import SalesOrderProducts from '../../components/SalesOrder/SalesOrderProducts';
-
-// import SalesOrderPrintWithCost from '../../components/PDF/SalesOrderPrintWithCost';
-// import PdfPickingList from '../../components/PDF/PdfPick';
-// import PdfPackingList from '../../components/PDF/PdfPack';
-// import PdfSalesQuote from '../../components/PDF/PdfSalesOrderQuote';
-// import PrintPerfoma from '../../components/PDF/PrintPerfoma';
+import Customer from '../../components/Invoice/Customer';
+import Currency from '../../components/Invoice/Currency';
+import Shipping from '../../components/Invoice/Shipping';
+import SalesMan from '../../components/Invoice/SalesMan';
+// import QuoteLineItem from '../../components/Invoice/QuoteLineItem';
+// import EditLineItemModal from '../../components/Invoice/EditLineItemModal';
+import SalesOrderProducts from '../../components/Invoice/SalesOrderProducts';
 
 
 const SalesOrderEdit = () => {
@@ -46,14 +40,7 @@ const SalesOrderEdit = () => {
       { id: '2', name: 'Currency' },
       { id: '3', name: 'Shipping' },
       { id: '4', name: 'Sales Man' },
-       { id: '5', name: 'Pdf Pick' },
-       { id: '6', name: 'Pdf Pack' },
-       { id: '10', name: 'Pdf quote' },
-
-
-     
-       { id: '6', name: 'Pdf Pick' },
-       { id: '7', name: 'Pdf Pick' },
+    
     ];
     const toggle = (tab) => {
       setActiveTab(tab);
@@ -112,7 +99,7 @@ const handleInputs = (e) => {
 
 const getSettingById = () => {
   api
-    .post('/invoice/getInvoiceorderById', { invoice_id: id })
+    .post('/invoice/getSalesorderById', { invoice_id: id })
     .then((res) => {
       setSettingDetails(res.data.data[0]);
     })
@@ -123,7 +110,7 @@ const getSettingById = () => {
 //Update Setting
 const editSettingData = () => {
     api
-      .post('/invocie/editInvoice', settingdetails)
+      .post('/invoice/editSalesOrder', settingdetails)
       .then(() => {
         message('Record editted successfully', 'success');
       })
@@ -190,7 +177,7 @@ useEffect(() => {
                   <Input
                     type="text"
                     onChange={handleInputs}
-                    value={settingdetails && settingdetails.tran_no}
+                    value={settingdetails && settingdetails.invoice_code}
                     name="tran_no"
                   ></Input>
                 </FormGroup>
@@ -201,7 +188,7 @@ useEffect(() => {
                   <Input
                     type="date"
                     onChange={handleInputs}
-                    value={settingdetails && settingdetails.tran_date}
+                    value={settingdetails && settingdetails.invoice_date}
                     name="tran_date"
                   />
                 </FormGroup>
@@ -242,8 +229,7 @@ useEffect(() => {
              handleInputs={handleInputs}
              ></SalesMan>
           </TabPane>
-         
-         
+        
         </TabContent>
       </ComponentCard>
       <>

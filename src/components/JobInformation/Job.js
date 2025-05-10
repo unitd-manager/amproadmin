@@ -7,14 +7,20 @@ export default function JobBank({ handleInputsJobInformation, job, allBank }) {
     handleInputsJobInformation: PropTypes.any,
     job: PropTypes.any,
     allBank: PropTypes.any,
+ 
+
   };
+
+
   return (
       <FormGroup>
         <Row>
           <Col md="4">
             <FormGroup>
-              <Label>Mode of Payment</Label>
-
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Mode of Payment
+              </Label>
+             
               <Input
                 type="select"
                 value={job && job.mode_of_payment}
@@ -30,7 +36,10 @@ export default function JobBank({ handleInputsJobInformation, job, allBank }) {
           </Col>
           <Col md="4">
             <FormGroup>
-              <Label>Account No</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Account No
+              </Label>
+              
               <Input
                 type="text"
                 onChange={handleInputsJobInformation}
@@ -41,7 +50,11 @@ export default function JobBank({ handleInputsJobInformation, job, allBank }) {
           </Col>
           <Col md="4">
             <FormGroup>
-              <Label>Bank Name</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Bank Name
+              </Label>
+              
+             
               <Input
                 type="select"
                 name="bank_name"
@@ -60,7 +73,10 @@ export default function JobBank({ handleInputsJobInformation, job, allBank }) {
           </Col>
           <Col md="4">
             <FormGroup>
-              <Label>Bank Code</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Bank Code
+              </Label>
+             
               <Input
                 type="text"
                 onChange={handleInputsJobInformation}
@@ -71,7 +87,10 @@ export default function JobBank({ handleInputsJobInformation, job, allBank }) {
           </Col>
           <Col md="4">
             <FormGroup>
-              <Label>Branch Code</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Branch Code
+              </Label>
+            
               <Input
                 type="text"
                 onChange={handleInputsJobInformation}

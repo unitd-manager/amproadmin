@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { Row, Col, Input, Button, Form, FormGroup } from 'reactstrap';
+import { Row, Col, Input, Button, Form, FormGroup, TabContent, TabPane } from 'reactstrap';
 import { useNavigate, useParams,Link } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import random from 'random';
@@ -13,7 +13,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import ComponentCard from '../../components/ComponentCard';
 import message from '../../components/Message';
-import AppContext from '../../context/AppContext';
 import api from '../../constants/api';
 import TrainingCompany from '../../components/Training/TrainingCompany';
 import TrainingMainDetails from '../../components/Training/TrainingMainDetails';
@@ -23,10 +22,13 @@ import ViewFileComponentV2 from '../../components/ProjectModal/ViewFileComponent
 //import ComponentCardV2 from '../../components/ComponentCardV2';
 import ApiButton from '../../components/ApiButton';
 import creationdatetime from '../../constants/creationdatetime';
+import AppContext from '../../context/AppContext';
+import Tab from '../../components/project/Tab';
+// import Tabs from '../../components/project/Tabs';
 
 const TrainingEdit = () => {
   //All state variables
-
+  const [activeTab, setActiveTab] = useState('1');
   const [trainingDetails, setTrainingDetails] = useState();
   const [employeeLinked, setEmployeeLinked] = useState();
   const [prevEmployee, setPreviousEmployee] = useState();
@@ -42,6 +44,15 @@ const TrainingEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { loggedInuser } = useContext(AppContext);
+  const tabs = [
+    { id: '1', name: 'Linked Employee' },
+    { id: '2', name: 'Attachments' },
+    
+  ];
+
+  const toggle = (tab) => {
+    setActiveTab(tab);
+  };
   //Button fuctions
   // const applyChanges = () => {};
   const backToList = () => {
@@ -167,8 +178,9 @@ const TrainingEdit = () => {
   };
   //edit data in link employee
   const insertTrainingStaff = (trainingId, staffObj) => {
-    
     if (new Date(staffObj.to_date) > new Date(staffObj.from_date)) {
+      staffObj.creation_date = creationdatetime;
+      staffObj.created_by= loggedInuser.first_name;
       api
         .post('/training/insertTrainingStaff', {
           training_id: trainingId,
@@ -209,6 +221,8 @@ const TrainingEdit = () => {
     }
   };
 
+  
+
   //Insert Training
   const insertTrainingData = () => {
     const result = [];
@@ -232,11 +246,11 @@ const TrainingEdit = () => {
         }
       }
     });
-    if (new Date(trainingDetails.to_date) > new Date(trainingDetails.from_date)) {
+    if ((new Date(trainingDetails.to_date) == new Date(trainingDetails.from_date)) ||(new Date(trainingDetails.to_date) > new Date(trainingDetails.from_date))) {
       if (trainingDetails.title !== '') {
-        //Update training
         trainingDetails.modification_date = creationdatetime;
-        trainingDetails.modified_by = loggedInuser.first_name;
+        trainingDetails.modified_by= loggedInuser.first_name;
+        //Update training
         api
           .post('/training/edit-Training', trainingDetails)
           .then(() => {
@@ -247,7 +261,7 @@ const TrainingEdit = () => {
             message('Unable to edit record.', 'error');
           });
       } else {
-        message('Please fill all required fields', 'warning');
+        message('Please fill all required fields', 'error');
       }
     } else {
       message('The To date should be the future date of From date', 'error');
@@ -339,9 +353,43 @@ const TrainingEdit = () => {
       }
     });
   };
+  const getSelectedLanguageFromLocalStorage = () => {
+    return localStorage.getItem('selectedLanguage') || '';
+  };
+
+  const selectedLanguage = getSelectedLanguageFromLocalStorage();
+
+  // Use the selected language value as needed
+  console.log('Selected language from localStorage:', selectedLanguage);
+ 
+  const [arabic, setArabic] = useState([]);
+
+  const arb = selectedLanguage === 'Arabic';
+
+
+
+  const getArabicCompanyName = () => {
+    api
+      .get('/training/getTranslationforHRTraining')
+      .then((res) => {
+        setArabic(res.data.data);
+      })
+      .catch(() => {
+        // Handle error if needed
+      });
+  };
+
+  console.log('arabic', arabic);
+  useEffect(() => {
+    getArabicCompanyName();
+  }, []);
+
+  
   return (
-    <>
-      <BreadCrumbs heading={trainingDetails && trainingDetails.title} />
+    <> 
+    <BreadCrumbs heading={trainingDetails && trainingDetails.title} />
+    
+      {/* <BreadCrumbs heading={trainingDetails && trainingDetails.title} /> */}
       <Form>
         <FormGroup>
           <ToastContainer></ToastContainer>
@@ -351,7 +399,7 @@ const TrainingEdit = () => {
             <ApiButton
               editData={insertTrainingData}
               navigate={navigate}
-              applyChanges={insertTrainingData}
+             // applyChanges={insertTrainingData}
               backToList={backToList}
               module="Training"
               deleteData={deleteData}
@@ -362,194 +410,215 @@ const TrainingEdit = () => {
 
       {/* Main Details */}
       <TrainingMainDetails
+       arb={arb}
+       arabic={arabic}
+      
         trainingDetails={trainingDetails}
         handleInputs={handleInputs}
       ></TrainingMainDetails>
 
       {/* Training Company Form */}
       <TrainingCompany
+       arb={arb}
+       arabic={arabic}
+      
         trainingDetails={trainingDetails}
         handleInputs={handleInputs}
       ></TrainingCompany>
-      {/* Attachment */}
-      <Form>
-        <FormGroup>
-          <ComponentCard title="Attachments">
-            <Row>
-              <Col xs="12" md="3" className="mb-3">
-                <Button
-                  className="shadow-none"
-                  color="primary"
-                  onClick={() => {
-                    setRoomName('Training');
-                    setFileTypes(['JPG', 'JPEG', 'PNG', 'GIF', 'PDF']);
-                    dataForAttachment();
-                    setAttachmentModal(true);
-                  }}
-                >
-                  <Icon.File className="rounded-circle" width="20" />
-                </Button>
-              </Col>
-            </Row>
-            <AttachmentModalV2
-              moduleId={id}
-              attachmentModal={attachmentModal}
-              setAttachmentModal={setAttachmentModal}
-              roomName={RoomName}
-              fileTypes={fileTypes}
-              altTagData="TrainingRelated Data"
-              desc="TrainingRelated Data"
-              recordType="TrainingRelatedPicture"
-              mediaType={attachmentData.modelType}
-              update={update}
-              setUpdate={setUpdate}
-            />
-            <ViewFileComponentV2
-              moduleId={id}
-              roomName="Training"
-              recordType="TrainingRelatedPicture"
-              update={update}
-              setUpdate={setUpdate}
-            />
-          </ComponentCard>
-        </FormGroup>
-      </Form>
+ <ComponentCard title="More Details">
+<Tab toggle={toggle} tabs={tabs} />
+        
+
+        <TabContent className="p-4" activeTab={activeTab}>
+       
+<TabPane tabId="1">
 
       <ComponentCard>
         {/* Training Staff */}
         <Row>
-          <table className="lineitem  border border-secondary rounded">
-            <thead>
-              <tr>
-                <th scope="col">Employee Name</th>
-                <th scope="col">From Date</th>
-                <th scope="col">To date</th>
-                <th scope="col"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {prevEmployee &&
-                prevEmployee.map((item) => {
-                  return (
-                    <tr key={item.id}>
-                      <td data-label="Employee Name">
-                        <Select
-                          key={item.id}
-                          defaultValue={{ value: item.employee_id, label: item.employee_name }}
-                          isDisabled={false}
-                          options={employeeLinked}
-                        />
-                        <Input
-                          value={item.employee_id.toString()}
-                          type="hidden"
-                          name="employee_id"
-                        ></Input>
-                      </td>
-                      <td data-label="From Date">
-                        <p>{item.from_date}</p>
-                      </td>
-                      <td data-label="To Date">
-                        <p>{item.to_date}</p>
-                      </td>
-                      <td>
-                        <Input type="hidden" name="id" defaultValue={item.id}></Input>
-                      </td>
-                      {/* delete button from training staff*/}
-                      <td>
-                        <Button
-                          color="danger"
-                          className="shadow-none"
-                          onClick={() => {
-                            {
-                              deleteTrainingStaffData(item.training_staff_id);
-                            }
-                          }}
-                        >
-                          Delete
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })}
-            </tbody>
-          </table>
+          <table className="lineitem border border-secondary rounded">
+  <thead>
+    <tr>
+      <th scope="col">Employee Name</th>
+      <th scope="col">From Date</th>
+      <th scope="col">To Date</th>
+      <th scope="col"></th>
+    </tr>
+  </thead>
+  <tbody>
+    {prevEmployee &&
+      prevEmployee.map((item) => {
+        return (
+          <tr key={item.id}>
+            <td data-label="Employee Name">
+              <Select
+                key={item.id}
+                defaultValue={{ value: item.employee_id, label: item.employee_name }}
+                isDisabled={false}
+                options={employeeLinked}
+              />
+              <Input
+                value={item.employee_id.toString()}
+                type="hidden"
+                name="employee_id"
+              ></Input>
+            </td>
+            <td data-label="From Date">
+              <p>{item.from_date}</p>
+            </td>
+            <td data-label="To Date">
+              <p>{item.to_date}</p>
+            </td>
+            <td>
+              <Input type="hidden" name="id" defaultValue={item.id}></Input>
+            </td>
+            <td>
+              <Button
+                color="danger"
+                className="shadow-none"
+                onClick={() => {
+                  deleteTrainingStaffData(item.training_staff_id);
+                }}
+              >
+                Delete
+              </Button>
+            </td>
+          </tr>
+        );
+      })}
+  </tbody>
+</table>
+</Row>
+<br />
+<Row>
+  <Col md="3">
+    <Button
+      color="primary"
+      className="shadow-none"
+      type="button"
+      onClick={() => {
+        AddNewLineItem();
+      }}
+    >
+      Link Employee
+    </Button>
+  </Col>
+</Row>
+<br />
+<Row>
+  <table className="lineitem newemp border border-secondary rounded">
+    <thead>
+      <tr>
+        <th scope="col">Employee Name</th>
+        <th scope="col">From Date</th>
+        <th scope="col">To Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {addLineItem.map((item) => {
+        return (
+          <tr key={item.id}>
+            <td data-label="Employee Name">
+              <Select
+                key={item.id}
+                defaultValue={{ value: item.employee_id, label: item.employee_name }}
+                onChange={(e) => {
+                  onchangeItem(e, item.id);
+                }}
+                options={employeeLinked}
+              />
+              <Input
+                value={item.employee_id.toString()}
+                type="hidden"
+                name="employee_id"
+              ></Input>
+            </td>
+            <td data-label="From Date">
+              <Input type="date" defaultValue={item && item.from_date} name="from_date" />
+            </td>
+            <td data-label="To Date">
+              <Input
+                type="date"
+                defaultValue={item && item.to_date}
+                min={new Date(item && item.from_date)}
+                name="to_date"
+              />
+            </td>
+            <td>
+              <Input type="hidden" name="id" defaultValue={item.id}></Input>
+            </td>
+            <td data-label="Action">
+              <Link to="">
+                <Input type="hidden" name="id" defaultValue={item.id}></Input>
+                <span
+                  onClick={() => {
+                    ClearValue(item);
+                  }}
+                >
+                  Clear
+                </span>
+              </Link>
+            </td>
+          </tr>
+        );
+      })}
+    </tbody>
+  </table>
+
         </Row>
-        <br />
-        <Row>
-          <Col md="3">
-            <Button
-              color="primary"
-              className="shadow-none"
-              type="button"
-              onClick={() => {
-                AddNewLineItem();
-              }}
-            >
-              Linked Employee
-            </Button>
-          </Col>
-        </Row>
-        <br />
-        <Row>
-          <table className="lineitem newemp border border-secondary rounded">
-            <thead>
-              <tr>
-                <th scope="col">Employee Name</th>
-                <th scope="col">From Date</th>
-                <th scope="col">To date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {addLineItem.map((item) => {
-                return (
-                  <tr key={item.id}>
-                    <td data-label="Employee Name">
-                      <Select
-                        key={item.id}
-                        defaultValue={{ value: item.employee_id, label: item.employee_name }}
-                        onChange={(e) => {
-                          onchangeItem(e, item.id);
-                        }}
-                        options={employeeLinked}
-                      />
-                      <Input
-                        value={item.employee_id.toString()}
-                        type="hidden"
-                        name="employee_id"
-                      ></Input>
-                    </td>
-                    <td data-label="From Date">
-                      <Input type="date" defaultValue={item && item.from_date} name="from_date" />
-                    </td>
-                    <td data-label="To Date">
-                      <Input
-                        type="date"
-                        defaultValue={item && item.to_date}
-                        min={new Date(item && item.from_date)}
-                        name="to_date"
-                      />
-                    </td>
-                    <td>
-                      <Input type="hidden" name="id" defaultValue={item.id}></Input>
-                    </td>
-                    <td data-label="Action">
-                      <Link to="">
-                        <Input type="hidden" name="id" defaultValue={item.id}></Input>
-                        <span
-                          onClick={() => {
-                            ClearValue(item);
-                          }}
-                        >
-                          Clear
-                        </span>
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </Row>
+      </ComponentCard>
+      </TabPane>
+      <TabPane tabId="2">
+
+{/* Attachment */}
+<Form>
+  <FormGroup>
+    <ComponentCard title={arb ? 'المرفقات':"Attachments"}>
+      <Row>
+        <Col xs="12" md="3" className="mb-3">
+          <Button
+            className="shadow-none"
+            color="primary"
+            onClick={() => {
+              setRoomName('Training');
+              setFileTypes(['JPG', 'JPEG', 'PNG', 'GIF', 'PDF']);
+              dataForAttachment();
+              setAttachmentModal(true);
+            }}
+          >
+            <Icon.File className="rounded-circle" width="20" />
+          </Button>
+        </Col>
+      </Row>
+      <AttachmentModalV2
+      arb={arb}
+      arabic={arabic}
+        moduleId={id}
+        attachmentModal={attachmentModal}
+        setAttachmentModal={setAttachmentModal}
+        roomName={RoomName}
+        fileTypes={fileTypes}
+        altTagData="TrainingRelated Data"
+        desc="TrainingRelated Data"
+        recordType="TrainingRelatedPicture"
+        mediaType={attachmentData.modelType}
+        update={update}
+        setUpdate={setUpdate}
+      />
+      <ViewFileComponentV2
+      arb={arb}
+      arabic={arabic}
+        moduleId={id}
+        roomName="Training"
+        recordType="TrainingRelatedPicture"
+        update={update}
+        setUpdate={setUpdate}
+      />
+    </ComponentCard>
+  </FormGroup>
+</Form>
+</TabPane>
+      </TabContent>
       </ComponentCard>
     </>
   );

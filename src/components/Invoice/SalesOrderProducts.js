@@ -110,8 +110,8 @@ const SalesOrderProducts = ({
  React.useEffect(() => {
   const fetchBillDiscountAndTax = async () => {
     try {
-      const response = await api.post('/salesOrder/getSalesorderById', {
-        sales_order_id: id,
+      const response = await api.post('/invoice/getSalesorderById', {
+        invoice_id: id,
       });
 
       const data = response.data.data[0];
@@ -144,7 +144,7 @@ console.log("Bill discount loaded:", billDiscount,taxRate, taxType);
 const saveBillDiscount = async (value) => {
   try {
     await api.post('/salesOrder/updateBillDiscount', {
-      sales_order_id: id,
+      invoice_id: id,
       bill_discount: value,
     });
   } catch (error) {
@@ -155,8 +155,8 @@ const saveBillDiscount = async (value) => {
   
 const saveSalesOrderSummary = async (subTotal, Tax, netTotal) => {
   try {
-    await api.post('/salesOrder/updateSalesOrderSummary', {
-      sales_order_id: id,
+    await api.post('/invoice/updateSalesOrderSummary', {
+      invoice_id: id,
       sub_total: subTotal,
       tax: Tax,
       net_total: netTotal,
@@ -183,7 +183,7 @@ React.useEffect(() => {
       <Row>
         <Col md="6">
           <Button color="primary" onClick={addQuoteItemsToggle}>
-            Add Sale Items
+            Add Invoice Items
           </Button>
         </Col>
       </Row>
