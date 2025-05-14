@@ -64,42 +64,6 @@ const SalesOrderProducts = ({
   }
   const [selectedProduct, setSelectedProduct] = React.useState(null);
 
-  const [backOrderQtyMap, setBackOrderQtyMap] = React.useState({});
-  
-  const fetchBackOrderQty = async (productId) => {
-    try {
-      const response = await api.post('/salesOrder/getBackOrderQtyByProductId', {
-        product_id: productId,
-      });
-
-      return response.data.data.back_order_qty || 0;
-    } catch (error) {
-      console.error('Error fetching back order quantity:', error);
-      return 0;
-    }
-  };
-
-  React.useEffect(() => {
-    const getAllBackOrderQty = async () => {
-      const productIds = [...new Set(lineItem.map(item => item.product_id))];
-      const results = await Promise.all(
-        productIds.map(async ids => {
-          const qty = await fetchBackOrderQty(ids);
-          return { ids, qty };
-        })
-      );
-      const qtyMap = results.reduce((acc, { ids, qty }) => {
-        acc[ids] = qty;
-        return acc;
-      }, {});
-      setBackOrderQtyMap(qtyMap);
-    };
-  
-    if (Array.isArray(lineItem) && lineItem.length > 0) {
-      getAllBackOrderQty();
-    }
-  }, [lineItem]);
-  
   const [billDiscount, setBillDiscount] = React.useState(0);
  // const [isInitialLoad, setIsInitialLoad] = React.useState(true);
   
@@ -143,7 +107,7 @@ console.log("Bill discount loaded:", billDiscount,taxRate, taxType);
 // 2. Save function - not triggered automatically
 const saveBillDiscount = async (value) => {
   try {
-    await api.post('/salesOrder/updateBillDiscount', {
+    await api.post('/invoice/updateBillDiscount', {
       invoice_id: id,
       bill_discount: value,
     });
@@ -234,7 +198,7 @@ React.useEffect(() => {
             }}>
               <Icon.Edit2 />
             </span>
-            <span className="addline" onClick={() => deleteRecord(e.sales_order_item_id)}>
+            <span className="addline" onClick={() => deleteRecord(e.invoice_item_id)}>
               <Icon.Trash2 />
             </span>
           </td>
@@ -282,17 +246,14 @@ React.useEffect(() => {
       <p>
   <strong>CQty:</strong> {selectedProduct.Cqty || '0.00'}&nbsp;&nbsp;
   <strong>Qty On Hand:</strong> {selectedProduct.quantity || '0.00'}&nbsp;&nbsp;
-  <strong>Back Order Qty:</strong> {backOrderQtyMap[selectedProduct?.product_id] || '0.00'}&nbsp;&nbsp;
-  <strong>Actual Qty:</strong> {(
-    (parseFloat(selectedProduct.quantity || 0) - parseFloat(backOrderQtyMap[selectedProduct.product_id] || 0)).toFixed(2)
-  )}
+ 
 </p>
 
     </>
   ) : (
     <>
     <p><strong>Uom: </strong> 0.00&nbsp;&nbsp; <strong>Pieces/Carton:</strong> 0.00&nbsp;&nbsp; <strong>Purchase UnitCost:</strong> 0.00 &nbsp;&nbsp; <strong>Profit%:</strong> 0.00 &nbsp;&nbsp; <strong>Wholesale Price:</strong> 0.00 &nbsp;&nbsp; <strong>Carton Price:</strong> 0.00</p>
-      <p><strong>CQty:</strong> 0.00 &nbsp;&nbsp; <strong>Qty On Hand:</strong> 0.00 &nbsp;&nbsp; <strong>Back Order Qty:</strong> 0.00 &nbsp;&nbsp; <strong>Actual Qty:</strong> 0.00</p>
+      <p><strong>CQty:</strong> 0.00 &nbsp;&nbsp; <strong>Qty On Hand:</strong> 0.00 &nbsp;&nbsp; </p>
     </>
   )}
 </Col>

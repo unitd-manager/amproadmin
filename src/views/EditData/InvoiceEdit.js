@@ -26,7 +26,6 @@ import SalesMan from '../../components/Invoice/SalesMan';
 // import QuoteLineItem from '../../components/Invoice/QuoteLineItem';
 // import EditLineItemModal from '../../components/Invoice/EditLineItemModal';
 import SalesOrderProducts from '../../components/Invoice/SalesOrderProducts';
-import SalesInvoicePickingListPdf from '../../components/PDF/SalesInvoicePickingListPdf';
 
 
 
@@ -42,7 +41,7 @@ const SalesOrderEdit = () => {
       { id: '2', name: 'Currency' },
       { id: '3', name: 'Shipping' },
       { id: '4', name: 'Sales Man' },
-       { id: '5', name: 'Pdf' },
+    
     ];
     const toggle = (tab) => {
       setActiveTab(tab);
@@ -231,13 +230,7 @@ useEffect(() => {
              handleInputs={handleInputs}
              ></SalesMan>
           </TabPane>
-          <TabPane tabId="5">
-          <SalesInvoicePickingListPdf
-          id={id}
-                   settingdetails={settingdetails}
-                   lineItem={lineItem}
-                ></SalesInvoicePickingListPdf>
-          </TabPane>
+       
          
         
         </TabContent>

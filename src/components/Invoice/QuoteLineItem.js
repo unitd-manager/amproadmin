@@ -89,9 +89,9 @@ const QuoteLineItem = ({
     obj.creation_date = creationdatetime;
     obj.created_by = loggedInuser.first_name;
     //obj.opportunity_id = projectInfo;
-    obj.sales_order_id = quoteLine;
+    obj.invoice_id = quoteLine;
     api
-      .post('/salesOrder/insertQuoteItems', obj)
+      .post('/invoice/insertQuoteItems', obj)
       .then(() => {
         message('Line Item Added Successfully', 'sucess');
         window.location.reload();
