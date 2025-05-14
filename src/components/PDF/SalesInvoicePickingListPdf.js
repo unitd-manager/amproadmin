@@ -19,6 +19,7 @@ const SalesInvoicePickingListPdf = ({ id, settingdetails }) => {
   const [salesOrder, setSalesOrder] = useState({});
   const [lineItems, setLineItems] = useState();
   const [hfdata, setHeaderFooterData] = useState();
+  const [gTotal, setGtotal] = useState(0);
   
 
   useEffect(() => {
@@ -43,9 +44,14 @@ console.log("SalesOrde", salesOrder)
       });
 
     api
-      .post('/salesOrder/getQuoteLineItemsById', { sales_order_id: id })
+      .post('/invoice/getQuoteLineItemsById', { invoice_id: id })
       .then((res) => {
         setLineItems(res.data.data);
+        let grandTotal = 0;
+        res.data.data.forEach((elem) => {
+          grandTotal += elem.total;
+        });
+        setGtotal(grandTotal);
     })
       .catch(() => {
         message('Sales Order Line Items Not Found', 'info');
@@ -65,6 +71,10 @@ console.log("SalesOrde", salesOrder)
         { text: 'Product Name', style: 'tableHead' },
         { text: 'Uom', style: 'tableHead' },
         { text: 'CQty', style: 'tableHead' },
+        { text: 'Loose Qty', style: 'tableHead' },
+        { text: 'Carton Price', style: 'tableHead' },
+        { text: 'Discount', style: 'tableHead' },
+        { text: 'Amount', style: 'tableHead' },
       ],
     ];
 
@@ -74,8 +84,15 @@ console.log("SalesOrde", salesOrder)
         { text: `${item.product_name || ''}`, style: 'tableBody' },
         { text: `${item.unit || ''}`, style: 'tableBody' },
         { text: `${item.carton_qty || ''}`, style: 'tableBody' },
+        { text: `${item.loose_qty || ''}`, style: 'tableBody' },
+        { text: `${item.carton_price || ''}`, style: 'tableBody' },
+        { text: `${item.discount_value || ''}`, style: 'tableBody' },
+        { text: `${item.total || ''}`, style: 'tableBody' },
       ]);
     });
+
+    const gst = gTotal * 0.07;
+    const totalWithGst = gTotal + gst;
 
 
     const dd = {
@@ -97,7 +114,7 @@ console.log("SalesOrde", salesOrder)
                 stack: [
                   {
                     table: {
-                        widths: ['20%','auto','30%'],
+                        widths: ['auto','auto','auto'],
                       body: [
                         ['Selected Invoice', ':', settingdetails.invoice_code || ''],
                       ],
@@ -112,7 +129,7 @@ console.log("SalesOrde", salesOrder)
               stack: [
                 {
                   table: {
-                    widths: ['20%','auto','30%'],
+                    widths: ['auto','auto','auto'],
                     body: [
                         ['Print date', ':', moment().format('DD-MM-YYYY HH:mm:ss') ],
                         ['Page No', ':',  ''],
@@ -139,9 +156,30 @@ console.log("SalesOrde", salesOrder)
           },
           table: {
             headerRows: 1,
-            widths: ['auto', '*', 'auto', 'auto'],
+            widths: ['auto', '*', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto'],
             body: productItems,
           },
+        },
+        {
+          table: {
+            widths: ['*', 'auto'],
+            body: [
+              [
+                { text: 'Subtotal', alignment: 'right', bold: true, fontSize: 9 },
+                { text: gTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 }),fontSize: 9, alignment: 'right' },
+              ],
+              [
+                { text: 'GST (7%)', alignment: 'right', bold: true, fontSize: 9 },
+                { text: gst.toLocaleString('en-IN', { minimumFractionDigits: 2 }),fontSize: 9 , alignment: 'right' },
+              ],
+              [
+                { text: 'Total', alignment: 'right', bold: true, fontSize: 9 },
+                { text: totalWithGst.toLocaleString('en-IN', { minimumFractionDigits: 2 }), fontSize: 9, alignment: 'right' },
+              ],
+            ],
+          },
+          layout: 'Borders',
+          margin: [0, 0, 0, 0],
         },
       ],
       styles: {

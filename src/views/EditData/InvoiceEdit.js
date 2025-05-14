@@ -64,9 +64,9 @@ const SalesOrderEdit = () => {
   
 
 
-  //   const addQuoteItemsToggle = () => {
-  //   setAddLineItemModal(!addLineItemModal);
-  // };
+    const addQuoteItemsToggle = () => {
+    setAddLineItemModal(!addLineItemModal);
+  };
 
    const viewLineToggle = () => {
     setViewLineModal(!viewLineModal);
@@ -255,7 +255,7 @@ useEffect(() => {
             </Row>
             <br />
             <Row>
-              <div className="container">
+              {/* <div className="container">
                 <Table id="example" className="display border border-secondary rounded">
                   <thead>
                     <tr>
@@ -318,7 +318,7 @@ useEffect(() => {
                       })}
                   </tbody>
                 </Table>
-              </div>
+              </div> */}
             </Row>
             
 
