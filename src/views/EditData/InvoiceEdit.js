@@ -26,6 +26,7 @@ import SalesMan from '../../components/Invoice/SalesMan';
 // import QuoteLineItem from '../../components/Invoice/QuoteLineItem';
 // import EditLineItemModal from '../../components/Invoice/EditLineItemModal';
 import SalesOrderProducts from '../../components/Invoice/SalesOrderProducts';
+import SalesInvoicePickingListPdf from '../../components/PDF/SalesInvoicePickingListPdf';
 
 
 const SalesOrderEdit = () => {
@@ -54,9 +55,9 @@ const SalesOrderEdit = () => {
   
 
 
-    const addQuoteItemsToggle = () => {
-    setAddLineItemModal(!addLineItemModal);
-  };
+  //   const addQuoteItemsToggle = () => {
+  //   setAddLineItemModal(!addLineItemModal);
+  // };
 
    const viewLineToggle = () => {
     setViewLineModal(!viewLineModal);
