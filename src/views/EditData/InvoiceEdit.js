@@ -26,6 +26,7 @@ import SalesMan from '../../components/Invoice/SalesMan';
 // import QuoteLineItem from '../../components/Invoice/QuoteLineItem';
 // import EditLineItemModal from '../../components/Invoice/EditLineItemModal';
 import SalesOrderProducts from '../../components/Invoice/SalesOrderProducts';
+import SalesInvoicePickingListPdf from '../../components/PDF/SalesInvoicePickingListPdf';
 
 
 
@@ -41,7 +42,7 @@ const SalesOrderEdit = () => {
       { id: '2', name: 'Currency' },
       { id: '3', name: 'Shipping' },
       { id: '4', name: 'Sales Man' },
-       { id: '6', name: 'Pdf' },
+       { id: '5', name: 'Pdf' },
     ];
     const toggle = (tab) => {
       setActiveTab(tab);
@@ -55,9 +56,9 @@ const SalesOrderEdit = () => {
   
 
 
-    const addQuoteItemsToggle = () => {
-    setAddLineItemModal(!addLineItemModal);
-  };
+  //   const addQuoteItemsToggle = () => {
+  //   setAddLineItemModal(!addLineItemModal);
+  // };
 
    const viewLineToggle = () => {
     setViewLineModal(!viewLineModal);
