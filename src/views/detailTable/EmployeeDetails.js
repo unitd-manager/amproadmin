@@ -1,17 +1,28 @@
-import React, { useState, useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { Row, Col, FormGroup, Label, Input, Button } from 'reactstrap';
 import { ToastContainer } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import moment from 'moment';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import AppContext from '../../context/AppContext';
 import api from '../../constants/api';
 import message from '../../components/Message';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import ComponentCard from '../../components/ComponentCard';
 import creationdatetime from '../../constants/creationdatetime';
+import AppContext from '../../context/AppContext';
 
 const EmployeeDetails = () => {
+
+  
+  const getSelectedLocationFromLocalStorage = () => {
+    const locations = localStorage.getItem('selectedLocation');
+    const loc=JSON.parse(locations);
+    return locations ? Number(loc) : null;
+  };
+
+  const selectedLocation = getSelectedLocationFromLocalStorage();
+
+  const [buttonClick, setButtonClick] = useState(false);
   //state variables
   // const [empcode, setEmpcode] = useState();
   const [employeeData, setEmployeeData] = useState({
@@ -41,6 +52,8 @@ const EmployeeDetails = () => {
     setPasstype(e.target.value);
   };
   const { loggedInuser } = useContext(AppContext);
+
+
   //Insert Employee Data
   // Import necessary modules and components
 
@@ -56,9 +69,11 @@ const EmployeeDetails = () => {
     employeeData.year_of_completion1 = moment();
     employeeData.year_of_completion2 = moment();
     employeeData.year_of_completion3 = moment();
-    employeeData.created_by = loggedInuser.first_name;
     employeeData.creation_date = creationdatetime;
-
+    employeeData.created_by= loggedInuser.first_name;
+    employeeData.site_id = selectedLocation;
+    if(buttonClick === false){
+    setButtonClick(true);
     api
       .post('/employeemodule/insertEmployee', employeeData)
       .then((res) => {
@@ -71,150 +86,56 @@ const EmployeeDetails = () => {
       .catch(() => {
         message('Unable to create employee.', 'error');
       });
+    }
   };
   const [isNricAlreadyInserted, setIsNricAlreadyInserted] = useState(false); //
-  const [isFinAlreadyInserted, setIsFinAlreadyInserted] = useState(false);
-  // const generateCode = () => {
-  //   if (
-  //     employeeData.employee_name !== '' &&
-  //     employeeData.status !== '' &&
-  //     employeeData.passtype !== ''
-  //   ) {
-  //     // Check if the employeeData contains either NRIC, FIN, or both
-  //     if (
-  //       employeeData.nric_no !== '' ||
-  //       employeeData.fin_no !== '' ||
-  //       employeeData.work_permit !== ''
-  //     ) {
-  //       api
-  // .get('/employeemodule/CheckNricNo')
-  // .then((response) => {
-  //   const existingNricNumbers = response.data.data;
-  
-
-  //   // Check if the dynamically provided NRIC number exists in the array
-  //   const isNricAlreadyExists = existingNricNumbers.includes(employeeData.nric_no);
-
-  //   if (isNricAlreadyExists) {
-  //     // Number already exists, show an alert message or handle it as needed
-  //     setIsNricAlreadyInserted(true);
-  //     message('NRIC is already inserted. Please provide a different number.', 'warning');
-  //   } else {
-  //     // No duplicates found, proceed with your logic
-  //     setIsNricAlreadyInserted(false);
-  //     // Check for FIN number validation
-  //     api
-  //     .get('/employeemodule/CheckFinNo')
-  //     .then((finResponse) => {
-  //       const existingFinNumbers = finResponse.data.data;
-  //       // Check if the dynamically provided FIN number exists in the array
-  //       const isFinAlreadyExists = existingFinNumbers.includes(employeeData.fin_no);
-
-  //       if (isFinAlreadyExists) {
-  //         // FIN already exists, show an alert message or handle it as needed
-  //         setIsFinAlreadyInserted(true);
-  //         message('FIN is already inserted. Please provide a different number.', 'warning');
-  //       } else {
-  //         setIsFinAlreadyInserted(false); // Reset FIN validation state
-  //         // No duplicates found, proceed with your logic
-
-  //             api
-  //               .post('/commonApi/getCodeValue', { type: 'employee' })
-  //               .then((res) => {
-  //                 insertEmployee(res.data.data);
-  //               })
-  //               .catch(() => {
-  //                 insertEmployee('');
-  //               });
-  //           }
-  //         })
-  //         .catch(() => {
-  //           message('Unable to check for duplicate FIN numbers.', 'error');
-  //         });
-  //     }
-  //   })
-  //       .catch(() => {
-  //           message('Unable to check for duplicate NRIC numbers.', 'error');
-  //         });
-  //     } else {
-  //       message('Please fill at least one required field (NRIC, FIN, or Work Permit).', 'warning');
-  //     }
-  //   } else {
-  //     message('Please fill all required fields.', 'warning');
-  //   }
-  // };
-
   const generateCode = () => {
     if (
       employeeData.employee_name !== '' &&
       employeeData.status !== '' &&
       employeeData.passtype !== ''
     ) {
-      // Check if the employeeData contains either NRIC, FIN, or both based on the pass type
+      // Check if the employeeData contains either NRIC, FIN, or both
       if (
-        (passtype === 'Citizen' || passtype === 'PR') && employeeData.nric_no !== '' ||
-        (passtype === 'EP' || passtype === 'SP' || passtype === 'DP' || passtype === 'WP') && employeeData.fin_no !== '' ||
-        passtype === 'WP' && employeeData.work_permit !== ''
+        employeeData.nric_no !== '' ||
+        employeeData.fin_no !== '' ||
+        employeeData.work_permit !== ''
       ) {
-        // Validate NRIC number if relevant pass types are selected
-        if (passtype === 'Citizen' || passtype === 'PR') {
-          api.get('/employeemodule/CheckNricNo')
-            .then((response) => {
-              const existingNricNumbers = response.data.data;
-              const isNricAlreadyExists = existingNricNumbers.includes(employeeData.nric_no);
-              if (isNricAlreadyExists) {
-                setIsNricAlreadyInserted(true);
-                message('NRIC is already inserted. Please provide a different number.', 'warning');
-              } else {
-                setIsNricAlreadyInserted(false);
-                // Proceed with your logic
-                api.post('/commonApi/getCodeValue', { type: 'employee' })
-                  .then((res) => {
-                    insertEmployee(res.data.data);
-                  })
-                  .catch(() => {
-                    insertEmployee('');
-                  });
-              }
-            })
-            .catch(() => {
-              message('Unable to check for duplicate NRIC numbers.', 'error');
-            });
-        }
-  
-        // Validate FIN number if relevant pass types are selected
-        if (passtype === 'EP' || passtype === 'SP' || passtype === 'DP' || passtype === 'WP') {
-          api.get('/employeemodule/CheckFinNo')
-            .then((finResponse) => {
-              const existingFinNumbers = finResponse.data.data;
-              const isFinAlreadyExists = existingFinNumbers.includes(employeeData.fin_no);
-              if (isFinAlreadyExists) {
-                setIsFinAlreadyInserted(true);
-                message('FIN is already inserted. Please provide a different number.', 'warning');
-              } else {
-                setIsFinAlreadyInserted(false);
-                // Proceed with your logic
-                api.post('/commonApi/getCodeValue', { type: 'employee' })
-                  .then((res) => {
-                    insertEmployee(res.data.data);
-                  })
-                  .catch(() => {
-                    insertEmployee('');
-                  });
-              }
-            })
-            .catch(() => {
-              message('Unable to check for duplicate FIN numbers.', 'error');
-            });
-        }
+        api
+          .post('/employeemodule/getEmployeeById', {
+            nric_no: employeeData.nric_no,
+            employee_id:employeeData.employee_id
+          })
+          .then((response) => {
+            if (response.data.error) {
+              // Number already exists, show an alert message
+              setIsNricAlreadyInserted(true); // Set the state to indicate that NRIC is already inserted
+              message('NRIC is already inserted. Please provide a different number.', 'error');
+            } else {
+              // No duplicates found, proceed with inserting the employee
+              setIsNricAlreadyInserted(false); // Reset the state
+
+              api
+                .post('/commonApi/getCodeValue', { type: 'employee' })
+                .then((res) => {
+                  insertEmployee(res.data.data);
+                })
+                .catch(() => {
+                  insertEmployee('');
+                });
+            }
+          })
+
+          .catch(() => {
+            message('Unable to check for duplicate numbers.', 'error');
+          });
       } else {
-        message('Please fill at least one required field (NRIC, FIN, or Work Permit).', 'warning');
+        message('Please fill at least one required field (NRIC, FIN, or Work Permit).', 'error');
       }
     } else {
-      message('Please fill all required fields.', 'warning');
+      message('Please fill all required fields.', 'error');
     }
   };
-
   // const insertEmployee = (code) => {
   //   // Check if the employee name already exists
   //   checkEmployeeNameExists()
@@ -299,7 +220,7 @@ const EmployeeDetails = () => {
                       type="text"
                     />
                     {(isNricAlreadyInserted && (
-                      <alert className="error-message">
+                      <alert color="error">
                         NRIC is already inserted. Please provide a different number.
                       </alert>
                     )) ||
@@ -322,12 +243,6 @@ const EmployeeDetails = () => {
                       onChange={handleInputs}
                       type="text"
                     />
-                     {(isFinAlreadyInserted && (
-                      <alert className="error-message">
-                        FIN Number is already inserted. Please provide a different number.
-                      </alert>
-                    )) ||
-                      null}
                   </Col>
                 </Row>
               </FormGroup>

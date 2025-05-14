@@ -3,10 +3,12 @@ import { Row, Col, FormGroup, Label, Input } from 'reactstrap';
 import PropTypes from 'prop-types';
 
 function LoginDetailsTab({ employeeDetails, handleInputChange }) {
+  // Define prop types
   LoginDetailsTab.propTypes = {
-    employeeDetails: PropTypes.object,
-    handleInputChange: PropTypes.func,
+    employeeDetails: PropTypes.object.isRequired,
+    handleInputChange: PropTypes.func.isRequired,
   };
+
   return (
     <div>
       <Row>
@@ -15,7 +17,7 @@ function LoginDetailsTab({ employeeDetails, handleInputChange }) {
             <Label>Login Email</Label>
             <Input
               name="login_email"
-              value={employeeDetails && employeeDetails.login_email}
+              value={employeeDetails?.login_email ?? ''}
               onChange={handleInputChange}
               type="email"
             />
@@ -26,7 +28,7 @@ function LoginDetailsTab({ employeeDetails, handleInputChange }) {
             <Label>Password</Label>
             <Input
               name="login_pass_word"
-              value={employeeDetails && employeeDetails.login_pass_word}
+              value={employeeDetails?.login_pass_word ?? ''}
               onChange={handleInputChange}
               type="password"
             />
@@ -37,7 +39,7 @@ function LoginDetailsTab({ employeeDetails, handleInputChange }) {
             <Label>User Group</Label>
             <Input
               name="staff_user_group_id"
-              value={employeeDetails && employeeDetails.staff_user_group_id}
+              value={employeeDetails?.staff_user_group_id ?? ''}
               onChange={handleInputChange}
               type="select"
             >
@@ -52,29 +54,27 @@ function LoginDetailsTab({ employeeDetails, handleInputChange }) {
             </Input>
           </FormGroup>
         </Col>
-
         <Col md="3">
           <FormGroup>
             <Label>Published</Label>
-            <br></br>
-            <Label>Yes</Label>
-            &nbsp;
+            <br />
+            <Label for="published-yes">Yes</Label>
             <Input
-              name="staff_published"
+              id="published-yes"
+              name="published"
               value="1"
               type="radio"
-              defaultChecked={employeeDetails && employeeDetails.staff_published === 1 && true}
-              onChange={handleInputChange}
+              checked={employeeDetails?.published === 1}
+              onChange={() => handleInputChange({ target: { name: 'published', value: 1 } })}
             />
-            &nbsp; &nbsp;
-            <Label>No</Label>
-            &nbsp;
+            <Label for="published-no">No</Label>
             <Input
-              name="staff_published"
+              id="published-no"
+              name="published"
               value="0"
               type="radio"
-              defaultChecked={employeeDetails && employeeDetails.staff_published === 0 && true}
-              onChange={handleInputChange}
+              checked={employeeDetails?.published === 0}
+              onChange={() => handleInputChange({ target: { name: 'published', value: 0 } })}
             />
           </FormGroup>
         </Col>

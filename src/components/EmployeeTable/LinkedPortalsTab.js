@@ -9,9 +9,10 @@ import { jicolumns, tlcolumns } from '../../data/PayrollHR/Employee';
 import AddNote from '../Tender/AddNote';
 import ViewNote from '../Tender/ViewNote';
 
-function LinkedPortalsTab({ id }) {
+function LinkedPortalsTab({ id,arb }) {
   LinkedPortalsTab.propTypes = {
     id: PropTypes.any,
+    arb: PropTypes.any,
   };
   //state variables
   const [jobInformationHistoryDetails, setJobInformationHistoryDetails] = useState([]);
@@ -50,7 +51,7 @@ function LinkedPortalsTab({ id }) {
       <ToastContainer></ToastContainer>
       <Row style={{alignItems:'flex-start'}}>
         <Col md="6">
-          <ComponentCard title="Job Information History">
+          <ComponentCard title= {arb ?'تاريخ المعلومات الوظيفية':'Job Information History'}>
             <Table id="examplepl" className="display">
               <thead>
                 <tr>
@@ -76,7 +77,7 @@ function LinkedPortalsTab({ id }) {
           </ComponentCard>
         </Col>
         <Col md="6">
-          <ComponentCard title="Training Linked">
+          <ComponentCard title= {arb ?'التدريب مرتبط':'Training Linked'}>
             <Table id="examplepl" className="display">
               <thead>
                 <tr>
@@ -103,7 +104,7 @@ function LinkedPortalsTab({ id }) {
         </Col>
       </Row>
       <Row>
-        <ComponentCard title="Add a note">
+        <ComponentCard title= {arb ?'أضف ملاحظة':'Add a note'}>
           <AddNote recordId={id} roomName="EmployeeEdit" />
           <ViewNote recordId={id} roomName="EmployeeEdit" />
         </ComponentCard>

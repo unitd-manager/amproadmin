@@ -19,22 +19,13 @@ import message from '../../components/Message';
 import api from '../../constants/api';
 import Tab from '../../components/ProjectTabs/Tab';
 //import ApiButton from '../../components/ApiButton';
-import Customer from '../../components/SalesOrder/Customer';
-import Currency from '../../components/SalesOrder/Currency';
-import Shipping from '../../components/SalesOrder/Shipping';
-import SalesMan from '../../components/SalesOrder/SalesMan';
-import QuoteLineItem from '../../components/SalesOrder/QuoteLineItem';
-import EditLineItemModal from '../../components/SalesOrder/EditLineItemModal';
-import SalesInvoicePickingListPdf from '../../components/PDF/SalesInvoicePickingListPdf';
-// import QuoteLineItem from '../../components/SalesOrder/QuoteLineItem';
-// import EditLineItemModal from '../../components/SalesOrder/EditLineItemModal';
-import SalesOrderProducts from '../../components/SalesOrder/SalesOrderProducts';
-
-// import SalesOrderPrintWithCost from '../../components/PDF/SalesOrderPrintWithCost';
-// import PdfPickingList from '../../components/PDF/PdfPick';
-// import PdfPackingList from '../../components/PDF/PdfPack';
-// import PdfSalesQuote from '../../components/PDF/PdfSalesOrderQuote';
-// import PrintPerfoma from '../../components/PDF/PrintPerfoma';
+import Customer from '../../components/Invoice/Customer';
+import Currency from '../../components/Invoice/Currency';
+import Shipping from '../../components/Invoice/Shipping';
+import SalesMan from '../../components/Invoice/SalesMan';
+// import QuoteLineItem from '../../components/Invoice/QuoteLineItem';
+// import EditLineItemModal from '../../components/Invoice/EditLineItemModal';
+import SalesOrderProducts from '../../components/Invoice/SalesOrderProducts';
 
 
 const SalesOrderEdit = () => {
@@ -49,7 +40,6 @@ const SalesOrderEdit = () => {
       { id: '2', name: 'Currency' },
       { id: '3', name: 'Shipping' },
       { id: '4', name: 'Sales Man' },
-       { id: '5', name: 'Sales order Items' },
        { id: '6', name: 'Pdf' },
     ];
     const toggle = (tab) => {
@@ -109,7 +99,7 @@ const handleInputs = (e) => {
 
 const getSettingById = () => {
   api
-    .post('/invoice/getInvoiceorderById', { invoice_id: id })
+    .post('/invoice/getSalesorderById', { invoice_id: id })
     .then((res) => {
       setSettingDetails(res.data.data[0]);
     })
@@ -120,7 +110,7 @@ const getSettingById = () => {
 //Update Setting
 const editSettingData = () => {
     api
-      .post('/invocie/editInvoice', settingdetails)
+      .post('/invoice/editSalesOrder', settingdetails)
       .then(() => {
         message('Record editted successfully', 'success');
       })
@@ -187,7 +177,7 @@ useEffect(() => {
                   <Input
                     type="text"
                     onChange={handleInputs}
-                    value={settingdetails && settingdetails.tran_no}
+                    value={settingdetails && settingdetails.invoice_code}
                     name="tran_no"
                   ></Input>
                 </FormGroup>
@@ -198,7 +188,7 @@ useEffect(() => {
                   <Input
                     type="date"
                     onChange={handleInputs}
-                    value={settingdetails && settingdetails.tran_date}
+                    value={settingdetails && settingdetails.invoice_date}
                     name="tran_date"
                   />
                 </FormGroup>
@@ -239,110 +229,7 @@ useEffect(() => {
              handleInputs={handleInputs}
              ></SalesMan>
           </TabPane>
-
-            <TabPane tabId="5">
-            <Row>
-                <Col md="6">
-                <Button
-                  className="shadow-none"
-                  color="primary"
-                  to=""
-                  onClick={addQuoteItemsToggle.bind(null)}
-                >
-                  Add Sales Items 
-                </Button>
-              </Col>
-            </Row>
-            <br />
-            <Row>
-              {/* <div className="container">
-                <Table id="example" className="display border border-secondary rounded">
-                  <thead>
-                    <tr>
-                      {columns1.map((cell) => {
-                        return <td key={cell.name}>{cell.name}</td>;
-                      })}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {lineItem &&
-                      lineItem.map((e, index) => {
-                        return (
-                          <tr key={e.project_quote_id}>
-                            <td>{index + 1}</td>
-                            <td data-label="Title">{e.title}</td>
-                            <td data-label="Description">{e.description}</td>
-                            <td data-label="Quantity">{e.quantity}</td>
-                            <td data-label="Unit Price">{e.unit_price}</td>
-                            <td data-label="Amount">{e.amount}</td>
-                            <td data-label="Updated By">
-              <Icon.Eye
-                id={`tooltip-${index}`}
-                onMouseOver={() => toggleTooltip(index)} // Pass index to toggle function
-              />
-              <Tooltip
-                placement="top"
-                isOpen={hoveredRowIndex === index} // Check if current row index matches hoveredRowIndex
-                target={`tooltip-${index}`}
-                toggle={() => toggleTooltip(index)}
-              >
-                <span className="tooltiptext">
-                  {e.modification_date
-                    ? `Modified by ${e.modified_by} on ${e.modification_date}`
-                    : `Created by ${e.created_by} on ${e.creation_date}`}
-                </span>
-              </Tooltip>
-            </td>
-                            
-                            <td data-label="Actions">
-                              <span
-                                className="addline"
-                                onClick={() => {
-                                  setEditLineModelItem(e);
-                                  setEditLineModal(true);
-                                }}
-                              >
-                                <Icon.Edit2 />
-                              </span>
-                              <span
-                                className="addline"
-                                onClick={() => {
-                                  deleteRecord(e.sales_order_item_id);
-                                }}
-                              >
-                                <Icon.Trash2 />
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-                </Table>
-              </div> */}
-            </Row>
-            
-
-            {/* End View Line Item Modal */}
-            <EditLineItemModal
-              editLineModal={editLineModal}
-              setEditLineModal={setEditLineModal}
-              FetchLineItemData={editLineModelItem}
-              getLineItem={getLineItem}
-              setViewLineModal={setViewLineModal}
-            
-              //insertquote={insertquote}
-            ></EditLineItemModal>
-            {addLineItemModal && (
-              <QuoteLineItem
-                //projectInfo={tenderId}
-                addLineItemModal={addLineItemModal}
-                setAddLineItemModal={setAddLineItemModal}
-                quoteLine={id}
-            
-              ></QuoteLineItem>
-            )}
-          </TabPane>
-          <TabPane tabId="6">
+          <TabPane tabId="5">
           <SalesInvoicePickingListPdf
           id={id}
                    settingdetails={settingdetails}
@@ -350,7 +237,7 @@ useEffect(() => {
                 ></SalesInvoicePickingListPdf>
           </TabPane>
          
-         
+        
         </TabContent>
       </ComponentCard>
       <>

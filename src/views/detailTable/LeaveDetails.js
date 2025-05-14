@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext} from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Row, Col, Form, FormGroup, Label, Input, Button } from 'reactstrap';
 import { useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
@@ -7,26 +7,39 @@ import moment from 'moment';
 import message from '../../components/Message';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import ComponentCard from '../../components/ComponentCard';
-import AppContext from '../../context/AppContext';
 import api from '../../constants/api';
 import creationdatetime from '../../constants/creationdatetime';
+import AppContext from '../../context/AppContext';
 
 const LeaveDetails = () => {
-  //Navigation and parameters
   const navigate = useNavigate();
-  //All State Variable
-  const [employee, setEmployee] = useState();
+  const { loggedInuser } = useContext(AppContext);
+
+  // const getSelectedLocationFromLocalStorage = () => {
+  //   return localStorage.getItem('selectedLocation') || '';
+  // };
+
+  const getSelectedLocationFromLocalStorage = () => {
+    const locations = localStorage.getItem('selectedLocation');
+    const loc=JSON.parse(locations);
+    return locations ? Number(loc) : null;
+  };
+
+  const selectedLocation = getSelectedLocationFromLocalStorage();
+
+  console.log('Leavesite',selectedLocation)
+
+  const [employee, setEmployee] = useState([]);
   const [leaveInsertData, setLeaveInsertData] = useState({
     employee_id: '',
     from_date: '',
     to_date: '',
     leave_type: '',
   });
-  //setting data in leaveInsertData
+
   const handleInputs = (e) => {
     setLeaveInsertData({ ...leaveInsertData, [e.target.name]: e.target.value });
   };
-  const { loggedInuser } = useContext(AppContext);
 
   function isDateInRange(dateToCheck, fromDateArray, toDateArray) {
     for (let i = 0; i < fromDateArray.length; i++) {
@@ -37,54 +50,81 @@ const LeaveDetails = () => {
         return true; // The date is within the range
       }
     }
-
     return false; // The date is not within any of the ranges
   }
-  //Api insertLeave
-  const insertLeave = () => {
-   leaveInsertData.creation_date=creationdatetime;
-   leaveInsertData.created_by=loggedInuser.first_name;
-    if (
-      leaveInsertData.employee_id !== '' &&
-      leaveInsertData.from_date !== '' &&
-      leaveInsertData.to_date !== '' &&
-      leaveInsertData.leave_type !== ''
-    ) {
-      console.log('leaveinsertdataid', leaveInsertData.employee_id);
-      const emp = employee.find((a) => {
-        return a.employee_id === Number(leaveInsertData.employee_id);
-      });
-      const dateToCheckFromDate = new Date(leaveInsertData.from_date);
-      const dateToCheckToDate = new Date(leaveInsertData.to_date);
 
+  const calculateLeaveDays = (fromDate, toDate) => {
+    const fromMoment = moment(fromDate);
+    const toMoment = moment(toDate);
+
+    const endOfMonth = fromMoment.clone().endOf('month');
+    const startOfNextMonth = fromMoment.clone().add(1, 'month').startOf('month');
+
+    const daysInCurrentMonth = toMoment.isAfter(endOfMonth)
+      ? endOfMonth.diff(fromMoment, 'days') + 1
+      : toMoment.diff(fromMoment, 'days') + 1;
+
+    const daysInNextMonth = toMoment.isSameOrAfter(startOfNextMonth)
+      ? toMoment.diff(startOfNextMonth, 'days') + 1
+      : 0;
+
+    return { daysInCurrentMonth, daysInNextMonth };
+  };
+
+  const insertLeave = () => {
+    if (new Date(leaveInsertData.to_date) >= new Date(leaveInsertData.from_date)) {
       if (
-        isDateInRange(dateToCheckFromDate, emp.from_date, emp.to_date) ||
-        isDateInRange(dateToCheckToDate, emp.from_date, emp.to_date)
+        leaveInsertData.employee_id !== '' &&
+        leaveInsertData.from_date !== '' &&
+        leaveInsertData.to_date !== '' &&
+        leaveInsertData.leave_type !== ''
       ) {
-        message('You already applied for that day', 'warning');
+        const emp = employee.find((a) => a.employee_id === Number(leaveInsertData.employee_id));
+        const dateToCheckFromDate = new Date(leaveInsertData.from_date);
+        const dateToCheckToDate = new Date(leaveInsertData.to_date);
+
+        if (
+          isDateInRange(dateToCheckFromDate, emp.from_date, emp.to_date) ||
+          isDateInRange(dateToCheckToDate, emp.from_date, emp.to_date)
+        ) {
+          message('You already applied for that day', 'error');
+        } else {
+          const { daysInCurrentMonth, daysInNextMonth } = calculateLeaveDays(
+            leaveInsertData.from_date,
+            leaveInsertData.to_date
+          );
+
+          leaveInsertData.no_of_days = daysInCurrentMonth;
+          leaveInsertData.no_of_days_next_month = daysInNextMonth;
+          leaveInsertData.creation_date = creationdatetime;
+          leaveInsertData.created_by = loggedInuser.first_name;
+          leaveInsertData.site_id = selectedLocation;
+
+          api
+            .post('/leave/insertLeave', leaveInsertData)
+            .then((res) => {
+              const insertedDataId = res.data.data.insertId;
+              message('Leave inserted successfully.', 'success');
+              setTimeout(() => {
+                navigate(`/LeavesEdit/${insertedDataId}?tab=1`);
+              }, 300);
+            })
+            .catch(() => {
+              message('Network connection error.', 'error');
+            });
+        }
       } else {
-        api
-          .post('/leave/insertLeave', leaveInsertData)
-          .then((res) => {
-            const insertedDataId = res.data.data.insertId;
-            message('Leave inserted successfully.', 'success');
-            setTimeout(() => {
-              navigate(`/LeavesEdit/${insertedDataId}?tab=1`);
-            }, 300);
-          })
-          .catch(() => {
-            message('Network connection error.', 'error');
-          });
+        message('Please fill all required fields', 'error');
       }
     } else {
-      message('Please fill all required fields', 'warning');
+      message('The To date should be the future date of From date', 'error');
     }
-    
-  
   };
-  // getEmployee dropDown
+
   const getEmployee = () => {
-    api.get('/leave/getEmployee').then((res) => {
+    // api.get('/leave/getEmployee')
+    api.post('/leave/getEmployeesite', { site_id: selectedLocation })
+    .then((res) => {
       res.data.data.forEach((el) => {
         el.from_date = String(el.from_date).split(',');
         el.to_date = String(el.to_date).split(',');
@@ -92,7 +132,7 @@ const LeaveDetails = () => {
       setEmployee(res.data.data);
     });
   };
-  console.log('emp', employee);
+
   useEffect(() => {
     getEmployee();
   }, []);
@@ -100,7 +140,7 @@ const LeaveDetails = () => {
   return (
     <div>
       <BreadCrumbs />
-      <ToastContainer></ToastContainer>
+      <ToastContainer />
       <Row>
         <Col md="12">
           <ComponentCard title="Key Details">
@@ -119,16 +159,13 @@ const LeaveDetails = () => {
                     >
                       <option value="selected">Please Select</option>
                       {employee &&
-                        employee.map((ele) => {
-                          return (
-                            <option key={ele.employee_id} value={ele.employee_id}>
-                              {ele.employee_name}
-                            </option>
-                          );
-                        })}
+                        employee.map((ele) => (
+                          <option key={ele.employee_id} value={ele.employee_id}>
+                            {ele.employee_name}
+                          </option>
+                        ))}
                     </Input>
                   </Col>
-
                   <Col md="6">
                     <Label>
                       From date<span className="required"> *</span>
@@ -136,9 +173,7 @@ const LeaveDetails = () => {
                     <Input
                       type="date"
                       onChange={handleInputs}
-                      value={
-                        leaveInsertData && moment(leaveInsertData.from_date).format('YYYY-MM-DD')
-                      }
+                      value={leaveInsertData && moment(leaveInsertData.from_date).format('YYYY-MM-DD')}
                       name="from_date"
                     />
                   </Col>
@@ -153,16 +188,11 @@ const LeaveDetails = () => {
                     <Input
                       type="date"
                       onChange={handleInputs}
-                      min={
-                        leaveInsertData && moment(leaveInsertData.from_date).format('YYYY-MM-DD')
-                      }
-                      value={
-                        leaveInsertData && moment(leaveInsertData.to_date).format('YYYY-MM-DD')
-                      }
+                      min={leaveInsertData && moment(leaveInsertData.from_date).format('YYYY-MM-DD')}
+                      value={leaveInsertData && moment(leaveInsertData.to_date).format('YYYY-MM-DD')}
                       name="to_date"
                     />
                   </Col>
-
                   <Col md="6">
                     <Label>
                       Type of Leave <span className="required"> *</span>

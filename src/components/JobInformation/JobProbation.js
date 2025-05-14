@@ -12,25 +12,10 @@ export default function JobProbation({ handleInputsJobInformation, job }) {
   JobProbation.propTypes = {
     handleInputsJobInformation: PropTypes.any,
     job: PropTypes.any,
+  
 
   };
-  //const {id}=useParams();
 
-//   const[position,setPosition]=useState();
-//   //get receipt
-//   const getPosition = () => {
-//    api
-//      .get('/jobinformation/getPosition')
-//      .then((res) => {
-//        setPosition(res.data.data);
-//      })
-//      .catch(() => {
-       
-//      });
-//  };
-//  useEffect(()=>{
-//   getPosition();
-//  });
  
   // Function to handle status change
   const handleStatusChange = (e) => {
@@ -52,7 +37,10 @@ export default function JobProbation({ handleInputsJobInformation, job }) {
         <Row>
           <Col md="4">
             <FormGroup>
-              <Label> Under Probation</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Under Probation
+              </Label>
+              
               <br></br>
               <Label> Yes </Label>
               <Input
@@ -77,7 +65,10 @@ export default function JobProbation({ handleInputsJobInformation, job }) {
           {job && job.probationary === '1' && (
             <Col md="4">
               <FormGroup>
-                <Label>Length of Probation</Label>
+              <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Length of Probation
+              </Label>
+               
                 <Input
                   type="text"
                   onChange={handleInputsJobInformation}
@@ -89,7 +80,10 @@ export default function JobProbation({ handleInputsJobInformation, job }) {
           )}
           {job && job.probationary === '1' && (
             <Col md="4">
-              <Label>Probation Start Date</Label>
+              <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Probation Start Date
+              </Label>
+             
               <Input
                 type="date"
                 onChange={handleInputsJobInformation}
@@ -100,7 +94,10 @@ export default function JobProbation({ handleInputsJobInformation, job }) {
           )}
           {job && job.probationary === '1' && (
             <Col md="4">
-              <Label>Probation End Date</Label>
+             
+              <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Probation End Date
+              </Label>
               <Input
                 type="date"
                 onChange={handleInputsJobInformation}
@@ -112,7 +109,10 @@ export default function JobProbation({ handleInputsJobInformation, job }) {
 
           <Col md="4">
             <FormGroup>
-              <Label>Employment Type</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Employment Type
+              </Label>
+              
               <Input
                 type="select"
                 value={job && job.emp_type}
@@ -128,7 +128,10 @@ export default function JobProbation({ handleInputsJobInformation, job }) {
           </Col>
           <Col md="4">
             <FormGroup>
-              <Label>Designation</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Designation
+              </Label>
+             
               <Input
                 type="select"
                 value={job && job.designation}
@@ -176,7 +179,10 @@ export default function JobProbation({ handleInputsJobInformation, job }) {
               </Col> */}
           <Col md="4">
             <FormGroup>
-              <Label>Department</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Department
+              </Label>
+             
               <Input
                 type="select"
                 value={job && job.department}
@@ -193,9 +199,10 @@ export default function JobProbation({ handleInputsJobInformation, job }) {
 
           <Col md="4">
             <FormGroup>
-              <Label>
-                Joined/Arrival Date<span className="required"> *</span>{' '}
+            <Label dir="rtl" style={{ textAlign: 'right' }}><span className="required"> *</span>{' '}
+                Joined/Arrival Date  
               </Label>
+            
               <Input
                 type="date"
                 onChange={handleInputsJobInformation}
@@ -206,7 +213,11 @@ export default function JobProbation({ handleInputsJobInformation, job }) {
           </Col>
           <Col md="4">
           <FormGroup>
-            <Label>Status</Label>
+          <Label dir="rtl" style={{ textAlign: 'right' }}>
+          <span className="required"> *</span>{' '}
+                Status
+              </Label>
+          
             <Input
               type="select"
               defaultValue={job && job.status}

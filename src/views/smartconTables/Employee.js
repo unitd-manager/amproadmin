@@ -16,10 +16,19 @@ const Cards = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const getSelectedLocationFromLocalStorage = () => {
+    const locations = localStorage.getItem('selectedLocation');
+    const loc=JSON.parse(locations);
+    return locations ? Number(loc) : null;
+  };
+  
+  const selectedLocation = getSelectedLocationFromLocalStorage();
+
   const getAllEmployees = () => {
     setLoading(true);
     api
-      .get('/employeeModule/getCurrentEmployee')
+      // .get('/employeeModule/getCurrentEmployee')
+      .post('/employeeModule/getCurrentEmployeeFromLocation', { site_id: selectedLocation })
       .then((res) => {
         setEmployees(res.data.data);
         setLoading(false);
@@ -57,27 +66,29 @@ const Cards = () => {
     for ( let x = 0; x < rows.length; x++ ) {
       arr.push(
         {
-          Record_No: rows[x][0],
-          WorkPermit: rows[x][1],
-          NRIC_FIN: rows[x][2],
-          WorkPermitValidFromDate: rows[x][3],
-          WorkPermitExpiryDate: rows[x][4],
-          WelderID: rows[x][5],
-          Name: rows[x][6],
-          DOB: rows[x][7],
-          Gender: rows[x][8],
-          Race: rows[x][9],
-          Nationality: rows[x][10],
-          Citizenship: rows[x][11],
-          SkillSet: rows[x][12],
-          Occupation: rows[x][13],
-          Education: rows[x][14],
-          SOCCertNum: rows[x][15],
-          SOCRegisDate: rows[x][16],
-          CommenceDate: rows[x][17],
-          Sponsor: rows[x][18],
-          SubContractor: rows[x][19],
-          Remarks: rows[x][20]
+          Name: rows[x][0],
+          Salutation: rows[x][1],
+          Gender: rows[x][2],
+          NricNo: rows[x][3],
+          FinNo: rows[x][4],
+          WpNo: rows[x][5],
+          BasicPay: rows[x][6],
+          HourlyCharge: rows[x][7],
+          FinExpiry: rows[x][8],
+          WpExpiry: rows[x][9],
+          Dob: rows[x][10],
+          Nationality: rows[x][11],
+          Race: rows[x][12],
+          YearofPR: rows[x][13],
+          Occupation: rows[x][14],
+          HandphoneNo: rows[x][15],
+          PassportNo: rows[x][16],
+          PassportExpiry: rows[x][17],
+          PassType: rows[x][18],
+          EmploymentStartDate: rows[x][19],
+          DutiesAndResponsibilities: rows[x][20],
+          Detailsofworkinghours: rows[x][21],
+          Noofworkingdays: rows[x][22]
         }
       )
     }
@@ -95,7 +106,7 @@ const Cards = () => {
         readXlsxFile(e.target.files[0])
           .then((rows) => {
             processData(rows);
-           // message('Uploading File On The Server', 'info');
+            message('Uploading File On The Server', 'info');
           })
           .finally(() => {
             $('#upload_file').val(null);
@@ -109,9 +120,43 @@ const Cards = () => {
     }
   };
 
+  const getSelectedLanguageFromLocalStorage = () => {
+    return localStorage.getItem('selectedLanguage') || '';
+  };
+  
+   const selectedLanguage = getSelectedLanguageFromLocalStorage();
+
+  const [arabic, setArabic] = useState([]);
+
+
+  const arb =selectedLanguage === 'Arabic'
+
+  //const eng =selectedLanguage === 'English'
+  
+
+  const getArabicCompanyName = () => {
+      api
+      .get('/employeeModule/getTranslationForEmployee')
+      .then((res) => {
+        setArabic(res.data.data);
+      })
+      .catch(() => {
+        // Handle error if needed
+      });   
+  };
+
+  // let genLabel = '';
+
+  // if (arb === true) {
+  //   genLabel = 'arb_value';
+  // } else {
+  //   genLabel = 'value';
+  // }
+
 
   useEffect(() => {
     getAllEmployees();
+    getArabicCompanyName();
   }, []);
 
   return (
@@ -120,11 +165,13 @@ const Cards = () => {
         <BreadCrumbs />
         <ToastContainer></ToastContainer>
         <CommonTable
+        
           loading={loading}
-          title="Employee List"
+          title={arb ?'قائمة موظف':'Employee List'}
+          module='Employee'
           Button={
             <>
-              <Row>
+              
                 <Col md="4">
                   <Link to="/EmployeeDetails">
                     <Button color="primary" className="shadow-none">
@@ -132,28 +179,40 @@ const Cards = () => {
                     </Button>
                   </Link>
                 </Col>
-                <Col md="4">
+               
+              
+            </>
+          }
+          ImportButton={
+            <>
+             <Col md="4">
             {/* <Link to=""> */}
-            <Button color="primary" className="shadow-none " onClick={() => importExcel()}>
-                Import
+            <Button color="primary" className="shadow-none mr-2" onClick={() => importExcel()}>
+            {arb ?'يستورد':'Import'}
               </Button>
             {/* </Link> */}
             <input type='file' style={{display: 'none'}} id="import_excel" onChange={importExcelFile} />
             </Col>
-                <Col md="4">
-                  <a
-                    href="http://43.228.126.245/pyramidapi/storage/excelsheets/Employee.xlsx"
-                    download
-                  >
-                    <Button color="primary" className="shadow-none mr-3">
-                      Sample
-                    </Button>
-                  </a>
-                </Col>
-              </Row>
             </>
           }
-        ></CommonTable>
+          SampleButton={
+            <>
+          <Col md="4">
+          <a
+            href="http://43.228.126.245/smartco-api/storage/excelsheets/Employee.xlsx"
+            download
+          >
+            <Button color="primary" className="shadow-none">
+            {arb ?'عينة':'Sample'}
+            </Button>
+          </a>
+        </Col>
+        </>
+          }
+          
+        >
+        <p><b>{arb ?'عدد الموظفي:':'Total Employees:'} {employees.length}</b></p>
+        </CommonTable>
 
         <Row className="employee-img">
           {employees.map((blg) => {
@@ -164,14 +223,20 @@ const Cards = () => {
                   onClick={`/EmployeeEdit/${blg.employee_id_duplicate}?tab=1`}
                   image={Image}
                   id={blg.employee_id_duplicate}
-                  title={blg.employee_name?.split(' ').shift().toUpperCase()} // before: title={blg.employee_name.charAt(0).toUpperCase() + blg.employee_name.slice(1)}
+                  title= {
+                    arb?
+                    (blg.employee_name_arb?.split(' ').shift().toUpperCase()?blg.employee_name_arb?.split(' ').shift().toUpperCase():
+                    blg.employee_name_arb !== null ? '' : blg.employee_name) :blg.employee_name}  // before: title={blg.employee_name.charAt(0).toUpperCase() + blg.employee_name.slice(1)}
                   dateOfBirth={blg.date_of_birth}
                   empId={blg.employee_id_duplicate}
-                  projectDesignation={blg.project_designation}
+                  projectDesignation={arb ? blg.project_designation_arb : blg.project_designation}
                   gender={blg.gender}
                   team={blg.team}
                   empCode={blg.emp_code}
                   email={blg.login_email}
+                  joinDate={blg.act_join_date}
+                  arb={arb}
+                  arabic={arabic}
                 />
               </Col>
             )

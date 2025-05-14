@@ -6,12 +6,15 @@ export default function JobProbation({
   handleInputsJobInformation,
   job,
   handleRadioGst,
+  arb
+  
   // overTimeRate,
 }) {
   JobProbation.propTypes = {
     handleInputsJobInformation: PropTypes.any,
     job: PropTypes.any,
     handleRadioGst: PropTypes.any,
+    arb: PropTypes.any,
     // overTimeRate: PropTypes.any,
   };
 
@@ -22,7 +25,10 @@ export default function JobProbation({
         <Row>
           <Col md="4">
             <FormGroup>
-              <Label>Salary Period</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Salary Period
+              </Label>
+             
               <Input
                 type="select"
                 value={job && job.payment_type}
@@ -40,7 +46,10 @@ export default function JobProbation({
           </Col>
           <Col md="4">
             <FormGroup>
-              <Label>Date(s) of Salary Payment</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Date(s) of Salary Payment
+              </Label>
+              
               <Input
                 type="date"
                 onChange={handleInputsJobInformation}
@@ -51,22 +60,49 @@ export default function JobProbation({
           </Col>
           <Col md="4">
             <FormGroup>
-              <Label>Date(s) of Overtime Payment (if different)</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Date(s) of Overtime Payment (if different)
+              </Label>
+             
               <Input
                 type="date"
                 onChange={handleInputsJobInformation}
-                value={job && job.overtime_payment_dates}
-                name="overtime_payment_dates"
+             
+
+                value={
+                  arb
+                    ? job && job.overtime_payment_dates_arb
+                    : job && job.overtime_payment_dates
+                }
+                name={arb ? 'overtime_payment_dates_arb' : 'overtime_payment_dates'}
+            
               />
             </FormGroup>
           </Col>
-
+{job&&job.payment_type ==="hourly"&& <Col md="4">
+            <FormGroup>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                {' '}
+                Hourly Pay <span className="required"> *</span>{' '}
+              </Label>
+              <Input
+                type="numbers"
+                onChange={(e) => {
+                  handleInputsJobInformation(e);
+                  handleRadioGst(job.over_time_rate, e.target.value, job.overtime);
+                }}
+                value={job && job.hourly_pay}
+                name="hourly_pay"
+              />
+            </FormGroup>
+          </Col> }
           <Col md="4">
             <FormGroup>
-              <Label>
-                {' '}
-                Working Calendar(No of Days/Week)(KET)<span className="required"> *</span>{' '}
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                {' '} <span className="required"> *</span>{' '}
+                Working Calendar(No of Days/Week)(KET)
               </Label>
+             
               <Input
                 type="select"
                 value={job && job.working_days}
@@ -82,10 +118,11 @@ export default function JobProbation({
           </Col>
           <Col md="4">
             <FormGroup>
-              <Label>
-                {' '}
-                Basic Pay <span className="required"> *</span>{' '}
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                {' '} <span className="required"> *</span>{' '}
+                Basic Pay
               </Label>
+             
               <Input
                 type="numbers"
                 onChange={(e) => {
@@ -99,7 +136,10 @@ export default function JobProbation({
           </Col>
           <Col md="4">
             <FormGroup>
-              <Label> Overtime Applicable</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Overtime Applicable
+              </Label>
+             
               <br></br>
               <Label> Yes </Label>
               &nbsp;
@@ -129,13 +169,14 @@ export default function JobProbation({
               />
             </FormGroup>
           </Col>
-          {job && (job.overtime === '1' || job.overtime === 1) && (
+          {job && job.overtime === '1' && (
             <Col md="4">
               <FormGroup>
-                <Label>
-                  {' '}
-                  Over Time Rate<span className="required"> *</span>{' '}
-                </Label>
+              <Label dir="rtl" style={{ textAlign: 'right' }}>
+                {' '}<span className="required"> *</span>{' '}
+                Over Time Rate 
+              </Label>
+                
                 <Input
                   type="select"
                   value={job && job.over_time_rate}
@@ -154,8 +195,12 @@ export default function JobProbation({
           )}
           <Col md="4">
             <FormGroup>
-              <Label>Overtime Pay Rate/ Hour</Label>
-            
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Overtime Pay Rate/ Hour
+              </Label>
+             
+              {/* <br />
+              <span>{job && job.overtime_pay_rate?job.overtime_pay_rate:''}</span> */}
               <Input
                 type="numbers"
                 onChange={handleInputsJobInformation}
@@ -167,7 +212,10 @@ export default function JobProbation({
 
           <Col md="4">
             <FormGroup>
-              <Label>Transport</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Transport
+              </Label>
+            
               <Input
                 type="numbers"
                 onChange={handleInputsJobInformation}
@@ -178,7 +226,10 @@ export default function JobProbation({
           </Col>
           <Col md="4">
             <FormGroup>
-              <Label>Entertainment</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Entertainment
+              </Label>
+             
               <Input
                 type="numbers"
                 onChange={handleInputsJobInformation}
@@ -189,7 +240,10 @@ export default function JobProbation({
           </Col>
           <Col md="4">
             <FormGroup>
-              <Label>Food</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Food
+              </Label>
+              
               <Input
                 type="numbers"
                 onChange={handleInputsJobInformation}
@@ -200,7 +254,10 @@ export default function JobProbation({
           </Col>
           <Col md="4">
             <FormGroup>
-              <Label>Shift Allowance</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Shift Allowance
+              </Label>
+             
               <Input
                 type="numbers"
                 onChange={handleInputsJobInformation}
@@ -211,7 +268,10 @@ export default function JobProbation({
           </Col>
           <Col md="4">
             <FormGroup>
-              <Label>Others</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Others
+              </Label>
+             
               <Input
                 type="numbers"
                 onChange={handleInputsJobInformation}
@@ -223,7 +283,10 @@ export default function JobProbation({
 
           <Col md="4">
             <FormGroup>
-              <Label>Housing</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Housing
+              </Label>
+            
               <Input
                 type="numbers"
                 onChange={handleInputsJobInformation}
@@ -234,7 +297,9 @@ export default function JobProbation({
           </Col>
           <Col md="4">
             <FormGroup>
-              <Label>Transportation</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Transportation
+              </Label>           
               <Input
                 type="numbers"
                 onChange={handleInputsJobInformation}
@@ -245,7 +310,9 @@ export default function JobProbation({
           </Col>
           <Col md="4">
             <FormGroup>
-              <Label>Others</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Others
+              </Label>   
               <Input
                 type="numbers"
                 onChange={handleInputsJobInformation}
@@ -256,7 +323,10 @@ export default function JobProbation({
           </Col>
           <Col md="4">
             <FormGroup>
-              <Label>Food</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Food
+              </Label>   
+             
               <Input
                 type="numbers"
                 onChange={handleInputsJobInformation}
@@ -267,7 +337,10 @@ export default function JobProbation({
           </Col>
           <Col md="4">
             <FormGroup>
-              <Label>Levy</Label>
+            <Label dir="rtl" style={{ textAlign: 'right' }}>
+                Levy
+              </Label>   
+            
               <Input
                 type="numbers"
                 onChange={handleInputsJobInformation}

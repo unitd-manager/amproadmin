@@ -3,141 +3,95 @@ import { Row, Col, FormGroup, Label, Input } from 'reactstrap';
 import PropTypes from 'prop-types';
 import moment from 'moment';
 
-function TabPassTypeTab({ tabPassTypeDetails, handlePassTypeInputs, isNricAlreadyInserted ,isFinAlreadyInserted}) {
+function TabPassTypeTab({ tabPassTypeDetails, handlePassTypeInputs }) {
   TabPassTypeTab.propTypes = {
     tabPassTypeDetails: PropTypes.object,
     handlePassTypeInputs: PropTypes.func,
-    isNricAlreadyInserted: PropTypes.object,
-    isFinAlreadyInserted:PropTypes.object,
   };
 
   return (
     <div>
       <Row>
-      <Col md="4">
-        <FormGroup>
-          <Label>
-            Pass Type <span style={{ color: 'red' }}>*</span>
-          </Label>
-          <Input
-            name="citizen"
-            value={tabPassTypeDetails && tabPassTypeDetails.citizen}
-            type="select"
-            onChange={handlePassTypeInputs}
-          >
-            <option value="">Please Select</option>
-            <option defaultValue="selected" value="Citizen">
-              Citizen
-            </option>
-            <option value="PR">PR</option>
-            <option value="EP">EP</option>
-            <option value="SP">SP</option>
-            <option value="WP">WP</option>
-            <option value="DP">DP</option>
-          </Input>
-        </FormGroup>
-      </Col>
-      {tabPassTypeDetails.citizen === 'Citizen' && (
         <Col md="4">
           <FormGroup>
             <Label>
-              NRIC No <span style={{ color: 'red' }}>*</span>
+              <span style={{ color: 'red' }}>*</span> Pass Type
             </Label>
             <Input
-              name="nric_no"
-              value={tabPassTypeDetails && tabPassTypeDetails.nric_no}
-              type="text"
+              name="citizen"
+              value={tabPassTypeDetails?.citizen || ''}
+              type="select"
               onChange={handlePassTypeInputs}
-            />
-            {(isNricAlreadyInserted && (
-                      <alert className="error-message">
-                        NRIC is already inserted. Please provide a different number.
-                      </alert>
-                    )) ||
-                      null}
+            >
+              <option value="">Please Select</option>
+              <option value="Citizen">Citizen</option>
+              <option value="PR">PR</option>
+              <option value="EP">EP</option>
+              <option value="SP">SP</option>
+              <option value="WP">WP</option>
+              <option value="DP">DP</option>
+            </Input>
           </FormGroup>
         </Col>
-      )}
-      </Row>
-      {tabPassTypeDetails.citizen === 'SP' && (
-        <Row>
-          {' '}
+
+        {tabPassTypeDetails?.citizen === 'Citizen' && (
           <Col md="4">
             <FormGroup>
               <Label>
-                Fin No <span style={{ color: 'red' }}>*</span>
-              </Label>
-              <Input
-                name="fin_no"
-                value={tabPassTypeDetails && tabPassTypeDetails.fin_no}
-                type="text"
-                onChange={handlePassTypeInputs}
-              />
-               {(isFinAlreadyInserted && (
-                      <alert className="error-message">
-                        Fin No is already inserted. Please provide a different number.
-                      </alert>
-                    )) ||
-                      null}
-            </FormGroup>
-          </Col>
-          <Col md="4">
-            <FormGroup>
-              <Label>Fin No Expiry date</Label>
-              <Input
-                name="fin_no_expiry_date"
-                value={moment(tabPassTypeDetails && tabPassTypeDetails.fin_no_expiry_date).format(
-                  'YYYY-MM-DD',
-                )}
-                type="date"
-                onChange={handlePassTypeInputs}
-              />
-            </FormGroup>
-          </Col>
-        </Row>
-      )}
-      {tabPassTypeDetails.citizen === 'EP' && (
-        <Row>
-          {' '}
-          <Col md="4">
-            <FormGroup>
-              <Label>
-                Fin No <span style={{ color: 'red' }}>*</span>
-              </Label>
-              <Input
-                name="fin_no"
-                value={tabPassTypeDetails && tabPassTypeDetails.fin_no}
-                type="text"
-                onChange={handlePassTypeInputs}
-              />
-            </FormGroup>
-          </Col>
-          <Col md="4">
-            <FormGroup>
-              <Label>Fin No Expiry date</Label>
-              <Input
-                name="fin_no_expiry_date"
-                value={moment(tabPassTypeDetails && tabPassTypeDetails.fin_no_expiry_date).format(
-                  'YYYY-MM-DD',
-                )}
-                type="date"
-                onChange={handlePassTypeInputs}
-              />
-            </FormGroup>
-          </Col>
-        </Row>
-      )}
-      {tabPassTypeDetails.citizen === 'PR' && (
-        <Row>
-          {' '}
-          <Col md="4">
-            <FormGroup>
-              <Label>
-                NRIC No <span style={{ color: 'red' }}>*</span>
+                <span style={{ color: 'red' }}>*</span> NRIC No
               </Label>
               <Input
                 name="nric_no"
-                value={tabPassTypeDetails && tabPassTypeDetails.nric_no}
+                value={tabPassTypeDetails?.nric_no || ''}
+                type="text"
+                onChange={handlePassTypeInputs}
+              />
+            </FormGroup>
+          </Col>
+        )}
+      </Row>
+
+      {(tabPassTypeDetails?.citizen === 'SP' ||
+        tabPassTypeDetails?.citizen === 'EP' ||
+        tabPassTypeDetails?.citizen === 'DP') && (
+        <Row>
+          <Col md="4">
+            <FormGroup>
+              <Label>
+                <span style={{ color: 'red' }}>*</span> FIN No
+              </Label>
+              <Input
+                name="fin_no"
+                value={tabPassTypeDetails?.fin_no || ''}
+                type="text"
+                onChange={handlePassTypeInputs}
+              />
+            </FormGroup>
+          </Col>
+          <Col md="4">
+            <FormGroup>
+              <Label>FIN No Expiry Date</Label>
+              <Input
+                name="fin_no_expiry_date"
+                value={moment(tabPassTypeDetails?.fin_no_expiry_date).format('YYYY-MM-DD')}
+                type="date"
+                onChange={handlePassTypeInputs}
+              />
+            </FormGroup>
+          </Col>
+        </Row>
+      )}
+
+      {tabPassTypeDetails?.citizen === 'PR' && (
+        <Row>
+          <Col md="4">
+            <FormGroup>
+              <Label>
+                <span style={{ color: 'red' }}>*</span> NRIC No
+              </Label>
+              <Input
+                name="nric_no"
+                value={tabPassTypeDetails?.nric_no || ''}
                 type="text"
                 onChange={handlePassTypeInputs}
               />
@@ -148,11 +102,11 @@ function TabPassTypeTab({ tabPassTypeDetails, handlePassTypeInputs, isNricAlread
               <Label>SPR Year</Label>
               <Input
                 name="spr_year"
-                value={tabPassTypeDetails && tabPassTypeDetails.spr_year}
-                onChange={handlePassTypeInputs}
+                value={tabPassTypeDetails?.spr_year || ''}
                 type="select"
+                onChange={handlePassTypeInputs}
               >
-                <option defaultValue="selected">Please Select</option>
+                <option value="">Please Select</option>
                 <option value="1">1</option>
                 <option value="2">2</option>
                 <option value="3">3</option>
@@ -162,63 +116,16 @@ function TabPassTypeTab({ tabPassTypeDetails, handlePassTypeInputs, isNricAlread
         </Row>
       )}
 
-      {tabPassTypeDetails.citizen === 'DP' && (
-        <Row>
-          {' '}
-          <Col md="4">
-            <FormGroup>
-              <Label>
-                Fin No <span style={{ color: 'red' }}>*</span>
-              </Label>
-              <Input
-                name="fin_no"
-                value={tabPassTypeDetails && tabPassTypeDetails.fin_no}
-                type="text"
-                onChange={handlePassTypeInputs}
-              />
-            </FormGroup>
-          </Col>
-          <Col md="4">
-            <FormGroup>
-              <Label>Fin No Expiry date </Label>
-              <Input
-                name="fin_no_expiry_date"
-                value={moment(tabPassTypeDetails && tabPassTypeDetails.fin_no_expiry_date).format(
-                  'YYYY-MM-DD',
-                )}
-                type="date"
-                onChange={handlePassTypeInputs}
-              />
-            </FormGroup>
-          </Col>
-        </Row>
-      )}
-      {tabPassTypeDetails.citizen === 'WP' && (
+      {tabPassTypeDetails?.citizen === 'WP' && (
         <>
-          {' '}
           <Row>
             <Col md="4">
               <FormGroup>
-                <Label>
-                  Fin No <span style={{ color: 'red' }}>*</span>
-                </Label>
+                <Label>FIN No</Label>
                 <Input
                   name="fin_no"
-                  value={tabPassTypeDetails && tabPassTypeDetails.fin_no}
+                  value={tabPassTypeDetails?.fin_no || ''}
                   type="text"
-                  onChange={handlePassTypeInputs}
-                />
-              </FormGroup>
-            </Col>
-            <Col md="4">
-              <FormGroup>
-                <Label>Fin No Expiry date </Label>
-                <Input
-                  name="fin_no_expiry_date"
-                  value={moment(tabPassTypeDetails && tabPassTypeDetails.fin_no_expiry_date).format(
-                    'YYYY-MM-DD',
-                  )}
-                  type="date"
                   onChange={handlePassTypeInputs}
                 />
               </FormGroup>
@@ -227,24 +134,13 @@ function TabPassTypeTab({ tabPassTypeDetails, handlePassTypeInputs, isNricAlread
           <Row>
             <Col md="4">
               <FormGroup>
-                <Label>Work Permit No <span style={{ color: 'red' }}>*</span> </Label>
+                <Label>
+                  <span style={{ color: 'red' }}>*</span> Work Permit No
+                </Label>
                 <Input
                   name="work_permit"
-                  value={tabPassTypeDetails && tabPassTypeDetails.work_permit}
+                  value={tabPassTypeDetails?.work_permit || ''}
                   type="text"
-                  onChange={handlePassTypeInputs}
-                />
-              </FormGroup>
-            </Col>
-            <Col md="4">
-              <FormGroup>
-                <Label>Work Expiry date </Label>
-                <Input
-                  name="work_permit_expiry_date"
-                  value={moment(
-                    tabPassTypeDetails && tabPassTypeDetails.work_permit_expiry_date,
-                  ).format('YYYY-MM-DD')}
-                  type="date"
                   onChange={handlePassTypeInputs}
                 />
               </FormGroup>
@@ -252,6 +148,19 @@ function TabPassTypeTab({ tabPassTypeDetails, handlePassTypeInputs, isNricAlread
           </Row>
         </>
       )}
+
+      <Col md="4">
+        <FormGroup>
+          <Label>Work Permit Expiry Date</Label>
+          <Input
+            type="date"
+            onChange={handlePassTypeInputs}
+            name="work_permit_expiry_date"
+            value={moment(tabPassTypeDetails?.work_permit_expiry_date).format('YYYY-MM-DD')}
+            min={moment().format('YYYY-MM-DD')}
+          />
+        </FormGroup>
+      </Col>
     </div>
   );
 }
