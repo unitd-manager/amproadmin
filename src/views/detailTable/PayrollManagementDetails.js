@@ -27,17 +27,18 @@ import ViewFileComponentV2 from '../../components/ProjectModal/ViewFileComponent
 //import LoanPaymentHistoryModal from '../../components/PayrollManagementTable/LoanPaymentHistoryModal';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import PdfPaySlip from '../../components/PDF/PdfPaySlip';
-import PdfTimeSheet from '../../components/PDF/PdfTimeSheet';
+// import PdfTimeSheet from '../../components/PDF/PdfTimeSheet';
 import AddNote from '../../components/Tender/AddNote';
 import ViewNote from '../../components/Tender/ViewNote';
-import PayslipSummary from '../../components/PayrollManagementTable/PayslipSummary';
-import EarningDeductions from '../../components/PayrollManagementTable/EarningDeductions';
-import PayrollLeaveSummary from '../../components/PayrollManagementTable/PayrollLeaveSummary';
+import PayslipSummary from '../../components/PayrollManagement/PayslipSummary';
+import EarningDeductions from '../../components/PayrollManagement/EarningDeductions';
+import PayrollLeaveSummary from '../../components/PayrollManagement/PayrollLeaveSummary';
 import ApiButton from '../../components/ApiButton';
 
 //import Loan from '../smartconTables/Loan';
 
 function PayrollManagementDetails() {
+
   const { id } = useParams();
   const navigate = useNavigate();
   const [payroll, setPayroll] = useState({
@@ -583,8 +584,8 @@ function PayrollManagementDetails() {
       <ComponentCardV2>
         <PdfPaySlip payroll={payroll}></PdfPaySlip>
         &nbsp;&nbsp;
-        <PdfTimeSheet payroll={payroll}></PdfTimeSheet>
-        &nbsp;&nbsp;
+        {/* <PdfTimeSheet payroll={payroll}></PdfTimeSheet>
+        &nbsp;&nbsp; */}
       </ComponentCardV2>
 
       <ComponentCard title="Main Details">
