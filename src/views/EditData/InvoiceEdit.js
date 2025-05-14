@@ -41,7 +41,7 @@ const SalesOrderEdit = () => {
       { id: '2', name: 'Currency' },
       { id: '3', name: 'Shipping' },
       { id: '4', name: 'Sales Man' },
-       { id: '6', name: 'Pdf' },
+       { id: '5', name: 'Pdf' },
     ];
     const toggle = (tab) => {
       setActiveTab(tab);
