@@ -132,10 +132,12 @@ const OpportunityDetails = () => {
 
   const insertTender = (code) => {
     if (tenderForms.company_id !== '' ) {
+
       tenderForms.tran_no = code;
-      tenderForms.tran_date = creationdatetime
+      tenderForms.tran_date = new Date().toISOString().slice(0, 10);
       tenderForms.creation_date = creationdatetime
       tenderForms.created_by = loggedInuser.first_name;
+      tenderForms.status = 'Open';
       api
         .post('/salesOrder/insertSalesOrder', tenderForms)
         .then((res) => {

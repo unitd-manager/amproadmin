@@ -27,11 +27,11 @@ import SalesMan from '../../components/SalesOrder/SalesMan';
 // import EditLineItemModal from '../../components/SalesOrder/EditLineItemModal';
 import SalesOrderProducts from '../../components/SalesOrder/SalesOrderProducts';
 
-import SalesOrderPrintWithCost from '../../components/PDF/SalesOrderPrintWithCost';
-import PdfPickingList from '../../components/PDF/PdfPick';
-import PdfPackingList from '../../components/PDF/PdfPack';
-import PdfSalesQuote from '../../components/PDF/PdfSalesOrderQuote';
-import PrintPerfoma from '../../components/PDF/PrintPerfoma';
+// import SalesOrderPrintWithCost from '../../components/PDF/SalesOrderPrintWithCost';
+// import PdfPickingList from '../../components/PDF/PdfPick';
+// import PdfPackingList from '../../components/PDF/PdfPack';
+// import PdfSalesQuote from '../../components/PDF/PdfSalesOrderQuote';
+// import PrintPerfoma from '../../components/PDF/PrintPerfoma';
 
 
 const SalesOrderEdit = () => {
@@ -46,14 +46,14 @@ const SalesOrderEdit = () => {
       { id: '2', name: 'Currency' },
       { id: '3', name: 'Shipping' },
       { id: '4', name: 'Sales Man' },
-       { id: '5', name: 'Pdf Pick' },
-       { id: '6', name: 'Pdf Pack' },
-       { id: '10', name: 'Pdf quote' },
+      //  { id: '5', name: 'Pdf Pick' },
+      //  { id: '6', name: 'Pdf Pack' },
+      //  { id: '10', name: 'Pdf quote' },
 
 
      
-       { id: '6', name: 'Pdf Pick' },
-       { id: '7', name: 'Pdf Pick' },
+      //  { id: '6', name: 'Pdf Pick' },
+      //  { id: '7', name: 'Pdf Pick' },
     ];
     const toggle = (tab) => {
       setActiveTab(tab);
@@ -242,12 +242,12 @@ useEffect(() => {
              handleInputs={handleInputs}
              ></SalesMan>
           </TabPane>
-          <TabPane tabId="5">
+          {/* <TabPane tabId="5">
             <PdfPickingList
             id={id}
             ></PdfPickingList>
-          </TabPane>
-          <TabPane tabId="6">
+          </TabPane> */}
+          {/* <TabPane tabId="6">
             <PdfPackingList
             id={id}
             ></PdfPackingList>
@@ -256,8 +256,8 @@ useEffect(() => {
             <PdfSalesQuote
             id={id}
             ></PdfSalesQuote>
-            </TabPane>
-          <TabPane tabId="7">
+            </TabPane> */}
+          {/* <TabPane tabId="7">
           <SalesOrderPrintWithCost
           id={id}
                    settingdetails={settingdetails}
@@ -268,7 +268,7 @@ useEffect(() => {
                    settingdetails={settingdetails}
                    lineItem={lineItem}
                 ></PrintPerfoma>
-          </TabPane>
+          </TabPane> */}
          
         </TabContent>
       </ComponentCard>

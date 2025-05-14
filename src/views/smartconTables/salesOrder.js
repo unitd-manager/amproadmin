@@ -14,6 +14,13 @@ import message from '../../components/Message';
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
+import PrintPerfoma from '../../components/PDF/PrintPerfoma';
+
+import SalesOrderPrintWithCost from '../../components/PDF/SalesOrderPrintWithCost';
+// import PdfPickingList from '../../components/PDF/PdfPick';
+// import PdfPackingList from '../../components/PDF/PdfPack';
+// import PdfSalesQuote from '../../components/PDF/PdfSalesOrderQuote';
+
 
 const Test = () => {
   const [supplier, setSupplier] = useState(null);
@@ -25,7 +32,7 @@ const Test = () => {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [customerFilter, setCustomerFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('Open');
 
   const toggleDropdown = () => setDropdownOpen((prevState) => !prevState);
 
@@ -115,6 +122,32 @@ const Test = () => {
       message(error.response?.data?.message || 'Failed to generate invoice', 'error');
     }
   };
+const id = selectedOrder?.sales_order_id || '';
+  const [settingdetails, setSettingDetails] = useState();
+
+const getSettingById = () => {
+  api
+    .post('/salesorder/getSalesorderById', { sales_order_id: id })
+    .then((res) => {
+      setSettingDetails(res.data.data[0]);
+    })
+    .catch(() => {
+      message('setting Data Not Found', 'info');
+    });
+};
+   const [lineItem, setLineItem] = useState();
+ 
+  const getLineItem = () => {
+    api.post('/salesOrder/getQuoteLineItemsById', { sales_order_id: id }).then((res) => {
+      setLineItem(res.data.data);
+      //setAddLineItemModal(true);
+    });
+  };
+
+useEffect(() => {
+  getSettingById();
+      getLineItem();
+}, [id]);
 
   return (
     <div className="MainDiv">
@@ -147,11 +180,25 @@ const Test = () => {
               </DropdownToggle>
               <DropdownMenu>
                 <DropdownItem onClick={generateInvoice}>Convert To Sales Invoice</DropdownItem>
-                <DropdownItem>Print Pick List</DropdownItem>
-                <DropdownItem>Print Packing</DropdownItem>
-                <DropdownItem>Print Quotation</DropdownItem>
-                <DropdownItem>Print With Cost</DropdownItem>
-                <DropdownItem>Print Performa</DropdownItem>
+                {/* <DropdownItem>  <PdfPickingList
+            id={id}
+            ></PdfPickingList></DropdownItem> */}
+                {/* <DropdownItem>  <PdfPackingList
+            id={id}
+            ></PdfPackingList></DropdownItem> */}
+                {/* <DropdownItem> <PdfSalesQuote
+            id={id}
+            ></PdfSalesQuote></DropdownItem> */}
+                <DropdownItem>  <SalesOrderPrintWithCost
+          id={id}
+                   settingdetails={settingdetails}
+                   lineItem={lineItem}
+                ></SalesOrderPrintWithCost></DropdownItem>
+                <DropdownItem>    <PrintPerfoma
+                   id={id}
+                   settingdetails={settingdetails}
+                   lineItem={lineItem}
+                ></PrintPerfoma></DropdownItem>
               </DropdownMenu>
             </Dropdown>
           }
@@ -175,11 +222,16 @@ const Test = () => {
                     />
                   </td>
                   <td>{index + 1}</td>
-                  <td>
-                    <Link to={`/salesorderEdit/${element.sales_order_id}`}>
-                      <Icon.Edit2 />
-                    </Link>
-                  </td>
+                 <td>
+  {element.status !== 'Closed' ? (
+    <Link to={`/salesorderEdit/${element.sales_order_id}`}>
+      <Icon.Edit2 />
+    </Link>
+  ) : (
+    ''
+  )}
+</td>
+
                   <td>{element.tran_no}</td>
                   <td>{element.tran_date}</td>
                   <td>{element.company_name}</td>

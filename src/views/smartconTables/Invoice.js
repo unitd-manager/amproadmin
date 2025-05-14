@@ -14,6 +14,8 @@ import message from '../../components/Message';
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
+// import SalesInvoicePickingListPdf from '../../components/PDF/SalesInvoicePickingListPdf';
+
 
 const Test = () => {
   const [supplier, setSupplier] = useState(null);
@@ -103,6 +105,7 @@ const Test = () => {
       const payload = {
         invoice_id: selectedOrder.invoice_id,
         company_id: selectedOrder.company_id,
+        amount: selectedOrder.invoice_amount,
        receipt_code: receiptCode,
       };
       const response = await api.post('/invoice/generateReceiptFromSalesOrder', payload);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import pdfMake from 'pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
-import { Button } from 'reactstrap';
+//import { Button } from 'reactstrap';
 import PropTypes from 'prop-types';
 import moment from 'moment';
 import api from '../../constants/api';
@@ -356,9 +356,9 @@ const PrintPerfoma = ({ id }) => {
 
   return (
     <>
-      <Button type="button" className="btn btn-dark mr-2" onClick={GetPdf}>
-        Print Picking List
-      </Button>
+      <a   onClick={GetPdf}>
+        Print Performa
+      </a>
     </>
   );
 };
