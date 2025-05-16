@@ -24,7 +24,7 @@ const PurchaseOrder = () => {
   //Getting data from purchaseorder
   const getpurchaseorder = () => {
     setLoading(true)
-    api.get('/purchaseorder/TabPurchaseOrder').then((res) => {
+    api.get('/purchaseorder/getPurchaseOrders').then((res) => {
       setPurchaseOrder(res.data.data);
       setLoading(false)
     }).catch(()=>{
@@ -66,20 +66,27 @@ const PurchaseOrder = () => {
       sortable: false,
     },
     {
-      name: 'PO Code',
+      name: 'Tran No',
       selector: 'po_code',
       sortable: true,
       grow: 0,
       wrap: true,
     },
     {
-      name: 'Title',
+      name: 'Tran Date',
       selector: 'title',
       sortable: true,
       grow: 2,
       wrap: true,
     },
-   
+    {
+      name: 'Supplier',
+      selector: 'supplier',
+      sortable: true,
+      width: 'auto',
+      grow: 3,
+
+    },
     {
       name: 'Status',
       selector: 'status',
@@ -89,24 +96,24 @@ const PurchaseOrder = () => {
 
     },
     {
-      name: 'PO Date',
-      selector: 'purchase_order_date',
+      name: 'SubTotal',
+      selector: 'sub_total',
       sortable: true,
       width: 'auto',
       grow: 3,
 
     },
     {
-      name: 'Supplier Invoice Code',
-      selector: 'supplier_inv_code',
+      name: 'Tax',
+      selector: 'tax',
       sortable: true,
       width: 'auto',
       grow: 3,
 
     },
     {
-      name: 'Creation Date',
-      selector: 'creation_date',
+      name: 'Net Total',
+      selector: 'net_total',
       sortable: true,
       width: 'auto',
       grow: 3,
@@ -159,12 +166,14 @@ const PurchaseOrder = () => {
                       <Link to={`/purchaseorderEdit/${element.purchase_order_id}`}><Icon.Edit2 />
                       </Link>
                     </td>
-                    <td>{element.po_code}</td>
-                    <td>{element.title ? element.title :element.title_field}</td>
+                    <td>{element.tran_no}</td>
+                    <td>{element.tran_date}</td>
+                    <td>{element.supplier_name}</td>
                     <td>{element.status}</td>
                     <td>{element.purchase_order_date? moment(element.purchase_order_date).format('YYYY-MM-DD'):''}</td>
-                    <td>{element.supplier_inv_code}</td>
+                 
                     <td>{element.creation_date? moment(element.creation_date).format('YYYY-MM-DD'):''}</td>
+                    <td></td>
                   </tr>
                 );
               })}

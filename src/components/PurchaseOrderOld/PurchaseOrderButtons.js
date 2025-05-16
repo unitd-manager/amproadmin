@@ -36,7 +36,10 @@ function PurchaseOrderButtons({
                 ></PdfPurchaseOrder>
               </Col>
               <Col>
-                <PdfPurchaseOrderPrice product={product} purchaseDetails={purchaseDetails}></PdfPurchaseOrderPrice>
+                <PdfPurchaseOrderPrice
+                  product={product}
+                  purchaseDetails={purchaseDetails}
+                ></PdfPurchaseOrderPrice>
               </Col>
               <Col>
                 <Button
@@ -44,7 +47,9 @@ function PurchaseOrderButtons({
                   color="primary"
                   onClick={() => {
                     editPurchaseData();
-                    navigate('/PurchaseOrder');
+                    setTimeout(() => {
+                      navigate('/PurchaseOrder');
+                    }, 1100);
                   }}
                 >
                   Save
@@ -57,8 +62,6 @@ function PurchaseOrderButtons({
                   onClick={() => {
                     editPurchaseData();
                     applyChanges();
-                    
-                    console.log('cancel process');
                   }}
                 >
                   Apply

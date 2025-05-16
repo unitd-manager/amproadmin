@@ -1,5 +1,6 @@
 import React from 'react';
 import { Row, Button, Table } from 'reactstrap';
+import { Link } from 'react-router-dom';
 import * as Icon from 'react-feather';
 import PropTypes from 'prop-types';
 import { purchaseTableColumn } from '../../data/PurchaseOrder/PurchaseTableColumn';
@@ -7,7 +8,7 @@ import { purchaseTableColumn } from '../../data/PurchaseOrder/PurchaseTableColum
 function ProductLinkedTable({
   products,
   setProduct,
-  // getCheckedDeliverProducts,
+  getCheckedDeliverProducts,
   getCheckedPoProducts,
   setEditModal,
   setViewHistoryModal,
@@ -17,7 +18,7 @@ function ProductLinkedTable({
   ProductLinkedTable.propTypes = {
     products: PropTypes.array,
     setProduct: PropTypes.func,
-    // getCheckedDeliverProducts: PropTypes.func,
+    getCheckedDeliverProducts: PropTypes.func,
     getCheckedPoProducts: PropTypes.func,
     setEditModal: PropTypes.func,
     setViewHistoryModal: PropTypes.func,
@@ -51,7 +52,7 @@ function ProductLinkedTable({
                         }}
                       />
                     </td>
-                    {/* <td>
+                    <td>
                       <input
                         type="checkbox"
                         id="dno"
@@ -61,9 +62,9 @@ function ProductLinkedTable({
                           getCheckedDeliverProducts(e, index, element);
                         }}
                       />
-                    </td> */}
+                    </td>
                     <td>{index + 1}</td>
-                    <td>{element.product_code}</td>
+                    <td>{element.item_code}</td>
                     <td>{element.title}</td>
                     <td>{element.cost_price}</td>
                     <td>{element.selling_price}</td>
@@ -89,7 +90,7 @@ function ProductLinkedTable({
                       </Button>
                     </td>
                     <td>
-                      <div className="anchor">
+                      <Link to="">
                         <span
                           onClick={() => {
                             deletePoProduct(element.po_product_id);
@@ -97,11 +98,12 @@ function ProductLinkedTable({
                         >
                           <Icon.Trash2 />
                         </span>
-                      </div>
+                      </Link>
                     </td>
                     <td>
-                      <div
-                        className="anchor"
+                      <Link
+                        to=""
+                        color="primary"
                         onClick={() => {
                           setHistoryProduct(element.product_id);
                           setViewHistoryModal(true);
@@ -110,7 +112,7 @@ function ProductLinkedTable({
                         <b>
                           <u>View History</u>
                         </b>
-                      </div>
+                      </Link>
                     </td>
                   </tr>
                 );

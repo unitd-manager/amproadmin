@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Row,
   Col,
@@ -11,14 +11,13 @@ import {
   ModalFooter,
   Label,
 } from 'reactstrap';
+import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import * as $ from 'jquery';
 import random from 'random';
 import Select from 'react-select';
-import AppContext from '../../context/AppContext';
 import api from '../../constants/api';
-import message from '../Message'
-import creationdatetime from '../../constants/creationdatetime';
+import message from '../Message';
 
 const AddPoModal = ({
   projectId,
@@ -35,8 +34,7 @@ const AddPoModal = ({
     setAddPurchaseOrderModal: PropTypes.func,
   };
   const [addNewProductModal, setAddNewProductModal] = useState(false);
-   const [getProductValue, setProductValue] = useState();
-   const { loggedInuser } = useContext(AppContext);
+  const [getProductValue, setProductValue] = useState();
   const [productDetail, setProductDetail] = useState({
     category_id: null,
     sub_category_id: null,
@@ -78,47 +76,6 @@ const AddPoModal = ({
       description: '',
     },
   ]);
-
-  // const [query, setQuery] = useState('');
-  // const [filteredOptions, setFilteredOptions] = useState([]);
-
-  // const handleInputChange = async (event) => {
-  //   const inputQuery = event.target.value;
-  //   setQuery(inputQuery);
-
-  //   try {
-  //     if (inputQuery.trim() === '') {
-  //       setFilteredOptions([]);
-  //     } else {
-  //       api.post('/product/getProductsbySearchFilter',{keyword:inputQuery}).then((res) => {
-  //         const items = res.data.data;
-  //         const finaldat = [];
-  //         items.forEach((item) => {
-  //           finaldat.push({ value: item.product_id, label: item.title });
-  //         });
-  //         console.log('productsearchdata',finaldat)
-  //         console.log('finaldat',finaldat)
-  //         // setProductValue(finaldat);
-  //         setFilteredOptions(finaldat);
-  //       });
-        
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching data:', error);
-  //   }
-  // };
-
-  // const handleSelectOption = (selectedOption,itemId) => {
-  //   setQuery(selectedOption);
-  //   const element = addMoreItem.find((el) => el.id === itemId);
-  //   element.title = selectedOption.label;
-  //   element.item_title = selectedOption.label;
-  //   element.product_id = selectedOption.value.toString();
-  //   setMoreItem(addMoreItem);
-  //   setFilteredOptions([]); // Clear the suggestions when an option is selected
-  //   // Additional actions to perform when an option is selected
-  //   console.log('selectedoption',selectedOption)
-  // };
 
   const AddNewLineItem = () => {
     setMoreItem([
@@ -175,61 +132,34 @@ const AddPoModal = ({
     payment: '0',
     project: '',
   });
-  const [isNewProductValid, setIsNewProductValid] = useState(false);
 
   const handleNewProductDetails = (e) => {
     setProductDetail({ ...productDetail, [e.target.name]: e.target.value });
-    const isValid = e.target.value.trim() !== '';
-    setIsNewProductValid(isValid);
   };
 
   //   Get Products
-  // const getProduct = (e) => {
-  //   api.post('/product/getProductsbySearchFilter',{keyword:e.target.value}).then((res) => {
-  //     const items = res.data.data;
-  //     const finaldat = [];
-  //     items.forEach((item) => {
-  //       finaldat.push({ value: item.product_id, label: item.title });
-  //     });
-  //     console.log('productsearchdata',finaldat)
-  //     setProductValue(finaldat);
-  //   });
-  // };
- //   Get Products
- const getProduct = () => {
-  api.get('/product/getProducts').then((res) => {
-    const items = res.data.data;
-    const finaldat = [];
-    items.forEach((item) => {
-      finaldat.push({ value: item.product_id, label: item.product_name });
+  const getProduct = () => {
+    api.get('/product/getProducts').then((res) => {
+      const items = res.data.data;
+      const finaldat = [];
+      items.forEach((item) => {
+        finaldat.push({ value: item.product_id, label: item.title });
+      });
+      setProductValue(finaldat);
     });
-    setProductValue(finaldat);
-  });
-};
+  };
 
-const insertProduct = (ProductCode, ItemCode) => {
-  if (productDetail.title !== '') {
-    productDetail.product_code = ProductCode;
-    productDetail.item_code = ItemCode;
-    productDetail.creation_date = creationdatetime;
-    productDetail.created_by = loggedInuser.first_name;
+  const insertProduct = () => {
     api
       .post('/purchaseorder/insertPurchaseProduct', productDetail)
       .then((res) => {
         const insertedDataId = res.data.data.insertId;
         message('Product inserted successfully.', 'success');
         api
-          .post('/commonApi/getCodeValues', { type: 'InventoryCode' })
-          .then((res1) => {
-            const InventoryCode = res1.data.data;
-            message('inventory created successfully.', 'success');
-            api
-            .post('/inventory/insertinventory', { product_id: insertedDataId, inventory_code:InventoryCode, creation_date:creationdatetime,created_by:loggedInuser.first_name })
-          
+          .post('/inventory/insertinventory', { product_id: insertedDataId })
           .then(() => {
             message('inventory created successfully.', 'success');
-             getProduct();
-          })
+            getProduct();
           })
           .catch(() => {
             message('Unable to create inventory.', 'error');
@@ -237,27 +167,6 @@ const insertProduct = (ProductCode, ItemCode) => {
       })
       .catch(() => {
         message('Unable to insert product.', 'error');
-      });
-    } else {
-      message('Please fill the Product Name', 'warning');
-    }
-  };
-
-  //Auto generation code
-  const generateCode = () => {
-    api
-      .post('/commonApi/getCodeValues', { type: 'ProductCode' })
-      .then((res) => {
-        const ProductCode = res.data.data
-      api
-      .post('/commonApi/getCodeValues', { type: 'ItemCode' })
-      .then((response) => {
-        const ItemCode = response.data.data
-        insertProduct(ProductCode, ItemCode);
-      })
-      })
-      .catch(() => {
-        insertProduct('');
       });
   };
 
@@ -277,7 +186,6 @@ const insertProduct = (ProductCode, ItemCode) => {
       });
   };
   const poProduct = (itemObj) => {
-    console.log('supplierid',supplierId)
     api
       .post('/purchaseorder/insertPoProduct', {
         purchase_order_id: PurchaseOrderId,
@@ -293,10 +201,10 @@ const insertProduct = (ProductCode, ItemCode) => {
         status: 'In Progress',
         cost_price: itemObj.cost_price,
         selling_price: itemObj.mrp,
-        qty_updated: 0,
+        qty_updated: parseInt(itemObj.qty, 10),
         qty: parseInt(itemObj.qty, 10),
         product_id: itemObj.product_id,
-        supplier_id:supplierId,
+        supplier_id: insertPurchaseOrderData.supplier_id,
         gst: itemObj.gst,
         damage_qty: 0,
         brand: '',
@@ -306,9 +214,9 @@ const insertProduct = (ProductCode, ItemCode) => {
       })
       .then(() => {
         message('Product Added!', 'success');
-        // setTimeout(() => {
-        //   window.location.reload();
-        // }, 300);
+        setTimeout(() => {
+          window.location.reload();
+        }, 300);
       })
       .catch(() => {
         message('Unable to add Product!', 'error');
@@ -347,9 +255,7 @@ const insertProduct = (ProductCode, ItemCode) => {
           obj.title = foundObj.title;
           obj.item_title = foundObj.item_title;
         }
-        if(obj.unit){
-          poProduct(foundObj);
-          }
+        poProduct(foundObj);
       }
     });
 
@@ -362,7 +268,10 @@ const insertProduct = (ProductCode, ItemCode) => {
     setMoreItem(copyDeliverOrderProducts);
   }
 
-
+  useEffect(() => {
+    getProduct();
+    TabMaterialsPurchased();
+  }, []);
   useEffect(() => {
     setMoreItem([
       {
@@ -405,30 +314,7 @@ const insertProduct = (ProductCode, ItemCode) => {
     element.product_id = str.value.toString();
     setMoreItem(addMoreItem);
   };
-  const [unitOptions, setUnitOptions] = useState([]);
 
-  // Fetch data from API for unit options
-  const getUnitOptions = () => {
-    api.get('/product/getUnitFromValueList', unitOptions).then((res) => {
-      const items = res.data.data;
-      const finaldat = [];
-      items.forEach((item) => {
-        finaldat.push({ value: item.value, label: item.value });
-      });
-      setUnitOptions(finaldat);
-    });
-  };
-  const onchangeItem1 = (selectedValue, index) => {
-    const copyAddMoreItem = [...addMoreItem];
-    copyAddMoreItem[index].unit = selectedValue.value;
-    setMoreItem(copyAddMoreItem);
-  };
-
-  useEffect(() => {
-    getProduct();
-    TabMaterialsPurchased();
-    getUnitOptions(); // Fetch unit options
-  }, []);
   // Clear row value
   const ClearValue = (ind) => {
     setMoreItem((current) =>
@@ -504,9 +390,8 @@ const insertProduct = (ProductCode, ItemCode) => {
                         />
                         <Input value={item.product_id} type="hidden" name="product_id"></Input>
                         <Input value={item.title} type="hidden" name="title"></Input>
-                        
                       </td>
-{/* 
+
                       <td data-label="Unit">
                         <Input
                           defaultValue={item.uom}
@@ -514,15 +399,6 @@ const insertProduct = (ProductCode, ItemCode) => {
                           name="unit"
                           onChange={(e) => updateState(index, 'unit', e)}
                           value={insertPurchaseOrderData && insertPurchaseOrderData.unit}
-                        /> 
-                      </td> */}
-                    
-                    <td data-label="Unit">
-                        <Select
-                          name="unit"
-                          defaultValue={{ value: item.unit, label: item.unit }}
-                          onChange={(selectedOption) => onchangeItem1(selectedOption, index)}
-                          options={unitOptions}
                         />
                       </td>
                       <td data-label="Qty">
@@ -559,21 +435,21 @@ const insertProduct = (ProductCode, ItemCode) => {
                           defaultValue={item.gst}
                           name="gst"
                           onChange={(e) => updateState(index, 'gst', e)}
+                          value={insertPurchaseOrderData && insertPurchaseOrderData.gst}
                         />
                       </td>
-                      
                       <td data-label="Action">
                         {' '}
                         <Input defaultValue={item.id} type="hidden" name="id"></Input>
-                          <div className="anchor">
-                            <span
-                              onClick={() => {
-                                ClearValue(item);
-                              }}
-                            >
-                              Clear
-                            </span>
-                        </div>
+                        <Link to="">
+                          <span
+                            onClick={() => {
+                              ClearValue(item);
+                            }}
+                          >
+                            Clear
+                          </span>
+                        </Link>
                       </td>
                     </tr>
                   );
@@ -635,19 +511,16 @@ const insertProduct = (ProductCode, ItemCode) => {
           </FormGroup>
         </ModalBody>
         <ModalFooter>
-        <Button
+          <Button
             color="primary"
             className="shadow-none"
             onClick={() => {
-              // Check if the validation passes before closing the modal
-              if (isNewProductValid) {
-                setAddNewProductModal(false);
-                generateCode();
-                getProduct();
-              } else {
-                // Show a message or handle invalid input in some way
-                alert('Please fill in the product name.');
-              }
+              setAddNewProductModal(false);
+              insertProduct();
+              getProduct();
+              setTimeout(() => {
+                window;
+              }, 300);
             }}
           >
             Submit

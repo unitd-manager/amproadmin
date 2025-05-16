@@ -57,7 +57,7 @@ const EditLineItemModal = ({ editLineModal, setEditLineModal, FetchLineItemData,
     const pcsPerCarton = parseFloat(data.pcs_per_carton) || 0;
     const cartonPrice = parseFloat(data.carton_price) || 0;
     const wholesalePrice = parseFloat(data.wholesale_price) || 0;
-    const discount = parseFloat(data.discount) || 0;
+    const discount = parseFloat(data.discount_value) || 0;
 
     const quantity = cartonQty * pcsPerCarton + looseQty;
     const cartonTotal = cartonQty * cartonPrice;
@@ -104,7 +104,7 @@ const EditLineItemModal = ({ editLineModal, setEditLineModal, FetchLineItemData,
     };
 
     api
-      .post('/salesOrder/edit-TabQuoteLine', updatedData)
+      .post('/invoice/edit-TabQuoteLine', updatedData)
       .then(() => {
         message('Edit Line Item Updated Successfully.', 'success');
         window.location.reload();

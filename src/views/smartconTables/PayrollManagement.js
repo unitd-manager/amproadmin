@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import * as Icon from 'react-feather';
-import { Row, Col, Button, Card, Badge } from 'reactstrap';
+import { Row, Col, Button, Card, Badge,Modal,ModalBody,ModalFooter,ModalHeader } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'datatables.net-dt/js/dataTables.dataTables';
 import 'datatables.net-dt/css/jquery.dataTables.min.css';
@@ -16,11 +16,13 @@ import 'datatables.net-buttons/js/buttons.colVis';
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
-import TerminatingPayslipModal from '../../components/PayrollManagementTable/TerminatingPayslipModal';
-import UpdateOtModal from '../../components/PayrollManagementTable/updateOtModal';
-import PrintPayslipModal from '../../components/PayrollManagementTable/PrintPayslipModal';
-import { columns } from '../../data/PayrollHR/PayrollColumn';
-import PdfPaySlipList from '../../components/PDF/PdfPaySlipList';
+import TerminatingPayslipModal from '../../components/PayrollManagement/TerminatingPayslipModal';
+import UpdateOtModal from '../../components/PayrollManagement/updateOtModal';
+import PrintPayslipModal from '../../components/PayrollManagement/PrintPayslipModal';
+//import FileExporter from '../../components/Excelarabexport';
+// import PrintIR8AModal from '../../components/PayrollManagement/PrintIR8AModal';
+// import { columns } from '../../data/PayrollHR/PayrollColumn';
+// import PdfPaySlipList from '../../components/PDF/PdfPaySlipList';
 
 const Payrollmanagement = () => {
   //state variables
@@ -30,10 +32,40 @@ const Payrollmanagement = () => {
   const [updateOtModal, setUpdateOtModal] = useState(false);
   const [terminatingPayslip, setTerminatingPayslip] = useState([]);
   const [printPayslipModal, setPrintPayslipModal] = useState(false);
+  //const [printIR8AModal,setPrintIR8AModal]= useState(false);
   const [loading, setLoading] = useState(false);
-
+  const getSelectedLanguageFromLocalStorage = () => {
+    return localStorage.getItem('selectedLanguage') || '';
+  };
+  
+const selectedLanguage = getSelectedLanguageFromLocalStorage();
   const [empWithoutJobInfo, setEmpWithoutJobInfo] = useState([]);
   //handleinputs
+  const [arabic, setArabic] = useState([]);
+console.log('arabic', arabic);
+  const [showModal, setShowModal] = useState(false);
+
+  const arb =selectedLanguage === 'Arabic'
+
+  // const eng =selectedLanguage === 'English'
+  const handleCloseModal = () => setShowModal(false);
+  const handleShowModal = () => setShowModal(true);
+
+  const getArabicLabels = () => {
+      api
+      .get('/translation/getTranslationForPayrollManagement')
+      .then((res) => {
+        setArabic(res.data.data);
+      })
+      .catch(() => {
+        // Handle error if needed
+      });   
+  };
+
+  useEffect(() => {
+  
+    getArabicLabels();
+  }, []);
 
   const handleInputs = (e) => {
     setPayrollManagementsdata({ ...payrollManagementsdata, [e.target.name]: e.target.value });
@@ -169,8 +201,7 @@ const Payrollmanagement = () => {
   console.log('last month first date', lastmonthfirst);
   console.log('last month last date', lastmonthlast);
 
-  // //create payroll api
-
+  //create payroll api
   const createPayrollManagements = async (Arr) => {
     const lastmonthfirstdate = moment(new Date())
       .subtract(1, 'months')
@@ -187,7 +218,7 @@ const Payrollmanagement = () => {
     console.log('last month last date', lastmonthlastdate);
 
     console.log('filtered', Arr);
-    await Arr.forEach(async (obj) => {
+    await Arr.forEach(async (obj,index) => {
       const workingDaysInWeek = obj.working_days;
       // const daysInMonth = moment(obj.payslip_start_date);
       // const endDate = moment(obj.payslip_end_date);
@@ -215,22 +246,17 @@ const Payrollmanagement = () => {
       obj.status = 'generated';
 
       // Calculate basic_per_month based on basic_pay, actual_working_days, and working_days_in_month
-      const totalBasicPay = parseFloat(obj.basic_pay) || 0;
-      const actualWorkingDays = parseFloat(obj.actual_working_days) || 0;
-      const workingDaysInMonth = parseFloat(obj.working_days_in_month) || 0;
-      
+      const totalBasicPay = parseFloat(obj.basic_pay);
+      const actualWorkingDays = parseFloat(obj.actual_working_days);
+      const workingDaysInMonth = parseFloat(obj.working_days_in_month);
+
       if (actualWorkingDays > 0 && workingDaysInMonth > 0) {
-        const basicPayPercentage = Number((
+        const basicPayPercentage = (
           (totalBasicPay / workingDaysInMonth) *
           actualWorkingDays
-        ).toFixed(2));
-        console.log('3', basicPayPercentage);
-      
-        obj.total_basic_pay_for_month = Number.isNaN(basicPayPercentage) ? 0 : basicPayPercentage;
-      } else {
-        obj.total_basic_pay_for_month = 0;
+        ).toFixed(2);
+        obj.total_basic_pay_for_month = parseFloat(basicPayPercentage);
       }
-      
 
       // // Example usage:
       // const totalBasicPayForMonth = 1000; // Replace with your value
@@ -238,7 +264,7 @@ const Payrollmanagement = () => {
       // calculateCpfContributions(totalBasicPayForMonth, age);
 
       // Ensure it's formatted as a two-decimal float
-      const grosspay = parseFloat(obj.basic_pay);
+      //const grosspay = parseFloat(obj.basic_pay);
       const empID = obj.employee_id;
 
       console.log('employee', empID);
@@ -254,154 +280,19 @@ const Payrollmanagement = () => {
 
           console.log('age', age);
           // Call // with empId
-          const selectedEmployeeId = obj.employee_id;
+          //const selectedEmployeeId = obj.employee_id;
           const payrollyear = obj.payroll_year;
-        
           const basicpays = obj.basic_pay;
+         
 
           
-          console.log('payrollyear', basicpays);
+          console.log('basicpay', basicpays);
           console.log('payrollyear', payrollyear);
           
 
-          api
-            .post('/payrollmanagement/getCpfCalc', {
-              employee_id: selectedEmployeeId,
-               payroll_year: payrollyear,
-              basic_pay: 10000,
-    
-            })
-            .then((res) => {
-              const { byEmployee, byEmployer } = res.data.data[0];
-              const { capAmountEmployee, capAmountEmployer } = res.data.data[0];
-              console.log('by', byEmployee);
-              console.log('by', byEmployer);  // Replace with actual API response structure
-              // Set these values to your rowPercentageCPF object
-
-              //setCpfEmployees(res.data.data); // Assuming the API returns CPF data
-              let cpfmployee = null;
-              let cpfmployer = null;
-              let totalcontribution = null;
-              const rowPercentageCPF = {
-                byEmployer: byEmployee,
-                byEmployee: byEmployer,
-                capAmountEmployer: capAmountEmployee,
-                capAmountEmployee: capAmountEmployer,
-              };
-              console.log('by1', byEmployer);
-              console.log('by1', byEmployee);
-              rowPercentageCPF.byEmployee = byEmployee;
-              rowPercentageCPF.byEmployer = byEmployer;
-              rowPercentageCPF.capAmountEmployee = capAmountEmployee;
-              rowPercentageCPF.capAmountEmployer = capAmountEmployer;
-
-              console.log('by2', byEmployer);
-              console.log('by2', byEmployee);
-              let cpfEmployee = 0;
-              //let cpfEmployeeInt = 0;
-              if (basicpays >= 501 && basicpays <= 749) {
-                console.log('basicpays', basicpays);
-                if (age >= 0 && age <= 55) {
-                  console.log('age1', age);
-                  cpfEmployee = 0.6 * (grosspay - 500);
-                  console.log('CPF Employee Contribution:', cpfEmployee);
-                } else if (age >= 56 && age <= 60) {
-                  cpfEmployee = 0.39 * (grosspay - 500);
-                  console.log('CPF Employee Contribution:', cpfEmployee);
-                } else if (age >= 61 && age <= 65) {
-                  cpfEmployee = 0.225 * (grosspay - 500);
-                  console.log('CPF Employee Contribution:', cpfEmployee);
-                } else if (age >= 66) {
-                  cpfEmployee = 0.15 * (grosspay - 500);
-                  console.log('CPF Employee Contribution:', cpfEmployee);
-                }
-
-                const cpfEmployer = (grosspay * rowPercentageCPF.byEmployer) / 100;
-                console.log('CPF Employer Contribution1:', cpfEmployer);
-                cpfmployee = cpfEmployee;
-                cpfmployer = cpfEmployer;
-                const totalContribution = cpfEmployee + cpfEmployer;
-                console.log('Total CPF Contribution2:', totalContribution);
-                const totalContributionamount = Math.round(totalContribution);
-                // CPF Employee Contribution
-                const cpfEmployeeInt = Math.floor(cpfEmployee); // Take only the integer part
-                // CPF Employer contribution
-                totalcontribution = totalContributionamount;
-                const cpf = totalContributionamount - cpfEmployeeInt;
-                console.log('Total CPF Contributions3:', totalContributionamount);
-                console.log('Total CPF Contribution4:', cpfEmployeeInt);
-                console.log('Total CPF Contribution5:', cpf);
-
-                console.log('CPF Employee Contribution6:', cpfEmployeeInt.toFixed(2)); // Format as a two-decimal float
-                console.log('CPF Employer Contribution7:', cpfEmployer.toFixed(2)); // Format as a two-decimal float
-                console.log('Total CPF Contribution:', totalContribution.toFixed(2)); // Format as a two-decimal float
-              } else {
-                /* CPF Total Calculation */
-
-                const totalCpfPercent = rowPercentageCPF.byEmployee + rowPercentageCPF.byEmployer;
-                console.log('byEmplo', rowPercentageCPF.byEmployee);
-                console.log('byEmplor', rowPercentageCPF.byEmployer);
-                console.log('row', rowPercentageCPF);
-                const totalContribution = (basicpays * totalCpfPercent) / 100;
-                const totalContributionAmount = Math.round(totalContribution);
-                console.log('basic_pays', basicpays);
-
-                console.log('CPF total Contribution1: 0.00', totalCpfPercent); // No employee contribution outside the range
-                console.log('CPF Employer Contribution2: 0.00'); // No employer contribution outside the range
-                console.log('Total CPF Contribution3:', totalContribution.toFixed(2)); // Format as a two-decimal float
-                console.log('CPF3:', totalContributionAmount.toFixed(2)); // Format as a two-decimal float
-
-                /* CPF Calculation */
-                const cpf = (basicpays * rowPercentageCPF.byEmployer) / 100;
-                console.log('CPF ', cpf.toFixed(2)); // Format as a two-decimal float
-                // CPF Employee contribution
-                const cpfEp = (basicpays * rowPercentageCPF.byEmployee) / 100;
-                const cpfE = Math.round(cpfEp);
-                console.log('CPFE Calculation2:', cpfE.toFixed(2));
-
-                // Calculate total_cap_amount_cpf
-                const totalCapAmountCpf =
-                  rowPercentageCPF.capAmountEmployer + rowPercentageCPF.capAmountEmployee;
-
-                let totalContributionAmountCorrection = totalCapAmountCpf;
-                cpfmployer = cpf;
-                cpfmployee = cpfE;
-                console.log('cpf10', cpf);
-                console.log('cpf11', cpfE);
-                if (totalContributionAmount > totalCapAmountCpf) {
-                  totalContributionAmountCorrection = totalCapAmountCpf;
-                } else {
-                  totalContributionAmountCorrection = totalContributionAmount;
-                }
-                totalcontribution = totalCapAmountCpf;
-                console.log('cpf12', totalCapAmountCpf);
-                // Calculate CPF Employer contribution
-                let cpfEmp = totalContributionAmount - cpfE;
-
-                if (
-                  cpf > rowPercentageCPF.capAmountEmployer &&
-                  rowPercentageCPF.capAmountEmployer !== 0
-                ) {
-                  cpfEmp = rowPercentageCPF.capAmountEmployer;
-                }
-                if (
-                  cpfE > rowPercentageCPF.capAmountEmployee &&
-                  rowPercentageCPF.capAmountEmployee !== 0
-                ) {
-                  cpfEmp = rowPercentageCPF.capAmountEmployee;
-                }
-
-                console.log('Total Contribution Amount Correction:', totalCapAmountCpf);
-                console.log(
-                  'Total Contribution Amount Correction:',
-                  totalContributionAmountCorrection,
-                );
-                console.log('Total Contribution Amount Correction:', cpfEmp);
-              }
-
-              obj.cpf_employee = cpfmployee;
-              obj.cpf_employer = cpfmployer;
-              obj.total_cpf_contribution = totalcontribution;
+              // obj.cpf_employee = cpfmployee;
+              // obj.cpf_employer = cpfmployer;
+              // obj.total_cpf_contribution = totalcontribution;
               obj.ot_hours=parseFloat(obj.total_ot_hours)*(parseFloat(1.5)) +parseFloat(obj.total_ph_hours)*(parseFloat(2));
               obj.ot_amount= parseFloat(obj.ot_hours)*parseFloat(obj.overtime_pay_rate);
               const normalHoursPay=parseFloat(obj.total_normal_hours)*parseFloat(obj.hourly_pay);
@@ -419,8 +310,8 @@ const Payrollmanagement = () => {
               // console.log('objectishere',obj)
               // console.log('actualamount',actualAmount)
               // }
-              // if(obj.pay ==='HourlyPay'){
-              
+               //if(obj.pay ==='HourlyPay'){
+              console.log('obj',obj);
                 if(parseFloat(obj.ot_hours) > 72 ){
                   obj.ot_hours=72;
                   obj.ot_amount= parseFloat(obj.ot_hours)*parseFloat(obj.overtime_pay_rate);
@@ -437,267 +328,25 @@ const Payrollmanagement = () => {
                 .then(() => {
                   //generatecpfcalculator();
                   
-                 // message('Payrolls created successfully.', 'success');
+                 message('Payrolls created successfully.', 'success');
                   // setLoading(false);
+                  if(index === Arr.length -1){
+                    setTimeout(()=>{
+                      window.location.reload();
+                    },300)
+                  }
+                  
                 })
                 .catch(() => {
                   message('Unable to create record', 'info');
                 });
-            });
+          
         });
     });
-    // setTimeout(()=>{
-    //   window.location.reload();
-    // },2000)
+   
  
   
   };
-
-
-  // const createPayrollManagements = async (Arr) => {
-  //   const lastmonthfirstdate = moment(new Date())
-  //     .subtract(1, 'months')
-  //     .startOf('month')
-  //     .format('YYYY-MM-DD');
-
-  //   const lastmonthlastdate = moment(new Date())
-  //     .subtract(1, 'months')
-  //     .endOf('month')
-  //     .format('YYYY-MM-DD');
-  //   const payrollMonth = moment(lastmonthfirstdate).format('MM');
-  //   const payrollYear = moment(lastmonthfirstdate).format('YYYY');
-  //   console.log('last month first date', lastmonthfirstdate);
-  //   console.log('last month last date', lastmonthlastdate);
-
-  //   console.log('filtered', Arr);
-  //   await Arr.forEach(async (obj) => {
-  //     const workingDaysInWeek = obj.working_days;
-  //     // const daysInMonth = moment(obj.payslip_start_date);
-  //     // const endDate = moment(obj.payslip_end_date);
-  //     const startDate = moment(lastmonthfirstdate);
-  //     const endDate = moment(lastmonthlastdate);
-  //     const daysInRange = endDate.diff(startDate, 'days') + 1;
-  //     console.log('1', daysInRange);
-  //     console.log('obj', obj);
-  //     console.log('2', workingDaysInWeek);
-
-  //     const weeksInMonth = Math.floor(daysInRange / 7);
-  //     console.log('3', weeksInMonth);
-  //     const remainingDays = daysInRange - weeksInMonth * 7;
-  //     console.log('4', remainingDays);
-  //     const workingdaysInRanges = workingDaysInWeek * weeksInMonth + remainingDays;
-  //     console.log('4', workingdaysInRanges);
-  //     // Set actual_working_days
-  //     obj.actual_working_days = workingdaysInRanges;
-  //     obj.working_days_in_month = workingdaysInRanges;
-
-  //     obj.payslip_start_date = lastmonthfirstdate;
-  //     obj.payslip_end_date = lastmonthlastdate;
-  //     obj.payroll_month = payrollMonth;
-  //     obj.payroll_year = payrollYear;
-  //     obj.status = 'generated';
-
-  //     // Calculate basic_per_month based on basic_pay, actual_working_days, and working_days_in_month
-  //     const totalBasicPay = parseFloat(obj.basic_pay);
-  //     const actualWorkingDays = parseFloat(obj.actual_working_days);
-  //     const workingDaysInMonth = parseFloat(obj.working_days_in_month);
-
-  //     if (actualWorkingDays > 0 && workingDaysInMonth > 0) {
-  //       const basicPayPercentage = (
-  //         (totalBasicPay / workingDaysInMonth) *
-  //         actualWorkingDays
-  //       ).toFixed(2);
-  //       obj.total_basic_pay_for_month = basicPayPercentage;
-  //     }
-
-  //     // // Example usage:
-  //     // const totalBasicPayForMonth = 1000; // Replace with your value
-  //     // const age = 60; // Replace with your age
-  //     // calculateCpfContributions(totalBasicPayForMonth, age);
-
-  //     // Ensure it's formatted as a two-decimal float
-  //     const grosspay = parseFloat(obj.basic_pay);
-  //     const empID = obj.employee_id;
-
-  //     console.log('employee', empID);
-  //     await api
-  //       .post('/payrollmanagement/getemployeeages', {
-  //         employee_id: empID,
-  //       })
-
-  //       .then((res1) => {
-  //         console.log('res1', res1.data.data[0]);
-  //         // You may need to adjust this based on the actual field in your obj
-  //         const { age } = res1.data.data[0];
-
-  //         console.log('age', age);
-  //         // Call generatecpfcalculator with empId
-  //         const selectedEmployeeId = obj.employee_id;
-  //         const payrollyear = obj.payroll_year;
-  //         const basicpays = obj.basic_pay;
-         
-
-          
-  //         console.log('payrollyear', basicpays);
-  //         console.log('payrollyear', payrollyear);
-          
-
-  //         api
-  //           .post('/payrollmanagement/getCpfCalc', {
-  //             employee_id: selectedEmployeeId,
-
-  //             payroll_year: payrollyear,
-  //             basic_pay: basicpays,
-         
-  //           })
-  //           .then((res) => {
-  //             const { byEmployee, byEmployer } = res.data.data[0];
-  //             const { capAmountEmployee, capAmountEmployer } = res.data.data[0];
-  //             console.log('by', byEmployee);
-  //             console.log('by', byEmployer);  // Replace with actual API response structure
-  //             // Set these values to your rowPercentageCPF object
-
-  //             //setCpfEmployees(res.data.data); // Assuming the API returns CPF data
-  //             let cpfmployee = null;
-  //             let cpfmployer = null;
-  //             let totalcontribution = null;
-  //             const rowPercentageCPF = {
-  //               byEmployer: byEmployee,
-  //               byEmployee: byEmployer,
-  //               capAmountEmployer: capAmountEmployee,
-  //               capAmountEmployee: capAmountEmployer,
-  //             };
-  //             console.log('by1', byEmployer);
-  //             console.log('by1', byEmployee);
-  //             rowPercentageCPF.byEmployee = byEmployee;
-  //             rowPercentageCPF.byEmployer = byEmployer;
-  //             rowPercentageCPF.capAmountEmployee = capAmountEmployee;
-  //             rowPercentageCPF.capAmountEmployer = capAmountEmployer;
-
-  //             console.log('by2', byEmployer);
-  //             console.log('by2', byEmployee);
-  //             let cpfEmployee = 0;
-  //             //let cpfEmployeeInt = 0;
-  //             if (basicpays >= 501 && basicpays <= 749) {
-  //               console.log('basicpays', basicpays);
-  //               if (age >= 0 && age <= 55) {
-  //                 console.log('age1', age);
-  //                 cpfEmployee = 0.6 * (grosspay - 500);
-  //                 console.log('CPF Employee Contribution:', cpfEmployee);
-  //               } else if (age >= 56 && age <= 60) {
-  //                 cpfEmployee = 0.39 * (grosspay - 500);
-  //                 console.log('CPF Employee Contribution:', cpfEmployee);
-  //               } else if (age >= 61 && age <= 65) {
-  //                 cpfEmployee = 0.225 * (grosspay - 500);
-  //                 console.log('CPF Employee Contribution:', cpfEmployee);
-  //               } else if (age >= 66) {
-  //                 cpfEmployee = 0.15 * (grosspay - 500);
-  //                 console.log('CPF Employee Contribution:', cpfEmployee);
-  //               }
-
-  //               const cpfEmployer = (grosspay * rowPercentageCPF.byEmployer) / 100;
-  //               console.log('CPF Employer Contribution1:', cpfEmployer);
-  //               cpfmployee = cpfEmployee;
-  //               cpfmployer = cpfEmployer;
-  //               const totalContribution = cpfEmployee + cpfEmployer;
-  //               console.log('Total CPF Contribution2:', totalContribution);
-  //               const totalContributionamount = Math.round(totalContribution);
-  //               // CPF Employee Contribution
-  //               const cpfEmployeeInt = Math.floor(cpfEmployee); // Take only the integer part
-  //               // CPF Employer contribution
-  //               totalcontribution = totalContributionamount;
-  //               const cpf = totalContributionamount - cpfEmployeeInt;
-  //               console.log('Total CPF Contributions3:', totalContributionamount);
-  //               console.log('Total CPF Contribution4:', cpfEmployeeInt);
-  //               console.log('Total CPF Contribution5:', cpf);
-
-  //               console.log('CPF Employee Contribution6:', cpfEmployeeInt.toFixed(2)); // Format as a two-decimal float
-  //               console.log('CPF Employer Contribution7:', cpfEmployer.toFixed(2)); // Format as a two-decimal float
-  //               console.log('Total CPF Contribution:', totalContribution.toFixed(2)); // Format as a two-decimal float
-  //             } else {
-  //               /* CPF Total Calculation */
-
-  //               const totalCpfPercent = rowPercentageCPF.byEmployee + rowPercentageCPF.byEmployer;
-  //               console.log('byEmplo', rowPercentageCPF.byEmployee);
-  //               console.log('byEmplor', rowPercentageCPF.byEmployer);
-  //               console.log('row', rowPercentageCPF);
-  //               const totalContribution = (basicpays * totalCpfPercent) / 100;
-  //               const totalContributionAmount = Math.round(totalContribution);
-  //               console.log('basic_pays', basicpays);
-
-  //               console.log('CPF total Contribution1: 0.00', totalCpfPercent); // No employee contribution outside the range
-  //               console.log('CPF Employer Contribution2: 0.00'); // No employer contribution outside the range
-  //               console.log('Total CPF Contribution3:', totalContribution.toFixed(2)); // Format as a two-decimal float
-  //               console.log('CPF3:', totalContributionAmount.toFixed(2)); // Format as a two-decimal float
-
-  //               /* CPF Calculation */
-  //               const cpf = (basicpays * rowPercentageCPF.byEmployer) / 100;
-  //               console.log('CPF ', cpf.toFixed(2)); // Format as a two-decimal float
-  //               // CPF Employee contribution
-  //               const cpfEp = (basicpays * rowPercentageCPF.byEmployee) / 100;
-  //               const cpfE = Math.round(cpfEp);
-  //               console.log('CPFE Calculation2:', cpfE.toFixed(2));
-
-  //               // Calculate total_cap_amount_cpf
-  //               const totalCapAmountCpf =
-  //                 rowPercentageCPF.capAmountEmployer + rowPercentageCPF.capAmountEmployee;
-
-  //               let totalContributionAmountCorrection = totalCapAmountCpf;
-  //               cpfmployer = cpf;
-  //               cpfmployee = cpfE;
-  //               console.log('cpf10', cpf);
-  //               console.log('cpf11', cpfE);
-  //               if (totalContributionAmount > totalCapAmountCpf) {
-  //                 totalContributionAmountCorrection = totalCapAmountCpf;
-  //               } else {
-  //                 totalContributionAmountCorrection = totalContributionAmount;
-  //               }
-  //               totalcontribution = totalCapAmountCpf;
-  //               console.log('cpf12', totalCapAmountCpf);
-  //               // Calculate CPF Employer contribution
-  //               let cpfEmp = totalContributionAmount - cpfE;
-
-  //               if (
-  //                 cpf > rowPercentageCPF.capAmountEmployer &&
-  //                 rowPercentageCPF.capAmountEmployer !== 0
-  //               ) {
-  //                 cpfEmp = rowPercentageCPF.capAmountEmployer;
-  //               }
-  //               if (
-  //                 cpfE > rowPercentageCPF.capAmountEmployee &&
-  //                 rowPercentageCPF.capAmountEmployee !== 0
-  //               ) {
-  //                 cpfEmp = rowPercentageCPF.capAmountEmployee;
-  //               }
-
-  //               console.log('Total Contribution Amount Correction:', totalCapAmountCpf);
-  //               console.log(
-  //                 'Total Contribution Amount Correction:',
-  //                 totalContributionAmountCorrection,
-  //               );
-  //               console.log('Total Contribution Amount Correction:', cpfEmp);
-  //             }
-
-  //             obj.cpf_employee = cpfmployee;
-  //             obj.cpf_employer = cpfmployer;
-  //             obj.total_cpf_contribution = totalcontribution;
-
-  //             api
-  //               .post('/payrollmanagement/insertpayroll_management', obj)
-  //               .then(() => {
-  //                 // generatecpfcalculator();
-                  
-  //                // message('Payrolls created successfully.', 'success');
-  //                 // setLoading(false);
-  //               })
-  //               .catch(() => {
-  //                 message('Unable to create record', 'info');
-  //               });
-  //           });
-  //       });
-  //   });
-  //   getAllPayrollManagements();
-  // };
 
   // generate payslip
   const generateTerminatingPayslips = () => {
@@ -711,7 +360,8 @@ const Payrollmanagement = () => {
   const generatePayslips = () => {
     navigate(`/PayrollManagement?month=${filterPeriod.month}&year=${filterPeriod.year}`);
     // setLoading(true);
-    api.get('/payrollmanagement/getJobInformationPayroll').then((res) => {
+      api.get('/payrollmanagement/getJobInformationPayroll').then((res) => {
+
       setJobInformationRecords(res.data.data);
       console.log('jobinformationrecords', res.data.data);
       console.log('jobinformationrecords', jobInformationRecords);
@@ -756,29 +406,148 @@ const Payrollmanagement = () => {
       }
     };
   }, [filterPeriod]);
-
+  const columns = [
+    {
+      name: '#',
+      selector: 'id',
+      sortable: true,
+      grow: 0,
+      width: 'auto',
+    },
+    {
+      name: 'edit',
+      selector: 'edit',
+      sortable: true,
+      grow: 0,
+      width: 'auto',
+      wrap: true,
+    },
+    {
+      name: 'Employee Name',
+     
+      selector: 'code',
+      sortable: true,
+      grow: 1,
+    },
+    {
+    
+      name: 'Payslip print',
+      selector: 'code',
+      sortable: true,
+      grow: 1,
+    },
+    {
+      name: 'Month',
+      selector: 'project',
+      sortable: true,
+      grow: 1,
+      cell: (d) => <span>{d.closing.join(', ')}</span>,
+    },
+    {
+      name: 'Year',
+      selector: 'project',
+      sortable: true,
+      grow: 1,
+      cell: (d) => <span>{d.closing.join(', ')}</span>,
+    },
+    {
+      name: 'Basic Pay',
+      selector: 'project',
+      sortable: true,
+      grow: 1,
+      cell: (d) => <span>{d.closing.join(', ')}</span>,
+    },
+    {
+      name: 'OT',
+      selector: 'project',
+      sortable: true,
+      grow: 1,
+      cell: (d) => <span>{d.closing.join(', ')}</span>,
+    },
+    {
+      name: 'CPF(Employer)',
+      selector: 'project',
+      sortable: true,
+      grow: 1,
+      cell: (d) => <span>{d.closing.join(', ')}</span>,
+    },
+    {
+      name: 'CPF(Employee)',
+      selector: 'project',
+      sortable: true,
+      grow: 1,
+      cell: (d) => <span>{d.closing.join(', ')}</span>,
+    },
+    {
+      name: 'Allowance',
+      selector: 'project',
+      sortable: true,
+      grow: 1,
+      cell: (d) => <span>{d.closing.join(', ')}</span>,
+    },
+    {
+      name: 'Deductions',
+      selector: 'project',
+      sortable: true,
+      grow: 1,
+      cell: (d) => <span>{d.closing.join(', ')}</span>,
+    },
+    {
+      name: 'Net Pay',
+      selector: 'project',
+      sortable: true,
+      grow: 1,
+      cell: (d) => <span>{d.closing.join(', ')}</span>,
+    },
+    {
+      name: 'Status',
+      selector: 'project',
+      sortable: true,
+      grow: 1,
+      cell: (d) => <span>{d.closing.join(', ')}</span>,
+    },
+    {
+      name: 'ID',
+      selector: 'project',
+      sortable: true,
+      grow: 1,
+      cell: (d) => <span>{d.closing.join(', ')}</span>,
+    },
+  ];
   return (
     <div className="MainDiv">
       <div className=" pt-xs-25">
         <BreadCrumbs />
         <ToastContainer></ToastContainer>
-
-        <Card style={{ padding: '10px' }}>
-          <div>
-            <h5>
-              Please create Job information records for the below employees to make them appear in
-              payroll.
-            </h5>
-            {empWithoutJobInfo.map((el) => {
-              return (
-                <span style={{ marginRight: '5px' }}>
-                  <Badge> {el.employee_name}</Badge>
-                </span>
-              );
-            })}
-          </div>
-        </Card>
-
+        <Button class="primary" onClick={handleShowModal}>
+         Employee Name
+        </Button>
+           {/* Modal */}
+           <Modal  size="lg" isOpen={showModal} toggle={handleCloseModal}>     
+           <ModalHeader closeButton>
+            
+          </ModalHeader>
+          <ModalBody>
+            <Card style={{ padding: '10px' }}>
+              <div>
+                <h5>
+                Plase create Job information records for the below employees to make them appear in payroll
+                </h5>
+                {empWithoutJobInfo.map((el) => (
+                  <span style={{ marginRight: '5px' }}>
+                    <Badge>{el.employee_name}</Badge>
+                  </span>
+                ))}
+              </div>
+            </Card>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="secondary" onClick={handleCloseModal}>
+              Close
+            </Button>
+          </ModalFooter>
+        </Modal>
+        
         <Card className="p-2">
           <Row>
             <Col md="2">
@@ -823,6 +592,17 @@ const Payrollmanagement = () => {
                 Update OT
               </Button>
             </Col>
+            {/* <Col md="2">
+              <Button
+                type="submit"
+                className="border btn-dark rounded"
+                onClick={() => {
+                  setPrintIR8AModal(true);
+                }}
+              >
+                IR8A yearly Pdf
+              </Button>
+            </Col> */}
           </Row>
         </Card>
         {terminatingPayslipModal && (
@@ -849,24 +629,33 @@ const Payrollmanagement = () => {
             payrollManagementsdata={payrollManagementsdata}
           />
         )}
+        {/* {printIR8AModal && (
+          <PrintIR8AModal
+            printIR8AModal={printIR8AModal}
+            setPrintIR8AModal={setPrintIR8AModal}
+            payrollManagementsdata={payrollManagementsdata}
+          />
+        )} */}
+        {/* <FileExporter/> */}
         <CommonTable
           loading={loading}
           title="Payroll Management List"
-          Button={
-            <div>
-              <Row>
-                <Col md="6"> 
+          module='Payroll Management'
+          SampleButton={
+            <>
+           
+                <Col md="6">
                   <a
-                    href="http://43.228.126.245/pyramidapi/storage/excelsheets/PayrollManagement.xlsx"
+                    href="http://43.228.126.245/smartco-api/storage/excelsheets/PayrollManagement.xlsx"
                     download
                   >
-                    <Button color="primary" className="shadow-none ">
+                    <Button color="primary" className="shadow-none">
                       Sample
                     </Button>
                   </a>
                 </Col>
-              </Row>
-            </div>
+            
+            </>
           }
         >
           <thead>
@@ -887,9 +676,11 @@ const Payrollmanagement = () => {
                         <Icon.Edit2 />
                       </Link>
                     </td>
-                    <td>{element.employee_name}</td>
+                    {/* <td>{element.employee_name}</td> */}
+                    <td>{arb ? element.employee_name_arb ||element.first_name_arb : element.employee_name ||element.first_name}</td>
+
                     <td>
-                      <PdfPaySlipList payroll={element}></PdfPaySlipList>
+                      {/* <PdfPaySlipList payroll={element}></PdfPaySlipList> */}
                     </td>
                     <td>{element.payroll_month}</td>
                     <td>{element.payroll_year}</td>

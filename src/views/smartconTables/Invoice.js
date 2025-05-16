@@ -14,7 +14,7 @@ import message from '../../components/Message';
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
-// import SalesInvoicePickingListPdf from '../../components/PDF/SalesInvoicePickingListPdf';
+import SalesInvoicePickingListPdf from '../../components/PDF/SalesInvoicePickingListPdf';
 
 
 const Test = () => {
@@ -27,7 +27,7 @@ const Test = () => {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [customerFilter, setCustomerFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('Not Paid');
 
   const toggleDropdown = () => setDropdownOpen((prevState) => !prevState);
 
@@ -114,7 +114,33 @@ const Test = () => {
       message(error.response?.data?.message || 'Failed to generate receipt', 'error');
     }
   };
+    const id = selectedOrder?.invoice_id || '';
 
+    const [settingdetails, setSettingDetails] = useState();
+
+const getSettingById = () => {
+  api
+    .post('/invoice/getSalesorderById', { invoice_id: id })
+    .then((res) => {
+      setSettingDetails(res.data.data[0]);
+    })
+    .catch(() => {
+      message('setting Data Not Found', 'info');
+    });
+};
+ // Get Line Item
+   const [lineItem, setLineItem] = useState();
+  const getLineItem = () => {
+    api.post('/invoice/getQuoteLineItemsById', { invoice_id: id }).then((res) => {
+      setLineItem(res.data.data);
+      //setAddLineItemModal(true);
+    });
+  };
+
+useEffect(() => {
+  getSettingById();
+      getLineItem();
+}, [id]);
   return (
     <div className="MainDiv">
       <div className="pt-xs-25">
@@ -128,8 +154,8 @@ const Test = () => {
           <select className="form-select"   style={{ width: '15%' }}
            value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <option value="">All</option>
-            <option value="Open">Open</option>
-            <option value="Closed">Closed</option>
+            <option value="Paid">Paid</option>
+            <option value="Not Paid">Not Paid</option>
           </select>
           <Button color="primary" onClick={getSupplier}>Search</Button>
         </div>
@@ -146,11 +172,15 @@ const Test = () => {
               </DropdownToggle>
               <DropdownMenu>
                 <DropdownItem onClick={generateReceipt}>Receive Payment</DropdownItem>
-                <DropdownItem>Print Letter Format</DropdownItem>
-                <DropdownItem>Print Pick List</DropdownItem>
+                <DropdownItem> <SalesInvoicePickingListPdf
+          id={id}
+                   settingdetails={settingdetails}
+                   lineItem={lineItem}
+                ></SalesInvoicePickingListPdf></DropdownItem>
+                {/* <DropdownItem>Print Pick List</DropdownItem>
                 <DropdownItem>Print Packing</DropdownItem>
                 <DropdownItem>Print With Cost</DropdownItem>
-                <DropdownItem>Print Performa</DropdownItem>
+                <DropdownItem>Print Performa</DropdownItem> */}
               </DropdownMenu>
             </Dropdown>
           }
@@ -174,11 +204,16 @@ const Test = () => {
                     />
                   </td>
                   <td>{index + 1}</td>
-                  <td>
-                    <Link to={`/InvoiceEdit/${element.invoice_id}`}>
-                      <Icon.Edit2 />
-                    </Link>
-                  </td>
+                 <td>
+  {element.status === 'Paid' ? (
+    <Icon.Edit2 style={{ color: '#ccc', cursor: 'not-allowed' }} />
+  ) : (
+    <Link to={`/InvoiceEdit/${element.invoice_id}`}>
+      <Icon.Edit2 />
+    </Link>
+  )}
+</td>
+
                   <td>{element.invoice_code}</td>
                   <td>{element.invoice_date}</td>
                   <td>{element.company_name}</td>
