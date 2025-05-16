@@ -15,124 +15,140 @@ import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import ExportReport from '../../components/Report/ExportReport';
 
 const InvoiceBYYear = () => {
-  //All state variable
-  const [invoiceReport, setInvoiceReport] = useState(null);
-  const [userSearchData, setUserSearchData] = useState('');
+  const [invoiceReport, setInvoiceReport] = useState([]);
+  const [userSearchData, setUserSearchData] = useState([]);
   const [companyName, setCompanyName] = useState('');
+  const [company, setCompany] = useState([]);
+  const [page, setPage] = useState(0);
 
-  const thisYear=new Date().getFullYear();
+  const employeesPerPage = 20;
+  const numberOfEmployeesVisited = page * employeesPerPage;
 
-  console.log('thisyear',thisYear)
-  //Get data from Training table
-  const getProject = () => {
+  const displayEmployees = userSearchData.slice(
+    numberOfEmployeesVisited,
+    numberOfEmployeesVisited + employeesPerPage
+  );
+  const totalPages = Math.ceil(userSearchData.length / employeesPerPage);
+
+  const changePage = ({ selected }) => {
+    setPage(selected);
+  };
+
+  const thisYear = new Date().getFullYear();
+console.log('thisyear',thisYear)
+console.log('invoiceReport',invoiceReport)
+
+
+  // Fetch company list for dropdown
+  const getCompany = () => {
+    api.get('/reports/getCompany').then((res) => {
+      setCompany(res.data.data);
+    });
+  };
+
+  // Fetch invoice data, optionally filtered by company
+  const getProject = (companyId = '') => {
+    const url = companyId
+      ? `/reports/getInvoiceByYearReport?recordType=${companyId}`
+      : '/reports/getInvoiceByYearReport';
+
     api
-      .get('/reports/getInvoiceByYearReport')
+      .get(url)
       .then((res) => {
-        const data=[]
-       let obj = {invoice_year:'' ,invoice_amount_yearly:''}
-          let total=0
-        res.data.data.filter((x) => parseFloat(x.invoice_year) === thisYear).forEach((el)=>{
-          total +=el.invoice_amount_yearly
-        })
-        obj={invoice_year:thisYear ,invoice_amount_yearly:total}
-        data.push(obj);
         setInvoiceReport(res.data.data);
-        setUserSearchData(data);
+        setUserSearchData(res.data.data);
       })
       .catch(() => {
-        message('Project Data Not Found', 'info');
+        message('Invoice data not found', 'info');
       });
   };
 
   const handleSearch = () => {
-    const newData =  companyName === '' ?invoiceReport
-      .filter((x) => parseFloat(x.invoice_year) === thisYear):invoiceReport
-      .filter((y) => y.record_type === (companyName === '' ? y.record_type : companyName))
-        setUserSearchData(newData);
-        console.log('newdata',newData)
+    getProject(companyName);
   };
-  
-  useEffect(() => {
-        getProject();
-  }, []);
-  const [page, setPage] = useState(0);
 
-  const employeesPerPage = 20;
-  const numberOfEmployeesVistited = page * employeesPerPage;
-  const displayEmployees = userSearchData.slice(
-    numberOfEmployeesVistited,
-    numberOfEmployeesVistited + employeesPerPage,
-  );
-  console.log("displayEmployees",displayEmployees)
-  const totalPages = Math.ceil(userSearchData.length / employeesPerPage);
-  const changePage = ({ selected }) => {
-    setPage(selected);
+  // Convert company_id to name for display
+  const getCompanyName = (id) => {
+    const found = company.find((c) => c.company_id === id);
+    return found ? found.company_name : id;
   };
-  //structure of Training list view
+
   const columns = [
     {
       name: 'SN',
-      selector:'s_no'
+      selector: 's_no',
     },
     {
       name: 'Year',
-      selector:'invoice_year'
+      selector: 'invoice_year',
     },
     {
       name: 'Amount',
-      selector:'invoice_amount_yearly'
+      selector: 'invoice_amount_yearly',
     },
-    // {
-    //   name: 'Category',
-    //   selector: 'record_type',
-    // },   
-     ];
+    {
+      name: 'Company',
+      selector: 'company_id',
+    },
+  ];
+
+  useEffect(() => {
+    getCompany();
+    getProject(); // Load all by default
+  }, []);
+
   return (
     <>
-        <BreadCrumbs />
-        <ToastContainer></ToastContainer>
-        <Card>
-          <CardBody>
-            <Row>
-              <Col>
-                {/* <ExportReport columns={columns} data={userSearchData}/> */}
-              </Col>
-              <Col>
+      <BreadCrumbs />
+      <ToastContainer />
+      <Card>
+        <CardBody>
+          <Row>
+            <Col>
+              {/* Optional export */}
+              {/* <ExportReport columns={columns} data={userSearchData} /> */}
+            </Col>
+            <Col>
               <FormGroup>
-                <Label>Select Category</Label>
+                <Label>Select Company</Label>
                 <Input
                   type="select"
                   name="record_type"
                   onChange={(e) => setCompanyName(e.target.value)}
-                > <option value="">Select Category</option>
-                  <option value="project">Project</option>
-                  <option value="tenancy project">Tenancy Project</option>
-                  <option value="tenancy work">Tenancy Work</option>
-                  <option value="maintenance">Maintenance</option>
+                >
+                  <option value="">Please Select</option>
+                  {company &&
+                    company.map((ele) => (
+                      <option key={ele.company_id} value={ele.company_id}>
+                        {ele.company_name}
+                      </option>
+                    ))}
                 </Input>
               </FormGroup>
             </Col>
-             <Col md="1">
-              <Button color="primary" className="shadow-none" onClick={() => handleSearch()}>Go</Button>
+            <Col md="1">
+              <Button color="primary" className="shadow-none" onClick={handleSearch}>
+                Go
+              </Button>
             </Col>
-            </Row>
-          </CardBody>
-        </Card>
-
-        <Card>
-        <CardBody>
-          <Row>
-            <Col md="3">
-              <Label>
-                <b>Category:</b> {companyName}
-              </Label>
-            </Col>
-           </Row>
+          </Row>
         </CardBody>
       </Card>
 
+      <Card>
+        <CardBody>
+          <Row>
+            <Col md="4">
+              <Label>
+                <b>Selected Company:</b>{' '}
+                {companyName ? getCompanyName(companyName) : 'All Companies'}
+              </Label>
+            </Col>
+          </Row>
+        </CardBody>
+      </Card>
 
-     <Card>
+      <Card>
         <CardBody>
           <Row>
             <Col>
@@ -140,32 +156,28 @@ const InvoiceBYYear = () => {
             </Col>
           </Row>
         </CardBody>
-      
         <CardBody>
-          <Table>
-  
-          <thead>
-            <tr>
-              {columns.map((cell) => {
-                return <td key={cell.name}>{cell.name}</td>;
-              })}
-            </tr>
-          </thead>
-          <tbody>
-          {displayEmployees &&
-              displayEmployees.map((element,index) => {
-                return (
+          <Table striped bordered hover>
+            <thead>
+              <tr>
+                {columns.map((cell) => (
+                  <th key={cell.name}>{cell.name}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {displayEmployees &&
+                displayEmployees.map((element, index) => (
                   <tr key={element.invoice_id}>
-                    <td>{index+1}</td>
+                    <td>{index + 1 + numberOfEmployeesVisited}</td>
                     <td>{element.invoice_year}</td>
                     <td>{element.invoice_amount_yearly}</td>
-                    {/* <td>{element.record_type}</td> */}
+                    <td>{getCompanyName(element.company_id)}</td>
                   </tr>
-                );
-              })} 
-          </tbody>
-        </Table>
-        <ReactPaginate
+                ))}
+            </tbody>
+          </Table>
+          <ReactPaginate
             previousLabel="Previous"
             nextLabel="Next"
             pageCount={totalPages}
@@ -176,9 +188,10 @@ const InvoiceBYYear = () => {
             disabledClassName="navigationDisabled"
             activeClassName="navigationActive"
           />
-                </CardBody>
+        </CardBody>
       </Card>
     </>
   );
 };
+
 export default InvoiceBYYear;
