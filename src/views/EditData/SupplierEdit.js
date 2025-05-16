@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Row, Col, Form, FormGroup, Button, TabContent, TabPane } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'datatables.net-dt/js/dataTables.dataTables';
@@ -9,6 +9,7 @@ import 'datatables.net-buttons/js/buttons.html5';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../form-editor/editor.scss';
+import { ToastContainer } from 'react-toastify'; // Make sure this is imported
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import Tab from '../../components/ProjectTabs/Tab';
 import ComponentCard from '../../components/ComponentCard';
@@ -19,6 +20,9 @@ import SupplierDetails from '../../components/SupplierModal/SupplierDetails';
 import Loginformation from '../../components/SupplierModal/Loginformation';
 import ContactDetails from '../../components/SupplierModal/ContactDetails';
 import Transaction from '../../components/SupplierModal/Transaction';
+import creationdatetime from '../../constants/creationdatetime';
+import AppContext from '../../context/AppContext';
+
 
 const SupplierEdit = () => {
   //all state variables
@@ -40,6 +44,7 @@ const SupplierEdit = () => {
   //navigation and params
   const { id } = useParams();
   const navigate = useNavigate();
+  const { loggedInuser } = useContext(AppContext);
   const applyChanges = () => {
     navigate('/Supplier');
   };
@@ -69,19 +74,24 @@ const SupplierEdit = () => {
   };
   //Logic for edit data in db
   const editSupplierData = () => {
-    if (supplier.company_name !== '')
-      api
-        .post('/supplier/edit-Supplier', supplier)
-        .then(() => {
-          message('Record editted successfully', 'success');
-        })
-        .catch(() => {
-          message('Unable to edit record.', 'error');
-        });
-    else {
-      message('Please fill all required fields.', 'error');
-    }
-  };
+      if (supplier.company_name !== '') {
+        supplier.modification_date = creationdatetime;
+        supplier.modified_by = loggedInuser.first_name;
+        api
+          .post('/supplier/edit-Supplier', supplier)
+          .then(() => {
+            message('Record edited successfully', 'success');
+            setTimeout(() => {
+              window.location.reload();
+            }, 700);
+          })
+          .catch(() => {
+            message('Unable to edit record.', 'error');
+          });
+      } else {
+        message('Please fill all required fields', 'warning');
+      }
+    };
   //Logic for edit data in db
   const Status = () => {
     api
@@ -210,6 +220,7 @@ const getTermsDrodownFromValuelist = () => {
 
   return (
     <>
+     <ToastContainer />
       <BreadCrumbs heading={supplier && supplier.company_name} />
       <Form>
         <FormGroup>
@@ -235,9 +246,6 @@ const getTermsDrodownFromValuelist = () => {
                   className="shadow-none"
                   onClick={() => {
                     editSupplierData();
-                    setTimeout(() => {
-                      window.location.reload();
-                    }, 1100);
                   }}
                 >
                   Apply

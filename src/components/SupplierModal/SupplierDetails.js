@@ -56,7 +56,7 @@ export default function SupplierDetails({  handleInputs ,supplier ,allCountries 
             type="text"
             onChange={handleInputs}
             value={supplier && supplier.phone}
-            name="email" />
+            name="phone" />
         </FormGroup>
       </Col>
       <Col md="3">
@@ -97,8 +97,8 @@ export default function SupplierDetails({  handleInputs ,supplier ,allCountries 
           <Input
             type="text"
             onChange={handleInputs}
-            value={supplier && supplier.webSite}
-            name="webSite"  />
+            value={supplier && supplier.website}
+            name="website"  />
         </FormGroup>
       </Col>
       <Col md="3">
@@ -193,7 +193,7 @@ export default function SupplierDetails({  handleInputs ,supplier ,allCountries 
           <Label>Area</Label>
           <Input
             type="select"
-            name="staff_type"
+            name="area"
             onChange={handleInputs}
             value={supplier && supplier.area}
             >
@@ -213,7 +213,7 @@ export default function SupplierDetails({  handleInputs ,supplier ,allCountries 
           <Label>Currency</Label>
           <Input
             type="select"
-            name="staff_type"
+            name="currency"
             onChange={handleInputs}
             value={supplier && supplier.currency}
             >
@@ -231,7 +231,7 @@ export default function SupplierDetails({  handleInputs ,supplier ,allCountries 
           <Label>Terms</Label>
           <Input
             type="select"
-            name="staff_type"
+            name="terms"
             onChange={handleInputs}
             value={supplier && supplier.terms}
             >
