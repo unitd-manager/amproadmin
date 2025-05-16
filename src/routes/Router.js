@@ -129,6 +129,7 @@ const Blog = Loadable(lazy(() => import('../views/smartconTables/Blog')));
 const Inventory = Loadable(lazy(() => import('../views/smartconTables/Inventory')));
 // Details Table
 const ProductDetailsTable = Loadable(lazy(() => import('../views/detailTable/ProductDetails')));
+const ClientTable = Loadable(lazy(() => import('../views/smartconTables/Client')));
 
 // Finance Admin
 const FinanceTable = Loadable(lazy(() => import('../views/smartconTables/Orders')));
@@ -172,6 +173,7 @@ const Support = Loadable(lazy(() => import('../views/smartconTables/Support')));
 const StaffDetails = Loadable(lazy(() => import('../views/detailTable/StaffDetails')));
 const SalesOrderDetails = Loadable(lazy(() => import('../views/detailTable/SalesOrderDetails')));
 const InvoiceDetails = Loadable(lazy(() => import('../views/detailTable/InvoiceDetails')));
+const ClientDetailsTable = Loadable(lazy(() => import('../views/detailTable/ClientDetails')));
 
 
 const PurchaseOrderEdit = Loadable(lazy(() => import('../views/EditData/PurchaseOrderEdit')));
@@ -201,6 +203,7 @@ const UserGroupEdit = Loadable(lazy(() => import('../views/EditData/UserGroupEdi
 const BlogEdit = Loadable(lazy(() => import('../views/EditData/BlogEdit')));
 const EnquiryEdit = Loadable(lazy(() => import('../views/EditData/EnquiryEdit')));
 const SalesOrderEdit = Loadable(lazy(() => import('../views/EditData/SalesOrderEdit')));
+const ClientEdit = Loadable(lazy(() => import('../views/EditData/ClientEdit')));
 
 
 const LoanEdit = Loadable(lazy(() => import('../views/EditData/LoanEdit')));
@@ -293,6 +296,7 @@ const Routernew = () => {
          
           <Route path="/CustomerSupplierPriceEdit/:id" name="productdata" element={<CustomerSupplierPriceEdit />}></Route>
           <Route path="/GoodsReceivedEdit/:id" name="orderdata" element={<GoodsReceivedEdit />}></Route>
+          <Route path="/clientEdit/:id" name="clienttdata" element={<ClientEdit />}></Route>
          
           
           
@@ -427,7 +431,9 @@ const Routernew = () => {
           <Route path="/ProductDetails" name="productDetaildata" element={<ProductDetailsTable />}></Route>
           <Route path="/StaffDetails" name="staffDetaildata" element={<StaffDetails />}></Route>
           <Route path="/SalesOrderDetails" name="salesOrderDetaildata" element={<SalesOrderDetails />}></Route>
-                    <Route path="/InvoiceDetails" name="invoiceDetaildata" element={<InvoiceDetails />}></Route>
+          <Route path="/InvoiceDetails" name="invoiceDetaildata" element={<InvoiceDetails />}></Route>
+          <Route path="/Client" name="clienttdata" element={<ClientTable />}></Route>
+          <Route path="/ClientDetails" name="clienttdata" element={<ClientDetailsTable />}></Route>
 
           <Route path="/Product" name="productdata" element={<ProductTable />}></Route>
           <Route path="/Orders" name="ordersdata" element={<FinanceTable />}></Route>

@@ -91,7 +91,7 @@ const Test = () => {
         setProjectsLinked(res.data.data);
       })
       .catch(() => {
-        message('Unable to get projects data.', 'error');
+        //message('Unable to get projects data.', 'error');
       });
   };
 
@@ -103,7 +103,7 @@ const Test = () => {
         setProductQty(res.data.data[0]);
       })
       .catch(() => {
-        message('Unable to get product quantity data.', 'error');
+        //message('Unable to get product quantity data.', 'error');
       });
   };
 
@@ -130,7 +130,7 @@ const Test = () => {
     getAllProjectsLinked();
     getAdjustStocklogsById();
     getProductQuantity();
-  }, [inventoryDetails.productId]);
+  }, [inventoryDetails?.productId]);
 
   useEffect(() => {
     let changes = 0;
