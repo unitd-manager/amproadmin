@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {  Form,  TabContent,TabPane,  Row, Col, FormGroup, Label, Input,Button} from 'reactstrap';
 import { ToastContainer } from 'react-toastify';
 // import * as Icon from 'react-feather';
@@ -18,6 +18,8 @@ import ComponentCard from '../../components/ComponentCard';
 import message from '../../components/Message';
 import api from '../../constants/api';
 import Tab from '../../components/ProjectTabs/Tab';
+import creationdatetime from '../../constants/creationdatetime';
+
 //import ApiButton from '../../components/ApiButton';
 import Customer from '../../components/Invoice/Customer';
 import Currency from '../../components/Invoice/Currency';
@@ -27,12 +29,14 @@ import SalesMan from '../../components/Invoice/SalesMan';
 // import EditLineItemModal from '../../components/Invoice/EditLineItemModal';
 import SalesOrderProducts from '../../components/Invoice/SalesOrderProducts';
 
+import AppContext from '../../context/AppContext';
 
 
 const SalesOrderEdit = () => {
    const { id } = useParams();
  
   const [activeTab, setActiveTab] = useState('1');
+  const { loggedInuser } = useContext(AppContext);
 
   const navigate = useNavigate();
 
@@ -110,7 +114,10 @@ const getSettingById = () => {
 };
 //Update Setting
 const editSettingData = () => {
+    settingdetails.modification_date = creationdatetime;
+      settingdetails.modified_by= loggedInuser.first_name;
     api
+    
       .post('/invoice/editSalesOrder', settingdetails)
       .then(() => {
         message('Record editted successfully', 'success');
@@ -190,7 +197,7 @@ useEffect(() => {
                     type="date"
                     onChange={handleInputs}
                     value={settingdetails && settingdetails.invoice_date}
-                    name="tran_date"
+                    name="invoice_date"
                   />
                 </FormGroup>
               </Col>

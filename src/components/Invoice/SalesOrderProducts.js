@@ -124,6 +124,7 @@ const saveSalesOrderSummary = async (subTotal, Tax, netTotal) => {
       sub_total: subTotal,
       tax: Tax,
       net_total: netTotal,
+      balance_amount: netTotal,
     });
   } catch (error) {
     console.error('Failed to update sales order summary:', error);

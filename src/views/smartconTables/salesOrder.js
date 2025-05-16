@@ -4,7 +4,7 @@ import { Button, Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 're
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'datatables.net-dt/js/dataTables.dataTables';
 import 'datatables.net-dt/css/jquery.dataTables.min.css';
-import $ from 'jquery';
+//import $ from 'jquery';
 import 'datatables.net-buttons/js/buttons.colVis';
 import 'datatables.net-buttons/js/buttons.flash';
 import 'datatables.net-buttons/js/buttons.html5';
@@ -49,20 +49,20 @@ const Test = () => {
       .then((res) => {
         setSupplier(res.data.data);
         setTimeout(() => {
-          $('#example').DataTable({
-            destroy: true,
-            pagingType: 'full_numbers',
-            pageLength: 20,
-            processing: true,
-            dom: 'Bfrtip',
-            buttons: [
-              {
-                extend: 'print',
-                text: 'Print',
-                className: 'shadow-none btn btn-primary',
-              },
-            ],
-          });
+          // $('#example').DataTable({
+          //   destroy: true,
+          //   pagingType: 'full_numbers',
+          //   pageLength: 20,
+          //   processing: true,
+          //   dom: 'Bfrtip',
+          //   // buttons: [
+          //   //   {
+          //   //     extend: 'print',
+          //   //     text: 'Print',
+          //   //     className: 'shadow-none btn btn-primary',
+          //   //   },
+          //   // ],
+          // });
         }, 500);
         setLoading(false);
       })
@@ -118,6 +118,9 @@ const Test = () => {
       };
       const response = await api.post('/salesOrder/generateInvoiceFromSalesOrder', payload);
       message(response.data.message, 'success');
+        setTimeout(() => {
+            window.location.reload();
+          }, 400);
     } catch (error) {
       message(error.response?.data?.message || 'Failed to generate invoice', 'error');
     }

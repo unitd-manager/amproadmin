@@ -509,6 +509,9 @@ function PayrollManagementDetails() {
         .post('/loan/insertLoanRepaymenthistory', elem)
         .then(() => {
           message('Loan record updated successfully','success');
+           setTimeout(() => {
+          window.location.reload();
+        }, 800);
           console.log("totalLoanAmount-console:", totalLoanAmount)
           // setPayroll({...payroll,loan_amount:totalLoanAmount})
           handleDeductions(

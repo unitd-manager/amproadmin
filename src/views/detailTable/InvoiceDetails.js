@@ -133,23 +133,30 @@ const OpportunityDetails = () => {
   const insertTender = (code) => {
     if (tenderForms.company_id !== '' ) {
       tenderForms.invoice_code = code;
-      tenderForms.invoice_date = creationdatetime
+      tenderForms.invoice_date = new Date().toISOString().slice(0, 10);
       tenderForms.creation_date = creationdatetime
       tenderForms.created_by = loggedInuser.first_name;
       api
         .post('/invoice/insertInvoice', tenderForms)
-        .then((res) => {
-          const insertedDataId = res.data.data.insertId;
-          getTendersById();
+       .then((res) => {
+    console.log("Insert Response:", res); // log full res object
+  console.log("Insert Response data:", res.data); // log res.data
+  const insertedDataId = res.data.data?.insertId;
+  if (insertedDataId) {
+    message('Order inserted successfully.', 'success');
+    setTimeout(() => {
+      navigate(`/InvoiceEdit/${insertedDataId}?tab=1`);
+    }, 300);
+  } else {
+    throw new Error('Invalid insert ID');
+  }
+})
+.catch((error) => {
+  console.error("Insert error:", error);
+  message('Network connection error.', 'error');
+});
 
-          message('Order inserted successfully.', 'success');
-          setTimeout(() => {
-            navigate(`/InvoiceEdit/${insertedDataId}?tab=1`);
-          }, 300);
-        })
-        .catch(() => {
-          message('Network connection error.', 'error');
-        });
+       
     } else {
       setFormSubmitted(true);
       message('Please fill all required fields', 'warning');
@@ -167,12 +174,17 @@ const OpportunityDetails = () => {
         insertTender('');
       });
   }; 
+useEffect(() => {
+  getCompany();
+  getCurrency();
+}, []); // only on component mount
 
-  useEffect(() => {
-    getCompany();
-    getCurrency();
-    // getAllCountries();
-  }, [id]);
+useEffect(() => {
+  if (id) {
+    getTendersById();
+  }
+}, [id]); // only when editing
+
 
   return (
     <div>
@@ -225,17 +237,7 @@ const OpportunityDetails = () => {
                   </Col> */}
                 </Row>
               </FormGroup>
-              {/* <TenderCompanyDetails
-                allCountries={allCountries}
-                insertCompany={insertCompany}
-                handleInputs={handleInputs}
-                toggle={toggle}
-                modal={modal}
-                setModal={setModal}
-                companyInsertData={companyInsertData}
-                addFormSubmitted={addFormSubmitted}
-              ></TenderCompanyDetails> */}
-
+            
 
 <FormGroup>
                 <Row>
@@ -246,12 +248,7 @@ const OpportunityDetails = () => {
                     <Input
                       type="select"
                       name="currency_id"
-                      // className={`form-control ${formSubmitted && tenderForms && (tenderForms.currency_id === undefined || tenderForms.currency_id.trim() === '')
-                      //     ? 'highlight'
-                      //     : ''
-                      //   }`}
-                      //value={tenderForms && tenderForms.currency_id}
-                      // onChange={handleInputsTenderForms}
+                    
                       onChange={(e) => {
                         handleInputsTenderForms(e)
                       }}
@@ -267,9 +264,7 @@ const OpportunityDetails = () => {
                           );
                         })}
                     </Input>
-                    {/* {formSubmitted && tenderForms && (tenderForms.currency_id === undefined || tenderForms.currency_id.trim() === '') && (
-                      <div className="error-message">Please select the currency name</div>
-                    )} */}
+                  
                   </Col>
                 </Row>
               </FormGroup>

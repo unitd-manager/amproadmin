@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useContext } from 'react';
 import {  Form,  TabContent,TabPane,  Row, Col, FormGroup, Label, Input,Button} from 'reactstrap';
 import { ToastContainer } from 'react-toastify';
 // import * as Icon from 'react-feather';
@@ -18,6 +18,8 @@ import ComponentCard from '../../components/ComponentCard';
 import message from '../../components/Message';
 import api from '../../constants/api';
 import Tab from '../../components/ProjectTabs/Tab';
+import creationdatetime from '../../constants/creationdatetime';
+
 //import ApiButton from '../../components/ApiButton';
 import Customer from '../../components/SalesOrder/Customer';
 import Currency from '../../components/SalesOrder/Currency';
@@ -32,12 +34,14 @@ import SalesOrderProducts from '../../components/SalesOrder/SalesOrderProducts';
 // import PdfPackingList from '../../components/PDF/PdfPack';
 // import PdfSalesQuote from '../../components/PDF/PdfSalesOrderQuote';
 // import PrintPerfoma from '../../components/PDF/PrintPerfoma';
+import AppContext from '../../context/AppContext';
 
 
 const SalesOrderEdit = () => {
    const { id } = useParams();
  
   const [activeTab, setActiveTab] = useState('1');
+  const { loggedInuser } = useContext(AppContext);
 
   const navigate = useNavigate();
 
@@ -122,6 +126,8 @@ const getSettingById = () => {
 };
 //Update Setting
 const editSettingData = () => {
+   settingdetails.modification_date = creationdatetime;
+      settingdetails.modified_by= loggedInuser.first_name;
     api
       .post('/salesorder/editSalesOrder', settingdetails)
       .then(() => {

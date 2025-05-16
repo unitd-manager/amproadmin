@@ -28,6 +28,7 @@ const EmployeeEdit = () => {
   const [activeTab, setActiveTab] = useState('1');
   const [employeeDetails, setEmployeeDetails] = useState({
     nationality: '',
+     login_email: '',
   });
   const { loggedInuser } = useContext(AppContext);
 

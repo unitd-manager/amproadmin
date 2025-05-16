@@ -182,7 +182,7 @@ const QuoteLineItem = ({
       const finalTotal = totalAmount - parseFloat(ind.amount);
       setTotalAmount(finalTotal);
     }
-  };
+  }; 
   React.useEffect(() => {
     getUnit();
     getProduct();
@@ -395,6 +395,7 @@ const QuoteLineItem = ({
                       onClick={() => {
                         getAllValues();
                         //setAddLineItemModal(false);
+                        
                       }}
                     >
                       {' '}
