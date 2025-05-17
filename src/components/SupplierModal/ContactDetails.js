@@ -68,50 +68,55 @@ const ContactDetails = () => {
       });
   };
   
-  const insertContact = () => {
-    if (newContact.first_name !== '') {
-      const contactToInsert = {
-        ...newContact,
-        creation_date: creationdatetime,
-        created_by: loggedInuser.first_name,
-        supplier_id: id,
-      };
-  
-      api.post('/contact/insertContact', contactToInsert)
-        .then((res) => {
-          message('Contact inserted successfully.', 'success');
-  
-          // Get the ID returned from backend, fallback if not available
-          const insertedContact = {
-            ...contactToInsert,
-            id: res.data.insertId || Math.random(), // Use actual ID if available
-          };
-  
-          // Add to contactList immediately
-          setContactList(prevList => [...prevList, insertedContact]);
-  
-          // Clear the input fields
-          setNewContact({
-            first_name: '',
-            phone: '',
-            fax: '',
-            email: '',
-            hand_phone_no: '',
-          });
-        })
-        .catch(() => {
-          message('Network connection error.', 'error');
+ const insertContact = () => {
+  const firstName = (newContact.first_name || '').trim();
+
+  if (firstName !== '') {
+    const contactToInsert = {
+      ...newContact,
+      creation_date: creationdatetime,
+      created_by: loggedInuser.first_name,
+      supplier_id: id,
+    };
+
+    api.post('/contact/insertContact', contactToInsert)
+      .then((res) => {
+        message('Contact inserted successfully.', 'success');
+
+        const insertedContact = {
+          ...contactToInsert,
+          id: res.data.insertId || Math.random(),
+        };
+
+        setContactList(prevList => [...prevList, insertedContact]);
+
+        setNewContact({
+          first_name: '',
+          phone: '',
+          fax: '',
+          email: '',
+          hand_phone_no: '',
         });
-    } else {
-      message('Please fill all required fields', 'warning');
-    }
-  };
-  
-  
+      })
+      .catch(() => {
+        message('Network connection error.', 'error');
+      });
+  } else {
+    console.log('First name is empty or invalid'); // Debug
+    message('Please fill all required fields', 'warning');
+  }
+};
+
    
     const handleUpdateContact = () => {
-      if (selectedContact.first_name && selectedContact.email) {
-        api.post('/contact/editContact', selectedContact)
+      if (selectedContact.first_name) {
+        api.post('/contact/editContact', {
+  contact_id: selectedContact.contact_id,
+  first_name: selectedContact.first_name,
+  email: selectedContact.email,
+  phone: selectedContact.phone,
+  fax: selectedContact.fax,
+  hand_phone_no: selectedContact.hand_phone_no,})
           .then(() => {
             message('Contact updated successfully.', 'success');
             toggleEditModal();
@@ -165,7 +170,7 @@ useEffect(() => {
           <Row>
             <Col md="3">
               <FormGroup>
-                <Label>Contact Person Name</Label>
+                <Label>Contact Person Name</Label><span className="required"> *</span>
                 <Input
                   type="text"
                   onChange={handleInputChange}
@@ -295,7 +300,7 @@ useEffect(() => {
   <ModalBody>
     <Form>
       <FormGroup>
-        <Label>Contact Person Name</Label>
+        <Label>Contact Person Name</Label><span className="required"> *</span>
         <Input
           type="text"
           name="first_name"

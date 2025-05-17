@@ -34,7 +34,8 @@ export default function SupplierDetails({  handleInputs ,supplier ,allCountries 
             type="text"
             onChange={handleInputs}
             value={supplier && supplier.supplier_code}
-            name="supplier_code"/>
+            name="supplier_code"
+            disabled/>
         </FormGroup>
       </Col>
       <Col md="3">
@@ -275,27 +276,29 @@ export default function SupplierDetails({  handleInputs ,supplier ,allCountries 
         </FormGroup>
       </Col>
       <Col md="3">
-              <Label>Is Active</Label>
-              <FormGroup>
-                <Input
-                  type="radio"
-                  name="is_active"
-                  value="1"
-                  onChange={handleInputs}
-                  defaultChecked={supplier && supplier.is_active === 1 && true}
-                />
-                <Label>Yes</Label>
-      
-                <Input
-                  type="radio"
-                  name="published"
-                  value="0"
-                  onChange={handleInputs}
-                  defaultChecked={supplier && supplier.is_active === 0 && true}
-                />
-                <Label>No</Label>
-              </FormGroup>
-            </Col>
+                <Label>Is Active</Label>
+                <FormGroup>
+                  <Label>Yes</Label>
+                  &nbsp;
+                  <Input
+                    name="is_active"
+                    value="1"
+                    type="radio"
+                    defaultChecked={supplier && supplier.is_active === 1 && true}
+                    onChange={handleInputs}
+                  />
+                  &nbsp; &nbsp;
+                  <Label>No</Label>
+                  &nbsp;
+                  <Input
+                    name="is_active"
+                    value="0"
+                    type="radio"
+                    defaultChecked={supplier && supplier.is_active === 0 && true}
+                    onChange={handleInputs}
+                  />
+                </FormGroup>
+              </Col>
     </Row>
   </ComponentCard>
 </FormGroup>
@@ -330,22 +333,10 @@ export default function SupplierDetails({  handleInputs ,supplier ,allCountries 
           <Input
             type="text"
             onChange={handleInputs}
-            value={supplier && supplier.address_street}
+            value={supplier && supplier.address_state}
             name="address_state"  />
         </FormGroup>
       </Col>
-      <Col md="3">
-        <FormGroup>
-          <Label>Portal</Label>
-          <Input
-            type="text"
-            onChange={handleInputs}
-            value={supplier && supplier.address_po_code}
-            name="address_po_code" />
-        </FormGroup>
-      </Col>
-      </Row>
-      <Row>
       <Col md="3">
         <FormGroup>
         <Label>Country</Label>
@@ -361,14 +352,16 @@ export default function SupplierDetails({  handleInputs ,supplier ,allCountries 
   </Input>
         </FormGroup>
       </Col>
-      <Col md="3">
+      </Row>
+      <Row>
+        <Col md="3">
         <FormGroup>
-          <Label>Pin Code</Label>
+          <Label>Portal</Label>
           <Input
             type="text"
             onChange={handleInputs}
             value={supplier && supplier.address_po_code}
-            name="address_po_code"  />
+            name="address_po_code" />
         </FormGroup>
       </Col>
     </Row>

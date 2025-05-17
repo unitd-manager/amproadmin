@@ -37,7 +37,7 @@ export default function ProductDetail({ productDetails, handleInputs,categorydro
               </Col>
               <Col md="3">
                 <FormGroup>
-                  <Label> Product Name </Label>
+                  <Label> Product Name </Label><span className="required"> *</span>
                   <Input
                     type="text"
                     onChange={handleInputs}
