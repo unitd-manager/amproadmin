@@ -92,6 +92,7 @@
     "react-validation": "^3.0.7",
     "reactstrap": "^9.0.0",
     "read-excel-file": "^5.8.5",
+    "recharts": "^2.15.3",
     "redux": "^4.1.2",
     "simplebar-react": "^2.3.6",
     "styled-components": "^5.3.5",
