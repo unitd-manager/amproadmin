@@ -1,4 +1,5 @@
 import { Row, Col } from 'reactstrap';
+import InvoiceMonthlyChart from '../../components/dashboard/ecommerceDashboard/InvoiceMonthlyChart';
 
 import EmployeeSummary from '../../components/dashboard/ecommerceDashboard/EmployeeSummary';
 import PasspotExpirySummary from '../../components/dashboard/PasspotExpirySummary';
@@ -9,7 +10,7 @@ const Classic = () => {
     <>
       <Row>
         <Col lg="12">
-        
+        <InvoiceMonthlyChart />
           <EmployeeSummary/>
           <PasspotExpirySummary />
           <WorkpermitExpirySummary/>
