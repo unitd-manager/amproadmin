@@ -21,6 +21,8 @@ const InvoiceBYYear = () => {
   const [company, setCompany] = useState([]);
   const [page, setPage] = useState(0);
 
+  console.log('invoiceReport', invoiceReport);
+
   const employeesPerPage = 20;
   const numberOfEmployeesVisited = page * employeesPerPage;
 
@@ -34,29 +36,28 @@ const InvoiceBYYear = () => {
     setPage(selected);
   };
 
-  const thisYear = new Date().getFullYear();
-console.log('thisyear',thisYear)
-console.log('invoiceReport',invoiceReport)
-
-
-  // Fetch company list for dropdown
+  // Fetch company list
   const getCompany = () => {
     api.get('/reports/getCompany').then((res) => {
       setCompany(res.data.data);
     });
   };
 
-  // Fetch invoice data, optionally filtered by company
+
+  // Fetch invoice data
   const getProject = (companyId = '') => {
     const url = companyId
-      ? `/reports/getInvoiceByYearReport?recordType=${companyId}`
+      ? `/reports/getInvoiceByYearReport?company_id=${companyId}`
       : '/reports/getInvoiceByYearReport';
 
     api
       .get(url)
       .then((res) => {
-        setInvoiceReport(res.data.data);
-        setUserSearchData(res.data.data);
+        const sortedData = res.data.data.sort(
+          (a, b) => Number(b.invoice_year) - Number(a.invoice_year)
+        );
+        setInvoiceReport(sortedData);
+        setUserSearchData(sortedData);
       })
       .catch(() => {
         message('Invoice data not found', 'info');
@@ -67,16 +68,23 @@ console.log('invoiceReport',invoiceReport)
     getProject(companyName);
   };
 
-  // Convert company_id to name for display
   const getCompanyName = (id) => {
     const found = company.find((c) => c.company_id === id);
     return found ? found.company_name : id;
   };
+  const totalAmount = userSearchData.reduce(
+  (total, item) => total + Number(item.invoice_amount_yearly),
+  0
+);
 
   const columns = [
     {
       name: 'SN',
       selector: 's_no',
+    },
+     {
+      name: 'Company',
+      selector: 'company_id',
     },
     {
       name: 'Year',
@@ -86,15 +94,11 @@ console.log('invoiceReport',invoiceReport)
       name: 'Amount',
       selector: 'invoice_amount_yearly',
     },
-    {
-      name: 'Company',
-      selector: 'company_id',
-    },
   ];
 
   useEffect(() => {
     getCompany();
-    getProject(); // Load all by default
+    getProject();
   }, []);
 
   return (
@@ -105,7 +109,7 @@ console.log('invoiceReport',invoiceReport)
         <CardBody>
           <Row>
             <Col>
-              {/* Optional export */}
+              {/* Optional: Export report */}
               {/* <ExportReport columns={columns} data={userSearchData} /> */}
             </Col>
             <Col>
@@ -113,7 +117,7 @@ console.log('invoiceReport',invoiceReport)
                 <Label>Select Company</Label>
                 <Input
                   type="select"
-                  name="record_type"
+                  name="company_id"
                   onChange={(e) => setCompanyName(e.target.value)}
                 >
                   <option value="">Please Select</option>
@@ -135,7 +139,7 @@ console.log('invoiceReport',invoiceReport)
         </CardBody>
       </Card>
 
-      <Card>
+      {/* <Card>
         <CardBody>
           <Row>
             <Col md="4">
@@ -146,7 +150,7 @@ console.log('invoiceReport',invoiceReport)
             </Col>
           </Row>
         </CardBody>
-      </Card>
+      </Card> */}
 
       <Card>
         <CardBody>
@@ -166,16 +170,25 @@ console.log('invoiceReport',invoiceReport)
               </tr>
             </thead>
             <tbody>
-              {displayEmployees &&
-                displayEmployees.map((element, index) => (
-                  <tr key={element.invoice_id}>
-                    <td>{index + 1 + numberOfEmployeesVisited}</td>
-                    <td>{element.invoice_year}</td>
-                    <td>{element.invoice_amount_yearly}</td>
-                    <td>{getCompanyName(element.company_id)}</td>
-                  </tr>
-                ))}
-            </tbody>
+  {displayEmployees &&
+    displayEmployees.map((element, index) => (
+      <tr key={`${element.invoice_year}-${element.company_id}`}>
+        <td>{index + 1 + numberOfEmployeesVisited}</td>
+         <td>{getCompanyName(element.company_id)}</td>
+        <td>{element.invoice_year}</td>
+        <td>{Number(element.invoice_amount_yearly).toLocaleString('en-IN')}</td>
+      </tr>
+    ))}
+
+  {/* Total Row */}
+  <tr style={{ fontWeight: 'bold', backgroundColor: '#f0f0f0' }}>
+    <td></td>
+    <td></td>
+    <td >Total</td>
+    <td className="fw-bold">{totalAmount.toLocaleString('en-IN')}</td>
+  </tr>
+</tbody>
+
           </Table>
           <ReactPaginate
             previousLabel="Previous"

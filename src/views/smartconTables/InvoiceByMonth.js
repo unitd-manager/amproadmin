@@ -1,121 +1,125 @@
 import React, { useEffect, useState } from 'react';
-import { Row, Col, Card, CardBody, Button, Input, FormGroup, Label,Table } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import 'datatables.net-dt/js/dataTables.dataTables';
-import 'datatables.net-dt/css/jquery.dataTables.min.css';
-import 'datatables.net-buttons/js/buttons.colVis';
-import 'datatables.net-buttons/js/buttons.flash';
-import 'datatables.net-buttons/js/buttons.html5';
-import 'datatables.net-buttons/js/buttons.print';
 import { ToastContainer } from 'react-toastify';
+import { Button, Card, CardBody, Col, FormGroup, Input, Label, Row, Table } from 'reactstrap';
 import ReactPaginate from 'react-paginate';
 import api from '../../constants/api';
 import message from '../../components/Message';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import ExportReport from '../../components/Report/ExportReport';
 
-const InvoiceMonthReports = () => {
-  //All state variable
-  const [report, setReport] = useState(null);
-  const [gTotal, setGtotal] = useState(0);
-  const [userSearchData, setUserSearchData] = useState('');
+const InvoiceByMonth = () => {
+  const [invoiceReport, setInvoiceReport] = useState([]);
+  const [userSearchData, setUserSearchData] = useState([]);
   const [companyName, setCompanyName] = useState('');
-  //Get data from Reports table
-  const getInvoiceMonth = () => {
+  const [company, setCompany] = useState([]);
+  const [page, setPage] = useState(0);
+
+  console.log('invoiceReport', invoiceReport)
+
+  const employeesPerPage = 20;
+  const numberOfEmployeesVisited = page * employeesPerPage;
+
+  const displayEmployees = userSearchData.slice(
+    numberOfEmployeesVisited,
+    numberOfEmployeesVisited + employeesPerPage
+  );
+  const totalPages = Math.ceil(userSearchData.length / employeesPerPage);
+
+  const changePage = ({ selected }) => {
+    setPage(selected);
+  };
+
+  const getCompany = () => {
+    api.get('/reports/getCompany').then((res) => {
+      setCompany(res.data.data);
+    });
+  };
+
+  const getProject = (companyId = '') => {
+    const url = companyId
+      ? `/reports/getInvoiceByMonthReport?company_id=${companyId}`
+      : '/reports/getInvoiceByMonthReport';
+
     api
-      .get('/reports/getInvoiveByMonth')
+      .get(url)
       .then((res) => {
-        setReport(res.data.data);
-        setUserSearchData(res.data.data);
-         //grand total
-         console.log(res.data.data)
-         let grandTotal = 0;
-        res.data.data.forEach((elem) => {
-          grandTotal += elem.invoice_amount_monthly;
-        });
-        setGtotal(grandTotal);
+        const sortedData = res.data.data.sort(
+          (a, b) => new Date(b.invoice_month) - new Date(a.invoice_month)
+        );
+        setInvoiceReport(sortedData);
+        setUserSearchData(sortedData);
       })
       .catch(() => {
-        message('Reports Data Not Found', 'info');
+        message('Invoice data not found', 'info');
       });
   };
 
   const handleSearch = () => {
-    const newData = report
-      .filter((y) => y.record_type === (companyName === '' ? y.record_type : companyName))
-        setUserSearchData(newData);
+    getProject(companyName);
   };
-  useEffect(() => {
-  
-    getInvoiceMonth();
-  }, []);
 
-  const [page, setPage] = useState(0);
-
-  const employeesPerPage = 20;
-  const numberOfEmployeesVistited = page * employeesPerPage;
-  const displayEmployees = userSearchData.slice(
-    numberOfEmployeesVistited,
-    numberOfEmployeesVistited + employeesPerPage,
-  );
-  console.log("displayEmployees",displayEmployees)
-  const totalPages = Math.ceil(userSearchData.length / employeesPerPage);
-  const changePage = ({ selected }) => {
-    setPage(selected);
+  const getCompanyName = (id) => {
+    const found = company.find((c) => String(c.company_id) === String(id));
+    return found ? found.company_name : id;
   };
-  //structure of Training list view
+
   const columns = [
-    {
-      name: 'S.No',
-      selector:'s_no'
-    },
-    {
-      name: 'Invoice Month',
-      selector: 'invoice_month',
-    },
-
-    {
-      name: 'Invoice Amount Monthly',
-      selector: 'invoice_amount_monthly',
-    },
-    {
-      name: 'Category',
-      selector: 'record_type',
-    },
+    { name: 'SN', selector: 's_no' },
+    { name: 'Company', selector: 'company_id' },
+    { name: 'Month', selector: 'invoice_month' },
+    { name: 'Amount', selector: 'invoice_amount_monthly' },
   ];
+
+  const getTotalAmount = () => {
+  return userSearchData.reduce((sum, item) => {
+    return sum + Number(item.invoice_amount_monthly || item.invoice_amount_yearly || 0);
+  }, 0);
+};
+
+  useEffect(() => {
+    getCompany();
+    getProject();
+  }, []);
 
   return (
     <>
-        <BreadCrumbs />
-        <ToastContainer></ToastContainer>
-        <Card>
-          <CardBody>
-            <Row>
-              <Col>
-                
-              </Col>
-              <Col>
+      <BreadCrumbs />
+      <ToastContainer />
+      <Card>
+        <CardBody>
+          <Row>
+            <Col>
+              {/* Optional: Export report */}
+              {/* <ExportReport columns={columns} data={userSearchData} /> */}
+            </Col>
+            <Col>
               <FormGroup>
-                <Label>Select Category</Label>
+                <Label>Select Company</Label>
                 <Input
                   type="select"
-                  name="record_type"
+                  name="company_id"
                   onChange={(e) => setCompanyName(e.target.value)}
-                > <option value="">Select Category</option>
-                  <option value="project">Project</option>
-                  <option value="tenancy project">Tenancy Project</option>
-                  <option value="tenancy work">Tenancy Work</option>
-                  <option value="maintenance">Maintenance</option>
+                >
+                  <option value="">Please Select</option>
+                  {company.map((ele) => (
+                    <option key={ele.company_id} value={ele.company_id}>
+                      {ele.company_name}
+                    </option>
+                  ))}
                 </Input>
               </FormGroup>
             </Col>
             <Col md="1">
-              <Button color="primary" className="shadow-none" onClick={() => handleSearch()}>Go</Button>
+              <Button color="primary" className="shadow-none" onClick={handleSearch}>
+                Go
+              </Button>
             </Col>
-            </Row>
-          </CardBody>
-        </Card>
-        <Card>
+          </Row>
+        </CardBody>
+      </Card>
+
+      <Card>
         <CardBody>
           <Row>
             <Col>
@@ -123,37 +127,37 @@ const InvoiceMonthReports = () => {
             </Col>
           </Row>
         </CardBody>
-      
         <CardBody>
-          <Table>
+          <Table striped bordered hover>
+            <thead>
+              <tr>
+                {columns.map((cell) => (
+                  <th key={cell.name}>{cell.name}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+  {displayEmployees &&
+    displayEmployees.map((element, index) => (
+      <tr key={`${element.invoice_month || element.invoice_year}-${element.company_id}`}>
+        <td>{index + 1 + numberOfEmployeesVisited}</td>
+         <td>{getCompanyName(element.company_id)}</td>
+        <td>{element.invoice_month || element.invoice_year}</td>
+        <td>{Number(element.invoice_amount_monthly || element.invoice_amount_yearly).toLocaleString('en-IN')}</td>
+      </tr>
+    ))}
 
-          <thead>
-            <tr>
-              {columns.map((cell) => {
-                return <td key={cell.name}>{cell.name}</td>;
-              })}
-            </tr>
-          </thead>
-          <tbody>
-            {displayEmployees &&
-              displayEmployees.map((element,index) => {
-                return (
-                  <tr key={element.invoice_id}>
-                    <td>{index+1}</td>
-                    <td>{element.invoice_month}</td>
-                    <td>{element.invoice_amount_monthly}</td>
-                    <td>{element.record_type}</td>
-                  </tr>
-                );
-              })} 
-               <tr>
-                  <td><b></b></td>
-                  <td><b>Total Invoice Amount</b></td>
-                  <td><b>{(gTotal.toLocaleString('en-IN', {  minimumFractionDigits: 1 }))}</b></td>
-                  </tr>
-          </tbody>
-</Table>
-        <ReactPaginate
+  {/* Total Row */}
+  <tr style={{ fontWeight: 'bold', backgroundColor: '#f0f0f0' }}>
+    <td></td>
+    <td></td>
+    <td>Total</td>
+    <td className="fw-bold">{getTotalAmount().toLocaleString('en-IN')}</td>
+   
+  </tr>
+</tbody>
+          </Table>
+          <ReactPaginate
             previousLabel="Previous"
             nextLabel="Next"
             pageCount={totalPages}
@@ -164,9 +168,10 @@ const InvoiceMonthReports = () => {
             disabledClassName="navigationDisabled"
             activeClassName="navigationActive"
           />
-      </CardBody>
+        </CardBody>
       </Card>
     </>
   );
 };
-export default InvoiceMonthReports;
+
+export default InvoiceByMonth;
