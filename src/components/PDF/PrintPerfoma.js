@@ -29,7 +29,7 @@ const PrintPerfoma = ({ id }) => {
     const filteredResult = hfdata?.find((e) => e.key_text === key);
     return filteredResult?.value || '';
   };
-
+ 
   const fetchSalesOrderData = () => {
     api
       .post('/salesorder/getSalesorderById', { sales_order_id: id })
@@ -55,7 +55,41 @@ const PrintPerfoma = ({ id }) => {
       });
   };
 
-  const gst = gTotal * 0.07;
+
+   const [taxType, setTaxType] = React.useState('');
+   const [taxRate, setTaxRate] = React.useState(0);
+   console.log(taxType)
+   React.useEffect(() => {
+    const fetchBillDiscountAndTax = async () => {
+      try {
+        const response = await api.post('/salesOrder/getSalesorderById', {
+          sales_order_id: id,
+        });
+  
+        const data = response.data.data[0];
+       
+  
+        const type = data?.tax_type || '';
+        setTaxType(type);
+  
+        const taxResponse = await api.post('/valuelist/getValueListByKeyText', {
+          value: type, // use this instead of taxType
+        });
+  
+        const taxCode = parseFloat(taxResponse.data.data[0]?.code) || 0;
+        setTaxRate(taxCode / 100);
+      } catch (error) {
+        console.error('Failed to fetch bill discount or tax info:', error);
+      }
+    };
+  
+    if (id) {
+      fetchBillDiscountAndTax();
+    }
+  }, [id]);
+  
+
+  const gst = gTotal * taxRate;
     const totalWithGst = gTotal + gst;
 
   useEffect(() => {
@@ -276,7 +310,7 @@ const PrintPerfoma = ({ id }) => {
               ],
               [
                 {}, // empty cell due to rowspan
-                { text: 'GST (7%)   :', bold: true, alignment: 'center', margin: [5, 5, 5, 5] },
+                { text: 'GST  :', bold: true, alignment: 'center', margin: [5, 5, 5, 5] },
                 { text: gst.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right', margin: [5, 5, 5, 5] }
               ],
               [

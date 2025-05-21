@@ -62,6 +62,39 @@ const PrintPerfoma = ({ id }) => {
     }
   }, [id]);
 
+
+    const [taxType, setTaxType] = React.useState('');
+   const [taxRate, setTaxRate] = React.useState(0);
+   console.log(taxType)
+   React.useEffect(() => {
+    const fetchBillDiscountAndTax = async () => {
+      try {
+        const response = await api.post('/salesOrder/getSalesorderById', {
+          sales_order_id: id,
+        });
+  
+        const data = response.data.data[0];
+       
+  
+        const type = data?.tax_type || '';
+        setTaxType(type);
+  
+        const taxResponse = await api.post('/valuelist/getValueListByKeyText', {
+          value: type, // use this instead of taxType
+        });
+  
+        const taxCode = parseFloat(taxResponse.data.data[0]?.code) || 0;
+        setTaxRate(taxCode / 100);
+      } catch (error) {
+        console.error('Failed to fetch bill discount or tax info:', error);
+      }
+    };
+  
+    if (id) {
+      fetchBillDiscountAndTax();
+    }
+  }, [id]);
+
   const GetPdf = () => {
     const productItems = [
       [
@@ -85,7 +118,7 @@ const PrintPerfoma = ({ id }) => {
       ]);
     });
 
-    const gst = gTotal * 0.07;
+    const gst = gTotal * taxRate;
     const totalWithGst = gTotal + gst;
 
     const dd = {
@@ -165,7 +198,7 @@ const PrintPerfoma = ({ id }) => {
                 { text: gTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right' },
               ],
               [
-                { text: 'GST (7%)', alignment: 'right', bold: true, fontSize: 10 },
+                { text: 'GST', alignment: 'right', bold: true, fontSize: 10 },
                 { text: gst.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right' },
               ],
               [

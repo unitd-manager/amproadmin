@@ -21,7 +21,7 @@ const SalesInvoicePickingListPdf = ({ id, settingdetails }) => {
   const [hfdata, setHeaderFooterData] = useState();
   const [gTotal, setGtotal] = useState(0);
   
-
+console.log(gTotal)
   useEffect(() => {
     api.get('/setting/getSettingsForCompany').then((res) => {
       setHeaderFooterData(res.data.data);
@@ -87,12 +87,12 @@ console.log("SalesOrde", salesOrder)
         { text: `${item.loose_qty || ''}`, style: 'tableBody' },
         { text: `${item.carton_price || ''}`, style: 'tableBody' },
         { text: `${item.discount_value || ''}`, style: 'tableBody' },
-        { text: `${item.total || ''}`, style: 'tableBody' },
+        { text: `${item.gross_total || ''}`, style: 'tableBody' },
       ]);
     });
 
-    const gst = gTotal * 0.07;
-    const totalWithGst = gTotal + gst;
+    // const gst = gTotal * 0.07;
+    // const totalWithGst = gTotal + gst;
 
 
     const dd = {
@@ -166,15 +166,15 @@ console.log("SalesOrde", salesOrder)
             body: [
               [
                 { text: 'Subtotal', alignment: 'right', bold: true, fontSize: 9 },
-                { text: gTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 }),fontSize: 9, alignment: 'right' },
+                { text:settingdetails.sub_total || 0('en-IN', { minimumFractionDigits: 2 }),fontSize: 9, alignment: 'right' },
               ],
               [
-                { text: 'GST (7%)', alignment: 'right', bold: true, fontSize: 9 },
-                { text: gst.toLocaleString('en-IN', { minimumFractionDigits: 2 }),fontSize: 9 , alignment: 'right' },
+                { text: 'GST %', alignment: 'right', bold: true, fontSize: 9 },
+                { text: settingdetails.tax || 0('en-IN', { minimumFractionDigits: 2 }),fontSize: 9 , alignment: 'right' },
               ],
               [
                 { text: 'Total', alignment: 'right', bold: true, fontSize: 9 },
-                { text: totalWithGst.toLocaleString('en-IN', { minimumFractionDigits: 2 }), fontSize: 9, alignment: 'right' },
+                { text: settingdetails.invoice_amount || 0('en-IN', { minimumFractionDigits: 2 }), fontSize: 9, alignment: 'right' },
               ],
             ],
           },
