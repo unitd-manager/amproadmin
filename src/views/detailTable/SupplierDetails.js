@@ -95,7 +95,7 @@ const SupplierDetails = () => {
             </Button>
             <Button
               onClick={() => {
-                navigate('/SupplierEdit')
+                navigate('/Supplier')
               }}
               type="button"
               className="btn btn-dark shadow-none" >

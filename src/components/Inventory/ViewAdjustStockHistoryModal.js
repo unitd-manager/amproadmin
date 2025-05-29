@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Card,
   CardBody,
   Row,
   Col,
@@ -62,7 +61,6 @@ function ViewAdjustStockHistoryModal({
         <ModalBody>
           <Row>
             <Col md="12">
-              <Card>
                 <CardBody>
                   <Table id="example" className="display">
                     <thead>
@@ -79,10 +77,7 @@ function ViewAdjustStockHistoryModal({
                             <tr key={element.adjust_stock_log_id}>
                               <td>{element.adjust_stock}</td>
                               <td>{element.current_stock}</td>
-                              <td>
-                                {element.creation_date
-                                  ? moment(element.creation_date).format('YYYY-MM-DD  hh:mm:ss')
-                                  : ''}
+                              <td>{element.created_by}-{element.creation_date ? moment(element.creation_date).format('YYYY-MM-DD  hh:mm:ss'): ''}
                               </td>
                             </tr>
                           );
@@ -90,7 +85,6 @@ function ViewAdjustStockHistoryModal({
                     </tbody>
                   </Table>
                 </CardBody>
-              </Card>
             </Col>
           </Row>
         </ModalBody>

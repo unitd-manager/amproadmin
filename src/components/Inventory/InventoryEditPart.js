@@ -35,9 +35,7 @@ function InventoryEditPart({ inventoryDetails, handleInputs, editinventoryData }
                     color="primary"
                     onClick={() => {
                       editinventoryData();
-                      setTimeout(() => {
-                        navigate('/Inventory');
-                      }, 1100);
+                      navigate(`/Inventory`);
                     }}
                   >
                     Save
@@ -71,11 +69,30 @@ function InventoryEditPart({ inventoryDetails, handleInputs, editinventoryData }
             </ComponentCardV2>
 
             <ComponentCard
-              title="Product Details"
-              creationModificationDate={inventoryDetails}
-            >
+              title="Product Details" creationModificationDate={inventoryDetails}>
+              {/* righttitle={
+                <Row>
+                  <Col className="fs-10 small">
+                    <small>Creation :</small>
+                    <small>
+                      {inventoryDetails && inventoryDetails.created_by}
+                      {inventoryDetails && inventoryDetails.creation_date}
+                    </small>
+                  </Col>
+
+                  <Col className="fs-10 small">
+                    <small>Modification :</small>
+
+                    <small>
+                      {inventoryDetails && inventoryDetails.modified_by}
+                      {inventoryDetails && inventoryDetails.modification_date}
+                    </small>
+                  </Col>
+                </Row>
+              } */}
+            
               <Row>
-                {/* <Col md="3">
+                <Col md="3">
                   <FormGroup>
                     <Label>Inventory Code</Label>
                     <Input
@@ -85,7 +102,7 @@ function InventoryEditPart({ inventoryDetails, handleInputs, editinventoryData }
                       disabled
                     />
                   </FormGroup>
-                </Col> */}
+                </Col>
                 <Col md="3">
                   <FormGroup>
                     <Label>Product Name</Label>
@@ -111,24 +128,13 @@ function InventoryEditPart({ inventoryDetails, handleInputs, editinventoryData }
                 </Col>
                 <Col md="3">
                   <FormGroup>
-                    <Label>Product Code</Label>
+                    <Label>Item Code</Label>
                     <Input
                       type="text"
                       value={inventoryDetails && inventoryDetails.product_code}
                       name="product_code"
                       disabled
                     />
-                  </FormGroup>
-                </Col>
-                <Col md="3">
-                  <FormGroup>
-                    <Label>Notes</Label>
-                    <Input
-                      onChange={handleInputs}
-                      type="textarea"
-                      defaultValue={inventoryDetails && inventoryDetails.notes}
-                      name="notes"
-                    ></Input>
                   </FormGroup>
                 </Col>
               </Row>
@@ -140,7 +146,7 @@ function InventoryEditPart({ inventoryDetails, handleInputs, editinventoryData }
                       type="text"
                       value={inventoryDetails && inventoryDetails.unit}
                       name="unit"
-                      
+                      disabled
                     />
                   </FormGroup>
                 </Col>
@@ -157,16 +163,15 @@ function InventoryEditPart({ inventoryDetails, handleInputs, editinventoryData }
                 </Col>
                 <Col md="3">
                   <FormGroup>
-                    <Label>Current Stock</Label>
+                    <Label>Notes</Label>
                     <Input
-                      type="text"
-                      defaultValue={inventoryDetails && inventoryDetails.current_stock}
                       onChange={handleInputs}
-                      name="current_stock"
-                    />
+                      type="textarea"
+                      defaultValue={inventoryDetails && inventoryDetails.notes}
+                      name="notes"
+                    ></Input>
                   </FormGroup>
                 </Col>
-                
               </Row>
             </ComponentCard>
           </FormGroup>
