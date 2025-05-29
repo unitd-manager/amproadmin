@@ -151,7 +151,7 @@ const Supplier = () => {
     {element.company_name}
   </Link>
 </td>
-                    <td>{element.address_street}</td>
+                    <td>{element.address_flat}{element.address_street}{element.address_state}</td>
                     <td>{element.phone}</td>
                     <td>{element.email}</td>
                   </tr>

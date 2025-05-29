@@ -234,7 +234,7 @@ const OverAllReport = () => {
                       <td>{element.invoice_code}</td>
                       <td>{element.company_name}</td>
                       <td>{element.invoiceAmount}</td>
-                      <td>{element.gst_value}</td>
+                      <td>{element.tax}</td>
                       <td>{element.total}</td>
                       <td>{element.received}</td>
                       <td>{element.balance}</td>

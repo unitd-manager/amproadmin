@@ -23,7 +23,7 @@ export default function SupplierDetails({  handleInputs ,supplier ,allCountries 
   return (
     <Form>
     <FormGroup>
-  <ComponentCard title="Supplier Details">
+  <ComponentCard title="Supplier Details" creationModificationDate={supplier}>
     <Row>
     <Col md="3">
         <FormGroup>

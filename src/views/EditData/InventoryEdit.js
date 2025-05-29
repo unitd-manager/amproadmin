@@ -91,7 +91,6 @@ const Test = () => {
         setProjectsLinked(res.data.data);
       })
       .catch(() => {
-        //message('Unable to get projects data.', 'error');
       });
   };
 
@@ -101,12 +100,13 @@ const Test = () => {
       .post('/inventory/getProductQuantity', { product_id: inventoryDetails && inventoryDetails.productId })
       .then((res) => {
         setProductQty(res.data.data[0]);
+        console.log('setProductQty', productQty)
       })
       .catch(() => {
-        //message('Unable to get product quantity data.', 'error');
+        message('Unable to get product quantity data.', 'error');
       });
   };
-
+console.log('inventoryDetails', inventoryDetails)
   //update Inventory
   const editInventoryData = () => {
     inventoryDetails.modification_date = creationdatetime;
@@ -130,7 +130,7 @@ const Test = () => {
     getAllProjectsLinked();
     getAdjustStocklogsById();
     getProductQuantity();
-  }, [inventoryDetails?.productId]);
+  }, [inventoryDetails.productId]);
 
   useEffect(() => {
     let changes = 0;
@@ -139,7 +139,10 @@ const Test = () => {
     });
     setChangedStock(changes);
   }, [adjustStocks]);
-
+const remainingQty =
+  (productQty?.materials_purchased || 0) -
+  (productQty?.materials_sold || 0) -
+  (changedStock || 0);
   return (
     <>
       <ToastContainer></ToastContainer>
@@ -162,7 +165,7 @@ const Test = () => {
                 <Row>
                   <h5>Sold Quantity</h5>
                 </Row>
-                <span>{productQty && productQty.materials_used}</span>
+                <span>{productQty && productQty.materials_sold}</span>
               </Col>
               <Col xs="12" md="3">
                 <Row>
@@ -174,7 +177,7 @@ const Test = () => {
                 <Row>
                   <h5>Remaining Quantity</h5>
                 </Row>
-                <span>{productQty && productQty.actual_stock}</span>
+                <span>{remainingQty}</span>
               </Col>
             </Row>
           </ComponentCard>

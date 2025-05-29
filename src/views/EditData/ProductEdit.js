@@ -88,6 +88,7 @@ const ProductUpdate = () => {
         setProductDetails(res.data.data[0]);
         convertHtmlToDraft(res.data.data[0].product_description);
       })
+       .catch(() => {});
   };
   
   //Edit Product

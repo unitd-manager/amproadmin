@@ -9,7 +9,6 @@ import { pocolumns } from '../../data/Tender/InventoryData';
 function InventoryEditTables({ tabPurchaseOrdersLinked }) {
   InventoryEditTables.propTypes = {
     tabPurchaseOrdersLinked: PropTypes.array,
-   
   };
 
   return (
@@ -27,7 +26,7 @@ function InventoryEditTables({ tabPurchaseOrdersLinked }) {
             {tabPurchaseOrdersLinked &&
               tabPurchaseOrdersLinked.map((element) => {
                 return (
-                  <tr key={element.title}>
+                  <tr key={element.po_code}>
                     <td>
                       <Link to={`/PurchaseOrderEdit/${element.purchase_order_id}`}>
                         {element.po_code}
@@ -40,10 +39,9 @@ function InventoryEditTables({ tabPurchaseOrdersLinked }) {
                         : ''}
                     </td>
                     <td>{element.title}</td>
-                    <td>{element.company_name}</td>
                     <td>{element.cost_price}</td>
                     <td>{element.qty}</td>
-                    <td>{element.supplier_name}</td>
+                    <td>{element.company_name}</td>
                   </tr>
                 );
               })}
@@ -51,7 +49,32 @@ function InventoryEditTables({ tabPurchaseOrdersLinked }) {
         </Table>
       </ComponentCard>
 
-     
+      {/* <ComponentCard title="Projects Linked">
+        <Table id="examplepl" className="display border border-secondary rounded">
+          <thead>
+            <tr>
+              {plcolumns.map((cell) => {
+                return <td key={cell.name}>{cell.name}</td>;
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            {projectsLinked &&
+              projectsLinked.map((element) => {
+                return (
+                  <tr key={element.project_id}>
+                    <td>{moment(element.material_used_date).format('YYYY-MM-DD')}</td>
+                    <td>
+                      <Link to={`/projectEdit/${element.project_id}`}>{element.title}</Link>
+                    </td>
+                    <td>{element.company_name}</td>
+                    <td>{element.quantity}</td>
+                  </tr>
+                );
+              })}
+          </tbody>
+        </Table>
+      </ComponentCard> */}
     </div>
   );
 }
