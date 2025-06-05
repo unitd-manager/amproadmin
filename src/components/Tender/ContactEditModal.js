@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-// import { useParams } from 'react-router-dom';
 import {
   Row,
   Col,
@@ -11,9 +10,10 @@ import {
   ModalFooter,
   Modal,
   ModalHeader,
+  Card,
 } from 'reactstrap';
 import PropTypes from 'prop-types';
-import ComponentCard from '../ComponentCard';
+//import ComponentCard from '../ComponentCard';
 import message from '../Message';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import '../../views/form-editor/editor.scss';
@@ -33,16 +33,11 @@ const ContactEditModal = ({ contactData, editContactEditModal, setEditContactEdi
     setContactInsert({ ...contactinsert, [e.target.name]: e.target.value });
   };
 
-  //Logic for edit data in db
-
   const editContactsData = () => {
     api
       .post('/clients/editContact', contactinsert)
       .then(() => {
-        message('Record editted successfully', 'success');
-        //  setTimeout(() => {
-        //    window.location.reload()
-        //  }, 300);
+        message('Record edited successfully', 'success');
         window.location.reload();
       })
       .catch(() => {
@@ -51,155 +46,154 @@ const ContactEditModal = ({ contactData, editContactEditModal, setEditContactEdi
   };
 
   useEffect(() => {
-    // editContactById();
     setContactInsert(contactData);
   }, [contactData]);
 
   return (
-    <>
-      <Modal size="lg" isOpen={editContactEditModal}>
-        <ModalHeader>
-          ContactDetails
-          <Button
-            color="secondary"
-            onClick={() => {
-              setEditContactEditModal(false);
-            }}
-          >
-            X
-          </Button>
-        </ModalHeader>
+    <Modal size="lg" isOpen={editContactEditModal}>
+      <ModalHeader className="bg-primary text-white d-flex justify-content-between align-items-center">
+        <span className="fw-bold">Edit Contact Details</span>
+        <Button
+          color="white"
+          className="btn-close btn-close-white"
+          onClick={() => setEditContactEditModal(false)}
+        />
+      </ModalHeader>
 
-        <ModalBody>
-          <Row>
-            <Col md="3" className="mb-4 d-flex justify-content-between"></Col>
-          </Row>
-          <Row>
-            <Col md="2">
-              <Label>title </Label>
-              <Input
-                type="select"
-                onChange={handleInputs}
-                value={contactinsert && contactinsert.salutation}
-                name="salutation"
-              >
-                <option value="" selected="selected">
-                  Please Select
-                </option>
-                <option value="Ms">Ms</option>
-                <option value="Mr">Mr</option>
-                <option value="Mrs">Mrs</option>
-              </Input>
-            </Col>
-            <Col md="2">
+      <ModalBody className="p-4">
+        <Card className="shadow-none">
+          <Row className="g-4">
+            <Col md="3">
               <FormGroup>
-                <Label>Name</Label>
+                <Label className="fw-bold">Title</Label>
+                <Input
+                  type="select"
+                  className="form-select"
+                  onChange={handleInputs}
+                  value={contactinsert?.salutation || ''}
+                  name="salutation"
+                >
+                  <option value="">Please Select</option>
+                  <option value="Ms">Ms</option>
+                  <option value="Mr">Mr</option>
+                  <option value="Mrs">Mrs</option>
+                </Input>
+              </FormGroup>
+            </Col>
+            <Col md="4">
+              <FormGroup>
+                <Label className="fw-bold">Name</Label>
                 <Input
                   type="text"
+                  className="form-control"
                   onChange={handleInputs}
-                  value={contactinsert && contactinsert.first_name}
+                  value={contactinsert?.first_name || ''}
                   name="first_name"
+                  placeholder="Enter name"
                 />
               </FormGroup>
             </Col>
-
-            <Col md="2">
+            <Col md="5">
               <FormGroup>
-                <Label>Email</Label>
+                <Label className="fw-bold">Email</Label>
                 <Input
-                  type="text"
+                  type="email"
+                  className="form-control"
                   onChange={handleInputs}
-                  value={contactinsert && contactinsert.email}
+                  value={contactinsert?.email || ''}
                   name="email"
+                  placeholder="Enter email"
                 />
               </FormGroup>
             </Col>
-            <Col md="2">
+
+            <Col md="6">
               <FormGroup>
-                <Label>Position </Label>
+                <Label className="fw-bold">Position</Label>
                 <Input
                   type="text"
+                  className="form-control"
                   onChange={handleInputs}
-                  value={contactinsert && contactinsert.position}
+                  value={contactinsert?.position || ''}
                   name="position"
+                  placeholder="Enter position"
                 />
               </FormGroup>
             </Col>
-            <Col md="2">
+            <Col md="6">
               <FormGroup>
-                <Label>Dept </Label>
+                <Label className="fw-bold">Department</Label>
                 <Input
                   type="text"
+                  className="form-control"
                   onChange={handleInputs}
-                  value={contactinsert && contactinsert.department}
+                  value={contactinsert?.department || ''}
                   name="department"
+                  placeholder="Enter department"
                 />
               </FormGroup>
             </Col>
-            <Col md="2">
+
+            <Col md="4">
               <FormGroup>
-                <Label>Phone(Direct) </Label>
+                <Label className="fw-bold">Phone (Direct)</Label>
                 <Input
-                  type="text"
+                  type="tel"
+                  className="form-control"
                   onChange={handleInputs}
-                  value={contactinsert && contactinsert.phone_direct}
+                  value={contactinsert?.phone_direct || ''}
                   name="phone_direct"
+                  placeholder="Enter phone number"
                 />
               </FormGroup>
             </Col>
-
-            <Col md="2">
+            <Col md="4">
               <FormGroup>
-                <Label>Fax(Direct) </Label>
+                <Label className="fw-bold">Mobile</Label>
                 <Input
-                  type="text"
+                  type="tel"
+                  className="form-control"
                   onChange={handleInputs}
-                  value={contactinsert && contactinsert.fax}
-                  name="fax"
-                />
-              </FormGroup>
-            </Col>
-
-            <Col md="2">
-              <FormGroup>
-                <Label>Mobile </Label>
-                <Input
-                  type="text"
-                  onChange={handleInputs}
-                  value={contactinsert && contactinsert.mobile}
+                  value={contactinsert?.mobile || ''}
                   name="mobile"
+                  placeholder="Enter mobile number"
+                />
+              </FormGroup>
+            </Col>
+            <Col md="4">
+              <FormGroup>
+                <Label className="fw-bold">Fax</Label>
+                <Input
+                  type="tel"
+                  className="form-control"
+                  onChange={handleInputs}
+                  value={contactinsert?.fax || ''}
+                  name="fax"
+                  placeholder="Enter fax number"
                 />
               </FormGroup>
             </Col>
           </Row>
-        </ModalBody>
+        </Card>
+      </ModalBody>
 
-        <ModalFooter>
-          <Row>
-            <div className="pt-3 mt-3 d-flex align-items-center gap-2">
-              <Button
-                color="primary"
-                onClick={() => {
-                  editContactsData();
-                }}
-              >
-                Submit
-              </Button>
-              <Button
-                color="secondary"
-                onClick={() => {
-                  setEditContactEditModal(false);
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
-          </Row>
-        </ModalFooter>
-
-        <ComponentCard></ComponentCard>
-      </Modal>
-    </>
+      <ModalFooter className="p-3">
+        <Button
+          color="primary"
+          onClick={editContactsData}
+          className="me-2"
+        >
+          Save Changes
+        </Button>
+        <Button
+          color="secondary"
+          onClick={() => setEditContactEditModal(false)}
+        >
+          Cancel
+        </Button>
+      </ModalFooter>
+    </Modal>
   );
 };
+
 export default ContactEditModal;
