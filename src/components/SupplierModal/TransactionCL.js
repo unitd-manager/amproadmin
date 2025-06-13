@@ -55,7 +55,7 @@ export default function SupplierTransactionReport({  SupplierId
           { label: 'Tran No', key: 'tran_no' },
           { label: 'Tran Date', key: 'tran_date' },
           { label: 'Sub Total', key: 'sub_total' },
-          { label: 'Tax', key: 'tax' },
+          { label: 'Tax', key: 'gst' },
           { label: 'Net Total', key: 'net_total' },
         ];
       case 'payments':
