@@ -186,6 +186,7 @@ const SupportDetails = Loadable(lazy(() => import('../views/detailTable/SupportD
 // Table Edit's
 
 const ProductEdit = Loadable(lazy(() => import('../views/EditData/ProductEdit')));
+const ProductCLEdit = Loadable(lazy(() => import('../views/EditData/ProductCLEdit')));
 const StaffEdit = Loadable(lazy(() => import('../views/EditData/StaffEdit')));
 const InvoiceEdit = Loadable(lazy(() => import('../views/EditData/InvoiceEdit')));
 
@@ -215,6 +216,7 @@ const EnquiryDetailsTable = Loadable(
 );
 const InventoryEdit = Loadable(lazy(() => import('../views/EditData/InventoryEdit')));
 const SupplierEdit = Loadable(lazy(() => import('../views/EditData/SupplierEdit')));
+const SupplierCLEdit = Loadable(lazy(() => import('../views/EditData/SupplierCLEdit')));
 //Reports
 const ProjectReportTable = Loadable(lazy(() => import('../views/Reports/ProjectReport')));
 const OverallSalesReportTable = Loadable(lazy(() => import('../views/Reports/OverAllSalesSummaryReport')));
@@ -286,12 +288,14 @@ const Routernew = () => {
       {/* Table Edit's */}
        
           <Route path="/ProductEdit/:id" name="productdata" element={<ProductEdit />}></Route>
+          <Route path="/ProductCLEdit/:id" name="productdata" element={<ProductCLEdit />}></Route>
           <Route path="/OrdersEdit/:id" name="orderdata" element={<OrdersEdit />}></Route>
           <Route path="/ContentEdit/:id" name="contentdata" element={<ContentEdit />}></Route>
           <Route path="/CustomerEdit/:id" name="customerdata" element={<CustomerEdit />}></Route>
           <Route path="/BlogEdit/:id" name="blogdata" element={<BlogEdit />}></Route>
           <Route path="/InventoryEdit/:id" name="inventorydata" element={<InventoryEdit />}></Route>
           <Route path="/SupplierEdit/:id" name="supplierdata" element={<SupplierEdit />}></Route>
+          <Route path="/SupplierCLEdit/:id" name="supplierdata" element={<SupplierCLEdit />}></Route>
           <Route path="/sectionEdit/:id" name="sectiondata" element={<SectionEdit />}></Route>
          
           <Route path="/CustomerSupplierPriceEdit/:id" name="productdata" element={<CustomerSupplierPriceEdit />}></Route>
