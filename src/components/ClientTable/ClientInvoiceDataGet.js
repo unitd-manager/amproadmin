@@ -15,18 +15,18 @@ export default function ClientInvoiceDataGet({ invoiceDetails }) {
       name: 'Invoice Code',
     },
 
-    {
-      name: 'Title',
-    },
+    // {
+    //   name: 'Title',
+    // },
     {
       name: 'Invoice Amount',
     },
     {
       name: 'Invoice Date',
     },
-    {
-      name: 'Invoice Due Date',
-    },
+    // {
+    //   name: 'Invoice Due Date',
+    // },
     {
       name: 'Status',
     },
@@ -51,10 +51,10 @@ export default function ClientInvoiceDataGet({ invoiceDetails }) {
                       {' '}
                       <Link to={`/InvoiceEdit/${element.invoice_id}`}>{element.invoice_code}</Link>
                     </td>
-                    <td>{element.project_title}</td>
+                    {/* <td>{element.project_title}</td> */}
                     <td>{element.invoice_amount}</td>
                     <td>{moment(element.invoice_date).format('YYYY-MM-DD')}</td>
-                    <td>{moment(element.invoice_due_date).format('YYYY-MM-DD')}</td>
+                    {/* <td>{moment(element.invoice_due_date).format('YYYY-MM-DD')}</td> */}
                     <td>{element.status}</td>
                   </tr>
                 );
