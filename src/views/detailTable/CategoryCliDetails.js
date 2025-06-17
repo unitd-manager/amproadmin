@@ -18,7 +18,7 @@ const AddCategory = () => {
     department_cli_id: '',
     sort_order: '',
     product_prefix: '',
-    department_image: null,
+    category_image: null,
     show_on_ecommerce: true,
     show_on_eprocurement: true,
     show_on_pos: true,
@@ -60,6 +60,25 @@ navigate(`/CategoriesEdit/${id}`)
     });
     const response =await api.post('/categorycli/insert_category_cli', formData);
       const {insertId} = response.data; 
+      if (form?.category_image) {
+        const data = new FormData() 
+                
+
+               
+                    data.append(`files`, form.category_image);
+                 
+                data.append('file', form.category_image)
+                data.append('record_id', insertId)
+                data.append('room_name', 'categorycli')
+                data.append('alt_tag_data', 'categorycli')
+                data.append('description', 'categorycli')
+
+                api.post('/file/uploadFiles',data).then(()=>{
+     
+                }).catch(()=>{
+                   
+                })
+    }
     onSave(insertId);
    
   };

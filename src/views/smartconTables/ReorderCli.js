@@ -20,8 +20,31 @@ const ReorderCli = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [totalRecords, setTotalRecords] = useState(0);
+const [isLoadingPO, setIsLoadingPO] = useState(false);
 
- 
+ const handleLoadPO = async () => {
+  try {
+    setIsLoadingPO(true);
+    const res = await api.get('/reordercli/load_po');
+
+    if (res.data && res.data.length > 0) {
+      // Append or replace, based on your logic:
+      // Option A: Replace current list
+      setCategories(res.data);
+
+      // Option B (if you want to append): 
+      // setCategories(prev => [...prev, ...res.data]);
+    } else {
+      alert('No PO items to load.');
+    }
+  } catch (err) {
+    console.error('Error loading PO:', err);
+    alert('Failed to load PO.');
+  } finally {
+    setIsLoadingPO(false);
+  }
+};
+
 
   const fetchCategories = async () => {
     try {
@@ -58,9 +81,13 @@ const ReorderCli = () => {
   return (
     <Container fluid className="p-4" style={{ backgroundColor: '#f0f4fa', minHeight: '100vh' }}>
       <h3 className="mb-4">Reorder Management</h3>
-      <Button color="primary" className="mb-3">
-        <FaPlus /> Add New(+)
-      </Button>
+      {/* <Button color="primary" className="mb-3">
+        <FaPlus /> Load PO
+      </Button> */}
+      <Button color="primary" className="mb-3" onClick={handleLoadPO} disabled={isLoadingPO}>
+  {isLoadingPO ? 'Loading...' : <><FaPlus /> Load PO</>}
+</Button>
+
 
       <InputGroup className="mb-3" style={{ maxWidth: '400px' }}>
         <Input

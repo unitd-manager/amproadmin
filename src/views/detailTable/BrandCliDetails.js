@@ -18,7 +18,7 @@ const AddBrand = () => {
     // department_cli_id: '',
     sort_order: '',
     product_prefix: '',
-    department_image: null,
+    brand_image: null,
     show_on_ecommerce: true,
     show_on_eprocurement: true,
     show_on_pos: true,
@@ -59,6 +59,25 @@ navigate(`/BrandEdit/${id}`)
     });
     const response =await api.post('/brandcli/insert_brand_cli', formData);
     const {insertId} = response.data; 
+      if (form?.brand_image) {
+        const data = new FormData() 
+                
+
+               
+                    data.append(`files`, form.brand_image);
+                 
+                data.append('file', form.brand_image)
+                data.append('record_id', insertId)
+                data.append('room_name', 'brandcli')
+                data.append('alt_tag_data', 'brandcli')
+                data.append('description', 'brandcli')
+
+                api.post('/file/uploadFiles',data).then(()=>{
+     
+                }).catch(()=>{
+                   
+                })
+    }
     onSave(insertId);
   };
 
@@ -105,8 +124,8 @@ navigate(`/BrandEdit/${id}`)
         </Col>
       </FormGroup>
       <FormGroup row>
-        <Label for="category_image" sm={4}>
-          Category Image (80x80)
+        <Label for="brand_image" sm={4}>
+          Brand Image (80x80)
         </Label>
         <Col sm={8}>
           <Input type="file" name="brand_image" accept="image/*" onChange={handleChange} />

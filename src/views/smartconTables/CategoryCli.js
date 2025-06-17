@@ -10,6 +10,7 @@ import {
   PaginationItem,
   PaginationLink
 } from 'reactstrap';
+import { useNavigate } from 'react-router-dom';
 import { FaTrash, FaPlus, FaFilter, FaSearch } from 'react-icons/fa';
 import api from '../../constants/api';
 
@@ -19,7 +20,7 @@ const CategoryManagement = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [totalRecords, setTotalRecords] = useState(0);
-
+const navigate=useNavigate();
   const fetchCategories = async () => {
     try {
       const response = await api.get('categorycli/get_all_category_cli', {
@@ -58,7 +59,9 @@ const CategoryManagement = () => {
   return (
     <Container fluid className="p-4" style={{ backgroundColor: '#f0f4fa', minHeight: '100vh' }}>
       <h3 className="mb-4">Category Management</h3>
-      <Button color="primary" className="mb-3">
+      <Button color="primary" className="mb-3" onClick={()=>{
+        navigate('/categoriesDetails')
+      }}>
         <FaPlus /> Add New(+)
       </Button>
 
