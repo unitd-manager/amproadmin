@@ -15,8 +15,8 @@ import '../form-editor/editor.scss';
 import ComponentCard from '../../components/ComponentCard';
 import api from '../../constants/api';
 // import NavTabs from '../../components/ClientTable/NavTabs';
-import AddNote from '../../components/Tender/AddNote';
-import ViewNote from '../../components/Tender/ViewNote';
+// import AddNote from '../../components/Tender/AddNote';
+// import ViewNote from '../../components/Tender/ViewNote';
 import creationdatetime from '../../constants/creationdatetime';
 import Tab from '../../components/project/Tab';
 
@@ -44,7 +44,7 @@ const ClientsEdit = () => {
   const tabs =  [
     {id:'1',name:'Contacts Linked'},
     {id:'2',name:'Invoice Linked'},
-    {id:'3',name:'Add notes'},
+    // {id:'3',name:'Add notes'},
   ];
 
   const toggle = (tab) => {
@@ -278,10 +278,10 @@ const ClientsEdit = () => {
             <ClientTenderDataGet tenderDetails={tenderDetails}></ClientTenderDataGet>
           </TabPane> */}
           {/* ADD NOTE */}
-          <TabPane tabId="3">
+          {/* <TabPane tabId="3">
               <AddNote recordId={id} roomName="AccountEdit" />
               <ViewNote recordId={id} roomName="AccountEdit" />
-          </TabPane>
+          </TabPane> */}
         </TabContent>
       </ComponentCard>
     </>

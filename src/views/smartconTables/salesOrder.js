@@ -115,6 +115,7 @@ const Test = () => {
         net_total: selectedOrder.net_total,
         invoice_code: invoiceCode,
         tran_date: selectedOrder.tran_date,
+        invoice_type: 'Sales Order Invoice',
       };
       const response = await api.post('/salesOrder/generateInvoiceFromSalesOrder', payload);
       message(response.data.message, 'success');

@@ -6,7 +6,6 @@ import {
   Modal,
   ModalHeader,
   ModalBody,
-  Card,
   Table,
   Label,
   Input,
@@ -15,7 +14,6 @@ import {
   Button,
   CardBody,
 } from 'reactstrap';
-import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import * as Icon from 'react-feather';
 
@@ -127,7 +125,7 @@ export default function ClientContactGetAndInsert({
                   <tr key={element.contact_id}>
                     <td>{i + 1}</td>
                     <td>
-                      <Link to="">
+                      <div className='anchor'>
                         <span
                           onClick={() => {
                             setContactData(element);
@@ -136,14 +134,14 @@ export default function ClientContactGetAndInsert({
                         >
                           <Icon.Edit2 />
                         </span>
-                      </Link>
+                      </div>
                     </td>
                     <td>
-                      <Link to="">
+                      <div color="primary" className='anchor'>
                         <span onClick={() => deleteRecord(element.contact_id)}>
                           <Icon.Trash2 />
                         </span>
-                      </Link>
+                      </div>
                     </td>
                     <td>{element.first_name}</td>
                     <td>{element.email}</td>
@@ -152,7 +150,7 @@ export default function ClientContactGetAndInsert({
                     <td>{element.position}</td>
                     <td>{element.department}</td>
                   </tr>
-                )
+                );
               })}
           </tbody>
         </Table>
@@ -168,7 +166,6 @@ export default function ClientContactGetAndInsert({
               <ModalBody>
                 <Row>
                   <Col md="12">
-                    <Card>
                       <CardBody>
                         <Form>
                           <Row>
@@ -270,7 +267,7 @@ export default function ClientContactGetAndInsert({
                           </Row>
                         </Form>
                       </CardBody>
-                    </Card>
+                   
                   </Col>
                 </Row>
               </ModalBody>
