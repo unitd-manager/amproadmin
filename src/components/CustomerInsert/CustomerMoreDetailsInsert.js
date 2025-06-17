@@ -2,12 +2,12 @@ import React from 'react';
 import { Row, Col, FormGroup, Label, Input } from 'reactstrap';
 import PropTypes from 'prop-types';
 
-export default function ContentMoreDetails({
+export default function ContentMoreDetailsInsert({
   contentDetails,
   handleInputs,
 
   }) {
-  ContentMoreDetails.propTypes = {
+  ContentMoreDetailsInsert.propTypes = {
     contentDetails: PropTypes.object,
     handleInputs: PropTypes.any,
 
