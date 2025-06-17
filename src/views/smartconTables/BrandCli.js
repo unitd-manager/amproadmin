@@ -20,13 +20,11 @@ const BrandCli = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [totalRecords, setTotalRecords] = useState(0);
 
-  useEffect(() => {
-    fetchCategories();
-  }, [currentPage, searchTerm]);
+
 
   const fetchCategories = async () => {
     try {
-      const response = await api.get('categories/getBrands', {
+      const response = await api.get('brandcli/get_all_brand_cli', {
         params: {
           page: currentPage,
           search: searchTerm
@@ -47,16 +45,18 @@ const BrandCli = () => {
 
   const handleDelete = async (id) => {
     try {
-      await api.delete(`/categories/${id}`);
+      await api.delete(`brandcli/delete_brand_cli/${id}`);
       fetchCategories();
     } catch (error) {
       console.error('Error deleting category:', error);
     }
   };
-
+  useEffect(() => {
+    fetchCategories();
+  }, [currentPage, searchTerm]);
   return (
     <Container fluid className="p-4" style={{ backgroundColor: '#f0f4fa', minHeight: '100vh' }}>
-      <h3 className="mb-4">Category Management</h3>
+      <h3 className="mb-4">Brand Management</h3>
       <Button color="primary" className="mb-3">
         <FaPlus /> Add New(+)
       </Button>
@@ -79,26 +79,26 @@ const BrandCli = () => {
         <thead className="table-light">
           <tr>
             <th>Action</th>
-            <th>Category Name</th>
-            <th>Department Name</th>
+            <th>Brand Name</th>
+            {/* <th>Department Name</th> */}
             <th>SortOrder</th>
             <th>Status</th>
-            <th>Modified By</th>
+            <th>Created_user</th>
             <th>Modified On</th>
           </tr>
         </thead>
         <tbody>
           {categories.map((cat) => (
-            <tr key={cat.id}>
+            <tr key={cat.brand_cli_id}>
               <td style={{ textAlign: 'center' }}>
-                <FaTrash style={{ cursor: 'pointer' }} onClick={() => handleDelete(cat.id)} />
+                <FaTrash style={{ cursor: 'pointer' }} onClick={() => handleDelete(cat.brand_cli_id)} />
               </td>
-              <td>{cat.name}</td>
-              <td>{cat.departmentName}</td>
+              <td>{cat.brand_name}</td>
+              {/* <td>{cat.departmentName}</td> */}
               <td>{cat.sortOrder}</td>
               <td>{cat.status}</td>
-              <td>{cat.modifiedBy}</td>
-              <td>{cat.modifiedOn}</td>
+              <td>{cat.created_by}</td>
+              <td>{cat.updated_at}</td>
             </tr>
           ))}
         </tbody>

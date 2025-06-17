@@ -14,17 +14,18 @@ import { FaTrash, FaPlus, FaFilter, FaSearch } from 'react-icons/fa';
 import api from '../../constants/api';
 
 
-const BinCli = () => {
+const ReorderCli = () => {
   const [categories, setCategories] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [totalRecords, setTotalRecords] = useState(0);
 
+ 
 
   const fetchCategories = async () => {
     try {
-      const response = await api.get('bincli/get_all_bin_cli', {
+      const response = await api.get('reordercli/get_all_reorder_cli', {
         params: {
           page: currentPage,
           search: searchTerm
@@ -45,19 +46,18 @@ const BinCli = () => {
 
   const handleDelete = async (id) => {
     try {
-      await api.delete(`bincli/delete_bin_cli/${id}`);
+      await api.delete(`reordercli/delete_reorder_cli/${id}`);
       fetchCategories();
     } catch (error) {
       console.error('Error deleting category:', error);
     }
   };
-
-  useEffect(() => {
+ useEffect(() => {
     fetchCategories();
   }, [currentPage, searchTerm]);
   return (
     <Container fluid className="p-4" style={{ backgroundColor: '#f0f4fa', minHeight: '100vh' }}>
-      <h3 className="mb-4">Bin Management</h3>
+      <h3 className="mb-4">Reorder Management</h3>
       <Button color="primary" className="mb-3">
         <FaPlus /> Add New(+)
       </Button>
@@ -88,14 +88,14 @@ const BinCli = () => {
             <th>Status</th>
             <th>Modified On</th>
             <th>Modified By</th>
-            					
+                                
           </tr>
         </thead>
         <tbody>
           {categories.map((cat) => (
-            <tr key={cat.bin_cli_id}>
+            <tr key={cat.reorder_cli_id}>
               <td style={{ textAlign: 'center' }}>
-                <FaTrash style={{ cursor: 'pointer' }} onClick={() => handleDelete(cat.bin_cli_id)} />
+                <FaTrash style={{ cursor: 'pointer' }} onClick={() => handleDelete(cat.reorder_cli_id)} />
               </td>
               <td>{cat.bin_name}</td>
               <td>{cat.floor_level}</td>
@@ -140,4 +140,4 @@ const BinCli = () => {
   );
 };
 
-export default BinCli;
+export default ReorderCli;

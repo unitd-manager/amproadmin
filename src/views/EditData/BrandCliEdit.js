@@ -9,37 +9,29 @@ import {
   Row,
   FormText,
 } from 'reactstrap';
-import axios from 'axios';
+import { useNavigate, useParams } from 'react-router-dom';
+import api from '../../constants/api';
 
-const AddEditBrand = ({ categoryId, onCancel, onSave }) => {
+const EditBrand = () => {
+  const { id } = useParams(); // brand_cli_id
+  const navigate = useNavigate();
+
   const [form, setForm] = useState({
-    name: '',
-    departmentId: '',
-    sortOrder: '',
-    prefix: '',
-    image: null,
-    showOnEcommerce: true,
-    showOnEprocurement: true,
-    showOnPOS: true,
-    readWeightFromScale: false,
-    isActive: true,
+    brand_name: '',
+    sort_order: '',
+    product_prefix: '',
+    brand_image: null,
+    show_on_ecommerce: true,
+    show_on_eprocurement: true,
+    show_on_pos: true,
+    read_weight_from_scale: false,
+    is_active: true,
   });
 
-  const [departments, setDepartments] = useState([]);
+  const [existingImage, setExistingImage] = useState(null); // for preview
 
-  useEffect(() => {
-    fetchDepartments();
-    if (categoryId) fetchCategory();
-  }, [categoryId]);
-
-  const fetchDepartments = async () => {
-    const res = await axios.get('/api/departments');
-    setDepartments(res.data);
-  };
-
-  const fetchCategory = async () => {
-    const res = await axios.get(`/api/categories/${categoryId}`);
-    setForm(res.data);
+  const onCancel = () => {
+    navigate('/Brand');
   };
 
   const handleChange = (e) => {
@@ -53,103 +45,108 @@ const AddEditBrand = ({ categoryId, onCancel, onSave }) => {
     }
   };
 
+  const fetchBrandDetails = async () => {
+    try {
+      const res = await api.post('/brandcli/get_brand_cli', { brand_cli_id: id });
+      if (res.data && res.data.length > 0) {
+        const brand = res.data[0];
+        setForm({ ...brand });
+        setExistingImage(brand.brand_image); // assumes backend returns image filename
+      }
+    } catch (err) {
+      console.error('Failed to fetch brand details', err);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData();
     Object.entries(form).forEach(([key, value]) => {
       formData.append(key, value);
     });
-    if (categoryId) {
-      await axios.put(`/api/categories/${categoryId}`, formData);
-    } else {
-      await axios.post('/api/categories', formData);
+    formData.append('brand_cli_id', id);
+
+    try {
+      await api.post('/brandcli/update_brand_cli', formData);
+      alert('Brand updated successfully');
+      navigate('/Brand');
+    } catch (err) {
+      console.error('Update failed:', err);
+      alert('Update failed. Please try again.');
     }
-    onSave();
   };
+
+  useEffect(() => {
+    fetchBrandDetails();
+  }, [id]);
 
   return (
     <Form onSubmit={handleSubmit} style={{ maxWidth: 700, margin: 'auto' }}>
-      <h4 className="mb-4">Add/Edit Category</h4>
+      <h4 className="mb-4">Edit Brand</h4>
+
       <FormGroup row>
-        <Label for="name" sm={4}>
-          Category Name *
-        </Label>
+        <Label for="brand_name" sm={4}>Brand Name *</Label>
         <Col sm={8}>
-          <Input type="text" name="name" value={form.name} onChange={handleChange} required />
+          <Input type="text" name="brand_name" value={form.brand_name} onChange={handleChange} required />
         </Col>
       </FormGroup>
+
       <FormGroup row>
-        <Label for="departmentId" sm={4}>
-          Department Name
-        </Label>
+        <Label for="sort_order" sm={4}>Sort Order</Label>
         <Col sm={8}>
-          <Input type="select" name="departmentId" value={form.departmentId} onChange={handleChange}>
-            <option value="">Select an option</option>
-            {departments.map((dept) => (
-              <option key={dept.id} value={dept.id}>
-                {dept.name}
-              </option>
-            ))}
-          </Input>
+          <Input type="number" name="sort_order" value={form.sort_order} onChange={handleChange} />
         </Col>
       </FormGroup>
+
       <FormGroup row>
-        <Label for="sortOrder" sm={4}>
-          Sort Order
-        </Label>
+        <Label for="product_prefix" sm={4}>Product Prefix</Label>
         <Col sm={8}>
-          <Input type="number" name="sortOrder" value={form.sortOrder} onChange={handleChange} />
+          <Input type="text" name="product_prefix" value={form.product_prefix} onChange={handleChange} />
         </Col>
       </FormGroup>
+
       <FormGroup row>
-        <Label for="prefix" sm={4}>
-          Product Prefix
-        </Label>
+        <Label for="brand_image" sm={4}>Brand Image (80x80)</Label>
         <Col sm={8}>
-          <Input type="text" name="prefix" value={form.prefix} onChange={handleChange} />
-        </Col>
-      </FormGroup>
-      <FormGroup row>
-        <Label for="image" sm={4}>
-          Category Image (80x80)
-        </Label>
-        <Col sm={8}>
-          <Input type="file" name="image" accept="image/*" onChange={handleChange} />
+          <Input type="file" name="brand_image" accept="image/*" onChange={handleChange} />
           <FormText color="muted">Upload image (80x80)</FormText>
+          {existingImage && (
+            <img
+              src={`${process.env.REACT_APP_IMAGE_PATH}/brand/${existingImage}`}
+              alt="Brand Preview"
+              style={{ height: 80, width: 80, marginTop: '10px', border: '1px solid #ccc' }}
+            />
+          )}
         </Col>
       </FormGroup>
+
       <Row className="mb-3">
         <Col sm={{ size: 8, offset: 4 }}>
-          <FormGroup check>
-            <Label check>
-              <Input type="checkbox" name="showOnEcommerce" checked={form.showOnEcommerce} onChange={handleChange} /> Show On ECommerce
-            </Label>
-          </FormGroup>
-          <FormGroup check>
-            <Label check>
-              <Input type="checkbox" name="showOnEprocurement" checked={form.showOnEprocurement} onChange={handleChange} /> Show On EProcurement
-            </Label>
-          </FormGroup>
-          <FormGroup check>
-            <Label check>
-              <Input type="checkbox" name="showOnPOS" checked={form.showOnPOS} onChange={handleChange} /> Show On POS
-            </Label>
-          </FormGroup>
-          <FormGroup check>
-            <Label check>
-              <Input type="checkbox" name="readWeightFromScale" checked={form.readWeightFromScale} onChange={handleChange} /> Read Weight From Scale
-            </Label>
-          </FormGroup>
-          <FormGroup check>
-            <Label check>
-              <Input type="checkbox" name="isActive" checked={form.isActive} onChange={handleChange} /> IsActive
-            </Label>
-          </FormGroup>
+          {[
+            { name: 'show_on_ecommerce', label: 'Show On ECommerce' },
+            { name: 'show_on_eprocurement', label: 'Show On EProcurement' },
+            { name: 'show_on_pos', label: 'Show On POS' },
+            { name: 'read_weight_from_scale', label: 'Read Weight From Scale' },
+            { name: 'is_active', label: 'IsActive' },
+          ].map((item) => (
+            <FormGroup check key={item.name}>
+              <Label check>
+                <Input
+                  type="checkbox"
+                  name={item.name}
+                  checked={!!form[item.name]}
+                  onChange={handleChange}
+                />{' '}
+                {item.label}
+              </Label>
+            </FormGroup>
+          ))}
         </Col>
       </Row>
+
       <Row className="mt-4">
         <Col sm={{ size: 8, offset: 4 }}>
-          <Button color="primary" type="submit">Save</Button>{' '}
+          <Button color="primary" type="submit">Update</Button>{' '}
           <Button color="danger" type="button" onClick={onCancel}>Cancel</Button>
         </Col>
       </Row>
@@ -157,4 +154,4 @@ const AddEditBrand = ({ categoryId, onCancel, onSave }) => {
   );
 };
 
-export default AddEditBrand;
+export default EditBrand;

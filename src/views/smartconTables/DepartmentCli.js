@@ -20,13 +20,11 @@ const DepartmentCli = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [totalRecords, setTotalRecords] = useState(0);
 
-  useEffect(() => {
-    fetchCategories();
-  }, [currentPage, searchTerm]);
+
 
   const fetchCategories = async () => {
     try {
-      const response = await api.get('categories/getDepartments', {
+      const response = await api.get('departmentcli/get_all_department_cli', {
         params: {
           page: currentPage,
           search: searchTerm
@@ -47,16 +45,19 @@ const DepartmentCli = () => {
 
   const handleDelete = async (id) => {
     try {
-      await api.delete(`https://your-api-endpoint.com/categories/${id}`);
+      await api.delete(`departmentcli/delete_department_cli/${id}`);
       fetchCategories();
     } catch (error) {
       console.error('Error deleting category:', error);
     }
   };
-
+  useEffect(() => {
+    fetchCategories();
+  }, [currentPage, searchTerm]);
+  
   return (
     <Container fluid className="p-4" style={{ backgroundColor: '#f0f4fa', minHeight: '100vh' }}>
-      <h3 className="mb-4">Category Management</h3>
+      <h3 className="mb-4">Department Management</h3>
       <Button color="primary" className="mb-3">
         <FaPlus /> Add New(+)
       </Button>
@@ -79,7 +80,7 @@ const DepartmentCli = () => {
         <thead className="table-light">
           <tr>
             <th>Action</th>
-            <th>Category Name</th>
+            {/* <th>Category Name</th> */}
             <th>Department Name</th>
             <th>SortOrder</th>
             <th>Status</th>
@@ -89,16 +90,16 @@ const DepartmentCli = () => {
         </thead>
         <tbody>
           {categories.map((cat) => (
-            <tr key={cat.id}>
+            <tr key={cat.department_cli_id}>
               <td style={{ textAlign: 'center' }}>
-                <FaTrash style={{ cursor: 'pointer' }} onClick={() => handleDelete(cat.id)} />
+                <FaTrash style={{ cursor: 'pointer' }} onClick={() => handleDelete(cat.department_cli_id)} />
               </td>
-              <td>{cat.name}</td>
-              <td>{cat.departmentName}</td>
-              <td>{cat.sortOrder}</td>
-              <td>{cat.status}</td>
-              <td>{cat.modifiedBy}</td>
-              <td>{cat.modifiedOn}</td>
+              {/* <td>{cat.category_name}</td> */}
+              <td>{cat.department_name}</td>
+              <td>{cat.sort_order}</td>
+              <td>{cat.is_active ? 'active':'inactive'}</td>
+              <td>{cat.updated_by}</td>
+              <td>{cat.updated_at}</td>
             </tr>
           ))}
         </tbody>
