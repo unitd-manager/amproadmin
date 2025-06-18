@@ -18,9 +18,7 @@ const ProductAnalysis = ({ productId }) => {
     location: 'Head Office',
   });
 
-  const [allPurchaseRecords, setAllPurchaseRecords] = useState([]);
   const [purchaseRecords, setPurchaseRecords] = useState([]);
-  const [allSalesRecords, setAllSalesRecords] = useState([]);
   const [salesRecords, setSalesRecords] = useState([]);
 
   const locationOptions = ['Head Office', 'Branch A', 'Branch B'];
@@ -34,56 +32,45 @@ const ProductAnalysis = ({ productId }) => {
     setSalesFilters({ ...salesFilters, [e.target.name]: e.target.value });
   };
 
-  useEffect(() => {
-    if (productId) {
-      api
-        .post('product/getPurchasedProduct', { product_id: productId })
-        .then((res) => {
-          const data = res?.data?.data || [];
-          setAllPurchaseRecords(data);
-          setPurchaseRecords(data);
-        })
-        .catch(() => message('Failed to load purchase records', 'error'));
-
-      api
-        .post('product/getSoldProduct', { product_id: productId })
-        .then((res) => {
-          const data = res?.data?.data || [];
-          setAllSalesRecords(data);
-          setSalesRecords(data);
-        })
-        .catch(() => message('Failed to load sales records', 'error'));
-    }
-  }, [productId]);
-
-  const filterRecords = (records, filters, includeModule = false) => {
-    const { fromDate, toDate, location, module } = filters;
-    return records.filter((rec) => {
-      const recordDate = new Date(rec.tran_date);
-      const from = fromDate ? new Date(fromDate) : null;
-      const to = toDate ? new Date(toDate) : null;
-
-      const matchDate = (!from || recordDate >= from) && (!to || recordDate <= to);
-      const matchLocation = location ? rec.location === location : true;
-      const matchModule = includeModule ? module ? rec.module === module : true : true;
-
-      return matchDate && matchLocation && matchModule;
-    });
-  };
+  
 
   const fetchFilteredPurchase = () => {
-    const filtered = filterRecords(allPurchaseRecords, purchaseFilters, true);
-    setPurchaseRecords(filtered);
+    api
+      .post('product/getPurchasedProduct', {
+        product_id: productId,
+        fromDate: purchaseFilters.fromDate,
+        toDate: purchaseFilters.toDate,
+        location: purchaseFilters.location,
+        module: purchaseFilters.module,
+      })
+      .then((res) => {
+        const data = res?.data?.data || [];
+        setPurchaseRecords(data);
+      })
+      .catch(() => message('Failed to load filtered purchase records', 'error'));
   };
 
   const fetchFilteredSales = () => {
-    const filtered = filterRecords(allSalesRecords, salesFilters, false);
-    setSalesRecords(filtered);
+    // You can similarly move this to backend filtering later
+    api
+      .post('product/getSoldProduct', { product_id: productId })
+      .then((res) => {
+        const data = res?.data?.data || [];
+        setSalesRecords(data); // Can add frontend filtering if needed
+      })
+      .catch(() => message('Failed to load sales records', 'error'));
   };
 
   const calculateTotal = (records) => {
     return records.reduce((sum, rec) => sum + Number(rec.total || 0), 0);
   };
+
+  useEffect(() => {
+    if (productId) {
+      fetchFilteredPurchase(); // load with filters (initially blank)
+      fetchFilteredSales();    // still using frontend filter
+    }
+  }, [productId]);
 
   return (
     <Row>

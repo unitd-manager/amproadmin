@@ -62,6 +62,25 @@ navigate(`/DepartmentEdit/${id}`)
     
     const response =await api.post('/departmentcli/insert_department_cli', formData);
     const {insertId} = response.data;
+      if (form?.department_image) {
+        const data = new FormData() 
+                
+
+               
+                    data.append(`files`, form.department_image);
+                 
+                data.append('file', form.department_image)
+                data.append('record_id', insertId)
+                data.append('room_name', 'departmentcli')
+                data.append('alt_tag_data', 'departmentcli')
+                data.append('description', 'departmentcli')
+
+                api.post('/file/uploadFiles',data).then(()=>{
+     
+                }).catch(()=>{
+                   
+                })
+    }
     onSave(insertId);
     
   };
@@ -111,11 +130,11 @@ navigate(`/DepartmentEdit/${id}`)
         </Col>
       </FormGroup>
       <FormGroup row>
-        <Label for="category_image" sm={4}>
-          Category Image (80x80)
+        <Label for="department_image" sm={4}>
+          Department Image (80x80)
         </Label>
         <Col sm={8}>
-          <Input type="file" name="category_image" accept="image/*" onChange={handleChange} />
+          <Input type="file" name="department_image" accept="image/*" onChange={handleChange} />
           <FormText color="muted">Upload image (80x80)</FormText>
         </Col>
       </FormGroup>

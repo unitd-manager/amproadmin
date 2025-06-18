@@ -62,6 +62,25 @@ navigate(`/SubCategoriesEdit/${id}`)
     
      const response =await api.post('/subcategorycli/insert_sub_category_cli', formData);
     const {insertId} = response.data; 
+      if (form?.sub_category_image) {
+        const data = new FormData() 
+                
+
+               
+                    data.append(`files`, form.sub_category_image);
+                 
+                data.append('file', form.sub_category_image)
+                data.append('record_id', insertId)
+                data.append('room_name', 'subcategorycli')
+                data.append('alt_tag_data', 'subcategorycli')
+                data.append('description', 'subcategorycli')
+
+                api.post('/file/uploadFiles',data).then(()=>{
+     
+                }).catch(()=>{
+                   
+                })
+    }
     onSave(insertId);
   };
 useEffect(() => {
@@ -111,7 +130,7 @@ useEffect(() => {
       </FormGroup>
       <FormGroup row>
         <Label for="sub_category_image" sm={4}>
-          Category Image (80x80)
+          SubCategory Image (80x80)
         </Label>
         <Col sm={8}>
           <Input type="file" name="sub_category_image" accept="image/*" onChange={handleChange} />
