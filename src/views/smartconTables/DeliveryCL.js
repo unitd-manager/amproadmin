@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import * as Icon from 'react-feather';
-import { Button, Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
+import { Button, Dropdown, DropdownToggle, DropdownMenu, DropdownItem} from 'reactstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'datatables.net-dt/js/dataTables.dataTables';
@@ -9,6 +9,8 @@ import message from '../../components/Message';
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
+import PrintPerfoma from '../../components/PDF/PrintDelivery';
+
 
 const DeliveryOrderList = () => {
   const navigate = useNavigate();
@@ -22,6 +24,12 @@ const DeliveryOrderList = () => {
   const [toDate, setToDate] = useState('');
   const [customerFilter, setCustomerFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+
+ 
+
+  const [isChangeDateModalOpen, setIsChangeDateModalOpen] = useState(false);
+const [newDeliveryDate, setNewDeliveryDate] = useState(() => new Date().toISOString().split('T')[0]);
+
 
   const toggleDropdown = () => setDropdownOpen((prevState) => !prevState);
 
@@ -75,17 +83,33 @@ const DeliveryOrderList = () => {
 
   const duplicateDeliveryOrder = async (orderToRepeat) => {
     try {
+      if (!orderToRepeat || !orderToRepeat.delivery_order_id) {
+        message('No delivery order selected to duplicate', 'warning');
+        return;
+      }
+
+      // Fetch delivery order items for the selected order
+      const itemsResponse = await api.post('/invoice/getDeliveryLineItemsById', { delivery_order_id: orderToRepeat.delivery_order_id });
+      const deliveryItems = itemsResponse.data.data || [];
+
       // Get the next delivery code
       const codeResponse = await api.post('/commonApi/getCodeValues', { type: 'delivery' });
       const newDeliveryCode = codeResponse.data.data;
 
-      // Create new delivery order with copied data
+      // Prepare new delivery order payload with duplicated items
       const payload = {
         ...orderToRepeat,
         delivery_code: newDeliveryCode,
         created_date: new Date().toISOString().split('T')[0],
         delivery_status: 'Open',
-        id: null, // Remove the original ID to create new record
+        companyId: orderToRepeat.company_id,
+      
+        products: deliveryItems.map(item => ({
+          productId: item.product_id,
+          quantity: item.quantity,
+          price: item.price,
+          // Add other relevant fields if needed
+        })),
       };
 
       const response = await api.post('/salesOrder/createDeliveryOrder', payload);
@@ -138,17 +162,74 @@ const DeliveryOrderList = () => {
       message(error.response?.data?.message || 'Failed to generate invoice', 'error');
     }
   };
+
+
+  const id = selectedOrder?.delivery_order_id || '';
+    const [settingdetails, setSettingDetails] = useState();
+  
+  const getSettingById = () => {
+    api
+      .post('/salesorder/getDeliveryorderById', { delivery_order_id: id })
+      .then((res) => {
+        setSettingDetails(res.data.data[0]);
+      })
+      .catch(() => {
+        message('setting Data Not Found', 'info');
+      });
+  };
+     const [lineItem, setLineItem] = useState();
+   
+    const getLineItem = () => {
+      api.post('/invoice/getDeliveryLineItemsById', { delivery_order_id: id }).then((res) => {
+        setLineItem(res.data.data);
+        //setAddLineItemModal(true);
+      });
+    };
+
+    useEffect(() => {
+      getSettingById();
+          getLineItem();
+    }, [id]);
+    const updateDeliveryOrderDate = async () => {
+  try {
+    const payload = {
+      delivery_order_id: selectedOrder.delivery_order_id,
+      delivery_date: newDeliveryDate,
+    };
+    const response = await api.post('/invoice/updateDeliveryDate', payload);
+    if (response.data.success) {
+      message('Delivery order date updated successfully', 'success');
+      setIsChangeDateModalOpen(false);
+      getDeliveryOrders(); // Refresh list
+         setTimeout(() => {
+            window.location.reload();
+          }, 400);
+    } else {
+      message('Failed to update delivery date', 'error');
+    }
+  } catch (error) {
+    console.error('Date update failed:', error);
+    message(error.response?.data?.message || 'Date update failed', 'error');
+  }
+};
+
+
+ // const [showPrintPerfoma, setShowPrintPerfoma] = useState(false);
+
   const handleActionClick = (action) => {
-    switch (action) {      case 'convert':
+    switch (action) {
+      case 'convert':
         if (!selectedOrder) {
           message('Please select any one delivery order', 'warning');
         } else {
           generateInvoice(selectedOrder);
         }
-        break;case 'bulk':
+        break;
+      case 'bulk':
         // Navigate to bulk delivery order form
         navigate('/BulkDeliveryOrder');
-        break;      case 'sms':
+        break;
+      case 'sms':
         if (!selectedOrder) {
           message('Please select any one delivery order', 'warning');
         } else {
@@ -158,14 +239,23 @@ const DeliveryOrderList = () => {
       case 'repeat':
         duplicateDeliveryOrder(selectedOrder);
         break;
-      case 'change':
-        // Handle Change DO Date
-        break;
+     
+        case 'change':
+  if (!selectedOrder) {
+    message('Please select any one delivery order', 'warning');
+  } else {
+    setNewDeliveryDate(new Date().toISOString().split('T')[0]); // default to today
+    setIsChangeDateModalOpen(true);
+  }
+  break;
+
       case 'track':
         // Handle Tracking Images
         break;
       case 'print':
-        // Handle Print Without Price
+        if (!selectedOrder) {
+          message('Please select any one delivery order', 'warning');
+        } 
         break;
       default:
         break;
@@ -224,7 +314,9 @@ const DeliveryOrderList = () => {
           Button={
             <Dropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
               <DropdownToggle color="primary" caret>
-                New Transaction
+               <Button color="primary" tag={Link} to="/DeliveryOrderDetails" className="shadow-none">
+                                New Transaction
+                              </Button>
               </DropdownToggle>
               <DropdownMenu>
                 <DropdownItem onClick={() => {
@@ -268,7 +360,13 @@ const DeliveryOrderList = () => {
                     return;
                   }
                   handleActionClick('print');
-                }}>Print Without Price</DropdownItem>
+                }}>
+          <PrintPerfoma
+            id={id}
+            settingdetails={settingdetails}
+            lineItem={lineItem}
+          />
+      </DropdownItem>
               </DropdownMenu>
             </Dropdown>
           }
@@ -312,7 +410,33 @@ const DeliveryOrderList = () => {
               ))}
           </tbody>
         </CommonTable>
+     
       </div>
+      {isChangeDateModalOpen && (
+  <div className="modal show d-block" tabIndex="-1" role="dialog">
+    <div className="modal-dialog" role="document">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h5 className="modal-title">Change Delivery Order Date</h5>
+          <button type="button" className="btn-close" onClick={() => setIsChangeDateModalOpen(false)} />
+        </div>
+        <div className="modal-body">
+          <input
+            type="date"
+            className="form-control"
+            value={newDeliveryDate}
+            onChange={(e) => setNewDeliveryDate(e.target.value)}
+          />
+        </div>
+        <div className="modal-footer">
+          <Button color="primary" onClick={updateDeliveryOrderDate}>Save</Button>
+          <Button color="secondary" onClick={() => setIsChangeDateModalOpen(false)}>Cancel</Button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };

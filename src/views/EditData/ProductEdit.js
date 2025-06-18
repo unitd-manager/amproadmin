@@ -21,6 +21,7 @@ import AttachmentModalV2 from '../../components/Tender/AttachmentModalV2';
 import ProductDetail from '../../components/ProductTable/ProductDetail';
 import creationdatetime from '../../constants/creationdatetime';
 import AppContext from '../../context/AppContext';
+import ProductStockMovement from '../../components/Product/ProductStockMovement';
 // import ContactPriceButton from '../../components/ProductTable/ContactPriceButton';
 
 const ProductUpdate = () => {
@@ -62,7 +63,7 @@ const ProductUpdate = () => {
     { id: '2', name: 'Image'},
     { id: '3', name: 'Product UOM'},
     { id: '4', name: 'Product Variation'},
-    // { id: '5', name: 'Contact Price Button'},
+    { id: '5', name: 'Product Stock Movement'},
   ];
   const toggle = (tab) => {
     if (activeTab !== tab) setActiveTab(tab);
@@ -277,6 +278,10 @@ const getSupplier = () => {
 <TabPane tabId="4">
  
     <ProductVariation productId={id} />
+</TabPane>
+<TabPane tabId="5">
+ 
+    <ProductStockMovement productId={id} />
 </TabPane>
 
 {/* <TabPane tabId="5">
