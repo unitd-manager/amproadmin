@@ -151,6 +151,7 @@ const CustomerDetailsTable = Loadable(lazy(() => import('../views/detailTable/Cu
 const SubCategoryTable = Loadable(lazy(() => import('../views/smartconTables/SubCategory')));
 const BlogDetailsTable = Loadable(lazy(() => import('../views/detailTable/BlogDetails')));
 const SupplierDetailsTable = Loadable(lazy(() => import('../views/detailTable/SupplierDetails')));
+const SupplierCLDetailsTable = Loadable(lazy(() => import('../views/detailTable/SupplierCLDetails')));
 
 const CustomerSupplierPriceDetailTable = Loadable(lazy(() => import('../views/detailTable/CustomerSupplierPriceDetails')));
 const GoodsReceivedDetailTable = Loadable(lazy(() => import('../views/detailTable/GoodsReceivedDetails')));
@@ -159,6 +160,7 @@ const SubCategoryDetailsTable = Loadable(
   lazy(() => import('../views/detailTable/SubCategoryDetails')),
 );
 const SupplierTable = Loadable(lazy(() => import('../views/smartconTables/Supplier')));
+const SupplierCLTable = Loadable(lazy(() => import('../views/smartconTables/SupplierCL')));
 const SalesOrderTable = Loadable(lazy(() => import('../views/smartconTables/salesOrder')));
 const ValuelistTable = Loadable(lazy(() => import('../views/smartconTables/Valuelist')));
 const ValuelistDetailsTable = Loadable(lazy(() => import('../views/detailTable/ValuelistDetails')));
@@ -531,6 +533,7 @@ const Routernew = () => {
           {/* Tender */}
           <Route path="/BlogDetails" name="blogDetaildata" element={<BlogDetailsTable />}></Route>
           <Route path="/SupplierDetails" name="supplierDetaildata" element={<SupplierDetailsTable />}></Route>
+          <Route path="/SupplierCLDetails" name="supplierDetaildata" element={<SupplierCLDetailsTable />}></Route>
           <Route path="/Task" name="taskdata" element={<TaskTable />}></Route>
           <Route path="/Staff" name="staffdata" element={<StaffTable />}></Route>
           <Route path="/ProductDetails" name="productDetaildata" element={<ProductDetailsTable />}></Route>
@@ -612,6 +615,7 @@ const Routernew = () => {
           <Route path="/IR8AReport" name="ir8areportdata" element={<IR8AReport />}></Route>
           <Route path="/PurchaseGstReport" name="purchasegstreportdata" element={<PurchaseGstReport />}></Route>
           <Route path="/Supplier" name="supplierdata" element={<SupplierTable />}></Route>
+          <Route path="/SupplierCL" name="supplierdata" element={<SupplierCLTable />}></Route>
           <Route path="/salesOrder" name="supplierdata" element={<SalesOrderTable />}></Route>
 
           <Route path="/Leave" name="clienttdata" element={<LeaveTable />}></Route>
