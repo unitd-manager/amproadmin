@@ -101,7 +101,9 @@
     "yup": "^0.32.11"
   },
   "devDependencies": {
+    "@playwright/test": "^1.53.1",
     "@types/datatables.net-buttons": "^1.4.7",
+    "@types/node": "^24.0.3",
     "eslint": "^7.30.0",
     "eslint-config-airbnb": "^18.2.1",
     "eslint-config-prettier": "^8.3.0",
