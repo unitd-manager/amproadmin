@@ -67,7 +67,7 @@ const SupplierCL = () => {
     setSelectedSupplier(supplierRow);
     setShowActivateModal(true);
   };
-
+       
   const confirmActivate = () => {
     if (!selectedSupplier) return;
     setLoading(true);
