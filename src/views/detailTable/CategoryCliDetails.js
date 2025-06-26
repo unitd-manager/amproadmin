@@ -19,11 +19,11 @@ const AddCategory = () => {
     sort_order: '',
     product_prefix: '',
     category_image: null,
-    show_on_ecommerce: true,
-    show_on_eprocurement: true,
-    show_on_pos: true,
-    read_weight_from_scale: false,
-    is_active: true,
+    show_on_ecommerce: 1,
+    show_on_eprocurement: 1,
+    show_on_pos: 1,
+    read_weight_from_scale: 0,
+    is_active: 1,
   });
 
   const [departments, setDepartments] = useState([]);
@@ -38,19 +38,29 @@ navigate(`/CategoriesEdit/${id}`)
 
   const fetchDepartments = async () => {
     const res = await api.get('/departmentcli/getalldepartments');
-    setDepartments(res.data);
+    setDepartments(res?.data?.data);
   };
 
-  const handleChange = (e) => {
-    const { name, value, type, checked, files } = e.target;
-    if (type === 'checkbox') {
-      setForm({ ...form, [name]: checked });
-    } else if (type === 'file') {
-      setForm({ ...form, [name]: files[0] });
-    } else {
-      setForm({ ...form, [name]: value });
-    }
-  };
+  // const handleChange = (e) => {
+  //   const { name, value, type, checked, files } = e.target;
+  //   if (type === 'checkbox') {
+  //     setForm({ ...form, [name]: checked });
+  //   } else if (type === 'file') {
+  //     setForm({ ...form, [name]: files[0] });
+  //   } else {
+  //     setForm({ ...form, [name]: value });
+  //   }
+  // };
+const handleChange = (e) => {
+  const { name, value, type, checked, files } = e.target;
+  if (type === 'checkbox') {
+    setForm({ ...form, [name]: checked ? 1 : 0 });
+  } else if (type === 'file') {
+    setForm({ ...form, [name]: files[0] });
+  } else {
+    setForm({ ...form, [name]: value });
+  }
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -103,7 +113,7 @@ navigate(`/CategoriesEdit/${id}`)
         <Col sm={8}>
           <Input type="select" name="department_cli_id" value={form.department_cli_id} onChange={handleChange}>
             <option value="">Select an option</option>
-            {departments.map((dept) => (
+            {departments?.map((dept) => (
               <option key={dept.department_cli_id} value={dept.department_cli_id}>
                 {dept.department_name}
               </option>
@@ -140,27 +150,28 @@ navigate(`/CategoriesEdit/${id}`)
         <Col sm={{ size: 8, offset: 4 }}>
           <FormGroup check>
             <Label check>
-              <Input type="checkbox" name="show_on_ecommerce" checked={form.show_on_ecommerce} onChange={handleChange} /> Show On ECommerce
+              <Input type="checkbox" name="show_on_ecommerce" checked={form.show_on_ecommerce === 1}
+ onChange={handleChange} /> Show On ECommerce
             </Label>
           </FormGroup>
           <FormGroup check>
             <Label check>
-              <Input type="checkbox" name="show_on_eprocurement" checked={form.show_on_eprocurement} onChange={handleChange} /> Show On EProcurement
+              <Input type="checkbox" name="show_on_eprocurement" checked={form.show_on_eprocurement === 1} onChange={handleChange} /> Show On EProcurement
             </Label>
           </FormGroup>
           <FormGroup check>
             <Label check>
-              <Input type="checkbox" name="show_on_pos" checked={form.show_on_pos} onChange={handleChange} /> Show On POS
+              <Input type="checkbox" name="show_on_pos" checked={form.show_on_pos === 1} onChange={handleChange} /> Show On POS
             </Label>
           </FormGroup>
           <FormGroup check>
             <Label check>
-              <Input type="checkbox" name="read_weight_from_scale" checked={form.read_weight_from_scale} onChange={handleChange} /> Read Weight From Scale
+              <Input type="checkbox" name="read_weight_from_scale" checked={form.read_weight_from_scale === 1} onChange={handleChange} /> Read Weight From Scale
             </Label>
           </FormGroup>
           <FormGroup check>
             <Label check>
-              <Input type="checkbox" name="is_active" checked={form.is_active} onChange={handleChange} /> IsActive
+              <Input type="checkbox" name="is_active" checked={form.is_active === 1} onChange={handleChange} /> IsActive
             </Label>
           </FormGroup>
         </Col>

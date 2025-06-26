@@ -15,6 +15,8 @@ import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
 import SalesInvoicePickingListPdf from '../../components/PDF/SalesInvoicePickingListPdf';
+import PrintLetterPdf from '../../components/PDF/PrintLetterPdf';
+
 
 
 const Test = () => {
@@ -167,10 +169,12 @@ useEffect(() => {
                    settingdetails={settingdetails}
                    lineItem={lineItem}
                 ></SalesInvoicePickingListPdf></DropdownItem>
-                {/* <DropdownItem>Print Pick List</DropdownItem>
-                <DropdownItem>Print Packing</DropdownItem>
-                <DropdownItem>Print With Cost</DropdownItem>
-                <DropdownItem>Print Performa</DropdownItem> */}
+                 <DropdownItem> <PrintLetterPdf
+          id={id}
+                   settingdetails={settingdetails}
+                   lineItem={lineItem}
+                ></PrintLetterPdf></DropdownItem>
+              
               </DropdownMenu>
             </Dropdown>
           }

@@ -48,8 +48,8 @@ const EditBrand = () => {
   const fetchBrandDetails = async () => {
     try {
       const res = await api.post('/brandcli/get_brand_cli', { brand_cli_id: id });
-      if (res.data && res.data.length > 0) {
-        const brand = res.data[0];
+      if (res.data ) {
+        const brand = res.data.data[0];
         setForm({ ...brand });
         setExistingImage(brand.brand_image); // assumes backend returns image filename
       }
@@ -112,7 +112,7 @@ const EditBrand = () => {
           <FormText color="muted">Upload image (80x80)</FormText>
           {existingImage && (
             <img
-              src={`${process.env.REACT_APP_IMAGE_PATH}/brand/${existingImage}`}
+              src={`http://ampro.zaitunsoftsolutions.com/storage/uploads/${form.brand_image}`}
               alt="Brand Preview"
               style={{ height: 80, width: 80, marginTop: '10px', border: '1px solid #ccc' }}
             />
@@ -121,28 +121,34 @@ const EditBrand = () => {
       </FormGroup>
 
       <Row className="mb-3">
-        <Col sm={{ size: 8, offset: 4 }}>
-          {[
-            { name: 'show_on_ecommerce', label: 'Show On ECommerce' },
-            { name: 'show_on_eprocurement', label: 'Show On EProcurement' },
-            { name: 'show_on_pos', label: 'Show On POS' },
-            { name: 'read_weight_from_scale', label: 'Read Weight From Scale' },
-            { name: 'is_active', label: 'IsActive' },
-          ].map((item) => (
-            <FormGroup check key={item.name}>
-              <Label check>
-                <Input
-                  type="checkbox"
-                  name={item.name}
-                  checked={!!form[item.name]}
-                  onChange={handleChange}
-                />{' '}
-                {item.label}
-              </Label>
-            </FormGroup>
-          ))}
-        </Col>
-      </Row>
+              <Col sm={{ size: 8, offset: 4 }}>
+                <FormGroup check>
+                  <Label check>
+                    <Input type="checkbox" name="show_on_ecommerce" checked={form.show_on_ecommerce === 1} onChange={handleChange} /> Show On ECommerce
+                  </Label>
+                </FormGroup>
+                <FormGroup check>
+                  <Label check>
+                    <Input type="checkbox" name="show_on_eprocurement" checked={form.show_on_eprocurement === 1} onChange={handleChange} /> Show On EProcurement
+                  </Label>
+                </FormGroup>
+                <FormGroup check>
+                  <Label check>
+                    <Input type="checkbox" name="show_on_pos" checked={form.show_on_pos === 1} onChange={handleChange} /> Show On POS
+                  </Label>
+                </FormGroup>
+                <FormGroup check>
+                  <Label check>
+                    <Input type="checkbox" name="read_weight_from_scale" checked={form.read_weight_from_scale === 1} onChange={handleChange} /> Read Weight From Scale
+                  </Label>
+                </FormGroup>
+                <FormGroup check>
+                  <Label check>
+                    <Input type="checkbox" name="is_active" checked={form.is_active === 1} onChange={handleChange} /> IsActive
+                  </Label>
+                </FormGroup>
+              </Col>
+            </Row>
 
       <Row className="mt-4">
         <Col sm={{ size: 8, offset: 4 }}>
