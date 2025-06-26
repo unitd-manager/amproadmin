@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Button,
   Form,
@@ -14,6 +14,7 @@ import Swal from 'sweetalert2';
 import * as Icon from 'react-feather';
 import message from '../../components/Message';
 import api from '../../constants/api';
+import AppContext from '../../context/AppContext';
 
 const EditBrand = () => {
   const { id } = useParams(); // brand_cli_id
@@ -89,6 +90,7 @@ const tableStyle = {};
     }
   };
 
+      const { loggedInuser } = useContext(AppContext);
   const fetchBrandDetails = async () => {
     try {
       const res = await api.get(`/brandcli/get_brand_cli/${id}`, { brand_cli_id: id });
@@ -111,7 +113,7 @@ const tableStyle = {};
       formData.append(key, value);
     });
     formData.append('brand_cli_id', id);
-
+formData.append('updated_by', loggedInuser.first_name);
     try {
       await api.put(`/brandcli/update_brand_cli/${id}`, formData);
       alert('Brand updated successfully');

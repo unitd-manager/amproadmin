@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   Button,
   Form,
@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { FileUploader } from 'react-drag-drop-files';
 import message from '../../components/Message';
 import api from '../../constants/api';
+import AppContext from '../../context/AppContext';
 
 const AddBrand = () => {
   const [form, setForm] = useState({
@@ -51,6 +52,7 @@ navigate(`/BrandEdit/${id}`)
 //     setDepartments(res.data);
 //   };
 
+  const { loggedInuser } = useContext(AppContext);
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     if (type === 'checkbox') {
@@ -68,6 +70,7 @@ navigate(`/BrandEdit/${id}`)
     Object.entries(form).forEach(([key, value]) => {
       formData.append(key, value);
     });
+formData.append('created_by', loggedInuser.first_name);
     try{
     const response =await api.post('/brandcli/insert_brand_cli', formData);
     const { insertId } = response.data.data;

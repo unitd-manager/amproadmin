@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Button,
   Form,
@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { FileUploader } from 'react-drag-drop-files';
 import message from '../../components/Message';
 import api from '../../constants/api';
+import AppContext from '../../context/AppContext';
 
 const AddSubCategory = () => {
   const [form, setForm] = useState({
@@ -53,6 +54,8 @@ navigate(`/SubCategoriesEdit/${id}`)
     setDepartments(res.data.data);
   };
 
+
+  const { loggedInuser } = useContext(AppContext);
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     if (type === 'checkbox') {
@@ -70,6 +73,7 @@ navigate(`/SubCategoriesEdit/${id}`)
     Object.entries(form).forEach(([key, value]) => {
       formData.append(key, value);
     });
+formData.append('created_by', loggedInuser.first_name);
     try{
      const response =await api.post('/subcategorycli/insert_sub_category_cli', formData);
     const { insertId } = response.data.data;

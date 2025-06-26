@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Button,
   Form,
@@ -14,6 +14,7 @@ import Swal from 'sweetalert2';
 import * as Icon from 'react-feather';
 import message from '../../components/Message';
 import api from '../../constants/api';
+import AppContext from '../../context/AppContext';
 
 const EditDepartment = () => {
   const { id } = useParams(); // department_cli_id
@@ -41,6 +42,7 @@ const EditDepartment = () => {
       });
     };
   
+        const { loggedInuser } = useContext(AppContext);
     const deleteFile = (fileId) => {
       Swal.fire({
         title: `Are you sure?`,
@@ -90,7 +92,7 @@ const EditDepartment = () => {
       formData.append(key, value);
     });
     formData.append('department_cli_id', id); // send ID for update
-
+formData.append('updated_by', loggedInuser.first_name);
     try {
       await api.put(`/departmentcli/update_department_cli/${id}`, formData);
       alert('Department updated successfully');

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Button,
   Form,
@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { FileUploader } from 'react-drag-drop-files';
 import message from '../../components/Message';
 import api from '../../constants/api';
+import AppContext from '../../context/AppContext';
 
 const AddDepartment = () => {
   const [form, setForm] = useState({
@@ -36,6 +37,7 @@ const onSave=(id)=>{
 navigate(`/DepartmentEdit/${id}`)
 }
 
+  const { loggedInuser } = useContext(AppContext);
  const [file, setFile] = useState([]);
          const [ handleValue, setHandleValue ] = useState();
  
@@ -72,6 +74,7 @@ navigate(`/DepartmentEdit/${id}`)
     Object.entries(form).forEach(([key, value]) => {
       formData.append(key, value);
     });
+formData.append('created_by', loggedInuser.first_name);
     try{
     const response =await api.post('/departmentcli/insert_department_cli', formData);
         
