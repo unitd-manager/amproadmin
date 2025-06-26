@@ -7,9 +7,10 @@ import {
   Input,
   Col,
   Row,
-  FormText,
 } from 'reactstrap';
 import { useNavigate } from 'react-router-dom';
+import { FileUploader } from 'react-drag-drop-files';
+import message from '../../components/Message';
 import api from '../../constants/api';
 
 const AddDepartment = () => {
@@ -34,6 +35,18 @@ navigate('/Department')
 const onSave=(id)=>{
 navigate(`/DepartmentEdit/${id}`)
 }
+
+ const [file, setFile] = useState([]);
+         const [ handleValue, setHandleValue ] = useState();
+ 
+         const handleFileChange = (fiels) => {
+           
+             const arrayOfObj = Object.entries(fiels).map((e) => ( e[1]  ));
+ 
+             setFile(fiels);
+             setHandleValue(arrayOfObj);
+             console.log(fiels)
+         };
  console.log('departments',departments);
 
 
@@ -59,32 +72,42 @@ navigate(`/DepartmentEdit/${id}`)
     Object.entries(form).forEach(([key, value]) => {
       formData.append(key, value);
     });
-    
+    try{
     const response =await api.post('/departmentcli/insert_department_cli', formData);
         
-    const {id} = response;
-      if (form?.department_image) {
-        const data = new FormData() 
-                
-
-               
-                    data.append(`files`, form.department_image);
-                 
-                data.append('file', form.department_image)
-                data.append('record_id', id)
-                data.append('room_name', 'departmentcli')
-                data.append('alt_tag_data', 'departmentcli')
-                data.append('description', 'departmentcli')
-
-                api.post('/file/uploadFiles',data).then(()=>{
-     
-                }).catch(()=>{
-                   
-                })
-    }
-    console.log('insertid',id)
-   onSave(id);
-    
+   const { insertId } = response.data.data;
+   
+       if(file){
+   
+             
+                   const data = new FormData() 
+                   const arrayOfObj = Object.entries(file).map((el) => (  el[1] ));
+   
+                   arrayOfObj.forEach((ele) => {
+                       data.append(`files`, ele);
+                     });
+                   //data.append('file', file)
+                   data.append('record_id', insertId)
+                   data.append('room_name', 'departmentcli')
+                   data.append('alt_tag_data', 'departmentcli')
+                   data.append('description', 'departmentcli')
+   
+                   api.post('/file/uploadFiles',data).then(()=>{
+        
+                       message('Files Uploaded Successfully','success')
+                       
+                   }).catch(()=>{
+                      
+                       message('Unable to upload File','error')
+                      
+                   })
+               }
+       onSave(insertId);
+   
+     } catch (err) {
+       console.error("Error submitting form: ", err);
+       alert("There was an error saving the department.");
+     }
   };
   useEffect(() => {
     fetchDepartments();
@@ -136,8 +159,29 @@ navigate(`/DepartmentEdit/${id}`)
           Department Image (80x80)
         </Label>
         <Col sm={8}>
-          <Input type="file" name="department_image" accept="image/*" onChange={handleChange} />
-          <FormText color="muted">Upload image (80x80)</FormText>
+          {/* <Input type="file" name="department_image" accept="image/*" onChange={handleChange} />
+          <FormText color="muted">Upload image (80x80)</FormText> */}
+           <FormGroup>
+                            
+                          <FileUploader
+                                  multiple
+                                  handleChange={handleFileChange}
+                                  name="file"
+                                 // types={fileTypes}
+                              />
+                              
+          
+                              {handleValue ? (
+                                  handleValue.map((e) => (
+                                  <div>
+                                      <span> Name: {e.name} </span>
+                                  </div>
+                                  ))
+                              ) : (
+                                  <span>No file selected</span>
+                              )}
+          
+                          </FormGroup>
         </Col>
       </FormGroup>
       <Row className="mb-3">

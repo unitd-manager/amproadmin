@@ -8,6 +8,7 @@ import {
   Col,
   Row,
 } from 'reactstrap';
+import { useNavigate } from 'react-router-dom';
 import message from '../../components/Message';
 import api from '../../constants/api';
 
@@ -22,7 +23,13 @@ const AddBin = () => {
     sort_order: '',
     is_active: 1,
   });
-
+  const navigate=useNavigate();
+const onCancel=()=>{
+navigate('/Bin')
+}
+const onSave=(id)=>{
+navigate(`/BinEdit/${id}`)
+}
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     if (type === 'checkbox') {
@@ -41,7 +48,9 @@ const AddBin = () => {
       formData.append(key, value);
     });
     try {
-      await api.post('/bincli/insert_bin_cli', formData);
+      const response= await api.post('/bincli/insert_bin_cli', formData);
+      const { insertId } = response.data.data;
+
       message('Bin Added successfully.', 'success');
       setForm({
         bin_name: '',
@@ -53,6 +62,7 @@ const AddBin = () => {
         sort_order: '',
         is_active: 1,
       });
+      onSave(insertId)
     } catch (err) {
       alert('Error saving bin');
       console.error(err);
@@ -118,6 +128,7 @@ const AddBin = () => {
       <Row className="mt-4">
         <Col sm={{ size: 8, offset: 4 }}>
           <Button color="primary" type="submit">Save</Button>
+          <Button color="danger" type="button" onClick={onCancel}>Cancel</Button>
         </Col>
       </Row>
     </Form>

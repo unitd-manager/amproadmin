@@ -11,7 +11,7 @@ import {
   PaginationLink
 } from 'reactstrap';
 import { FaTrash, FaPlus, FaFilter, FaSearch } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate,Link } from 'react-router-dom';
 import api from '../../constants/api';
 
 const DepartmentCli = () => {
@@ -32,8 +32,8 @@ const navigate=useNavigate();
         }
       });
       setCategories(response.data.data);
-      setTotalPages(response.data.totalPages);
-      setTotalRecords(response.data.totalRecords);
+      setTotalPages(response.data.pagination.totalPages);
+      setTotalRecords(response.data.pagination.totalRecords);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -98,7 +98,9 @@ const navigate=useNavigate();
                 <FaTrash style={{ cursor: 'pointer' }} onClick={() => handleDelete(cat.department_cli_id)} />
               </td>
               {/* <td>{cat.category_name}</td> */}
-              <td>{cat.department_name}</td>
+              <td><Link to={`/DepartmentEdit/${cat.department_cli_id}`}>
+                                     {cat.department_name}
+                                    </Link></td>
               <td>{cat.sort_order}</td>
               <td>{cat.is_active ? 'active':'inactive'}</td>
               <td>{cat.updated_by}</td>

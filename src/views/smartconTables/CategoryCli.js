@@ -10,7 +10,7 @@ import {
   PaginationItem,
   PaginationLink
 } from 'reactstrap';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate,Link } from 'react-router-dom';
 import { FaTrash, FaPlus, FaFilter, FaSearch } from 'react-icons/fa';
 import api from '../../constants/api';
 
@@ -30,8 +30,8 @@ const navigate=useNavigate();
         }
       });
       setCategories(response.data.data);
-      setTotalPages(response.data.totalPages);
-      setTotalRecords(response.data.totalRecords);
+      setTotalPages(response.data.pagination.totalPages);
+      setTotalRecords(response.data.pagination.totalRecords);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -97,7 +97,10 @@ const navigate=useNavigate();
               <td style={{ textAlign: 'center' }}>
                 <FaTrash style={{ cursor: 'pointer' }} onClick={() => handleDelete(cat.category_cli_id)} />
               </td>
-              <td>{cat.category_name}</td>
+              <td><Link to={`/CategoriesEdit/${cat.category_cli_id}`}>
+                                     {cat.category_name}
+                                    </Link>
+                </td>
               <td>{cat.department_name}</td>
               <td>{cat.sort_order}</td>
               <td>{cat.is_active?'active':'inactive'}</td>

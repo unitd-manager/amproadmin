@@ -6,6 +6,9 @@ import api from '../../constants/api';
 const EditBin = () => {
   const { id } = useParams(); // Get bin_cli_id from URL
   const navigate = useNavigate();
+    const onCancel = () => {
+    navigate('/Bin');
+  };
 
   const [form, setForm] = useState({
     bin_name: '',
@@ -15,16 +18,18 @@ const EditBin = () => {
     max_occupancy: '',
     read_weight_from_scale: '',
     sort_order: '',
-    is_active: true,
+    is_active: 0,
   });
 
   
 
   const fetchBinDetails = async () => {
     try {
-      const response = await api.post('/bincli/get_bin_cli', { bin_cli_id: id });
-      if (response.data && response.data.length > 0) {
-        setForm(response.data[0]);
+      const response = await api.get(`/bincli/get_bin_cli/${id}`, { bin_cli_id: id });
+      if (response.data && response.data.data) {
+          setForm(prev => ({
+          ...prev,
+          ...response.data.data     }));
       }
     } catch (err) {
       console.error('Error fetching bin:', err);
@@ -35,7 +40,7 @@ const EditBin = () => {
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     if (type === 'checkbox') {
-      setForm({ ...form, [name]: checked });
+      setForm({ ...form, [name]: checked?1:0 });
     } else if (type === 'file') {
       setForm({ ...form, [name]: files[0] });
     } else {
@@ -52,9 +57,9 @@ const EditBin = () => {
     formData.append('bin_cli_id', id); // Required for update
 
     try {
-      await api.post('/bincli/update_bin_cli', formData);
+      await api.put(`/bincli/update_bin_cli/${id}`, formData);
       alert('Bin updated successfully');
-      navigate('/bin-list'); // Redirect to bin list
+      navigate('/Bin'); // Redirect to bin list
     } catch (err) {
       console.error('Update failed:', err);
       alert('Error updating bin');
@@ -115,7 +120,7 @@ useEffect(() => {
         <Col sm={{ size: 8, offset: 4 }}>
           <FormGroup check>
             <Label check>
-              <Input type="checkbox" name="is_active" checked={form.is_active} onChange={handleChange} /> IsActive
+              <Input type="checkbox" name="is_active" checked={form.is_active === 1} onChange={handleChange} /> IsActive
             </Label>
           </FormGroup>
         </Col>
@@ -124,6 +129,7 @@ useEffect(() => {
       <Row className="mt-4">
         <Col sm={{ size: 8, offset: 4 }}>
           <Button color="primary" type="submit">Update</Button>
+          <Button color="danger" type="button" onClick={onCancel}>Cancel</Button>
         </Col>
       </Row>
     </Form>
