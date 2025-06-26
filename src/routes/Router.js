@@ -115,6 +115,7 @@ const EditProject = Loadable(lazy(() => import('../views/cubosale/EditProject'))
 const StaffTable = Loadable(lazy(() => import('../views/smartconTables/Staff')));
 const TaskTable = Loadable(lazy(() => import('../views/smartconTables/Task')));
 const ProductTable = Loadable(lazy(() => import('../views/smartconTables/product')));
+const ProductCLTable = Loadable(lazy(() => import('../views/smartconTables/ProductCL')));
 const TestTable = Loadable(lazy(() => import('../views/smartconTables/Test')));
 const EmployeetrainingreportsTable = Loadable(lazy(() => import('../views/smartconTables/Employeetrainingreports')));
 const StatementofAccountsReport = Loadable(lazy(() => import('../views/Reports/StatementofAccountsReport')));
@@ -131,6 +132,7 @@ const Blog = Loadable(lazy(() => import('../views/smartconTables/Blog')));
 const Inventory = Loadable(lazy(() => import('../views/smartconTables/Inventory')));
 // Details Table
 const ProductDetailsTable = Loadable(lazy(() => import('../views/detailTable/ProductDetails')));
+const ProductCLDetailsTable = Loadable(lazy(() => import('../views/detailTable/ProductCLDetails')));
 const ClientTable = Loadable(lazy(() => import('../views/smartconTables/Client')));
 
 // Finance Admin
@@ -537,6 +539,7 @@ const Routernew = () => {
           <Route path="/Task" name="taskdata" element={<TaskTable />}></Route>
           <Route path="/Staff" name="staffdata" element={<StaffTable />}></Route>
           <Route path="/ProductDetails" name="productDetaildata" element={<ProductDetailsTable />}></Route>
+          <Route path="/ProductCLDetails" name="productDetaildata" element={<ProductCLDetailsTable />}></Route>
           <Route path="/StaffDetails" name="staffDetaildata" element={<StaffDetails />}></Route>
           <Route path="/SalesOrderDetails" name="salesOrderDetaildata" element={<SalesOrderDetails />}></Route>
                     <Route path="/DeliveryOrderDetails" name="DeliveryOrderDetaildata" element={<DeliveryOrderDetails />}></Route>
@@ -546,6 +549,7 @@ const Routernew = () => {
           <Route path="/ClientDetails" name="clienttdata" element={<ClientDetailsTable />}></Route>
 
           <Route path="/Product" name="productdata" element={<ProductTable />}></Route>
+          <Route path="/ProductCL" name="productdata" element={<ProductCLTable />}></Route>
           <Route path="/Orders" name="ordersdata" element={<FinanceTable />}></Route>
           <Route
             path="/PurchaseOrderEdit/:id"
