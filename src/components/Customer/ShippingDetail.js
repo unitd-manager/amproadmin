@@ -140,14 +140,14 @@ export default function CustomerShippingDetail( ) {
               checked={isHandPhoneEnabled}
             />{' '}
             <Label check for="handphone_enable_checkbox" className="mb-0 ms-2">
-              HandPhone No
+              Default Load OnInvoice
             </Label>
             {isHandPhoneEnabled && (
               <Input
                 type="text"
                 onChange={handleNewShippingInputs}
-                value={newShippingDetail.handphone_no}
-                name="handphone_no"
+                value={newShippingDetail.default_load_on_invoice}
+                name="default_load_on_invoice"
                 className="ms-3"
                 style={{ flex: 1 }} // Take remaining space
               />
@@ -176,13 +176,30 @@ export default function CustomerShippingDetail( ) {
             />
           </FormGroup>
           <FormGroup>
+            <Label>Hand Phone No</Label>
+            <Input
+              type="text"
+              onChange={handleNewShippingInputs}
+              value={newShippingDetail.handphone_no}
+              name="handphone_no"
+            />
+          </FormGroup>
+
+          <FormGroup>
             <Label>Country/Postal</Label>
             <Input
               type="text"
               onChange={handleNewShippingInputs}
-              value={newShippingDetail.country_postal}
-              name="country_postal"
+              value={newShippingDetail.country}
+              name="country"
             />
+                        <Input
+              type="text"
+              onChange={handleNewShippingInputs}
+              value={newShippingDetail.postal_code}
+              name="postal_code"
+            />
+
           </FormGroup>
           <FormGroup>
             <Label>Attention</Label>
@@ -193,7 +210,7 @@ export default function CustomerShippingDetail( ) {
               name="attention"
             />
           </FormGroup>
-          <FormGroup switch className="pt-3">
+          {/* <FormGroup switch className="pt-3">
             <Label check for="default_load_on_invoice_toggle">
               Default Load On Invoice
             </Label>
@@ -205,7 +222,7 @@ export default function CustomerShippingDetail( ) {
               name="default_load_on_invoice"
               role="switch"
             />
-          </FormGroup>
+          </FormGroup> */}
         </Col>
 
         <Col md="12" className="text-right mt-3">
@@ -251,7 +268,7 @@ export default function CustomerShippingDetail( ) {
                 <td>{detail.email}</td>
                 <td>{detail.country_postal}</td>
                 <td>{detail.attention}</td>
-                <td>{detail.default_load_on_invoice === 1 ? 'Yes' : 'No'}</td>
+                <td>{detail.default_load_on_invoice }</td>
                 <td>
                   <Button color="danger" size="sm" onClick={() => deleteShippingDetail(detail.id)}>
                     Delete
