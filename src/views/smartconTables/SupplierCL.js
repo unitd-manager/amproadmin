@@ -66,7 +66,7 @@ const SupplierCL = () => {
   const handleActivate = (supplierRow) => {
     setSelectedSupplier(supplierRow);
     setShowActivateModal(true);
-  };
+  }; 
        
   const confirmActivate = () => {
     if (!selectedSupplier) return;
