@@ -7,9 +7,10 @@ import {
   Input,
   Col,
   Row,
-  FormText,
 } from 'reactstrap';
 import { useNavigate } from 'react-router-dom';
+import { FileUploader } from 'react-drag-drop-files';
+import message from '../../components/Message';
 import api from '../../constants/api';
 
 const AddBrand = () => {
@@ -34,7 +35,17 @@ navigate('/Brand')
 const onSave=(id)=>{
 navigate(`/BrandEdit/${id}`)
 }
+ const [file, setFile] = useState([]);
+         const [ handleValue, setHandleValue ] = useState();
  
+         const handleFileChange = (fiels) => {
+           
+             const arrayOfObj = Object.entries(fiels).map((e) => ( e[1]  ));
+ 
+             setFile(fiels);
+             setHandleValue(arrayOfObj);
+             console.log(fiels)
+         };
 //   const fetchDepartments = async () => {
 //     const res = await api.get('/departmentcli/getalldepartments');
 //     setDepartments(res.data);
@@ -57,16 +68,20 @@ navigate(`/BrandEdit/${id}`)
     Object.entries(form).forEach(([key, value]) => {
       formData.append(key, value);
     });
+    try{
     const response =await api.post('/brandcli/insert_brand_cli', formData);
-    const {insertId} = response.data; 
-      if (form?.brand_image) {
-        const data = new FormData() 
-                
+    const { insertId } = response.data.data;
 
-               
-                    data.append(`files`, form.brand_image);
-                 
-                data.append('file', form.brand_image)
+    if(file){
+
+          
+                const data = new FormData() 
+                const arrayOfObj = Object.entries(file).map((el) => (  el[1] ));
+
+                arrayOfObj.forEach((ele) => {
+                    data.append(`files`, ele);
+                  });
+                //data.append('file', file)
                 data.append('record_id', insertId)
                 data.append('room_name', 'brandcli')
                 data.append('alt_tag_data', 'brandcli')
@@ -74,11 +89,20 @@ navigate(`/BrandEdit/${id}`)
 
                 api.post('/file/uploadFiles',data).then(()=>{
      
+                    message('Files Uploaded Successfully','success')
+                    
                 }).catch(()=>{
                    
+                    message('Unable to upload File','error')
+                   
                 })
-    }
+            }
     onSave(insertId);
+
+  } catch (err) {
+    console.error("Error submitting form: ", err);
+    alert("There was an error saving the brand .");
+  }
   };
 
   return (
@@ -128,9 +152,31 @@ navigate(`/BrandEdit/${id}`)
           Brand Image (80x80)
         </Label>
         <Col sm={8}>
-          <Input type="file" name="brand_image" accept="image/*" onChange={handleChange} />
-          <FormText color="muted">Upload image (80x80)</FormText>
+          {/* <Input type="file" name="brand_image" accept="image/*" onChange={handleChange} />
+          <FormText color="muted">Upload image (80x80)</FormText> */}
+          <FormGroup>
+                  
+                <FileUploader
+                        multiple
+                        handleChange={handleFileChange}
+                        name="file"
+                       // types={fileTypes}
+                    />
+                    
+
+                    {handleValue ? (
+                        handleValue.map((e) => (
+                        <div>
+                            <span> Name: {e.name} </span>
+                        </div>
+                        ))
+                    ) : (
+                        <span>No file selected</span>
+                    )}
+
+                </FormGroup>
         </Col>
+         
       </FormGroup>
       <Row className="mb-3">
         <Col sm={{ size: 8, offset: 4 }}>

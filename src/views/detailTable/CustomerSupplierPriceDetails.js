@@ -124,9 +124,13 @@ const ProductContactPricePage = () => {
           <CardTitle className="text-center" tag="h4">
             Add/Edit Product Contact Price
           </CardTitle>
-          <Row className="mb-3">
+          {/* <Row className="mb-3">
+             <Col md="6">
+                          <label>Contact Code</label>
+                          <Input type="text" value={contactDetails.contact_code} readOnly />
+                        </Col>
             <Col md="6">
-              <label>Contact</label>
+              <label>Contact Name</label>
               <Input
                 type="select"
                 value={selectedContactId}
@@ -134,13 +138,44 @@ const ProductContactPricePage = () => {
               >
                 <option value="">Select Contact</option>
                 {contacts.map((contact) => (
-                  <option key={contact.contact_id} value={contact.contact_id}>
+                  <option key={contact.contact_cli_id} value={contact.contact_cli_id}>
                     {contact.contact_name}
                   </option>
                 ))}
               </Input>
             </Col>
-          </Row>
+          </Row> */}
+          <Row className="mb-3">
+  <Col md="6">
+    <label>Contact Code</label>
+    <Input
+      type="select"
+      value={selectedContactId}
+      onChange={(e) => {
+        const selectedId = e.target.value;
+        setSelectedContactId(selectedId);
+        const selected = contacts.find(c => c.contact_cli_id === parseInt(selectedId, 10));
+        setContactDetails({
+          contact_code: selected ? selected.contact_code : "",
+          contact_name: selected ? selected.contact_name : ""
+        });
+      }}
+    >
+      <option value="">Select Contact Code</option>
+      {contacts.map((contact) => (
+        <option key={contact.contact_cli_id} value={contact.contact_cli_id}>
+          {contact.contact_code}
+        </option>
+      ))}
+    </Input>
+  </Col>
+
+  <Col md="6">
+    <label>Contact Name</label>
+    <Input type="text" value={contactDetails.contact_name || ""} readOnly />
+  </Col>
+</Row>
+
         </CardBody>
       </Card>
 

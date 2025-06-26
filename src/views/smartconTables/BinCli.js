@@ -10,7 +10,7 @@ import {
   PaginationItem,
   PaginationLink
 } from 'reactstrap';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate,Link } from 'react-router-dom';
 import { FaTrash, FaPlus, FaFilter, FaSearch } from 'react-icons/fa';
 import api from '../../constants/api';
 
@@ -33,8 +33,8 @@ const navigate=useNavigate();
         }
       });
       setCategories(response.data.data);
-      setTotalPages(response.data.totalPages);
-      setTotalRecords(response.data.totalRecords);
+      setTotalPages(response.data.pagination.totalPages);
+      setTotalRecords(response.data.pagination.totalRecords);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -101,12 +101,14 @@ const navigate=useNavigate();
               <td style={{ textAlign: 'center' }}>
                 <FaTrash style={{ cursor: 'pointer' }} onClick={() => handleDelete(cat.bin_cli_id)} />
               </td>
-              <td>{cat.bin_name}</td>
+              <td><Link to={`/BinEdit/${cat.bin_cli_id}`}>
+                                     {cat.bin_name}
+                                    </Link></td>
               <td>{cat.floor_level}</td>
               <td>{cat.rack_no}</td>
                <td>{cat.rack_level}</td>
               <td>{cat.max_occupancy}</td>
-              <td>{cat.status}</td>
+              <td>{cat.is_active ? 'active':'inactive'}</td>
               <td>{cat.updated_at}</td>
               <td>{cat.updatet_by}</td>
             </tr>
