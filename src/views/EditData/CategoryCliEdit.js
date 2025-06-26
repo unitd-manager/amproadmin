@@ -265,7 +265,7 @@
 // };
 
 // export default EditCategory;
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Button,
   Form,
@@ -280,6 +280,7 @@ import Swal from 'sweetalert2';
 import * as Icon from 'react-feather';
 import message from '../../components/Message';
 import api from '../../constants/api';
+import AppContext from '../../context/AppContext';
 
 const EditCategory = () => {
   const { id } = useParams();
@@ -321,6 +322,7 @@ const EditCategory = () => {
     }
   };
 
+      const { loggedInuser } = useContext(AppContext);
   const getFiles = async () => {
     const res = await api.post('/file/getListOfFiles', { record_id: id, room_name: 'categorycli' });
     setGetFile(res.data);
@@ -372,6 +374,7 @@ const EditCategory = () => {
       // Update category with JSON data (no FormData needed unless uploading files)
       // const {formDataToSend } = form;
       console.log('formdatatosend',form);
+form.updated_by=loggedInuser.first_name;
       await api.post(`/categorycli/update_category_cli`, form);
       alert('Category updated successfully');
 

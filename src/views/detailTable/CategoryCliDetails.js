@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Button,
   Form,
@@ -12,6 +12,7 @@ import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate } from 'react-router-dom';
 import message from '../../components/Message';
 import api from '../../constants/api';
+import AppContext from '../../context/AppContext';
 
 const AddCategory = () => {
   const [form, setForm] = useState({
@@ -52,6 +53,9 @@ navigate(`/CategoriesEdit/${id}`)
   //     setForm({ ...form, [name]: value });
   //   }
   // };
+  
+  
+    const { loggedInuser } = useContext(AppContext);
 
   const [file, setFile] = useState([]);
         const [ handleValue, setHandleValue ] = useState();
@@ -86,7 +90,7 @@ const handleSubmit = async (e) => {
       formData.append(key, value);
     }
   });
-
+formData.append('created_by', loggedInuser.first_name);
   try {
     const response = await api.post('/categorycli/insert_category_cli', formData);
     const { insertId } = response.data.data;

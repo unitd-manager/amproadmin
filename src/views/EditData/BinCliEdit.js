@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Button, Form, FormGroup, Label, Input, Col, Row } from 'reactstrap';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../constants/api';
+import AppContext from '../../context/AppContext';
 
 const EditBin = () => {
   const { id } = useParams(); // Get bin_cli_id from URL
@@ -21,6 +22,7 @@ const EditBin = () => {
     is_active: 0,
   });
 
+      const { loggedInuser } = useContext(AppContext);
   
 
   const fetchBinDetails = async () => {
@@ -54,6 +56,7 @@ const EditBin = () => {
     Object.entries(form).forEach(([key, value]) => {
       formData.append(key, value);
     });
+    formData.append('updated_by', loggedInuser.first_name);
     formData.append('bin_cli_id', id); // Required for update
 
     try {

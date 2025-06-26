@@ -28,7 +28,7 @@ const PricingManagement = () => {
   //getting data from content
   const getSupplier = () => {
     api
-      .get('/contact/getContactsupplier')
+      .get('/customersupplierprice/getSupplierPrice')
       .then((res) => {
         setSupplier(res.data.data);
         console.log(res.data.data)
@@ -40,7 +40,7 @@ const PricingManagement = () => {
   //getting data from content
   const getCustomer = () => {
     api
-      .get('/contact/getContactcustomer')
+      .get('/customersupplierprice/getCustomerPrice')
       .then((res) => {
         setCustomer(res.data.data);
         console.log(res.data.data)
@@ -120,11 +120,11 @@ useEffect(() => {
                     <Button color="danger" size="sm">Delete</Button>
                   </td>
                   <td>  <Link to={`/CustomerSupplierPriceEdit/${item.id}`}>
-                  {item.name}
+                  {item.contact_name}
                                       </Link></td>
-                  <td>{item.count}</td>
-                  <td>{item.user}</td>
-                  <td>{item.date}</td>
+                  <td>{item.product_count}</td>
+                  <td>{item.created_user}</td>
+                  <td>{item.created_at}</td>
                 </tr>
               ))}
             </tbody>

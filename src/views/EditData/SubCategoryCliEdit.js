@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Button,
   Form,
@@ -14,6 +14,7 @@ import Swal from 'sweetalert2';
 import * as Icon from 'react-feather';
 import message from '../../components/Message';
 import api from '../../constants/api';
+import AppContext from '../../context/AppContext';
 
 const EditSubCategory = () => {
   const { id } = useParams(); // get sub_category_cli_id
@@ -72,6 +73,7 @@ const tableStyle = {};
     getFiles();
   }, []);
 
+      const { loggedInuser } = useContext(AppContext);
   const [departments, setDepartments] = useState([]);
 
   const fetchDepartments = async () => {
@@ -121,7 +123,7 @@ const tableStyle = {};
       formData.append(key, value);
     });
     formData.append('sub_category_cli_id', id); // include ID for update
-
+formData.append('updated_by', loggedInuser.first_name);
     try {
       await api.put(`/subcategorycli/update_sub_category_cli/${id}`, formData);
       alert('Sub Category updated successfully');

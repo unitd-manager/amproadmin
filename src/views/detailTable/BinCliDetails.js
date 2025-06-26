@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   Button,
   Form,
@@ -11,6 +11,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import message from '../../components/Message';
 import api from '../../constants/api';
+import AppContext from '../../context/AppContext';
 
 const AddBin = () => {
   const [form, setForm] = useState({
@@ -30,6 +31,9 @@ navigate('/Bin')
 const onSave=(id)=>{
 navigate(`/BinEdit/${id}`)
 }
+
+
+  const { loggedInuser } = useContext(AppContext);
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     if (type === 'checkbox') {
@@ -47,6 +51,7 @@ navigate(`/BinEdit/${id}`)
     Object.entries(form).forEach(([key, value]) => {
       formData.append(key, value);
     });
+formData.append('created_by', loggedInuser.first_name);
     try {
       const response= await api.post('/bincli/insert_bin_cli', formData);
       const { insertId } = response.data.data;

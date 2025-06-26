@@ -28,29 +28,56 @@ const ProductContactPricePage = () => {
   const [contactDetails, setContactDetails] = useState({
     contact_code: "",
     contact_name: "",
+    contact_id:""
   });
 
   const toggleTab = (tab) => {
     if (activeTab !== tab) setActiveTab(tab);
   };
+  const [contacts, setContacts] = useState([]);
+
+useEffect(() => {
+  api.get("/customersupplierprice/getContactclis")
+    .then((res) => {
+      if (res.data && res.data.data) setContacts(res.data.data);
+    })
+    .catch((err) => console.error("Error fetching contacts:", err));
+}, []);
+
 
   useEffect(() => {
     if (id) {
       api
-        .post("/customersupplier/getPriceproducts", { customer_supplier_price_id: id })
+        .get(`/customersupplierprice/getCsProductByCSPId/${id}`, { customer_supplier_price_id: id })
         .then((res) => {
           if (res.data && res.data.data) setProductData(res.data.data);
         })
         .catch((err) => console.error("Error fetching product data:", err));
 
       api
-        .post("/customersupplier/getCustomerContact", { customer_supplier_price_id: id })
+        .get(`/customersupplierprice/getCustomerSupplierPriceById/${id}`, { customer_supplier_price_id: id })
         .then((res) => {
           if (res.data && res.data.data) setContactDetails(res.data.data);
         })
         .catch((err) => console.error("Error fetching contact details:", err));
     }
   }, [id]);
+ 
+// Once contacts + contact_id loaded -> sync code + name
+useEffect(() => {
+  if (contactDetails.contact_id && contacts.length > 0) {
+    const selectedContact = contacts.find(c => c.contact_cli_id === contactDetails.contact_id);
+    if (selectedContact) {
+      setContactDetails(prev => ({
+        ...prev,
+        contact_code: selectedContact.contact_code,
+        contact_name: selectedContact.contact_name,
+        contact_id: selectedContact.contact_cli_id
+      }));
+    }
+  }
+}, [contactDetails.contact_id, contacts]);
+
 
   const handleProductChange = (index, field, value) => {
     const updated = productData.map((item, i) =>
@@ -67,14 +94,14 @@ const ProductContactPricePage = () => {
   const handleSave = async () => {
     try {
       // Update Customer Supplier Price (if needed - create API if you don't have)
-      await api.post("/customersupplier/updateCustomerSupplierPrice", {
+      await api.post("/customersupplierprice/updateCustomerSupplierPrice", {
         customer_supplier_price_id: id,
         contact_id: contactDetails.contact_id, // Assuming contact_id is part of contactDetails
       });
 
       // Update products one by one (or create bulk update API)
       for (const product of productData) {
-        await api.post("/customersupplier/updateCsProduct", {
+        await api.post("/customersupplierprice/updateCsProduct", {
           cs_product_id: product.cs_product_id,
           product_code: product.product_code,
           product_id: product.product_id,
@@ -100,16 +127,41 @@ const ProductContactPricePage = () => {
           <CardTitle className="text-center" tag="h4">
             Edit Product Contact Price
           </CardTitle>
-          <Row className="mb-3">
-            <Col md="6">
-              <label>Contact Code</label>
-              <Input type="text" value={contactDetails.contact_code} readOnly />
-            </Col>
-            <Col md="6">
-              <label>Contact Name</label>
-              <Input type="text" value={contactDetails.contact_name} readOnly />
-            </Col>
-          </Row>
+        <Row className="mb-3">
+  <Col md="6">
+    <label>Contact Code</label>
+    <Input
+      type="select"
+      value={contactDetails.contact_code}
+      onChange={(e) => {
+        const code = e.target.value;
+        const selectedContact = contacts.find(c => c.contact_code === code);
+        setContactDetails({
+          contact_code: code,
+          contact_name: selectedContact ? selectedContact.contact_name : "",
+          contact_id: selectedContact ? selectedContact.contact_cli_id : ""
+        });
+      }}
+    >
+      <option value="">Select Contact Code</option>
+      {contacts.map(contact => (
+        <option key={contact.contact_cli_id} value={contact.contact_code}>
+          {contact.contact_code}
+        </option>
+      ))}
+    </Input>
+  </Col>
+
+  <Col md="6">
+    <label>Contact Name</label>
+    <Input
+      type="text"
+      value={contactDetails.contact_name}
+      readOnly
+    />
+  </Col>
+</Row>
+
         </CardBody>
       </Card>
 
