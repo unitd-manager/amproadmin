@@ -11,6 +11,7 @@ import {
   PaginationLink
 } from 'reactstrap';
 import { FaTrash, FaPlus, FaFilter, FaSearch } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import api from '../../constants/api';
 
 const SubCategoryCli = () => {
@@ -20,7 +21,7 @@ const SubCategoryCli = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [totalRecords, setTotalRecords] = useState(0);
 
- 
+ const navigate=useNavigate();
 
   const fetchCategories = async () => {
     try {
@@ -57,7 +58,9 @@ const SubCategoryCli = () => {
   return (
     <Container fluid className="p-4" style={{ backgroundColor: '#f0f4fa', minHeight: '100vh' }}>
       <h3 className="mb-4">SubCategory Management</h3>
-      <Button color="primary" className="mb-3">
+      <Button color="primary" className="mb-3" onClick={()=>{
+        navigate('/subcategoriesDetails')
+      }}>
         <FaPlus /> Add New(+)
       </Button>
 

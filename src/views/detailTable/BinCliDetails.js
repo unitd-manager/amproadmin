@@ -8,6 +8,7 @@ import {
   Col,
   Row,
 } from 'reactstrap';
+import message from '../../components/Message';
 import api from '../../constants/api';
 
 const AddBin = () => {
@@ -17,15 +18,15 @@ const AddBin = () => {
     rack_no: '',
     rack_level: '',
     max_occupancy: '',
-    read_weight_from_scale: '',
+    read_weight_from_scale: 0,
     sort_order: '',
-    is_active: true,
+    is_active: 1,
   });
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     if (type === 'checkbox') {
-      setForm({ ...form, [name]: checked });
+      setForm({ ...form, [name]: checked ? 1 : 0 });
     } else if (type === 'file') {
       setForm({ ...form, [name]: files[0] });
     } else {
@@ -41,16 +42,16 @@ const AddBin = () => {
     });
     try {
       await api.post('/bincli/insert_bin_cli', formData);
-      alert('Bin saved successfully');
+      message('Bin Added successfully.', 'success');
       setForm({
         bin_name: '',
         floor_level: '',
         rack_no: '',
         rack_level: '',
         max_occupancy: '',
-        read_weight_from_scale: '',
+        read_weight_from_scale: 0,
         sort_order: '',
-        is_active: true,
+        is_active: 1,
       });
     } catch (err) {
       alert('Error saving bin');
@@ -108,7 +109,7 @@ const AddBin = () => {
         <Col sm={{ size: 8, offset: 4 }}>
           <FormGroup check>
             <Label check>
-              <Input type="checkbox" name="is_active" checked={form.is_active} onChange={handleChange} /> IsActive
+              <Input type="checkbox" name="is_active" checked={form.is_active === 1} onChange={handleChange} /> IsActive
             </Label>
           </FormGroup>
         </Col>

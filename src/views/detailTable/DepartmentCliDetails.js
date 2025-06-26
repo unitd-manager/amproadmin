@@ -19,11 +19,11 @@ const AddDepartment = () => {
     sort_order: '',
     product_prefix: '',
     department_image: null,
-    show_on_ecommerce: true,
-    show_on_eprocurement: true,
-    show_on_pos: true,
-    read_weight_from_scale: false,
-    is_active: true,
+    show_on_ecommerce: 1,
+    show_on_eprocurement: 1,
+    show_on_pos: 1,
+    read_weight_from_scale: 0,
+    is_active: 1,
   });
 
   const [departments, setDepartments] = useState([]);
@@ -45,7 +45,7 @@ navigate(`/DepartmentEdit/${id}`)
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     if (type === 'checkbox') {
-      setForm({ ...form, [name]: checked });
+      setForm({ ...form, [name]: checked ? 1 : 0  });
     } else if (type === 'file') {
       setForm({ ...form, [name]: files[0] });
     } else {
@@ -61,7 +61,8 @@ navigate(`/DepartmentEdit/${id}`)
     });
     
     const response =await api.post('/departmentcli/insert_department_cli', formData);
-    const {insertId} = response.data;
+        
+    const {id} = response;
       if (form?.department_image) {
         const data = new FormData() 
                 
@@ -70,7 +71,7 @@ navigate(`/DepartmentEdit/${id}`)
                     data.append(`files`, form.department_image);
                  
                 data.append('file', form.department_image)
-                data.append('record_id', insertId)
+                data.append('record_id', id)
                 data.append('room_name', 'departmentcli')
                 data.append('alt_tag_data', 'departmentcli')
                 data.append('description', 'departmentcli')
@@ -81,7 +82,8 @@ navigate(`/DepartmentEdit/${id}`)
                    
                 })
     }
-    onSave(insertId);
+    console.log('insertid',id)
+   onSave(id);
     
   };
   useEffect(() => {
@@ -142,27 +144,27 @@ navigate(`/DepartmentEdit/${id}`)
         <Col sm={{ size: 8, offset: 4 }}>
           <FormGroup check>
             <Label check>
-              <Input type="checkbox" name="show_on_ecommerce" checked={form.show_on_ecommerce} onChange={handleChange} /> Show On ECommerce
+              <Input type="checkbox" name="show_on_ecommerce" checked={form.show_on_ecommerce === 1} onChange={handleChange} /> Show On ECommerce
             </Label>
           </FormGroup>
           <FormGroup check>
             <Label check>
-              <Input type="checkbox" name="show_on_eprocurement" checked={form.show_on_eprocurement} onChange={handleChange} /> Show On EProcurement
+              <Input type="checkbox" name="show_on_eprocurement" checked={form.show_on_eprocurement === 1} onChange={handleChange} /> Show On EProcurement
             </Label>
           </FormGroup>
           <FormGroup check>
             <Label check>
-              <Input type="checkbox" name="show_on_pos" checked={form.show_on_pos} onChange={handleChange} /> Show On POS
+              <Input type="checkbox" name="show_on_pos" checked={form.show_on_pos === 1} onChange={handleChange} /> Show On POS
             </Label>
           </FormGroup>
           <FormGroup check>
             <Label check>
-              <Input type="checkbox" name="read_weight_from_scale" checked={form.read_weight_from_scale} onChange={handleChange} /> Read Weight From Scale
+              <Input type="checkbox" name="read_weight_from_scale" checked={form.read_weight_from_scale === 1} onChange={handleChange} /> Read Weight From Scale
             </Label>
           </FormGroup>
           <FormGroup check>
             <Label check>
-              <Input type="checkbox" name="is_active" checked={form.is_active} onChange={handleChange} /> IsActive
+              <Input type="checkbox" name="is_active" checked={form.is_active === 1} onChange={handleChange} /> IsActive
             </Label>
           </FormGroup>
         </Col>

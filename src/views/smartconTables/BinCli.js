@@ -10,6 +10,7 @@ import {
   PaginationItem,
   PaginationLink
 } from 'reactstrap';
+import { useNavigate } from 'react-router-dom';
 import { FaTrash, FaPlus, FaFilter, FaSearch } from 'react-icons/fa';
 import api from '../../constants/api';
 
@@ -21,6 +22,7 @@ const BinCli = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [totalRecords, setTotalRecords] = useState(0);
 
+const navigate=useNavigate();
 
   const fetchCategories = async () => {
     try {
@@ -58,7 +60,9 @@ const BinCli = () => {
   return (
     <Container fluid className="p-4" style={{ backgroundColor: '#f0f4fa', minHeight: '100vh' }}>
       <h3 className="mb-4">Bin Management</h3>
-      <Button color="primary" className="mb-3">
+      <Button color="primary" className="mb-3" onClick={()=>{
+        navigate('/BinDetails')
+      }}>
         <FaPlus /> Add New(+)
       </Button>
 
