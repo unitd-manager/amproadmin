@@ -28,9 +28,9 @@ const PricingManagement = () => {
   //getting data from content
   const getSupplier = () => {
     api
-      .get('/contact/getContact')
+      .get('/contact/getContactsupplier')
       .then((res) => {
-        //setSupplier(res.data.data);
+        setSupplier(res.data.data);
         console.log(res.data.data)
       })
       .catch(() => {
@@ -40,9 +40,9 @@ const PricingManagement = () => {
   //getting data from content
   const getCustomer = () => {
     api
-      .get('/contact/getContact')
+      .get('/contact/getContactcustomer')
       .then((res) => {
-        //setCustomer(res.data.data);
+        setCustomer(res.data.data);
         console.log(res.data.data)
       })
       .catch(() => {
@@ -50,38 +50,13 @@ const PricingManagement = () => {
       });
   };
 
-//   const data = [
-//     { id: 1, name: "VINAYAGA TRADING & SUPERMART PTE LTD", code: "VINAJURONG", count: 48, user: "sales2", date: "06/02/2025" },
-//     { id: 2, name: "EVERGREEN TRADING MART", code: "EVERG", count: 51, user: "sales2", date: "06/02/2025" },
-//     { id: 3, name: "DAKSHNA TRADERS MINIMART", code: "DAKJURON", count: 176, user: "sales2", date: "06/02/2025" },
-//     { id: 4, name: "BS SUPERMARKET", code: "BSSTUS", count: 121, user: "sales1", date: "06/02/2025" },
-//     { id: 5, name: "TOH GUAN MINIMART", code: "TOUMI", count: 223, user: "sales2", date: "06/02/2025" },
-//     { id: 6, name: "POPULAR SUPERMARKET PTE LTD", code: "PAPULARSUP", count: 154, user: "sales2", date: "06/02/2025" },
-//     { id: 7, name: "BAZAAR", code: "BAZAARTOH", count: 82, user: "sales2", date: "06/02/2025" },
-//     { id: 8, name: "NAWAS GLOBAL PTE LTD", code: "NAWASTUAS", count: 306, user: "sales2", date: "06/02/2025" },
-//   ];
+
 useEffect(() => {
     
     getSupplier();
     getCustomer();
-    setCustomer([ { id: 1, name: "VINAYAGA TRADING & SUPERMART PTE LTD", code: "VINAJURONG", count: 48, user: "sales2", date: "06/02/2025" },
-        { id: 2, name: "EVERGREEN TRADING MART", code: "EVERG", count: 51, user: "sales2", date: "06/02/2025" },
-        { id: 3, name: "DAKSHNA TRADERS MINIMART", code: "DAKJURON", count: 176, user: "sales2", date: "06/02/2025" },
-        { id: 4, name: "BS SUPERMARKET", code: "BSSTUS", count: 121, user: "sales1", date: "06/02/2025" },
-        { id: 5, name: "TOH GUAN MINIMART", code: "TOUMI", count: 223, user: "sales2", date: "06/02/2025" },
-        { id: 6, name: "POPULAR SUPERMARKET PTE LTD", code: "PAPULARSUP", count: 154, user: "sales2", date: "06/02/2025" },
-        { id: 7, name: "BAZAAR", code: "BAZAARTOH", count: 82, user: "sales2", date: "06/02/2025" },
-        { id: 8, name: "NAWAS GLOBAL PTE LTD", code: "NAWASTUAS", count: 306, user: "sales2", date: "06/02/2025" },
-      ]);
-      setSupplier([ { id: 1, name: "VINAYAGA TRADING & SUPERMART PTE LTD", code: "VINAJURONG", count: 48, user: "sales2", date: "06/02/2025" },
-        { id: 2, name: "EVERGREEN TRADING MART", code: "EVERG", count: 51, user: "sales2", date: "06/02/2025" },
-        { id: 3, name: "DAKSHNA TRADERS MINIMART", code: "DAKJURON", count: 176, user: "sales2", date: "06/02/2025" },
-        { id: 4, name: "BS SUPERMARKET", code: "BSSTUS", count: 121, user: "sales1", date: "06/02/2025" },
-        { id: 5, name: "TOH GUAN MINIMART", code: "TOUMI", count: 223, user: "sales2", date: "06/02/2025" },
-        { id: 6, name: "POPULAR SUPERMARKET PTE LTD", code: "PAPULARSUP", count: 154, user: "sales2", date: "06/02/2025" },
-        { id: 7, name: "BAZAAR", code: "BAZAARTOH", count: 82, user: "sales2", date: "06/02/2025" },
-        { id: 8, name: "NAWAS GLOBAL PTE LTD", code: "NAWASTUAS", count: 306, user: "sales2", date: "06/02/2025" },
-      ])
+    setCustomer();
+      setSupplier()
   }, []);
   return (
     <Container className="mt-4">

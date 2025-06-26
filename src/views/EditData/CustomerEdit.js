@@ -7,13 +7,13 @@ import {
   Button,
   Label,
   Input,
-  TabContent, // Keep TabContent
-  TabPane,    // Keep TabPane
-  Nav,        // Keep Nav
-  NavItem,    // Keep NavItem
-  NavLink,    // Keep NavLink
+  TabContent,
+  TabPane,
+  Nav,
+  NavItem,
+  NavLink,
 } from 'reactstrap';
-import classnames from 'classnames'; // Keep classnames for active tab styling
+import classnames from 'classnames';
 import { useNavigate, useParams } from 'react-router-dom';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import '../form-editor/editor.scss';
@@ -25,23 +25,24 @@ import api from '../../constants/api';
 import ComponentCard from '../../components/ComponentCard';
 import creationdatetime from '../../constants/creationdatetime';
 import AppContext from '../../context/AppContext';
-import ContentMoreDetails from '../../components/Customer/CustomerMoreDetails';
+import ContentMoreDetails from '../../components/Customer/CustomerMoreDetails'; // Ensure this path is correct for your ContentMoreDetails
 import CustomerLogin from '../../components/Customer/CustomerLogin';
 import ContactPerson from '../../components/Customer/ContactPerson';
 import CustomerShippingDetail from '../../components/Customer/ShippingDetail';
 import CustomerSalesmen from '../../components/Customer/SalesMan';
-import Transaction from '../../components/Customer/Module';
+import CustomerTransactions from '../../components/Customer/Module';
 import CustomerProductDetails from '../../components/Customer/ProductDetails';
-
 
 const ContentUpdate = () => {
   const [contentDetails, setContentDetails] = useState({});
   const { loggedInuser } = useContext(AppContext);
-  const [activeTab, setActiveTab] = useState('1'); // State for active tab
+  const [activeTab, setActiveTab] = useState('1');
 
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // This handleInputs function is ALREADY CORRECT for switches.
+  // It converts boolean 'checked' to 1 or 0 for your state.
   const handleInputs = (e) => {
     const { name, value, type, checked } = e.target;
     setContentDetails({
@@ -54,23 +55,44 @@ const ContentUpdate = () => {
     api
       .post('/contact/getContactssById', { contact_id: id })
       .then((res) => {
-        setContentDetails(res.data.data[0]);
+        const fetchedData = res.data.data[0];
+        if (fetchedData) {
+          // KEY FIX: Normalize is_active to 0 or 1 upon fetching
+          setContentDetails({
+            ...fetchedData,
+            is_active: (fetchedData.is_active === 1 || fetchedData.is_active === true) ? 1 : 0,
+            // Ensure other fields that might be null/undefined are handled gracefully if needed
+            // e.g., first_name: fetchedData.first_name || '',
+          });
+        } else {
+            message('No content data found for this ID.', 'info');
+            // Optionally, reset contentDetails to a default empty state
+            setContentDetails({});
+        }
       })
-      .catch(() => {
+      .catch((error) => { // Added error parameter for logging
         message('Content Data Not Found', 'info');
+        console.error("Error fetching content data:", error); // Log the actual error
       });
   };
 
   const editContentData = () => {
+    // Added console logs for debugging
+    console.log('Saving contentDetails:', contentDetails);
+
     if (
       contentDetails.first_name !== '' &&
       contentDetails.mobile !== '' &&
       contentDetails.email !== ''
     ) {
-      contentDetails.modification_date = creationdatetime;
-      contentDetails.modified_by = loggedInuser.first_name;
+      const updatedDetails = {
+        ...contentDetails,
+        modification_date: creationdatetime,
+        modified_by: loggedInuser.first_name,
+      };
+
       api
-        .post('/contact/editContact', contentDetails)
+        .post('/contact/editContact', updatedDetails)
         .then(() => {
           message('Record edited successfully', 'success');
         })
@@ -79,13 +101,15 @@ const ContentUpdate = () => {
           console.error('Edit error:', error);
         });
     } else {
-      message('Please fill all required fields', 'warning');
+      message('Please fill all required fields (Name, Mobile, Email)', 'warning');
     }
   };
 
   useEffect(() => {
-    getContentById();
-  }, [id]);
+    if (id) { // Only fetch if ID is present
+      getContentById();
+    }
+  }, [id]); // Dependency array: re-fetch when 'id' changes
 
   // Function to toggle tabs
   const toggle = (tab) => {
@@ -94,7 +118,8 @@ const ContentUpdate = () => {
 
   return (
     <>
-      <BreadCrumbs heading={contentDetails && contentDetails.first_name} />
+      {/* Ensure contentDetails is defined before trying to access first_name */}
+      <BreadCrumbs heading={contentDetails && contentDetails.first_name || 'Loading...'} />
       <Form>
         <FormGroup>
           <ComponentCardV2>
@@ -104,6 +129,8 @@ const ContentUpdate = () => {
                   color="primary"
                   onClick={() => {
                     editContentData();
+                    // Using navigate with a delay can be problematic if the API call takes longer
+                    // Consider navigating only after successful API response.
                     setTimeout(() => {
                       navigate('/Customer');
                     }, 1100);
@@ -143,12 +170,12 @@ const ContentUpdate = () => {
                   <Input
                     type="text"
                     onChange={handleInputs}
-                    value={contentDetails && contentDetails.customer_code}
+                    value={contentDetails.customer_code || ''} // Handle potential undefined
                     name="customer_code"
                     disabled
                   />
                 </FormGroup>
-              </Col> 
+              </Col>
 
               <Col md="3">
                 <FormGroup>
@@ -156,14 +183,13 @@ const ContentUpdate = () => {
                   <Input
                     type="text"
                     onChange={handleInputs}
-                    value={contentDetails && contentDetails.company_name}
+                    value={contentDetails.company_name || ''} // Handle potential undefined
                     name="company_name"
                   />
                 </FormGroup>
               </Col>
-              </Row>
-              </ComponentCard>
-
+            </Row>
+          </ComponentCard>
 
 
           {/* Customer Details Form with Tabs */}
@@ -177,7 +203,7 @@ const ContentUpdate = () => {
                     toggle('1');
                   }}
                 >
-            Additional
+                  Additional
                 </NavLink>
               </NavItem>
               <NavItem>
@@ -241,41 +267,44 @@ const ContentUpdate = () => {
                 </NavLink>
               </NavItem>
 
-
             </Nav>
             <TabContent activeTab={activeTab} className="p-4">
-              {/* Tab 1: Customer Details */}
+              {/* Tab 1: Additional/More Details (your ContentMoreDetails) */}
               <TabPane tabId="1">
-<ContentMoreDetails 
+                <ContentMoreDetails
                   handleInputs={handleInputs}
                   contentDetails={contentDetails}
-></ContentMoreDetails>
+                />
               </TabPane>
 
-              {/* Tab 2: Additional */}
+              {/* Tab 2: Customer Login Info */}
               <TabPane tabId="2">
-                <CustomerLogin 
-                                  handleInputs={handleInputs}
-                                  contentDetails={contentDetails}
-                ></CustomerLogin>
+                <CustomerLogin
+                  handleInputs={handleInputs}
+                  contentDetails={contentDetails}
+                />
               </TabPane>
               <TabPane tabId="3">
-                <ContactPerson></ContactPerson>
+                {/* Assuming ContactPerson needs customerId or contentDetails */}
+                <ContactPerson customerId={id} contentDetails={contentDetails} />
               </TabPane>
               <TabPane tabId="4">
-                <CustomerShippingDetail></CustomerShippingDetail>
+                 {/* Assuming CustomerShippingDetail needs customerId or contentDetails */}
+                <CustomerShippingDetail customerId={id} contentDetails={contentDetails} />
               </TabPane>
 
               <TabPane tabId="5">
-                <CustomerSalesmen></CustomerSalesmen>
+                {/* Assuming CustomerSalesmen needs customerId or contentDetails */}
+                <CustomerSalesmen customerId={id} contentDetails={contentDetails} />
               </TabPane>
               <TabPane tabId="6">
-                <Transaction></Transaction>
-              </TabPane>
-              <TabPane tabId="7">
-                <CustomerProductDetails></CustomerProductDetails>
+                <CustomerTransactions customerId={id} />
               </TabPane>
 
+              <TabPane tabId="7">
+                {/* Assuming CustomerProductDetails needs customerId or contentDetails */}
+                <CustomerProductDetails customerId={id} contentDetails={contentDetails} />
+              </TabPane>
 
             </TabContent>
           </ComponentCard>

@@ -130,14 +130,21 @@ const EditSubCategory = () => {
       </FormGroup>
 
       <FormGroup row>
-        <Label for="sub_category_image" sm={4}>Category Image (80x80)</Label>
+        <Label for="sub_category_image" sm={4}>Sub Category Image (80x80)</Label>
         <Col sm={8}>
           <Input type="file" name="sub_category_image" accept="image/*" onChange={handleChange} />
           <FormText color="muted">Upload image (80x80)</FormText>
+           {form.sub_category_image && (
+            <img
+              src={`http://ampro.zaitunsoftsolutions.com/storage/uploads/${form.sub_category_image}`}
+              alt="Brand Preview"
+              style={{ height: 80, width: 80, marginTop: '10px', border: '1px solid #ccc' }}
+            />
+          )}
         </Col>
       </FormGroup>
 
-      <Row className="mb-3">
+      {/* <Row className="mb-3">
         <Col sm={{ size: 8, offset: 4 }}>
           {[
             { name: 'show_on_ecommerce', label: 'Show On ECommerce' },
@@ -159,7 +166,37 @@ const EditSubCategory = () => {
             </FormGroup>
           ))}
         </Col>
-      </Row>
+      </Row> */}
+
+       <Row className="mb-3">
+              <Col sm={{ size: 8, offset: 4 }}>
+                <FormGroup check>
+                  <Label check>
+                    <Input type="checkbox" name="show_on_ecommerce" checked={form.show_on_ecommerce === 1} onChange={handleChange} /> Show On ECommerce
+                  </Label>
+                </FormGroup>
+                <FormGroup check>
+                  <Label check>
+                    <Input type="checkbox" name="show_on_eprocurement" checked={form.show_on_eprocurement === 1} onChange={handleChange} /> Show On EProcurement
+                  </Label>
+                </FormGroup>
+                <FormGroup check>
+                  <Label check>
+                    <Input type="checkbox" name="show_on_pos" checked={form.show_on_pos === 1} onChange={handleChange} /> Show On POS
+                  </Label>
+                </FormGroup>
+                <FormGroup check>
+                  <Label check>
+                    <Input type="checkbox" name="read_weight_from_scale" checked={form.read_weight_from_scale === 1} onChange={handleChange} /> Read Weight From Scale
+                  </Label>
+                </FormGroup>
+                <FormGroup check>
+                  <Label check>
+                    <Input type="checkbox" name="is_active" checked={form.is_active === 1} onChange={handleChange} /> IsActive
+                  </Label>
+                </FormGroup>
+              </Col>
+            </Row>
 
       <Row className="mt-4">
         <Col sm={{ size: 8, offset: 4 }}>

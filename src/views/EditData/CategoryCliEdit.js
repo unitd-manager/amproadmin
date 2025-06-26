@@ -22,11 +22,11 @@ const EditCategory = () => {
     sort_order: '',
     product_prefix: '',
     category_image: null,
-    show_on_ecommerce: true,
-    show_on_eprocurement: true,
-    show_on_pos: true,
-    read_weight_from_scale: false,
-    is_active: true,
+    show_on_ecommerce: 1,
+    show_on_eprocurement: 1,
+    show_on_pos: 1,
+    read_weight_from_scale: 0,
+    is_active: 1,
   });
 
   const [departments, setDepartments] = useState([]);
@@ -34,7 +34,7 @@ const EditCategory = () => {
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     if (type === 'checkbox') {
-      setForm({ ...form, [name]: checked });
+      setForm({ ...form, [name]: checked ? 1 :0 });
     } else if (type === 'file') {
       setForm({ ...form, [name]: files[0] });
     } else {
@@ -62,14 +62,14 @@ const EditCategory = () => {
 
   const fetchDepartments = async () => {
     const res = await api.get('/departmentcli/getalldepartments');
-    setDepartments(res.data);
+    setDepartments(res.data.data);
   };
 
   const fetchCategoryDetails = async () => {
     try {
-      const res = await api.post('/categorycli/get_category_cli', { category_cli_id: id });
-      if (res.data && res.data.length > 0) {
-        setForm(res.data[0]);
+      const res = await api.get(`/categorycli/get_category_cli/${id}`, { category_cli_id: id });
+      if (res.data ) {
+        setForm(res.data.data);
       }
     } catch (error) {
       console.error('Error fetching category:', error);
@@ -101,7 +101,7 @@ const EditCategory = () => {
         <Col sm={8}>
           <Input type="select" name="department_cli_id" value={form.department_cli_id} onChange={handleChange}>
             <option value="">Select an option</option>
-            {departments.map((dept) => (
+            {departments?.map((dept) => (
               <option key={dept.department_cli_id} value={dept.department_cli_id}>
                 {dept.department_name}
               </option>
@@ -129,33 +129,47 @@ const EditCategory = () => {
         <Col sm={8}>
           <Input type="file" name="category_image" accept="image/*" onChange={handleChange} />
           <FormText color="muted">Upload image (80x80)</FormText>
+          {form.category_image&& (
+            <img
+              src={`http://ampro.zaitunsoftsolutions.com/storage/uploads/${form.category_image}`}
+              alt="Category"
+              style={{ height: 80, width: 80, marginTop: 10, border: '1px solid #ccc' }}
+            />
+          )}
         </Col>
       </FormGroup>
 
-      <Row className="mb-3">
+     
+  <Row className="mb-3">
         <Col sm={{ size: 8, offset: 4 }}>
-          {[
-            { name: 'show_on_ecommerce', label: 'Show On ECommerce' },
-            { name: 'show_on_eprocurement', label: 'Show On EProcurement' },
-            { name: 'show_on_pos', label: 'Show On POS' },
-            { name: 'read_weight_from_scale', label: 'Read Weight From Scale' },
-            { name: 'is_active', label: 'IsActive' },
-          ].map((item) => (
-            <FormGroup check key={item.name}>
-              <Label check>
-                <Input
-                  type="checkbox"
-                  name={item.name}
-                  checked={form[item.name]}
-                  onChange={handleChange}
-                />{' '}
-                {item.label}
-              </Label>
-            </FormGroup>
-          ))}
+          <FormGroup check>
+            <Label check>
+              <Input type="checkbox" name="show_on_ecommerce" checked={form.show_on_ecommerce === 1}
+ onChange={handleChange} /> Show On ECommerce
+            </Label>
+          </FormGroup>
+          <FormGroup check>
+            <Label check>
+              <Input type="checkbox" name="show_on_eprocurement" checked={form.show_on_eprocurement === 1} onChange={handleChange} /> Show On EProcurement
+            </Label>
+          </FormGroup>
+          <FormGroup check>
+            <Label check>
+              <Input type="checkbox" name="show_on_pos" checked={form.show_on_pos === 1} onChange={handleChange} /> Show On POS
+            </Label>
+          </FormGroup>
+          <FormGroup check>
+            <Label check>
+              <Input type="checkbox" name="read_weight_from_scale" checked={form.read_weight_from_scale === 1} onChange={handleChange} /> Read Weight From Scale
+            </Label>
+          </FormGroup>
+          <FormGroup check>
+            <Label check>
+              <Input type="checkbox" name="is_active" checked={form.is_active === 1} onChange={handleChange} /> IsActive
+            </Label>
+          </FormGroup>
         </Col>
       </Row>
-
       <Row className="mt-4">
         <Col sm={{ size: 8, offset: 4 }}>
           <Button color="primary" type="submit">Update</Button>{' '}
