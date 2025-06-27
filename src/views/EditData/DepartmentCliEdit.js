@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Button,
   Form,
@@ -10,7 +10,12 @@ import {
   FormText,
 } from 'reactstrap';
 import { useNavigate, useParams } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import * as Icon from 'react-feather';
+import { FileUploader } from 'react-drag-drop-files';
+import message from '../../components/Message';
 import api from '../../constants/api';
+import AppContext from '../../context/AppContext';
 
 const EditDepartment = () => {
   const { id } = useParams(); // department_cli_id
@@ -27,11 +32,63 @@ const EditDepartment = () => {
     read_weight_from_scale: 0,
     is_active: 1,
   });
+  const [file, setFile] = useState([]);
+           const [ handleValue, setHandleValue ] = useState();
+   
+           const handleFileChange = (fiels) => {
+             
+               const arrayOfObj = Object.entries(fiels).map((e) => ( e[1]  ));
+   
+               setFile(fiels);
+               setHandleValue(arrayOfObj);
+               console.log(fiels)
+           };
+  const tableStyle = {};
+  
+    const [getFile, setGetFile] = useState(null);
+  
+    const getFiles = () => {
+      api.post('/file/getListOfFiles', { record_id: id, room_name: 'departmentcli' }).then((res) => {
+        setGetFile(res.data);
+      });
+    };
+  
+        const { loggedInuser } = useContext(AppContext);
+    const deleteFile = (fileId) => {
+      Swal.fire({
+        title: `Are you sure?`,
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          api
+            .post('/file/deleteFile', { media_id: fileId })
+            .then((res) => {
+              console.log(res);
+              Swal.fire('Deleted!', 'Media has been deleted.', 'success');
+              //setViewLineModal(false)
+  
+              window.location.reload();
+            })
+            .catch(() => {
+              message('Unable to Delete Media', 'info');
+            });
+        }
+      });
+    };
+  
+    useEffect(() => {
+      getFiles();
+    }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     if (type === 'checkbox') {
-      setForm({ ...form, [name]: checked });
+      setForm({ ...form, [name]: checked?1:0 });
     } else if (type === 'file') {
       setForm({ ...form, [name]: files[0] });
     } else {
@@ -41,14 +98,35 @@ const EditDepartment = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData();
-    Object.entries(form).forEach(([key, value]) => {
-      formData.append(key, value);
-    });
-    formData.append('department_cli_id', id); // send ID for update
-
+    
     try {
-      await api.post(`/departmentcli/update_department_cli/${id}`, formData);
+      form.updated_by=loggedInuser.first_name;
+      await api.post(`/departmentcli/update_departments_cli`, form);
+        if(file){
+
+          
+                const data = new FormData() 
+                const arrayOfObj = Object.entries(file).map((el) => (  el[1] ));
+
+                arrayOfObj.forEach((ele) => {
+                    data.append(`files`, ele);
+                  });
+                //data.append('file', file)
+                data.append('record_id', id)
+                data.append('room_name', 'brandcli')
+                data.append('alt_tag_data', 'brandcli')
+                data.append('description', 'brandcli')
+
+                api.post('/file/uploadFiles',data).then(()=>{
+     
+                    message('Files Uploaded Successfully','success')
+                    
+                }).catch(()=>{
+                   
+                    message('Unable to upload File','error')
+                   
+                })
+            }
       alert('Department updated successfully');
       navigate('/Department');
     } catch (err) {
@@ -112,15 +190,78 @@ const EditDepartment = () => {
       <FormGroup row>
         <Label for="department_image" sm={4}>Department Image (80x80)</Label>
         <Col sm={8}>
-          <Input type="file" name="department_image" accept="image/*" onChange={handleChange} />
-          <FormText color="muted">Upload image (80x80)</FormText>
-            {form.department_image&& (
-            <img
-              src={`http://ampro.zaitunsoftsolutions.com/storage/uploads/${form.department_image}`}
-              alt="Category"
-              style={{ height: 80, width: 80, marginTop: 10, border: '1px solid #ccc' }}
-            />
-          )}
+  
+        <table style={tableStyle}>
+                                        {/* <thead>
+                                          <tr style={tableStyle}>
+                                            <th style={tableStyle}>
+                                             File Name
+                                            </th>
+                                            <th width="5%"></th>
+                                          </tr>
+                                        </thead> */}
+                                        <tbody>
+                                        {getFile ? (
+                                          getFile.map((res) => {
+                                            return (
+                                                <tr key={res.media_id}>
+                                                  <td style={tableStyle}>
+                                                      {/* <a
+                                                        href={`http://ampro.zaitunsoftsolutions.com/storage/uploads/${res.name}`}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                      >
+                                                        {res.name}
+                                                      </a> */}
+                                                       <img
+                                      src={`http://amproadmin.zaitunsoftsolutions.com/storage/uploads/${res.name}`}
+                                      alt="Department Preview"
+                                      style={{ height: 80, width: 80, marginTop: '10px', border: '1px solid #ccc' }}
+                                    />
+                                                  </td>
+                                                  <td style={tableStyle}>
+                                                    <button
+                                                      type="button"
+                                                      className="btn shadow-none"
+                                                      onClick={() => {
+                                                        deleteFile(res.media_id);
+                                                      }}
+                                                    >
+                                                      <Icon.Trash2 />{' '}
+                                                    </button>
+                                                  </td>
+                                                </tr>
+                                            );
+                                          })
+                                        ) : (
+                                          <>
+                                  <Input type="file" name="sub_category_image" accept="image/*" onChange={handleChange} />
+                                  <FormText color="muted">Upload image (80x80)</FormText> <FormGroup>
+                                                    
+                                                  <FileUploader
+                                                          multiple
+                                                          handleChange={handleFileChange}
+                                                          name="file"
+                                                         // types={fileTypes}
+                                                      />
+                                                      
+                                  
+                                                      {handleValue ? (
+                                                          handleValue.map((e) => (
+                                                          <div>
+                                                              <span> Name: {e.name} </span>
+                                                          </div>
+                                                          ))
+                                                      ) : (
+                                                          <span>No file selected</span>
+                                                      )}
+                                  
+                                                  </FormGroup>
+                                  </>
+                                        )}
+                                        </tbody>
+                                        
+                                      </table>
         </Col>
       </FormGroup>
  <Row className="mb-3">

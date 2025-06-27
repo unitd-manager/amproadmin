@@ -13,6 +13,7 @@ import {
   Col,
 } from "reactstrap";
 import { Link } from 'react-router-dom';
+import moment from 'moment';
 import message from '../../components/Message';
 import api from '../../constants/api';
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -28,7 +29,7 @@ const PricingManagement = () => {
   //getting data from content
   const getSupplier = () => {
     api
-      .get('/contact/getContactsupplier')
+      .get('/customersupplierprice/getSupplierPrice')
       .then((res) => {
         setSupplier(res.data.data);
         console.log(res.data.data)
@@ -40,7 +41,7 @@ const PricingManagement = () => {
   //getting data from content
   const getCustomer = () => {
     api
-      .get('/contact/getContactcustomer')
+      .get('/customersupplierprice/getCustomerPrice')
       .then((res) => {
         setCustomer(res.data.data);
         console.log(res.data.data)
@@ -115,16 +116,16 @@ useEffect(() => {
             </thead>
             <tbody>
               {customer?.map((item) => (
-                <tr key={item.id}>
+                <tr key={item.customer_supplier_price_id}>
                   <td>
                     <Button color="danger" size="sm">Delete</Button>
                   </td>
-                  <td>  <Link to={`/CustomerSupplierPriceEdit/${item.id}`}>
-                  {item.name}
+                  <td>  <Link to={`/CustomerSupplierPriceEdit/${item.customer_supplier_price_id}`}>
+                  {item.contact_name}
                                       </Link></td>
-                  <td>{item.count}</td>
-                  <td>{item.user}</td>
-                  <td>{item.date}</td>
+                  <td>{item.product_count}</td>
+                  <td>{item.created_user}</td>
+                  <td>{moment(item.created_at).format('DD/MM/YYYY')}</td>
                 </tr>
               ))}
             </tbody>
@@ -154,21 +155,63 @@ useEffect(() => {
               </tr>
             </thead>
             <tbody>
-              {supplier?.map((item) => (
-                <tr key={item.id}>
+               {supplier?.map((item) => (
+                <tr key={item.customer_supplier_price_id}>
                   <td>
                     <Button color="danger" size="sm">Delete</Button>
                   </td>
-                  <td>{item.name}</td>
-                  <td>{item.count}</td>
-                  <td>{item.user}</td>
-                  <td>{item.date}</td>
+                  <td>  <Link to={`/CustomerSupplierPriceEdit/${item.customer_supplier_price_id}`}>
+                  {item.contact_name}
+                                      </Link></td>
+                  <td>{item.product_count}</td>
+                  <td>{item.created_user}</td>
+                  <td>{moment(item.created_at).format('DD/MM/YYYY')}</td>
                 </tr>
               ))}
             </tbody>
           </Table>
         </TabPane>
-        <TabPane tabId="contactGroup">Contact group content here...</TabPane>
+        <TabPane tabId="contactGroup">
+
+           <Row>
+            <Col md={6} className="mb-3">
+              <Input type="text" placeholder="Search Contact..." />
+            </Col>
+            <Col md={2}>
+              <Button color="primary">Search</Button>
+            </Col>
+            <Col md={{ size: 3, offset: 1 }}>
+              <Button color="dark">Add New</Button>
+            </Col>
+          </Row>
+
+          <Table hover className="mt-3">
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>Contact Name</th>
+                <th>Product Count</th>
+                <th>Created User</th>
+                <th>Created Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {supplier?.map((item) => (
+                <tr key={item.customer_supplier_price_id}>
+                  <td>
+                    <Button color="danger" size="sm">Delete</Button>
+                  </td>
+                  <td>  <Link to={`/CustomerSupplierPriceEdit/${item.customer_supplier_price_id}`}>
+                  {item.contact_name}
+                                      </Link></td>
+                  <td>{item.product_count}</td>
+                  <td>{item.created_user}</td>
+                  <td>{moment(item.created_at).format('DD/MM/YYYY')}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </TabPane>
       </TabContent>
     </Container>
   );

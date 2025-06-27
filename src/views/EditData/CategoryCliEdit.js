@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Button,
   Form,
@@ -7,21 +8,25 @@ import {
   Input,
   Col,
   Row,
-  FormText,
 } from 'reactstrap';
 import { useNavigate, useParams } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import * as Icon from 'react-feather';
+import { FileUploader } from 'react-drag-drop-files';
+import message from '../../components/Message';
 import api from '../../constants/api';
+import AppContext from '../../context/AppContext';
 
 const EditCategory = () => {
-  const { id } = useParams(); // category_cli_id
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
+    category_cli_id: id,
     category_name: '',
     department_cli_id: '',
     sort_order: '',
     product_prefix: '',
-    category_image: null,
     show_on_ecommerce: 1,
     show_on_eprocurement: 1,
     show_on_pos: 1,
@@ -30,11 +35,77 @@ const EditCategory = () => {
   });
 
   const [departments, setDepartments] = useState([]);
+  const [getFile, setGetFile] = useState(null);
+
+  const fetchDepartments = async () => {
+    const res = await api.get('/departmentcli/getalldepartments');
+    setDepartments(res.data.data);
+  };
+const [file, setFile] = useState([]);
+         const [ handleValue, setHandleValue ] = useState();
+ 
+         const handleFileChange = (fiels) => {
+           
+             const arrayOfObj = Object.entries(fiels).map((e) => ( e[1]  ));
+ 
+             setFile(fiels);
+             setHandleValue(arrayOfObj);
+             console.log(fiels)
+         };
+  const fetchCategoryDetails = async () => {
+    try {
+      const res = await api.get(`/categorycli/get_category_cli/${id}`);
+      if (res.data && res.data.data) {
+        setForm(prev => ({
+          ...prev,
+          ...res.data.data,
+          category_image: null // reset file input
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching category:', error);
+    }
+  };
+
+      const { loggedInuser } = useContext(AppContext);
+  const getFiles = async () => {
+    const res = await api.post('/file/getListOfFiles', { record_id: id, room_name: 'categorycli' });
+    setGetFile(res.data);
+  };
+
+  const deleteFile = (fileId) => {
+    Swal.fire({
+      title: `Are you sure?`,
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        api.post('/file/deleteFile', { media_id: fileId })
+          .then(() => {
+            Swal.fire('Deleted!', 'Media has been deleted.', 'success');
+            getFiles();
+          })
+          .catch(() => {
+            message('Unable to Delete Media', 'info');
+          });
+      }
+    });
+  };
+
+  useEffect(() => {
+    fetchDepartments();
+    fetchCategoryDetails();
+    getFiles();
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     if (type === 'checkbox') {
-      setForm({ ...form, [name]: checked ? 1 :0 });
+      setForm({ ...form, [name]: checked ? 1 : 0 });
     } else if (type === 'file') {
       setForm({ ...form, [name]: files[0] });
     } else {
@@ -44,15 +115,39 @@ const EditCategory = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData();
-    Object.entries(form).forEach(([key, value]) => {
-      formData.append(key, value);
-    });
-    formData.append('category_cli_id', id); // for backend update reference
-
     try {
-      await api.post('/categorycli/update_category_cli', formData);
+      // Update category with JSON data (no FormData needed unless uploading files)
+      // const {formDataToSend } = form;
+      console.log('formdatatosend',form);
+form.updated_by=loggedInuser.first_name;
+      await api.post(`/categorycli/update_category_cli`, form);
+        if(file){
+
+          
+                const data = new FormData() 
+                const arrayOfObj = Object.entries(file).map((el) => (  el[1] ));
+
+                arrayOfObj.forEach((ele) => {
+                    data.append(`files`, ele);
+                  });
+                //data.append('file', file)
+                data.append('record_id', id)
+                data.append('room_name', 'brandcli')
+                data.append('alt_tag_data', 'brandcli')
+                data.append('description', 'brandcli')
+
+                api.post('/file/uploadFiles',data).then(()=>{
+     
+                    message('Files Uploaded Successfully','success')
+                    
+                }).catch(()=>{
+                   
+                    message('Unable to upload File','error')
+                   
+                })
+            }
       alert('Category updated successfully');
+
       navigate('/Categories');
     } catch (err) {
       console.error('Update failed:', err);
@@ -60,30 +155,9 @@ const EditCategory = () => {
     }
   };
 
-  const fetchDepartments = async () => {
-    const res = await api.get('/departmentcli/getalldepartments');
-    setDepartments(res.data.data);
-  };
-
-  const fetchCategoryDetails = async () => {
-    try {
-      const res = await api.get(`/categorycli/get_category_cli/${id}`, { category_cli_id: id });
-      if (res.data ) {
-        setForm(res.data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching category:', error);
-    }
-  };
-
   const onCancel = () => {
     navigate('/Categories');
   };
-
-  useEffect(() => {
-    fetchDepartments();
-    fetchCategoryDetails();
-  }, [id]);
 
   return (
     <Form onSubmit={handleSubmit} style={{ maxWidth: 700, margin: 'auto' }}>
@@ -101,7 +175,7 @@ const EditCategory = () => {
         <Col sm={8}>
           <Input type="select" name="department_cli_id" value={form.department_cli_id} onChange={handleChange}>
             <option value="">Select an option</option>
-            {departments?.map((dept) => (
+            {departments.map((dept) => (
               <option key={dept.department_cli_id} value={dept.department_cli_id}>
                 {dept.department_name}
               </option>
@@ -127,49 +201,65 @@ const EditCategory = () => {
       <FormGroup row>
         <Label for="category_image" sm={4}>Category Image (80x80)</Label>
         <Col sm={8}>
-          <Input type="file" name="category_image" accept="image/*" onChange={handleChange} />
-          <FormText color="muted">Upload image (80x80)</FormText>
-          {form.category_image&& (
-            <img
-              src={`http://ampro.zaitunsoftsolutions.com/storage/uploads/${form.category_image}`}
-              alt="Category"
-              style={{ height: 80, width: 80, marginTop: 10, border: '1px solid #ccc' }}
-            />
+          {getFile && getFile.length > 0 ? (
+            getFile.map((res) => (
+              <div key={res.media_id} style={{ display: 'flex', alignItems: 'center' }}>
+                <img
+                  src={`http://amproadmin.zaitunsoftsolutions.com/storage/uploads/${res.name}`}
+                  alt="Category"
+                  style={{ height: 80, width: 80, marginRight: 10, border: '1px solid #ccc' }}
+                />
+                <Button color="danger" size="sm" onClick={() => deleteFile(res.media_id)}>
+                  <Icon.Trash2 />
+                </Button>
+              </div>
+            ))
+          ) : (
+            <>
+               <FormGroup>
+                  
+                <FileUploader
+                        multiple
+                        handleChange={handleFileChange}
+                        name="file"
+                       // types={fileTypes}
+                    />
+                    
+
+                    {handleValue ? (
+                        handleValue.map((e) => (
+                        <div>
+                            <span> Name: {e.name} </span>
+                        </div>
+                        ))
+                    ) : (
+                        <span>No file selected</span>
+                    )}
+
+                </FormGroup>
+            </>
           )}
         </Col>
       </FormGroup>
 
-     
-  <Row className="mb-3">
+      <Row className="mb-3">
         <Col sm={{ size: 8, offset: 4 }}>
-          <FormGroup check>
-            <Label check>
-              <Input type="checkbox" name="show_on_ecommerce" checked={form.show_on_ecommerce === 1}
- onChange={handleChange} /> Show On ECommerce
-            </Label>
-          </FormGroup>
-          <FormGroup check>
-            <Label check>
-              <Input type="checkbox" name="show_on_eprocurement" checked={form.show_on_eprocurement === 1} onChange={handleChange} /> Show On EProcurement
-            </Label>
-          </FormGroup>
-          <FormGroup check>
-            <Label check>
-              <Input type="checkbox" name="show_on_pos" checked={form.show_on_pos === 1} onChange={handleChange} /> Show On POS
-            </Label>
-          </FormGroup>
-          <FormGroup check>
-            <Label check>
-              <Input type="checkbox" name="read_weight_from_scale" checked={form.read_weight_from_scale === 1} onChange={handleChange} /> Read Weight From Scale
-            </Label>
-          </FormGroup>
-          <FormGroup check>
-            <Label check>
-              <Input type="checkbox" name="is_active" checked={form.is_active === 1} onChange={handleChange} /> IsActive
-            </Label>
-          </FormGroup>
+          {['show_on_ecommerce', 'show_on_eprocurement', 'show_on_pos', 'read_weight_from_scale', 'is_active'].map((field) => (
+            <FormGroup check key={field}>
+              <Label check>
+                <Input
+                  type="checkbox"
+                  name={field}
+                  checked={form[field] === 1}
+                  onChange={handleChange}
+                />{' '}
+                {field.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
+              </Label>
+            </FormGroup>
+          ))}
         </Col>
       </Row>
+
       <Row className="mt-4">
         <Col sm={{ size: 8, offset: 4 }}>
           <Button color="primary" type="submit">Update</Button>{' '}
@@ -181,3 +271,4 @@ const EditCategory = () => {
 };
 
 export default EditCategory;
+ 

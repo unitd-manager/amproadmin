@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   Container,
   Row,
@@ -13,6 +13,8 @@ import {
 } from "reactstrap";
 import { FaTrash } from "react-icons/fa";
 import api from "../../constants/api";
+import { useNavigate } from "react-router-dom";
+import AppContext from "../../context/AppContext";
 
 const ProductContactPricePage = () => {
   const [products, setProducts] = useState([
@@ -30,10 +32,18 @@ const ProductContactPricePage = () => {
 
   const [contacts, setContacts] = useState([]);
   const [selectedContactId, setSelectedContactId] = useState("");
+  const [contactDetails, setContactDetails] = useState({
+    contact_code: "",
+    contact_name: "",
+    customer: 0,
+    supplier: 0,
+  });
 
+  const [allProducts, setAllProducts] = useState([]);
+const navigate=useNavigate();
   useEffect(() => {
-    // Fetch contacts for select dropdown
-    api.get("/contact/getContacts")
+    // Fetch contacts
+    api.get("/customersupplierprice/getContactclis")
       .then((res) => {
         if (res.data && res.data.data) {
           setContacts(res.data.data);
@@ -41,6 +51,17 @@ const ProductContactPricePage = () => {
       })
       .catch((err) => {
         console.error("Error fetching contacts:", err);
+      });
+
+    // Fetch products
+    api.get("/customersupplierprice/getProductclis")
+      .then((res) => {
+        if (res.data && res.data.data) {
+          setAllProducts(res.data.data);
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching products:", err);
       });
   }, []);
 
@@ -67,6 +88,8 @@ const ProductContactPricePage = () => {
     ]);
   };
 
+
+  const { loggedInuser } = useContext(AppContext);
   const handleDeleteProduct = (index) => {
     const updatedProducts = products.filter((_, i) => i !== index);
     setProducts(updatedProducts);
@@ -79,21 +102,23 @@ const ProductContactPricePage = () => {
     }
 
     try {
-      // Insert customer_supplier_price
+      const customerVal = contactDetails.customer === 1 ? 1 : 0;
+      const supplierVal = contactDetails.supplier === 1 ? 1 : 0;
+
       const priceRes = await api.post("/customersupplierprice/addCustomerSupplierPrice", {
         contact_id: selectedContactId,
         product_count: products.length,
-        customer: "CustomerName", // Replace or get dynamically
-        supplier: "SupplierName", // Replace or get dynamically
+        customer: customerVal,
+        supplier: supplierVal,
         product_code: "",
         price: 0,
-        created_user: "admin"
+        created_user: loggedInuser.first_name,
+        created_by:loggedInuser.first_name
       });
 
       if (priceRes.data && priceRes.data.data.insertId) {
         const insertId = priceRes.data.data.insertId;
 
-        // Insert products
         for (const prod of products) {
           await api.post("/customersupplierprice/addCsProduct", {
             customer_supplier_price_id: insertId,
@@ -108,6 +133,7 @@ const ProductContactPricePage = () => {
         }
 
         alert("Saved successfully!");
+        navigate(`/CustomerSupplierPriceEdit/${insertId}`)
       } else {
         alert("Failed to save Customer Supplier Price");
       }
@@ -124,21 +150,37 @@ const ProductContactPricePage = () => {
           <CardTitle className="text-center" tag="h4">
             Add/Edit Product Contact Price
           </CardTitle>
+
           <Row className="mb-3">
             <Col md="6">
-              <label>Contact</label>
+              <label>Contact Code</label>
               <Input
                 type="select"
                 value={selectedContactId}
-                onChange={(e) => setSelectedContactId(e.target.value)}
+                onChange={(e) => {
+                  const selectedId = e.target.value;
+                  setSelectedContactId(selectedId);
+                  const selected = contacts.find(c => c.contact_cli_id === parseInt(selectedId, 10));
+                  setContactDetails({
+                    contact_code: selected ? selected.contact_code : "",
+                    contact_name: selected ? selected.contact_name : "",
+                    customer: selected ? selected.customer : 0,
+                    supplier: selected ? selected.supplier : 0
+                  });
+                }}
               >
-                <option value="">Select Contact</option>
+                <option value="">Select Contact Code</option>
                 {contacts.map((contact) => (
-                  <option key={contact.contact_id} value={contact.contact_id}>
-                    {contact.contact_name}
+                  <option key={contact.contact_cli_id} value={contact.contact_cli_id}>
+                    {contact.contact_code}
                   </option>
                 ))}
               </Input>
+            </Col>
+
+            <Col md="6">
+              <label>Contact Name</label>
+              <Input type="text" value={contactDetails.contact_name || ""} readOnly />
             </Col>
           </Row>
         </CardBody>
@@ -167,16 +209,28 @@ const ProductContactPricePage = () => {
                   <td>{product.SNo}</td>
                   <td>
                     <Input
-                      type="text"
+                      type="select"
                       value={product.product_code}
-                      onChange={(e) => handleInputChange(index, "product_code", e.target.value)}
-                    />
+                      onChange={(e) => {
+                        const code = e.target.value;
+                        const prod = allProducts.find(p => p.product_code === code);
+                        handleInputChange(index, "product_code", code);
+                        handleInputChange(index, "product_id", prod ? prod.product_id : "");
+                      }}
+                    >
+                      <option value="">Select Product</option>
+                      {allProducts.map(p => (
+                        <option key={p.product_id} value={p.product_code}>
+                          {p.product_code}
+                        </option>
+                      ))}
+                    </Input>
                   </td>
                   <td>
                     <Input
                       type="text"
                       value={product.product_id}
-                      onChange={(e) => handleInputChange(index, "product_id", e.target.value)}
+                      readOnly
                     />
                   </td>
                   <td>

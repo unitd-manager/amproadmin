@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Button,
   Form,
@@ -7,10 +7,12 @@ import {
   Input,
   Col,
   Row,
-  FormText,
 } from 'reactstrap';
+import { FileUploader } from 'react-drag-drop-files';
 import { useNavigate } from 'react-router-dom';
+import message from '../../components/Message';
 import api from '../../constants/api';
+import AppContext from '../../context/AppContext';
 
 const AddCategory = () => {
   const [form, setForm] = useState({
@@ -51,6 +53,22 @@ navigate(`/CategoriesEdit/${id}`)
   //     setForm({ ...form, [name]: value });
   //   }
   // };
+  
+  
+    const { loggedInuser } = useContext(AppContext);
+
+  const [file, setFile] = useState([]);
+        const [ handleValue, setHandleValue ] = useState();
+
+        const handleFileChange = (fiels) => {
+          
+            const arrayOfObj = Object.entries(fiels).map((e) => ( e[1]  ));
+
+            setFile(fiels);
+            setHandleValue(arrayOfObj);
+            console.log(fiels)
+        };
+
 const handleChange = (e) => {
   const { name, value, type, checked, files } = e.target;
   if (type === 'checkbox') {
@@ -60,24 +78,33 @@ const handleChange = (e) => {
   } else {
     setForm({ ...form, [name]: value });
   }
+  console.log('formchange',form)
 };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const formData = new FormData();
-    Object.entries(form).forEach(([key, value]) => {
-      formData.append(key, value);
-    });
-    const response =await api.post('/categorycli/insert_category_cli', formData);
-      const {insertId} = response.data; 
-      if (form?.category_image) {
-        const data = new FormData() 
-                
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-               
-                    data.append(`files`, form.category_image);
-                 
-                data.append('file', form.category_image)
+  const formData = new FormData();
+  Object.entries(form).forEach(([key, value]) => {
+    if (value !== null && value !== undefined) {
+      formData.append(key, value);
+    }
+  });
+formData.append('created_by', loggedInuser.first_name);
+  try {
+    const response = await api.post('/categorycli/insert_category_cli', formData);
+    const { insertId } = response.data.data;
+
+    if(file){
+
+          
+                const data = new FormData() 
+                const arrayOfObj = Object.entries(file).map((el) => (  el[1] ));
+
+                arrayOfObj.forEach((ele) => {
+                    data.append(`files`, ele);
+                  });
+                //data.append('file', file)
                 data.append('record_id', insertId)
                 data.append('room_name', 'categorycli')
                 data.append('alt_tag_data', 'categorycli')
@@ -85,13 +112,98 @@ const handleChange = (e) => {
 
                 api.post('/file/uploadFiles',data).then(()=>{
      
+                    message('Files Uploaded Successfully','success')
+                    
                 }).catch(()=>{
                    
+                    message('Unable to upload File','error')
+                   
                 })
-    }
+            }
     onSave(insertId);
+
+  } catch (err) {
+    console.error("Error submitting form: ", err);
+    alert("There was an error saving the category.");
+  }
+};
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     const formData = new FormData();
+//     Object.entries(form).forEach(([key, value]) => {
+//       formData.append(key, value);
+//     });
+//     const response =await api.post('/categorycli/insert_category_cli', formData);
+//       const {insertId} = response.data.data; 
+//       console.log('response data',response.data)
+//       if (form?.category_image) {
+//         const data = new FormData() 
+                
+
+               
+//                     data.append(`files`, form.category_image);
+                 
+//                 data.append('file', form.category_image)
+//                 data.append('record_id', insertId)
+//                 data.append('room_name', 'categorycli')
+//                 data.append('alt_tag_data', 'categorycli')
+//                 data.append('description', 'categorycli')
+// console.log('data',data)
+//                 api.post('/file/uploadFiles',data).then(()=>{
+     
+//                 }).catch(()=>{
+                   
+//                 })
+//     }
+//     onSave(insertId);
    
-  };
+//   };
+ 
+
+        // const uploadFile = () =>{
+            
+        //     if(file){
+
+        //        // getFiles();
+            
+          
+        //         const data = new FormData() 
+        //         const arrayOfObj = Object.entries(file).map((e) => (  e[1] ));
+
+        //         arrayOfObj.forEach((ele) => {
+        //             data.append(`files`, ele);
+        //           });
+        //         //data.append('file', file)
+        //         data.append('record_id', moduleId)
+        //         data.append('room_name', roomName)
+        //         data.append('alt_tag_data', altTagData)
+        //         data.append('description', desc)
+
+        //         api.post('/file/uploadFiles',data,{onUploadProgress:(filedata)=>{
+        //             console.log( Math.round((filedata.loaded/filedata.total)*100))
+        //             setUploaded( Math.round((filedata.loaded/filedata.total)*100))
+                   
+        //         }}).then(()=>{
+     
+        //             // setAttachmentModal(false)
+        //             message('Files Uploaded Successfully','success')
+                    
+        //             setTimeout(() => {
+        //                 window.location.reload()
+        //             }, 400);
+        //         }).catch(()=>{
+        //             setAttachmentModal(false)
+        //             message('Unable to upload File','error')
+        //             // setTimeout(() => {
+        //             //     window.location.reload()
+        //             // }, 400);
+        //         })
+        //     }else{
+        //         message('No files selected','info')
+        //     }
+        // }
+      
  useEffect(() => {
     fetchDepartments();
   }, []);
@@ -142,9 +254,31 @@ const handleChange = (e) => {
           Category Image (80x80)
         </Label>
         <Col sm={8}>
-          <Input type="file" name="category_image" accept="image/*" onChange={handleChange} />
-          <FormText color="muted">Upload image (80x80)</FormText>
-        </Col>
+          {/* <Input type="file" name="category_image" accept="image/*" onChange={handleChange} />
+          <FormText color="muted">Upload image (80x80)</FormText> */}
+       
+        <FormGroup>
+                  
+                <FileUploader
+                        multiple
+                        handleChange={handleFileChange}
+                        name="file"
+                       // types={fileTypes}
+                    />
+                    
+
+                    {handleValue ? (
+                        handleValue.map((e) => (
+                        <div>
+                            <span> Name: {e.name} </span>
+                        </div>
+                        ))
+                    ) : (
+                        <span>No file selected</span>
+                    )}
+
+                </FormGroup>
+                 </Col>
       </FormGroup>
       <Row className="mb-3">
         <Col sm={{ size: 8, offset: 4 }}>

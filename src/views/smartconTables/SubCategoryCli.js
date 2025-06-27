@@ -11,7 +11,8 @@ import {
   PaginationLink
 } from 'reactstrap';
 import { FaTrash, FaPlus, FaFilter, FaSearch } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import moment from 'moment';
 import api from '../../constants/api';
 
 const SubCategoryCli = () => {
@@ -32,8 +33,8 @@ const SubCategoryCli = () => {
         }
       });
       setCategories(response.data.data);
-      setTotalPages(response.data.totalPages);
-      setTotalRecords(response.data.totalRecords);
+      setTotalPages(response.data.pagination.totalPages);
+      setTotalRecords(response.data.pagination.totalRecords);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -96,12 +97,14 @@ const SubCategoryCli = () => {
               <td style={{ textAlign: 'center' }}>
                 <FaTrash style={{ cursor: 'pointer' }} onClick={() => handleDelete(cat.sub_category_cli_id)} />
               </td>
-              <td>{cat.sub_category_name}</td>
+              <td><Link to={`/SubCategoriesEdit/${cat.sub_category_cli_id}`}>
+                                     {cat.sub_category_name}
+                                    </Link></td>
               <td>{cat.category_name}</td>
-              <td>{cat.sortOrder}</td>
+              <td>{cat.sort_order}</td>
               <td>{cat.is_active?'active':'inactive'}</td>
               <td>{cat.updated_by}</td>
-              <td>{cat.updated_at}</td>
+              <td>{moment(cat.updatet_at).format('DD/MM/YYYY')}</td>
             </tr>
           ))}
         </tbody>

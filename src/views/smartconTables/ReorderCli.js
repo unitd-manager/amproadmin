@@ -11,6 +11,7 @@ import {
   PaginationLink
 } from 'reactstrap';
 import { FaTrash, FaPlus, FaFilter, FaSearch } from 'react-icons/fa';
+import moment from 'moment';
 import api from '../../constants/api';
 
 
@@ -130,7 +131,7 @@ const [isLoadingPO, setIsLoadingPO] = useState(false);
                <td>{cat.rack_level}</td>
               <td>{cat.max_occupancy}</td>
               <td>{cat.status}</td>
-              <td>{cat.updated_at}</td>
+              <td>{moment(cat.updatet_at).format('DD/MM/YYYY')}</td>
               <td>{cat.updatet_by}</td>
             </tr>
           ))}

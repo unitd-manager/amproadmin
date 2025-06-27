@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   Button,
   Form,
@@ -8,8 +8,10 @@ import {
   Col,
   Row,
 } from 'reactstrap';
+import { useNavigate } from 'react-router-dom';
 import message from '../../components/Message';
 import api from '../../constants/api';
+import AppContext from '../../context/AppContext';
 
 const AddBin = () => {
   const [form, setForm] = useState({
@@ -22,7 +24,16 @@ const AddBin = () => {
     sort_order: '',
     is_active: 1,
   });
+  const navigate=useNavigate();
+const onCancel=()=>{
+navigate('/Bin')
+}
+const onSave=(id)=>{
+navigate(`/BinEdit/${id}`)
+}
 
+
+  const { loggedInuser } = useContext(AppContext);
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     if (type === 'checkbox') {
@@ -40,8 +51,11 @@ const AddBin = () => {
     Object.entries(form).forEach(([key, value]) => {
       formData.append(key, value);
     });
+formData.append('created_by', loggedInuser.first_name);
     try {
-      await api.post('/bincli/insert_bin_cli', formData);
+      const response= await api.post('/bincli/insert_bin_cli', formData);
+      const { insertId } = response.data.data;
+
       message('Bin Added successfully.', 'success');
       setForm({
         bin_name: '',
@@ -53,6 +67,7 @@ const AddBin = () => {
         sort_order: '',
         is_active: 1,
       });
+      onSave(insertId)
     } catch (err) {
       alert('Error saving bin');
       console.error(err);
@@ -118,6 +133,7 @@ const AddBin = () => {
       <Row className="mt-4">
         <Col sm={{ size: 8, offset: 4 }}>
           <Button color="primary" type="submit">Save</Button>
+          <Button color="danger" type="button" onClick={onCancel}>Cancel</Button>
         </Col>
       </Row>
     </Form>

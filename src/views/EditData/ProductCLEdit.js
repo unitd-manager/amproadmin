@@ -13,7 +13,7 @@ import Tab from '../../components/ProjectTabs/Tab';
 import ComponentCard from '../../components/ComponentCard';
 import message from '../../components/Message';
 import api from '../../constants/api';
-import ProductEditButtons from '../../components/Product/ProductEditButtons';
+import ProductEditButtons from '../../components/Product/ProductCLEditButtons';
 import ProductUOM from '../../components/Product/ProductUom';
 import ProductVariation from '../../components/Product/ProductVariation';
 import ViewFileComponentV2 from '../../components/ProjectModal/ViewFileComponentV2';
@@ -23,6 +23,7 @@ import creationdatetime from '../../constants/creationdatetime';
 import AppContext from '../../context/AppContext';
 import ProductAnalysis from '../../components/ProductTable/ProductAnalysis';
 import EcommerceSetting from '../../components/ProductTable/EcommerceSetting';
+import Stock from '../../components/ProductTable/Stock';
 
 const ProductUpdate = () => {
   // All state variables
@@ -153,7 +154,7 @@ const ProductUpdate = () => {
   // getting data from Department
   const getDepartment = () => {
     api
-      .get('/product/getDepartment')
+      .get('/product/getDepartmentCli')
       .then((res) => {
         setDepartmentDropdown(res.data.data);
       })
@@ -210,6 +211,16 @@ const getSupplier = () => {
           ></ProductDetail>
      
       </FormGroup>
+      </Form>
+      <Form>
+      <ComponentCard title="Stock">
+        <Stock
+                ProductId={id}
+                getProductById={getProductById}
+                productDetails={productDetails}
+              ></Stock>
+      </ComponentCard>
+
       </Form>
         {/* Delivery address Form */}
         <ComponentCard title="More Details">
@@ -314,6 +325,7 @@ const getSupplier = () => {
         </TabPane>  */}
       </TabContent>
       </ComponentCard>
+      
      
     
     

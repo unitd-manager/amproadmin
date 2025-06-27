@@ -97,6 +97,9 @@ const ContactDetails = () => {
           email: '',
           hand_phone_no: '',
         });
+        setTimeout(() => {
+              window.location.reload();
+            }, 300);
       })
       .catch(() => {
         message('Network connection error.', 'error');
@@ -121,7 +124,11 @@ const ContactDetails = () => {
             message('Contact updated successfully.', 'success');
             toggleEditModal();
             getContactDetails(); // Refresh contact list
+            setTimeout(() => {
+              window.location.reload();
+            }, 300);
           })
+          
           .catch(() => {
             message('Failed to update contact.', 'error');
           });
