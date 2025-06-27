@@ -23,6 +23,7 @@ import creationdatetime from '../../constants/creationdatetime';
 import AppContext from '../../context/AppContext';
 import ProductAnalysis from '../../components/ProductTable/ProductAnalysis';
 import EcommerceSetting from '../../components/ProductTable/EcommerceSetting';
+import Stock from '../../components/ProductTable/Stock';
 
 const ProductUpdate = () => {
   // All state variables
@@ -211,6 +212,16 @@ const getSupplier = () => {
      
       </FormGroup>
       </Form>
+      <Form>
+      <ComponentCard title="Stock">
+        <Stock
+                ProductId={id}
+                getProductById={getProductById}
+                productDetails={productDetails}
+              ></Stock>
+      </ComponentCard>
+
+      </Form>
         {/* Delivery address Form */}
         <ComponentCard title="More Details">
         <Tab toggle={toggle} tabs={tabs} />
@@ -314,6 +325,7 @@ const getSupplier = () => {
         </TabPane>  */}
       </TabContent>
       </ComponentCard>
+      
      
     
     

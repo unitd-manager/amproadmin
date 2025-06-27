@@ -53,7 +53,12 @@ const ProductAnalysis = ({ productId }) => {
   const fetchFilteredSales = () => {
     // You can similarly move this to backend filtering later
     api
-      .post('product/getSoldProduct', { product_id: productId })
+      .post('product/getSoldProduct', {
+        product_id: productId,
+        fromDate: salesFilters.fromDate,
+        toDate: salesFilters.toDate,
+        location: salesFilters.location,
+      })
       .then((res) => {
         const data = res?.data?.data || [];
         setSalesRecords(data); // Can add frontend filtering if needed
@@ -252,7 +257,7 @@ const ProductAnalysis = ({ productId }) => {
               salesRecords.map((rec) => (
                 <tr key={rec.tran_no}>
                   <td>{rec.tran_no}</td>
-                  <td>{rec.customer_name}</td>
+                  <td>{rec.company_name}</td>
                   <td>{rec.carton_qty ?? '-'}</td>
                   <td>{rec.qty ?? rec.quantity ?? '-'}</td>
                   <td>{rec.carton_price ?? '-'}</td>
