@@ -7,11 +7,11 @@ import {
   Input,
   Col,
   Row,
-  FormText,
 } from 'reactstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import * as Icon from 'react-feather';
+import { FileUploader } from 'react-drag-drop-files';
 import message from '../../components/Message';
 import api from '../../constants/api';
 import AppContext from '../../context/AppContext';
@@ -80,6 +80,17 @@ const tableStyle = {};
     const res = await api.get('/categorycli/getallcategoryclis');
     setDepartments(res.data.data);
   };
+const [file, setFile] = useState([]);
+         const [ handleValue, setHandleValue ] = useState();
+ 
+         const handleFileChange = (fiels) => {
+           
+             const arrayOfObj = Object.entries(fiels).map((e) => ( e[1]  ));
+ 
+             setFile(fiels);
+             setHandleValue(arrayOfObj);
+             console.log(fiels)
+         };
 
   const fetchSubCategoryDetails = async () => {
     try {
@@ -118,14 +129,35 @@ const tableStyle = {};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData();
-    Object.entries(form).forEach(([key, value]) => {
-      formData.append(key, value);
-    });
-    formData.append('sub_category_cli_id', id); // include ID for update
-formData.append('updated_by', loggedInuser.first_name);
+  
     try {
-      await api.put(`/subcategorycli/update_sub_category_cli/${id}`, formData);
+      form.updated_by=loggedInuser.first_name;
+      await api.put(`/subcategorycli/update_sub_category_cli/${id}`, form);
+        if(file){
+
+          
+                const data = new FormData() 
+                const arrayOfObj = Object.entries(file).map((el) => (  el[1] ));
+
+                arrayOfObj.forEach((ele) => {
+                    data.append(`files`, ele);
+                  });
+                //data.append('file', file)
+                data.append('record_id', id)
+                data.append('room_name', 'brandcli')
+                data.append('alt_tag_data', 'brandcli')
+                data.append('description', 'brandcli')
+
+                api.post('/file/uploadFiles',data).then(()=>{
+     
+                    message('Files Uploaded Successfully','success')
+                    
+                }).catch(()=>{
+                   
+                    message('Unable to upload File','error')
+                   
+                })
+            }
       alert('Sub Category updated successfully');
       navigate('/SubCategories');
     } catch (err) {
@@ -203,7 +235,7 @@ formData.append('updated_by', loggedInuser.first_name);
                                       {res.name}
                                     </a> */}
                                      <img
-                    src={`http://ampro.zaitunsoftsolutions.com/storage/uploads/${res.name}`}
+                    src={`http://amproadmin.zaitunsoftsolutions.com/storage/uploads/${res.name}`}
                     alt="Sub category Preview"
                     style={{ height: 80, width: 80, marginTop: '10px', border: '1px solid #ccc' }}
                   />
@@ -224,8 +256,27 @@ formData.append('updated_by', loggedInuser.first_name);
                         })
                       ) : (
                         <>
-                <Input type="file" name="sub_category_image" accept="image/*" onChange={handleChange} />
-                <FormText color="muted">Upload image (80x80)</FormText>
+                 <FormGroup>
+                  
+                <FileUploader
+                        multiple
+                        handleChange={handleFileChange}
+                        name="file"
+                       // types={fileTypes}
+                    />
+                    
+
+                    {handleValue ? (
+                        handleValue.map((e) => (
+                        <div>
+                            <span> Name: {e.name} </span>
+                        </div>
+                        ))
+                    ) : (
+                        <span>No file selected</span>
+                    )}
+
+                </FormGroup>
                 </>
                       )}
                       </tbody>

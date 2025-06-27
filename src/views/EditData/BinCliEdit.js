@@ -52,15 +52,10 @@ const EditBin = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData();
-    Object.entries(form).forEach(([key, value]) => {
-      formData.append(key, value);
-    });
-    formData.append('updated_by', loggedInuser.first_name);
-    formData.append('bin_cli_id', id); // Required for update
-
+  
     try {
-      await api.put(`/bincli/update_bin_cli/${id}`, formData);
+      form.updated_by=loggedInuser.first_name;
+      await api.put(`/bincli/update_bin_cli/${id}`, form);
       alert('Bin updated successfully');
       navigate('/Bin'); // Redirect to bin list
     } catch (err) {

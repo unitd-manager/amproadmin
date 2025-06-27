@@ -12,6 +12,7 @@ import {
 } from 'reactstrap';
 import { useNavigate,Link } from 'react-router-dom';
 import { FaTrash, FaPlus, FaFilter, FaSearch } from 'react-icons/fa';
+import moment from 'moment';
 import api from '../../constants/api';
 
 
@@ -26,7 +27,7 @@ const navigate=useNavigate();
 
   const fetchCategories = async () => {
     try {
-      const response = await api.get('bincli/get_all_bin_cli', {
+      const response = await api.get('bincli/get_all_bin_clis', {
         params: {
           page: currentPage,
           search: searchTerm
@@ -109,8 +110,8 @@ const navigate=useNavigate();
                <td>{cat.rack_level}</td>
               <td>{cat.max_occupancy}</td>
               <td>{cat.is_active ? 'active':'inactive'}</td>
-              <td>{cat.updated_at}</td>
-              <td>{cat.updatet_by}</td>
+              <td>{moment(cat.updated_at).format('DD/MM/YYYY')}</td>
+              <td>{cat.updated_by}</td>
             </tr>
           ))}
         </tbody>

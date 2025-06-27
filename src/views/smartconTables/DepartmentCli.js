@@ -12,6 +12,7 @@ import {
 } from 'reactstrap';
 import { FaTrash, FaPlus, FaFilter, FaSearch } from 'react-icons/fa';
 import { useNavigate,Link } from 'react-router-dom';
+import moment from 'moment';
 import api from '../../constants/api';
 
 const DepartmentCli = () => {
@@ -104,7 +105,7 @@ const navigate=useNavigate();
               <td>{cat.sort_order}</td>
               <td>{cat.is_active ? 'active':'inactive'}</td>
               <td>{cat.updated_by}</td>
-              <td>{cat.updated_at}</td>
+              <td>{moment(cat.updatet_at).format('DD/MM/YYYY')}</td>
             </tr>
           ))}
         </tbody>
