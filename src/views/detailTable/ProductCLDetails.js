@@ -135,7 +135,7 @@ const ProductCLDetails = () => {
                       className="btn btn-dark shadow-none"
                       onClick={(e) => {
                         if (window.confirm('Are you sure you want to cancel? ')) {
-                          navigate('/Product');
+                          navigate('/ProductCL');
                         } else {
                           e.preventDefault();
                         }
