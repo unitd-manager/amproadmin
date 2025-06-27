@@ -20,9 +20,7 @@ const ProductContactPriceEditPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { loggedInuser } = useContext(AppContext);
-const handleCancel=()=>{
-  navigate('/CustomerSupplierPrice')
-}
+
   const [contacts, setContacts] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
   const [selectedContactId, setSelectedContactId] = useState("");
@@ -31,11 +29,13 @@ const handleCancel=()=>{
     contact_name: "",
     customer: 0,
     supplier: 0,
-    contact_id:''
+    contact_id: "",
+    product_count:0,
   });
-console.log('contactdetails',contactDetails);
+
   const [products, setProducts] = useState([]);
 
+  // Load contact list and product list
   useEffect(() => {
     api.get("/customersupplierprice/getContactclis").then((res) => {
       if (res.data?.data) setContacts(res.data.data);
@@ -44,10 +44,13 @@ console.log('contactdetails',contactDetails);
     api.get("/customersupplierprice/getProductclis").then((res) => {
       if (res.data?.data) setAllProducts(res.data.data);
     });
+  }, []);
 
-    if (id) {
+  // Load contact details and assigned products when both allProducts and id are ready
+  useEffect(() => {
+    if (id && allProducts.length > 0) {
       api.get(`/customersupplierprice/getCustomerSupplierPriceById/${id}`).then((res) => {
-        if (res.data?.data) {
+        if (res.data?.data?.length > 0) {
           const contact = res.data.data[0];
           setSelectedContactId(contact.contact_id);
           setContactDetails({
@@ -57,18 +60,28 @@ console.log('contactdetails',contactDetails);
             supplier: contact.supplier || 0,
             contact_id: contact.contact_id || "",
           });
-          console.log('contact',contact);
         }
       });
 
       api.get(`/customersupplierprice/getCsProductByCSPId/${id}`).then((res) => {
-        if (res.data?.data) setProducts(res.data.data);
+        if (res.data?.data?.length > 0) {
+          const enrichedProducts = res.data.data.map((p) => {
+            const matched = allProducts.find((prod) => prod.product_id === p.product_id);
+            return {
+              ...p,
+              product_code: matched?.product_code || p.product_code || "",
+              title: matched?.title || p.title || "",
+            };
+          });
+          setProducts(enrichedProducts);
+        }
       });
     }
-  }, [id]);
-console.log('products',products)
+  }, [id, allProducts]);
+
+  // Update contact details when selection changes
   useEffect(() => {
-    if (selectedContactId && contacts.length) {
+    if (selectedContactId && contacts.length > 0) {
       const selected = contacts.find(c => c.contact_cli_id === parseInt(selectedContactId));
       if (selected) {
         setContactDetails({
@@ -82,35 +95,51 @@ console.log('products',products)
   }, [selectedContactId, contacts]);
 
   const handleInputChange = (index, field, value) => {
-    const updatedProducts = products.map((product, i) =>
-      i === index ? { ...product, [field]: value } : product
+    setProducts(prev =>
+      prev.map((prod, i) =>
+        i === index ? { ...prod, [field]: value } : prod
+      )
     );
-    setProducts(updatedProducts);
   };
 
-  const handleDeleteProduct = (index,prodid) => {
-    if(prodid){
-     api.delete(`/customersupplierprice/deleteCsProduct/${prodid}`, {
-        customer_supplier_price_id: id,
-        contact_id: selectedContactId,
-        updated_by: loggedInuser.first_name,
-      });
+  const handleProductCodeChange = (index, selectedCode) => {
+    const selectedProduct = allProducts.find(p => p.product_code === selectedCode);
+    setProducts(prev =>
+      prev.map((prod, i) =>
+        i === index
+          ? {
+              ...prod,
+              product_code: selectedCode,
+              product_id: selectedProduct?.product_id || "",
+              title: selectedProduct?.title || "",
+            }
+          : prod
+      )
+    );
+  };
+
+  const handleDeleteProduct = async (index, prodid) => {
+    if (prodid) {
+      await api.delete(`/customersupplierprice/deleteCsProduct/${prodid}`);
     }
-    const updatedProducts = products.filter((_, i) => i !== index);
-    setProducts(updatedProducts);
+    setProducts((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSave = async () => {
     try {
-      await api.post("/customersupplierprice/updateCustomerSupplierPrice", {
-        customer_supplier_price_id: id,
-        contact_id: selectedContactId,
+      await api.post(`/customersupplierprice/updateCustomerSupplierPrice`, {
+        customer_supplier_price_id: Number(id),
+        contact_id: Number(selectedContactId),
+        customer: Number(contactDetails.customer),
+        supplier: Number(contactDetails.supplier),
         updated_by: loggedInuser.first_name,
+        product_count: products.length,
       });
 
       for (const product of products) {
         await api.post("/customersupplierprice/updateCsProduct", {
           cs_product_id: product.cs_product_id,
+          customer_supplier_price_id: Number(id),
           product_code: product.product_code,
           product_id: product.product_id,
           purchase_unit_cost: product.purchase_unit_cost,
@@ -118,15 +147,20 @@ console.log('products',products)
           wholesale_price: product.wholesale_price,
           carton_price: product.carton_price,
           margin_perc: product.margin_perc,
+          updated_by: loggedInuser.first_name,
         });
       }
 
       alert("Updated successfully!");
-       navigate('/CustomerSupplierPrice')
+      navigate("/CustomerSupplierPrice");
     } catch (err) {
-      console.error("Error updating:", err);
-      alert("Update failed!");
+      console.error("Error saving:", err);
+      alert("Update failed");
     }
+  };
+
+  const handleCancel = () => {
+    navigate("/CustomerSupplierPrice");
   };
 
   return (
@@ -170,7 +204,7 @@ console.log('products',products)
               <tr>
                 <th>SNo</th>
                 <th>Product Code</th>
-                <th>Product ID</th>
+                <th>Title</th>
                 <th>Purchase Unit Cost</th>
                 <th>Pcs Per Carton</th>
                 <th>Wholesale Price</th>
@@ -187,15 +221,10 @@ console.log('products',products)
                     <Input
                       type="select"
                       value={product.product_code}
-                      onChange={(e) => {
-                        const code = e.target.value;
-                        const prod = allProducts.find(p => p.product_code === code);
-                        handleInputChange(index, "product_code", code);
-                        handleInputChange(index, "product_id", prod ? prod.product_id : "");
-                      }}
+                      onChange={(e) => handleProductCodeChange(index, e.target.value)}
                     >
                       <option value="">Select Product</option>
-                      {allProducts.map(p => (
+                      {allProducts.map((p) => (
                         <option key={p.product_id} value={p.product_code}>
                           {p.product_code}
                         </option>
@@ -203,7 +232,7 @@ console.log('products',products)
                     </Input>
                   </td>
                   <td>
-                    <Input type="text" value={product.title} readOnly />
+                    <Input type="text" value={product.title || ""} readOnly />
                   </td>
                   <td>
                     <Input
@@ -241,7 +270,11 @@ console.log('products',products)
                     />
                   </td>
                   <td>
-                    <Button color="danger" size="sm" onClick={() => handleDeleteProduct(index,product.cs_product_id)}>
+                    <Button
+                      color="danger"
+                      size="sm"
+                      onClick={() => handleDeleteProduct(index, product.cs_product_id)}
+                    >
                       <FaTrash />
                     </Button>
                   </td>
@@ -249,10 +282,11 @@ console.log('products',products)
               ))}
             </tbody>
           </Table>
+
           <Button color="success" className="mt-3" onClick={handleSave}>
             Save Changes
           </Button>
-           <Button color="error" className="mt-3" onClick={handleCancel}>
+          <Button color="secondary" className="mt-3 ms-2" onClick={handleCancel}>
             Cancel
           </Button>
         </CardBody>
