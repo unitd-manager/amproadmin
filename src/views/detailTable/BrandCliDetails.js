@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   Button,
   Form,
@@ -7,10 +7,12 @@ import {
   Input,
   Col,
   Row,
-  FormText,
 } from 'reactstrap';
 import { useNavigate } from 'react-router-dom';
+import { FileUploader } from 'react-drag-drop-files';
+import message from '../../components/Message';
 import api from '../../constants/api';
+import AppContext from '../../context/AppContext';
 
 const AddBrand = () => {
   const [form, setForm] = useState({
@@ -19,11 +21,11 @@ const AddBrand = () => {
     sort_order: '',
     product_prefix: '',
     brand_image: null,
-    show_on_ecommerce: true,
-    show_on_eprocurement: true,
-    show_on_pos: true,
-    read_weight_from_scale: false,
-    is_active: true,
+    show_on_ecommerce: 1,
+    show_on_eprocurement: 1,
+    show_on_pos: 1,
+    read_weight_from_scale: 0,
+    is_active: 1,
   });
 
 //   const [departments, setDepartments] = useState([]);
@@ -34,16 +36,27 @@ navigate('/Brand')
 const onSave=(id)=>{
 navigate(`/BrandEdit/${id}`)
 }
+ const [file, setFile] = useState([]);
+         const [ handleValue, setHandleValue ] = useState();
  
+         const handleFileChange = (fiels) => {
+           
+             const arrayOfObj = Object.entries(fiels).map((e) => ( e[1]  ));
+ 
+             setFile(fiels);
+             setHandleValue(arrayOfObj);
+             console.log(fiels)
+         };
 //   const fetchDepartments = async () => {
 //     const res = await api.get('/departmentcli/getalldepartments');
 //     setDepartments(res.data);
 //   };
 
+  const { loggedInuser } = useContext(AppContext);
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     if (type === 'checkbox') {
-      setForm({ ...form, [name]: checked });
+      setForm({ ...form, [name]: checked ? 1 : 0  });
     } else if (type === 'file') {
       setForm({ ...form, [name]: files[0] });
     } else {
@@ -57,16 +70,21 @@ navigate(`/BrandEdit/${id}`)
     Object.entries(form).forEach(([key, value]) => {
       formData.append(key, value);
     });
+formData.append('created_by', loggedInuser.first_name);
+    try{
     const response =await api.post('/brandcli/insert_brand_cli', formData);
-    const {insertId} = response.data; 
-      if (form?.brand_image) {
-        const data = new FormData() 
-                
+    const { insertId } = response.data.data;
 
-               
-                    data.append(`files`, form.brand_image);
-                 
-                data.append('file', form.brand_image)
+    if(file){
+
+          
+                const data = new FormData() 
+                const arrayOfObj = Object.entries(file).map((el) => (  el[1] ));
+
+                arrayOfObj.forEach((ele) => {
+                    data.append(`files`, ele);
+                  });
+                //data.append('file', file)
                 data.append('record_id', insertId)
                 data.append('room_name', 'brandcli')
                 data.append('alt_tag_data', 'brandcli')
@@ -74,11 +92,20 @@ navigate(`/BrandEdit/${id}`)
 
                 api.post('/file/uploadFiles',data).then(()=>{
      
+                    message('Files Uploaded Successfully','success')
+                    
                 }).catch(()=>{
                    
+                    message('Unable to upload File','error')
+                   
                 })
-    }
+            }
     onSave(insertId);
+
+  } catch (err) {
+    console.error("Error submitting form: ", err);
+    alert("There was an error saving the brand .");
+  }
   };
 
   return (
@@ -128,35 +155,57 @@ navigate(`/BrandEdit/${id}`)
           Brand Image (80x80)
         </Label>
         <Col sm={8}>
-          <Input type="file" name="brand_image" accept="image/*" onChange={handleChange} />
-          <FormText color="muted">Upload image (80x80)</FormText>
+          {/* <Input type="file" name="brand_image" accept="image/*" onChange={handleChange} />
+          <FormText color="muted">Upload image (80x80)</FormText> */}
+          <FormGroup>
+                  
+                <FileUploader
+                        multiple
+                        handleChange={handleFileChange}
+                        name="file"
+                       // types={fileTypes}
+                    />
+                    
+
+                    {handleValue ? (
+                        handleValue.map((e) => (
+                        <div>
+                            <span> Name: {e.name} </span>
+                        </div>
+                        ))
+                    ) : (
+                        <span>No file selected</span>
+                    )}
+
+                </FormGroup>
         </Col>
+         
       </FormGroup>
       <Row className="mb-3">
         <Col sm={{ size: 8, offset: 4 }}>
           <FormGroup check>
             <Label check>
-              <Input type="checkbox" name="show_on_ecommerce" checked={form.show_on_ecommerce} onChange={handleChange} /> Show On ECommerce
+              <Input type="checkbox" name="show_on_ecommerce" checked={form.show_on_ecommerce === 1} onChange={handleChange} /> Show On ECommerce
             </Label>
           </FormGroup>
           <FormGroup check>
             <Label check>
-              <Input type="checkbox" name="show_on_eprocurement" checked={form.show_on_eprocurement} onChange={handleChange} /> Show On EProcurement
+              <Input type="checkbox" name="show_on_eprocurement" checked={form.show_on_eprocurement === 1} onChange={handleChange} /> Show On EProcurement
             </Label>
           </FormGroup>
           <FormGroup check>
             <Label check>
-              <Input type="checkbox" name="show_on_pos" checked={form.show_on_pos} onChange={handleChange} /> Show On POS
+              <Input type="checkbox" name="show_on_pos" checked={form.show_on_pos === 1} onChange={handleChange} /> Show On POS
             </Label>
           </FormGroup>
           <FormGroup check>
             <Label check>
-              <Input type="checkbox" name="read_weight_from_scale" checked={form.read_weight_from_scale} onChange={handleChange} /> Read Weight From Scale
+              <Input type="checkbox" name="read_weight_from_scale" checked={form.read_weight_from_scale === 1} onChange={handleChange} /> Read Weight From Scale
             </Label>
           </FormGroup>
           <FormGroup check>
             <Label check>
-              <Input type="checkbox" name="is_active" checked={form.is_active} onChange={handleChange} /> IsActive
+              <Input type="checkbox" name="is_active" checked={form.is_active === 1} onChange={handleChange} /> IsActive
             </Label>
           </FormGroup>
         </Col>

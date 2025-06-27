@@ -13,6 +13,7 @@ import {
   Col,
 } from "reactstrap";
 import { Link } from 'react-router-dom';
+import moment from 'moment';
 import message from '../../components/Message';
 import api from '../../constants/api';
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -28,9 +29,9 @@ const PricingManagement = () => {
   //getting data from content
   const getSupplier = () => {
     api
-      .get('/contact/getContact')
+      .get('/customersupplierprice/getSupplierPrice')
       .then((res) => {
-        //setSupplier(res.data.data);
+        setSupplier(res.data.data);
         console.log(res.data.data)
       })
       .catch(() => {
@@ -40,9 +41,9 @@ const PricingManagement = () => {
   //getting data from content
   const getCustomer = () => {
     api
-      .get('/contact/getContact')
+      .get('/customersupplierprice/getCustomerPrice')
       .then((res) => {
-        //setCustomer(res.data.data);
+        setCustomer(res.data.data);
         console.log(res.data.data)
       })
       .catch(() => {
@@ -50,38 +51,13 @@ const PricingManagement = () => {
       });
   };
 
-//   const data = [
-//     { id: 1, name: "VINAYAGA TRADING & SUPERMART PTE LTD", code: "VINAJURONG", count: 48, user: "sales2", date: "06/02/2025" },
-//     { id: 2, name: "EVERGREEN TRADING MART", code: "EVERG", count: 51, user: "sales2", date: "06/02/2025" },
-//     { id: 3, name: "DAKSHNA TRADERS MINIMART", code: "DAKJURON", count: 176, user: "sales2", date: "06/02/2025" },
-//     { id: 4, name: "BS SUPERMARKET", code: "BSSTUS", count: 121, user: "sales1", date: "06/02/2025" },
-//     { id: 5, name: "TOH GUAN MINIMART", code: "TOUMI", count: 223, user: "sales2", date: "06/02/2025" },
-//     { id: 6, name: "POPULAR SUPERMARKET PTE LTD", code: "PAPULARSUP", count: 154, user: "sales2", date: "06/02/2025" },
-//     { id: 7, name: "BAZAAR", code: "BAZAARTOH", count: 82, user: "sales2", date: "06/02/2025" },
-//     { id: 8, name: "NAWAS GLOBAL PTE LTD", code: "NAWASTUAS", count: 306, user: "sales2", date: "06/02/2025" },
-//   ];
+
 useEffect(() => {
     
     getSupplier();
     getCustomer();
-    setCustomer([ { id: 1, name: "VINAYAGA TRADING & SUPERMART PTE LTD", code: "VINAJURONG", count: 48, user: "sales2", date: "06/02/2025" },
-        { id: 2, name: "EVERGREEN TRADING MART", code: "EVERG", count: 51, user: "sales2", date: "06/02/2025" },
-        { id: 3, name: "DAKSHNA TRADERS MINIMART", code: "DAKJURON", count: 176, user: "sales2", date: "06/02/2025" },
-        { id: 4, name: "BS SUPERMARKET", code: "BSSTUS", count: 121, user: "sales1", date: "06/02/2025" },
-        { id: 5, name: "TOH GUAN MINIMART", code: "TOUMI", count: 223, user: "sales2", date: "06/02/2025" },
-        { id: 6, name: "POPULAR SUPERMARKET PTE LTD", code: "PAPULARSUP", count: 154, user: "sales2", date: "06/02/2025" },
-        { id: 7, name: "BAZAAR", code: "BAZAARTOH", count: 82, user: "sales2", date: "06/02/2025" },
-        { id: 8, name: "NAWAS GLOBAL PTE LTD", code: "NAWASTUAS", count: 306, user: "sales2", date: "06/02/2025" },
-      ]);
-      setSupplier([ { id: 1, name: "VINAYAGA TRADING & SUPERMART PTE LTD", code: "VINAJURONG", count: 48, user: "sales2", date: "06/02/2025" },
-        { id: 2, name: "EVERGREEN TRADING MART", code: "EVERG", count: 51, user: "sales2", date: "06/02/2025" },
-        { id: 3, name: "DAKSHNA TRADERS MINIMART", code: "DAKJURON", count: 176, user: "sales2", date: "06/02/2025" },
-        { id: 4, name: "BS SUPERMARKET", code: "BSSTUS", count: 121, user: "sales1", date: "06/02/2025" },
-        { id: 5, name: "TOH GUAN MINIMART", code: "TOUMI", count: 223, user: "sales2", date: "06/02/2025" },
-        { id: 6, name: "POPULAR SUPERMARKET PTE LTD", code: "PAPULARSUP", count: 154, user: "sales2", date: "06/02/2025" },
-        { id: 7, name: "BAZAAR", code: "BAZAARTOH", count: 82, user: "sales2", date: "06/02/2025" },
-        { id: 8, name: "NAWAS GLOBAL PTE LTD", code: "NAWASTUAS", count: 306, user: "sales2", date: "06/02/2025" },
-      ])
+    setCustomer();
+      setSupplier()
   }, []);
   return (
     <Container className="mt-4">
@@ -140,16 +116,16 @@ useEffect(() => {
             </thead>
             <tbody>
               {customer?.map((item) => (
-                <tr key={item.id}>
+                <tr key={item.customer_supplier_price_id}>
                   <td>
                     <Button color="danger" size="sm">Delete</Button>
                   </td>
-                  <td>  <Link to={`/CustomerSupplierPriceEdit/${item.id}`}>
-                  {item.name}
+                  <td>  <Link to={`/CustomerSupplierPriceEdit/${item.customer_supplier_price_id}`}>
+                  {item.contact_name}
                                       </Link></td>
-                  <td>{item.count}</td>
-                  <td>{item.user}</td>
-                  <td>{item.date}</td>
+                  <td>{item.product_count}</td>
+                  <td>{item.created_user}</td>
+                  <td>{moment(item.created_at).format('DD/MM/YYYY')}</td>
                 </tr>
               ))}
             </tbody>
@@ -179,21 +155,63 @@ useEffect(() => {
               </tr>
             </thead>
             <tbody>
-              {supplier?.map((item) => (
-                <tr key={item.id}>
+               {supplier?.map((item) => (
+                <tr key={item.customer_supplier_price_id}>
                   <td>
                     <Button color="danger" size="sm">Delete</Button>
                   </td>
-                  <td>{item.name}</td>
-                  <td>{item.count}</td>
-                  <td>{item.user}</td>
-                  <td>{item.date}</td>
+                  <td>  <Link to={`/CustomerSupplierPriceEdit/${item.customer_supplier_price_id}`}>
+                  {item.contact_name}
+                                      </Link></td>
+                  <td>{item.product_count}</td>
+                  <td>{item.created_user}</td>
+                  <td>{moment(item.created_at).format('DD/MM/YYYY')}</td>
                 </tr>
               ))}
             </tbody>
           </Table>
         </TabPane>
-        <TabPane tabId="contactGroup">Contact group content here...</TabPane>
+        <TabPane tabId="contactGroup">
+
+           <Row>
+            <Col md={6} className="mb-3">
+              <Input type="text" placeholder="Search Contact..." />
+            </Col>
+            <Col md={2}>
+              <Button color="primary">Search</Button>
+            </Col>
+            <Col md={{ size: 3, offset: 1 }}>
+              <Button color="dark">Add New</Button>
+            </Col>
+          </Row>
+
+          <Table hover className="mt-3">
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>Contact Name</th>
+                <th>Product Count</th>
+                <th>Created User</th>
+                <th>Created Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {supplier?.map((item) => (
+                <tr key={item.customer_supplier_price_id}>
+                  <td>
+                    <Button color="danger" size="sm">Delete</Button>
+                  </td>
+                  <td>  <Link to={`/CustomerSupplierPriceEdit/${item.customer_supplier_price_id}`}>
+                  {item.contact_name}
+                                      </Link></td>
+                  <td>{item.product_count}</td>
+                  <td>{item.created_user}</td>
+                  <td>{moment(item.created_at).format('DD/MM/YYYY')}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </TabPane>
       </TabContent>
     </Container>
   );

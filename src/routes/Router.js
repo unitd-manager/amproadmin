@@ -354,8 +354,8 @@ const Routernew = () => {
             element={<CategoryCliDetails />}
           ></Route>
            <Route
-            path="/SubCategoryDetails"
-            name="SubCategoryDetails"
+            path="/SubCategoriesDetails"
+            name="SubCategoriesDetails"
             element={<SubCategoryCliDetails />}
           ></Route>
 
@@ -380,8 +380,8 @@ const Routernew = () => {
             element={<CategoryCliEdit />}
           ></Route>
           <Route
-            path="/SubCategoryEdit/:id"
-            name="SubCategoryEdit"
+            path="/SubCategoriesEdit/:id"
+            name="SubCategoriesEdit"
             element={<SubCategoryCliEdit />}
           ></Route>
           

@@ -126,7 +126,7 @@ const CustomerDetails = () => {
 
     try {
       // 1. Insert the main customer (contact) details
-      const contactResponse = await api.post('/contact/insertContact', customerDetails);
+      const contactResponse = await api.post('conntact/contact/insertContact', customerDetails);
       const insertedContactId = contactResponse.data.insertId;
 
       if (!insertedContactId) {

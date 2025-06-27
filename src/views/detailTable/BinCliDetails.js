@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   Button,
   Form,
@@ -8,7 +8,10 @@ import {
   Col,
   Row,
 } from 'reactstrap';
+import { useNavigate } from 'react-router-dom';
+import message from '../../components/Message';
 import api from '../../constants/api';
+import AppContext from '../../context/AppContext';
 
 const AddBin = () => {
   const [form, setForm] = useState({
@@ -17,15 +20,24 @@ const AddBin = () => {
     rack_no: '',
     rack_level: '',
     max_occupancy: '',
-    read_weight_from_scale: '',
+    read_weight_from_scale: 0,
     sort_order: '',
-    is_active: true,
+    is_active: 1,
   });
+  const navigate=useNavigate();
+const onCancel=()=>{
+navigate('/Bin')
+}
+const onSave=(id)=>{
+navigate(`/BinEdit/${id}`)
+}
 
+
+  const { loggedInuser } = useContext(AppContext);
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     if (type === 'checkbox') {
-      setForm({ ...form, [name]: checked });
+      setForm({ ...form, [name]: checked ? 1 : 0 });
     } else if (type === 'file') {
       setForm({ ...form, [name]: files[0] });
     } else {
@@ -39,19 +51,23 @@ const AddBin = () => {
     Object.entries(form).forEach(([key, value]) => {
       formData.append(key, value);
     });
+formData.append('created_by', loggedInuser.first_name);
     try {
-      await api.post('/bincli/insert_bin_cli', formData);
-      alert('Bin saved successfully');
+      const response= await api.post('/bincli/insert_bin_cli', formData);
+      const { insertId } = response.data.data;
+
+      message('Bin Added successfully.', 'success');
       setForm({
         bin_name: '',
         floor_level: '',
         rack_no: '',
         rack_level: '',
         max_occupancy: '',
-        read_weight_from_scale: '',
+        read_weight_from_scale: 0,
         sort_order: '',
-        is_active: true,
+        is_active: 1,
       });
+      onSave(insertId)
     } catch (err) {
       alert('Error saving bin');
       console.error(err);
@@ -108,7 +124,7 @@ const AddBin = () => {
         <Col sm={{ size: 8, offset: 4 }}>
           <FormGroup check>
             <Label check>
-              <Input type="checkbox" name="is_active" checked={form.is_active} onChange={handleChange} /> IsActive
+              <Input type="checkbox" name="is_active" checked={form.is_active === 1} onChange={handleChange} /> IsActive
             </Label>
           </FormGroup>
         </Col>
@@ -117,6 +133,7 @@ const AddBin = () => {
       <Row className="mt-4">
         <Col sm={{ size: 8, offset: 4 }}>
           <Button color="primary" type="submit">Save</Button>
+          <Button color="danger" type="button" onClick={onCancel}>Cancel</Button>
         </Col>
       </Row>
     </Form>

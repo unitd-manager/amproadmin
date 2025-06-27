@@ -10,7 +10,9 @@ import {
   PaginationItem,
   PaginationLink
 } from 'reactstrap';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaTrash, FaPlus, FaFilter, FaSearch } from 'react-icons/fa';
+import moment from 'moment';
 import api from '../../constants/api';
 
 const BrandCli = () => {
@@ -21,6 +23,7 @@ const BrandCli = () => {
   const [totalRecords, setTotalRecords] = useState(0);
 
 
+const navigate=useNavigate();
 
   const fetchCategories = async () => {
     try {
@@ -31,8 +34,8 @@ const BrandCli = () => {
         }
       });
       setCategories(response.data.data);
-      setTotalPages(response.data.totalPages);
-      setTotalRecords(response.data.totalRecords);
+      setTotalPages(response.data.pagination.totalPages);
+      setTotalRecords(response.data.pagination.totalRecords);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -57,7 +60,9 @@ const BrandCli = () => {
   return (
     <Container fluid className="p-4" style={{ backgroundColor: '#f0f4fa', minHeight: '100vh' }}>
       <h3 className="mb-4">Brand Management</h3>
-      <Button color="primary" className="mb-3">
+      <Button color="primary" className="mb-3" onClick={()=>{
+        navigate('/BrandDetails')
+      }}>
         <FaPlus /> Add New(+)
       </Button>
 
@@ -93,12 +98,14 @@ const BrandCli = () => {
               <td style={{ textAlign: 'center' }}>
                 <FaTrash style={{ cursor: 'pointer' }} onClick={() => handleDelete(cat.brand_cli_id)} />
               </td>
-              <td>{cat.brand_name}</td>
+              <td><Link to={`/BrandEdit/${cat.brand_cli_id}`}>
+                                     {cat.brand_name}
+                                    </Link></td>
               {/* <td>{cat.departmentName}</td> */}
-              <td>{cat.sortOrder}</td>
-              <td>{cat.status}</td>
+              <td>{cat.sort_order}</td>
+              <td>{cat.is_active ? 'active':'inactive'}</td>
               <td>{cat.created_by}</td>
-              <td>{cat.updated_at}</td>
+              <td>{moment(cat.updatet_at).format('DD/MM/YYYY')}</td>
             </tr>
           ))}
         </tbody>

@@ -52,7 +52,7 @@ export default function ProductDetail({ productDetails, handleInputs,categorydro
                   <Label>Department</Label>
                   <Input
                     type="select"
-                    name="department_id"
+                    name="department_cli_id"
                     value={productDetails && productDetails.department_id}
                     onChange={handleInputs}
                   >
@@ -60,7 +60,7 @@ export default function ProductDetail({ productDetails, handleInputs,categorydro
                     {departmentdropdown &&
                       departmentdropdown.map((ele) => {
                         return (
-                          <option key={ele.department_id} value={ele.department_id}>
+                          <option key={ele.department_cli_id} value={ele.department_cli_id}>
                             {ele.department_name}
                           </option>
                         );

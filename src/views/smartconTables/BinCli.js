@@ -10,7 +10,9 @@ import {
   PaginationItem,
   PaginationLink
 } from 'reactstrap';
+import { useNavigate,Link } from 'react-router-dom';
 import { FaTrash, FaPlus, FaFilter, FaSearch } from 'react-icons/fa';
+import moment from 'moment';
 import api from '../../constants/api';
 
 
@@ -21,18 +23,19 @@ const BinCli = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [totalRecords, setTotalRecords] = useState(0);
 
+const navigate=useNavigate();
 
   const fetchCategories = async () => {
     try {
-      const response = await api.get('bincli/get_all_bin_cli', {
+      const response = await api.get('bincli/get_all_bin_clis', {
         params: {
           page: currentPage,
           search: searchTerm
         }
       });
       setCategories(response.data.data);
-      setTotalPages(response.data.totalPages);
-      setTotalRecords(response.data.totalRecords);
+      setTotalPages(response.data.pagination.totalPages);
+      setTotalRecords(response.data.pagination.totalRecords);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -58,7 +61,9 @@ const BinCli = () => {
   return (
     <Container fluid className="p-4" style={{ backgroundColor: '#f0f4fa', minHeight: '100vh' }}>
       <h3 className="mb-4">Bin Management</h3>
-      <Button color="primary" className="mb-3">
+      <Button color="primary" className="mb-3" onClick={()=>{
+        navigate('/BinDetails')
+      }}>
         <FaPlus /> Add New(+)
       </Button>
 
@@ -97,14 +102,16 @@ const BinCli = () => {
               <td style={{ textAlign: 'center' }}>
                 <FaTrash style={{ cursor: 'pointer' }} onClick={() => handleDelete(cat.bin_cli_id)} />
               </td>
-              <td>{cat.bin_name}</td>
+              <td><Link to={`/BinEdit/${cat.bin_cli_id}`}>
+                                     {cat.bin_name}
+                                    </Link></td>
               <td>{cat.floor_level}</td>
               <td>{cat.rack_no}</td>
                <td>{cat.rack_level}</td>
               <td>{cat.max_occupancy}</td>
-              <td>{cat.status}</td>
-              <td>{cat.updated_at}</td>
-              <td>{cat.updatet_by}</td>
+              <td>{cat.is_active ? 'active':'inactive'}</td>
+              <td>{moment(cat.updated_at).format('DD/MM/YYYY')}</td>
+              <td>{cat.updated_by}</td>
             </tr>
           ))}
         </tbody>

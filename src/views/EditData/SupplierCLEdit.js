@@ -281,7 +281,7 @@ const getTermsDrodownFromValuelist = () => {
         termsfromvaluelist={termsfromvaluelist}
         editPurchaseOrderLinked={editPurchaseOrderLinked}
       ></SupplierDetails>
-
+ 
       {/* <PurchaseOrderLinked
         editPurchaseOrderLinked={editPurchaseOrderLinked}
         setEditPurchaseOrderLinked={setEditPurchaseOrderLinked}
