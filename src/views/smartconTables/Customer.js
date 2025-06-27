@@ -10,13 +10,13 @@ import message from '../../components/Message';
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
-
+ 
 const Customer = () => {
   const [customer, setCustomer] = useState([]);
   const [loading, setLoading] = useState(false);
   const [customerNameFilter, setCustomerNameFilter] = useState('');
   const [mobileFilter, setMobileFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('Active');
   const [selectedCustomerIds, setSelectedCustomerIds] = useState([]);
   const [modal, setModal] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
