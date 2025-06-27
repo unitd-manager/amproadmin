@@ -24,6 +24,8 @@ import AppContext from '../../context/AppContext';
 import ProductAnalysis from '../../components/ProductTable/ProductAnalysis';
 import EcommerceSetting from '../../components/ProductTable/EcommerceSetting';
 import Stock from '../../components/ProductTable/Stock';
+import ProductStockMovement from '../../components/Product/ProductStockMovement';
+
 
 const ProductUpdate = () => {
   // All state variables
@@ -66,6 +68,8 @@ const ProductUpdate = () => {
     { id: '4', name: 'Product Variation'},
     { id: '5', name: 'Analysis'},
      { id: '6', name: 'Ecommerce Settings'},
+     { id: '7', name: 'Product Stock Movement'},
+
   ];
   const toggle = (tab) => {
     if (activeTab !== tab) setActiveTab(tab);
@@ -309,6 +313,10 @@ const getSupplier = () => {
                 setAddPurchaseOrderModal={setModal}
                 productDetails={productDetails}
               ></EcommerceSetting> 
+        </TabPane>
+        <TabPane tabId="7">
+          
+            <ProductStockMovement productId={id} />
         </TabPane>
         {/* <TabPane tabId="7">
         <Col md="3" className="addNew">
