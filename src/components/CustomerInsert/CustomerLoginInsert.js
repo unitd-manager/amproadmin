@@ -57,7 +57,15 @@ export default function CustomerLogininsert({ contentDetails, handleInputs }) {
           <Input
             type="switch"
             id="is_active_toggle"
-            onChange={handleInputs}
+            onChange={e => handleInputs({
+              ...e,
+              target: {
+                ...e.target,
+                name: 'is_active',
+                value: e.target.checked ? 1 : 0,
+                checked: e.target.checked
+              }
+            })}
             checked={contentDetails.is_active === 1} // Assuming 1 for active, 0 for inactive
             name="is_active"
             role="switch"
