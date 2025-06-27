@@ -64,6 +64,9 @@ export default function EcommerceSetting({ ProductId, addPurchaseOrderModal, set
           .then(() => {
             message('Ecommerce data updated successfully.', 'success');
             setAddPurchaseOrderModal(false);
+            setTimeout(() => {
+              window.location.reload();
+            }, 300);
           })
           .catch(() => message('Update failed.', 'error'));
       } else {
@@ -121,11 +124,11 @@ export default function EcommerceSetting({ ProductId, addPurchaseOrderModal, set
                 Specification
               </NavLink>
             </NavItem>
-            <NavItem>
+            {/* <NavItem>
               <NavLink className={activeTab === '3' ? 'active' : ''} onClick={() => setActiveTab('3')}>
                 Related Products
               </NavLink>
-            </NavItem>
+            </NavItem> */}
           </Nav>
 
           <TabContent activeTab={activeTab} className="mt-3">
@@ -163,6 +166,7 @@ export default function EcommerceSetting({ ProductId, addPurchaseOrderModal, set
               </Row>
               <ModalFooter>
                 <Button color="primary" onClick={saveClientForm}>Save</Button>
+                <Button color="secondary" onClick={() => setAddPurchaseOrderModal(false)}>Cancel</Button>
               </ModalFooter>
             </TabPane>
 
@@ -180,10 +184,11 @@ export default function EcommerceSetting({ ProductId, addPurchaseOrderModal, set
               </ComponentCard>
               <ModalFooter>
                 <Button color="primary" onClick={saveClientForm}>Save</Button>
-              </ModalFooter>
+                <Button color="secondary" onClick={() => setAddPurchaseOrderModal(false)}>Cancel</Button>
+  </ModalFooter>
             </TabPane>
 
-            <TabPane tabId="3">
+            {/* <TabPane tabId="3">
               <Row>
                 <Col md="6">
                   <FormGroup>
@@ -201,7 +206,7 @@ export default function EcommerceSetting({ ProductId, addPurchaseOrderModal, set
               <ModalFooter>
                 <Button color="primary" onClick={saveClientForm}>Save</Button>
               </ModalFooter>
-            </TabPane>
+            </TabPane> */}
           </TabContent>
         </ComponentCard>
       </ModalBody>
