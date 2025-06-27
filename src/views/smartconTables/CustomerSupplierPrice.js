@@ -38,6 +38,7 @@ const PricingManagement = () => {
         message('Cannot get Content Data', 'error');
       });
   };
+ 
   //getting data from content
   const getCustomer = () => {
     api
@@ -50,7 +51,16 @@ const PricingManagement = () => {
         message('Cannot get Content Data', 'error');
       });
   };
-
+ const handleDelete = async (id) => {
+    try {
+      await api.delete(`/customersupplierprice/deleteCustomerSupplierPrice/${id}`);
+      
+      getSupplier();
+    getCustomer();
+    } catch (error) {
+      console.error('Error deleting category:', error);
+    }
+  };
 
 useEffect(() => {
     
@@ -118,7 +128,7 @@ useEffect(() => {
               {customer?.map((item) => (
                 <tr key={item.customer_supplier_price_id}>
                   <td>
-                    <Button color="danger" size="sm">Delete</Button>
+                    <Button color="danger" size="sm" onClick={()=>handleDelete(item.customer_supplier_price_id)}>Delete</Button>
                   </td>
                   <td>  <Link to={`/CustomerSupplierPriceEdit/${item.customer_supplier_price_id}`}>
                   {item.contact_name}
@@ -158,7 +168,7 @@ useEffect(() => {
                {supplier?.map((item) => (
                 <tr key={item.customer_supplier_price_id}>
                   <td>
-                    <Button color="danger" size="sm">Delete</Button>
+                    <Button color="danger" size="sm" onClick={()=>handleDelete(item.customer_supplier_price_id)}>Delete</Button>
                   </td>
                   <td>  <Link to={`/CustomerSupplierPriceEdit/${item.customer_supplier_price_id}`}>
                   {item.contact_name}
@@ -199,7 +209,7 @@ useEffect(() => {
               {supplier?.map((item) => (
                 <tr key={item.customer_supplier_price_id}>
                   <td>
-                    <Button color="danger" size="sm">Delete</Button>
+                    <Button color="danger" size="sm" onClick={()=>handleDelete(item.customer_supplier_price_id)}>Delete</Button>
                   </td>
                   <td>  <Link to={`/CustomerSupplierPriceEdit/${item.customer_supplier_price_id}`}>
                   {item.contact_name}

@@ -12,38 +12,14 @@ export default function CustomerShippingDetailInsert({ handleInputs, contentDeta
             <Input
               type="text"
               onChange={handleInputs}
-              value={contentDetails && contentDetails.address}
-              name="address"
+              value={contentDetails && contentDetails.address_street}
+              name="address_street"
             />
           </FormGroup>
         </Col>
         <Col md="6">
           <FormGroup>
             <Label>Address Line 2</Label>
-            <Input
-              type="text"
-              onChange={handleInputs}
-              value={contentDetails && contentDetails.address1}
-              name="address1"
-            />
-          </FormGroup>
-        </Col>
-      </Row>
-      <Row>
-        <Col md="6">
-          <FormGroup>
-            <Label>Address Line 3</Label>
-            <Input
-              type="text"
-              onChange={handleInputs}
-              value={contentDetails && contentDetails.address2}
-              name="address2"
-            />
-          </FormGroup>
-        </Col>
-        <Col md="6">
-          <FormGroup>
-            <Label>Area / District</Label>
             <Input
               type="text"
               onChange={handleInputs}
@@ -56,12 +32,12 @@ export default function CustomerShippingDetailInsert({ handleInputs, contentDeta
       <Row>
         <Col md="6">
           <FormGroup>
-            <Label>City</Label>
+            <Label>Address Line 3</Label>
             <Input
               type="text"
               onChange={handleInputs}
-              value={contentDetails && contentDetails.address_city}
-              name="address_city"
+              value={contentDetails && contentDetails.address_town}
+              name="address_town"
             />
           </FormGroup>
         </Col>
@@ -80,13 +56,12 @@ export default function CustomerShippingDetailInsert({ handleInputs, contentDeta
       <Row>
         <Col md="6">
           <FormGroup>
-            <Label>Country Code</Label>
+            <Label>Country</Label>
             <Input
               type="text"
               onChange={handleInputs}
-              value={contentDetails && contentDetails.address_country_code}
-              name="address_country_code"
-              placeholder="e.g., US, IN, UK"
+              value={contentDetails && contentDetails.address_country}
+              name="address_country"
             />
           </FormGroup>
         </Col>
