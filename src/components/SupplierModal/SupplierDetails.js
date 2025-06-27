@@ -1,9 +1,9 @@
 import React from 'react';
-import { Row, Col, Form, FormGroup, Label, Input, Button } from 'reactstrap';
+import { Row, Col, Form, FormGroup, Label, Input } from 'reactstrap';
 import PropTypes from 'prop-types';
 import ComponentCard from '../ComponentCard';
 
-export default function SupplierDetails({  handleInputs ,supplier ,allCountries , status , setEditPurchaseOrderLinked, taxfromvaluelist,
+export default function SupplierDetails({  handleInputs ,supplier ,allCountries , taxfromvaluelist,
   pricegroupfromvaluelist,contacttypefromvaluelist, areafromvaluelist, currencyfromvaluelist, termsfromvaluelist
 }) {
   SupplierDetails.propTypes = {
@@ -11,8 +11,6 @@ export default function SupplierDetails({  handleInputs ,supplier ,allCountries 
     supplier: PropTypes.object,
     allCountries: PropTypes.object,
     taxfromvaluelist: PropTypes.object,
-    status: PropTypes.object,
-    setEditPurchaseOrderLinked: PropTypes.bool,
     pricegroupfromvaluelist: PropTypes.object,
     contacttypefromvaluelist: PropTypes.object,
     areafromvaluelist: PropTypes.object,
@@ -365,7 +363,7 @@ export default function SupplierDetails({  handleInputs ,supplier ,allCountries 
         </FormGroup>
       </Col>
     </Row>
-   {status &&(status.payment_status === 'Due' ||status.payment_status === 'Partially Paid' ||status.payment_status === 'Paid') &&(
+   {/* {status &&(status.payment_status === 'Due' ||status.payment_status === 'Partially Paid' ||status.payment_status === 'Paid') &&(
    <Row>
       <div className="pt-3 mt-3 d-flex align-items-center gap-2">
         <Button className='shadow-none'
@@ -377,7 +375,7 @@ export default function SupplierDetails({  handleInputs ,supplier ,allCountries 
         </Button>
       </div>
     </Row>
-)}
+)} */}
   </ComponentCard>
 </FormGroup>
 </Form>
