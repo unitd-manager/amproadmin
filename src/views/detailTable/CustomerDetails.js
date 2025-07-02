@@ -116,19 +116,6 @@ const CustomerDetails = () => {
     if (activeTab !== tab) setActiveTab(tab);
   };
 
-  // Generate customer code on mount
-  React.useEffect(() => {
-    const fetchCode = async () => {
-      try {
-        const res = await api.post('/commonApi/getCodeValue', { type: 'customer' });
-        const code = res.data.data;
-        setCustomerDetails((prev) => ({ ...prev, customer_code: code }));
-      } catch {
-        setCustomerDetails((prev) => ({ ...prev, customer_code: '' }));
-      }
-    };
-    fetchCode();
-  }, []);
 
   // Insert Customer Data (Main Submission Function)
   const insertCustomerData = async () => {
