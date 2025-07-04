@@ -20,12 +20,12 @@ import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import ComponentCard from '../../components/ComponentCard';
 import message from '../../components/Message';
 import api from '../../constants/api'; // Ensure this path is correct
+import CustomerSalesmenInsert, { saveSalesmenToBackend } from '../../components/CustomerInsert/SalesManInsert';
 
 // Import child components
 import CustomerLogininsert from '../../components/CustomerInsert/CustomerLoginInsert';
 import ContactPersonInsert from '../../components/CustomerInsert/ContactPersonInsert';
 import CustomerShippingDetailInsert from '../../components/CustomerInsert/ShippingDetailInsert';
-import CustomerSalesmenInsert from '../../components/CustomerInsert/SalesManInsert';
 import ContentMoreDetailsInsert from '../../components/CustomerInsert/CustomerMoreDetailsInsert'; // Corrected name to match earlier discussion
 
 const CustomerDetails = () => {
@@ -116,9 +116,11 @@ const CustomerDetails = () => {
     if (activeTab !== tab) setActiveTab(tab);
   };
 
+
   // Insert Customer Data (Main Submission Function)
   const insertCustomerData = async () => {
-    if (!customerDetails.company_name.trim()) {
+    const detailsWithCode = { ...customerDetails };
+    if (!detailsWithCode.company_name.trim()) {
       message('Please fill the Customer Name field.', 'error');
       return;
     }
@@ -130,30 +132,19 @@ const CustomerDetails = () => {
 
     try {
       // 1. Insert the main customer (contact) details
-      const contactResponse = await api.post('contact/insertContact', customerDetails);
-      const insertedContactId = contactResponse.data.insertId;
+      const contactResponse = await api.post('contact/insertContact', detailsWithCode);
+      console.log('Insert contact API response:', contactResponse.data); // Debug log
+      // Use the correct path for the inserted ID based on backend response
+      const insertedContactId = contactResponse.data.data && contactResponse.data.data.insertId;
 
       if (!insertedContactId) {
-        throw new Error('Failed to retrieve new contact ID after main insertion.');
+        throw new Error(`Failed to retrieve new contact ID after main insertion. Full response: ${JSON.stringify(contactResponse.data)}`);
       }
       message('Customer details inserted successfully.', 'success');
 
-      // 2. Insert associated salesmen
+      // 2. Insert associated salesmen using the correct helper
       if (associatedSalesmen.length > 0) {
-        // Prepare data for batch insertion if your API supports it, or iterate
-        const salesmanPromises = associatedSalesmen.map(async (salesman) => {
-          try {
-            await api.post('/customer/addCustomerSalesman', {
-              contact_id: insertedContactId,
-              employee_id: salesman.employee_id, // Make sure salesman object has employee_id
-            });
-          } catch (salesmanErr) {
-            console.error(`Error associating salesman ${salesman.employee_name}:`, salesmanErr);
-            // Optionally, show a warning for this specific salesman, but allow others to proceed
-            message(`Failed to associate salesman ${salesman.employee_name}.`, 'warning');
-          }
-        });
-        await Promise.all(salesmanPromises); // Wait for all salesmen to be processed
+        await saveSalesmenToBackend(insertedContactId, associatedSalesmen);
         message('Salesmen associated successfully.', 'info');
       }
 
@@ -162,7 +153,7 @@ const CustomerDetails = () => {
       // that can handle an array of contact person objects for a given contact_id.
       if (associatedContactPersons.length > 0) {
         try {
-          await api.post('/contact/insertContactPersonsBatch', {
+          await api.post('contact/contact/insertContactPersonsBatch', {
             contact_id: insertedContactId,
             contact_persons: associatedContactPersons,
           });
@@ -315,6 +306,7 @@ const CustomerDetails = () => {
                       className="shadow-none"
                       color="primary"
                       onClick={insertCustomerData}
+                      disabled={!customerDetails.customer_code}
                     >
                       Save
                     </Button>

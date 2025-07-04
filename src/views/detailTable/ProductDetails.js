@@ -16,6 +16,7 @@ const ProductDetails = () => {
   const navigate = useNavigate();
   const [productDetails, setProductDetails] = useState({
     title: '',
+    product_code: '',
     creation_date: moment(),
   });
   //setting data in ProductDetails
@@ -24,46 +25,56 @@ const ProductDetails = () => {
   };
   //get staff details
   const { loggedInuser } = useContext(AppContext);
+
+  // Generate product code on mount
+  useEffect(() => {
+    const fetchCode = async () => {
+      try {
+        const res = await api.post('/commonApi/getCodeValues', { type: 'product' });
+        const ProductCode = res.data.data;
+        setProductDetails((prev) => ({ ...prev, product_code: ProductCode }));
+      } catch {
+        setProductDetails((prev) => ({ ...prev, product_code: '' }));
+      }
+    };
+    fetchCode();
+  }, []);
+
   //Insert Product Data
-  const insertProductData = (ProductCode) => {
-    if (productDetails.title.trim() !== '') {
-      productDetails.product_code = ProductCode;
-      productDetails.creation_date = creationdatetime;
-      productDetails.created_by = loggedInuser.first_name;
-      
+  const insertProductData = () => {
+    if (productDetails.title.trim() !== '' && productDetails.product_code) {
+      const detailsWithCode = { ...productDetails };
+      detailsWithCode.creation_date = creationdatetime;
+      detailsWithCode.created_by = loggedInuser.first_name;
       // Insert product
-      api.post('/product/insertProduct', productDetails)
+      api.post('/product/insertProduct', detailsWithCode)
         .then((res) => {
           const insertedDataId = res.data.data.insertId;
           message('Product inserted successfully.', 'success');
-  
           // Fetch inventory code and insert inventory
-
           api
-          .post('/commonApi/getCodeValues', { type: 'inventory' })
-          .then((resp) => {
+            .post('/commonApi/getCodeValues', { type: 'inventory' })
+            .then((resp) => {
               const InventoryCode = resp.data.data;
               message('Fetched Inventory code successfully.', 'success');
               api.post('/inventory/insertinventory', {
                 product_id: insertedDataId,
                 inventory_code: InventoryCode,
-                created_by: loggedInuser.first_name, 
-                creation_date: creationdatetime, 
+                created_by: loggedInuser.first_name,
+                creation_date: creationdatetime,
               })
-              .then(() => {
-                message('Inventory created successfully.', 'success');
-              })
-              .catch((inventoryError) => {
-                console.error('Error creating inventory:', inventoryError);
-                message('Unable to create inventory.', 'error');
-              });
-  
+                .then(() => {
+                  message('Inventory created successfully.', 'success');
+                })
+                .catch((inventoryError) => {
+                  console.error('Error creating inventory:', inventoryError);
+                  message('Unable to create inventory.', 'error');
+                });
             })
             .catch((codeError) => {
               console.error('Error fetching Inventory code:', codeError);
               message('Unable to fetch Inventory code.', 'error');
             });
-  
           setTimeout(() => {
             navigate(`/ProductEdit/${insertedDataId}?tab=1`);
           }, 300);
@@ -75,21 +86,6 @@ const ProductDetails = () => {
     } else {
       message('Please fill all required fields.', 'warning');
     }
-  };
-  
-
-  //Auto generation code
-  const generateCode = () => {
-    api
-      .post('/commonApi/getCodeValues', { type: 'product' })
-      .then((res) => {
-        const ProductCode = res.data.data;
-       console.log('ProductCode',ProductCode)
-          insertProductData(ProductCode);
-      })
-      .catch(() => {
-        insertProductData('');
-      });
   };
 
   //useeffect
@@ -124,9 +120,8 @@ const ProductDetails = () => {
                     <Button
                       className="shadow-none"
                       color="primary"
-                      onClick={() => {
-                        generateCode();
-                      }}
+                      onClick={insertProductData}
+                      disabled={!productDetails.product_code}
                     >
                       Save & Continue
                     </Button>

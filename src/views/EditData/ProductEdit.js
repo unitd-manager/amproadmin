@@ -280,7 +280,7 @@ const getSupplier = () => {
     <ProductVariation productId={id} />
 </TabPane>
 <TabPane tabId="5">
- 
+  
     <ProductStockMovement productId={id} />
 </TabPane>
 

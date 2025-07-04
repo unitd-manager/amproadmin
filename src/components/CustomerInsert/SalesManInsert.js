@@ -4,14 +4,14 @@ import PropTypes from 'prop-types';
 import api from '../../constants/api';
 import message from '../Message'; // Adjust path if necessary
 
-export default function CustomerSalesmenInsert({  setSalesmenData }) {
+export default function CustomerSalesmenInsert({ setSalesmenData }) {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
   const [availableSalesmen, setAvailableSalesmen] = useState([]);
   const [customerSalesmenList, setCustomerSalesmenList] = useState([]); // This holds salesmen selected by the user
 
   // Fetch all available salesmen (employees) for the dropdown
   useEffect(() => {
-    api.get('/customer/getAllSalesmen')
+    api.get('/employee/getEmployee')
       .then((res) => {
         if (res.data && Array.isArray(res.data.data)) {
           setAvailableSalesmen(res.data.data);
@@ -29,7 +29,7 @@ export default function CustomerSalesmenInsert({  setSalesmenData }) {
   }, [customerSalesmenList, setSalesmenData]); // Depend on customerSalesmenList and the setter function
 
   const handleSelectSalesman = (e) => {
-    setSelectedEmployeeId(e.target.value);
+    setSelectedEmployeeId(e.target.value ? String(e.target.value) : '');
   };
 
   const addSalesman = () => {
@@ -53,6 +53,7 @@ export default function CustomerSalesmenInsert({  setSalesmenData }) {
       setSelectedEmployeeId(''); // Clear dropdown selection
       message('Salesman added to list.', 'success');
     } else {
+      console.warn('Invalid salesman selected:', selectedEmployeeId, availableSalesmen);
       message('Invalid salesman selected.', 'error');
     }
   };
@@ -79,8 +80,8 @@ export default function CustomerSalesmenInsert({  setSalesmenData }) {
             >
               <option value="">Please Select</option>
               {availableSalesmen.map((salesman) => (
-                <option key={salesman.employee_id} value={salesman.employee_id}>
-                  {salesman.employee_name}
+                <option key={salesman.employee_id} value={String(salesman.employee_id)}>
+                  {salesman.employee_name} ({salesman.employee_id})
                 </option>
               ))}
             </Input>
@@ -129,4 +130,20 @@ export default function CustomerSalesmenInsert({  setSalesmenData }) {
 CustomerSalesmenInsert.propTypes = {
   // contactId: PropTypes.number, // contactId is null for new customer, number for edit
   setSalesmenData: PropTypes.func.isRequired,
+};
+
+// Move this function outside the component and use array iteration with Promise.all
+export const saveSalesmenToBackend = async (contactId, customerSalesmenList) => {
+  await Promise.all(
+    customerSalesmenList.map(async (salesman) => {
+      try {
+        await api.post('contact/customer/addCustomerSalesman', {
+          contact_id: contactId,
+          employee_id: salesman.employee_id,
+        });
+      } catch (err) {
+        message(`Failed to associate salesman: ${salesman.employee_name}`, 'error');
+      }
+    })
+  );
 };

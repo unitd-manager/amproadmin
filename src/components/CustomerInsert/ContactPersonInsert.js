@@ -29,12 +29,16 @@ export default function ContactPersonInsert({ setContactsData }) {
 
   const addContact = () => {
     // Basic validation for new contact person
-    if (newContact.contact_person.trim() === '' || newContact.email.trim() === '') {
+    const trimmedName = newContact.contact_person.trim();
+    const trimmedEmail = newContact.email.trim();
+    if (trimmedName === '' || trimmedEmail === '') {
       alert('Please fill at least Contact Person Name and Email for the new contact.');
       return;
     }
-    // Add a unique ID for local list management (e.g., for `key` prop in map, and delete function)
-    setContactList([...contactList, { ...newContact, id: Date.now() }]);
+    setContactList([
+      ...contactList,
+      { ...newContact, contact_person: trimmedName, email: trimmedEmail, id: Date.now() },
+    ]);
     setNewContact({ // Clear the form for the next entry
       contact_person: '',
       email: '',
@@ -48,6 +52,8 @@ export default function ContactPersonInsert({ setContactsData }) {
   const deleteContact = (idToDelete) => {
     setContactList(contactList.filter(contact => contact.id !== idToDelete));
   };
+
+  const isAddDisabled = newContact.contact_person.trim() === '' || newContact.email.trim() === '';
 
   return (
     <div>
@@ -119,7 +125,7 @@ export default function ContactPersonInsert({ setContactsData }) {
           </FormGroup>
         </Col>
         <Col md="12" className="text-right mt-3">
-          <Button color="success" onClick={addContact}>
+          <Button color="success" onClick={addContact} disabled={isAddDisabled}>
             Add Contact Person
           </Button>
         </Col>

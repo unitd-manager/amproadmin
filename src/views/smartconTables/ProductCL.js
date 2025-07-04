@@ -7,6 +7,7 @@ import DataTable from 'react-data-table-component';
 import message from '../../components/Message';
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
+import QRCodeModal from '../../components/ProductTable/QRCodeModal';
 
 const SectionDetails = () => {
   const [section, setSection] = useState([]);
@@ -21,6 +22,8 @@ const SectionDetails = () => {
   const [subCategoryDropdown, setSubCategoryDropdown] = useState([]);
   const [supplierDropdown, setSupplierDropdown] = useState([]);
   const [filteredSection, setFilteredSection] = useState([]);
+  const [qrModalOpen, setQrModalOpen] = useState(false);
+const [qrProduct, setQrProduct] = useState(null);
 
   const toggleDropdown = () => setDropdownOpen((prevState) => !prevState);
   const { id } = useParams();
@@ -178,6 +181,30 @@ const SectionDetails = () => {
     }
   };
 
+  const handleGenerateQR = () => {
+  if (selectedRows.length === 0) {
+    Swal.fire('No product selected', 'Please select a product to generate QR Code', 'info');
+    return;
+  }
+  if (selectedRows.length > 1) {
+    Swal.fire('Multiple products selected', 'Please select only one product', 'warning');
+    return;
+  }
+
+  const selected = selectedRows[0];
+  setQrProduct({
+    id: selected.product_id,
+    code: selected.product_code,
+    name: selected.title,
+    uom: selected.unit,
+    retail: selected.retail_price,
+    wholesale: selected.wholesale_price,
+    quantity: selected.qty_in_stock,
+  });
+  setQrModalOpen(true);
+};
+
+
   const columns = [
     {
       name: 'Action',
@@ -240,6 +267,7 @@ const SectionDetails = () => {
             </DropdownToggle>
             <DropdownMenu>
               <DropdownItem onClick={handleBulkDelete}>Bulk Delete</DropdownItem>
+              <DropdownItem onClick={handleGenerateQR}>Generate QR COde</DropdownItem>
             </DropdownMenu>
           </Dropdown>
         </div>
@@ -324,6 +352,8 @@ const SectionDetails = () => {
         responsive
         striped
       />
+      <QRCodeModal isOpen={qrModalOpen} toggle={() => setQrModalOpen(false)} qrData={qrProduct} />
+
     </div>
   );
 };

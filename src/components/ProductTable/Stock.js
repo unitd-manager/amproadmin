@@ -65,9 +65,7 @@ const getLatestStockByProductId = () => {
           ...prev,
           ...latestStock,
         }));
-      } else {
-        message('No stock record found for this product.', 'warning');
-      }
+      } 
     })
     .catch((err) => {
       console.error('Stock fetch error:', err);
