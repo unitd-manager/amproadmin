@@ -263,7 +263,7 @@ const ContentUpdate = () => {
                     toggle('7');
                   }}
                 >
-                  PrtDetails
+                  ProhhtDetails
                 </NavLink>
               </NavItem>
 
