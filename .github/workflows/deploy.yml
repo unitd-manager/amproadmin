@@ -26,7 +26,6 @@ jobs:
       - name: 🔧 Install Dependencies
         run: |
           npm install --force
-          export NODE_OPTIONS=--openssl-legacy-provider
           npm run build
 
       - name: 📤 Deploy to aaPanel Domain Folder
