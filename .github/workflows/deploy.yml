@@ -13,6 +13,11 @@ jobs:
       - name: 📦 Checkout Code
         uses: actions/checkout@v3
 
+      - name: Use Node.js 16.18.0
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.18.0
+
       - name: 🔧 Install Dependencies
         run: |
           npm install --force
