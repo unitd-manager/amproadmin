@@ -1,0 +1,29 @@
+name: Build and Deploy Static Website
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📦 Checkout Code
+        uses: actions/checkout@v3
+
+      - name: 🔧 Install Dependencies
+        run: |
+          npm install --force
+          export NODE_OPTIONS=--openssl-legacy-provider
+          npm run build
+
+      - name: 📤 Deploy to aaPanel Domain Folder
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "build/*"
+          target: "/www/wwwroot/amproadmin.zaitunsoftsolutions.com"

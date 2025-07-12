@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Row,
   Col,
@@ -6,40 +6,46 @@ import {
   Label,
   Input,
   Button,
-  Table, // Import Table for displaying shipping details
+  Table,
 } from 'reactstrap';
-// import PropTypes from 'prop-types';
+import PropTypes from 'prop-types';
+import api from '../../constants/api';
+import message from '../Message';
 
-export default function CustomerShippingDetail( ) {
-  // State for a new shipping detail being added
+export default function CustomerShippingDetail({ contactId }) {
   const [newShippingDetail, setNewShippingDetail] = useState({
     delivery_name: '',
     delivery_address1: '',
     delivery_address2: '',
     delivery_address3: '',
     phone_no: '',
-    handphone_no: '', // This will hold the value of the handphone
+    handphone_no: '',
     fax_no: '',
     email: '',
     country_postal: '',
     attention: '',
-    default_load_on_invoice: 0, // 0 for false, 1 for true
+    default_load_on_invoice: 0,
+     company_id: contactId,
   });
 
-  // State to manage the list of shipping details for this customer
   const [shippingDetailList, setShippingDetailList] = useState([]);
 
-  // State to manage if HandPhone No input is enabled/visible
-  const [isHandPhoneEnabled, setIsHandPhoneEnabled] = useState(false);
+  const getShipping = () => {
+    api
+      .post('/contact/getShippingByContactId', { company_id: contactId })
+      .then((res) => {
+        setShippingDetailList(res.data.data);
+      })
+      .catch(() => {
+        message('Shipping not found', 'error');
+      });
+  };
 
-  // Synchronize internal state with prop data when contentDetails.shipping_details changes
-//   useEffect(() => {
-//     if (contentDetails?.shipping_details && Array.isArray(contentDetails.shipping_details)) {
-//       setShippingDetailList(contentDetails.shipping_details);
-//     } else {
-//       setShippingDetailList([]); // Ensure it's an empty array if data isn't available
-//     }
-//   }, [contentDetails.shipping_details]);
+  useEffect(() => {
+    if (contactId) {
+      getShipping();
+    }
+  }, [contactId]);
 
   const handleNewShippingInputs = (e) => {
     const { name, value, type, checked } = e.target;
@@ -51,41 +57,53 @@ export default function CustomerShippingDetail( ) {
 
   const addShippingDetail = () => {
     if (newShippingDetail.delivery_name && newShippingDetail.delivery_address1) {
-      setShippingDetailList([
-        ...shippingDetailList,
-        { ...newShippingDetail, id: Date.now() + Math.random() }, // Add a unique ID
-      ]);
-      // Clear the form fields after adding
-      setNewShippingDetail({
-        delivery_name: '',
-        delivery_address1: '',
-        delivery_address2: '',
-        delivery_address3: '',
-        phone_no: '',
-        handphone_no: '',
-        fax_no: '',
-        email: '',
-        country_postal: '',
-        attention: '',
-        default_load_on_invoice: 0,
-      });
-      setIsHandPhoneEnabled(false); // Reset checkbox for HandPhone
-      // IMPORTANT: You'll need to pass this updated shippingDetailList to the parent
-      // e.g., via a prop like onShippingDetailsChange(updatedList)
+      const shippingData = {
+        ...newShippingDetail,
+        company_id: contactId,
+      };
+      api
+        .post('/contact/insertShipping', shippingData)
+        .then(() => {
+          message('Shipping added successfully', 'success');
+          getShipping(); // Refresh the list
+          setNewShippingDetail({
+            delivery_name: '',
+            delivery_address1: '',
+            delivery_address2: '',
+            delivery_address3: '',
+            phone_no: '',
+            handphone_no: '',
+            fax_no: '',
+            email: '',
+            country_postal: '',
+            attention: '',
+            default_load_on_invoice: 0,
+             company_id: contactId,
+          });
+        })
+        .catch(() => {
+          message('Failed to add shipping', 'error');
+        });
     } else {
-      alert('Please fill at least Delivery Name and Delivery Address1.');
+      message('Please fill at least Delivery Name and Delivery Address1.', 'warning');
     }
   };
 
-  const deleteShippingDetail = (id) => {
-    setShippingDetailList(shippingDetailList.filter((detail) => detail.id !== id));
-    // IMPORTANT: Pass updated list to parent if you want changes to persist on save
+  const deleteShippingDetail = (shippingId) => {
+    api
+      .post('/contact/deleteShipping', { delivery_address_id: shippingId })
+      .then(() => {
+        message('Shipping deleted successfully', 'success');
+        getShipping(); // Refresh the list
+      })
+      .catch(() => {
+        message('Failed to delete shipping', 'error');
+      });
   };
 
   return (
     <div>
       <Row className="mb-4">
-        {/* Left Column */}
         <Col md="6">
           <FormGroup>
             <Label>Delivery Name</Label>
@@ -132,30 +150,17 @@ export default function CustomerShippingDetail( ) {
               name="phone_no"
             />
           </FormGroup>
-          <FormGroup check className="d-flex align-items-center pt-3">
+          <FormGroup check>
             <Input
               type="checkbox"
-              id="handphone_enable_checkbox"
-              onChange={() => setIsHandPhoneEnabled(!isHandPhoneEnabled)}
-              checked={isHandPhoneEnabled}
-            />{' '}
-            <Label check for="handphone_enable_checkbox" className="mb-0 ms-2">
-              Default Load OnInvoice
-            </Label>
-            {isHandPhoneEnabled && (
-              <Input
-                type="text"
-                onChange={handleNewShippingInputs}
-                value={newShippingDetail.default_load_on_invoice}
-                name="default_load_on_invoice"
-                className="ms-3"
-                style={{ flex: 1 }} // Take remaining space
-              />
-            )}
+              onChange={handleNewShippingInputs}
+              name="default_load_on_invoice"
+              checked={newShippingDetail.default_load_on_invoice === 1}
+            />
+            <Label check>Default Load On Invoice</Label>
           </FormGroup>
         </Col>
 
-        {/* Right Column */}
         <Col md="6">
           <FormGroup>
             <Label>Fax No</Label>
@@ -190,16 +195,9 @@ export default function CustomerShippingDetail( ) {
             <Input
               type="text"
               onChange={handleNewShippingInputs}
-              value={newShippingDetail.country}
-              name="country"
+              value={newShippingDetail.country_postal}
+              name="country_postal"
             />
-                        <Input
-              type="text"
-              onChange={handleNewShippingInputs}
-              value={newShippingDetail.postal_code}
-              name="postal_code"
-            />
-
           </FormGroup>
           <FormGroup>
             <Label>Attention</Label>
@@ -210,19 +208,6 @@ export default function CustomerShippingDetail( ) {
               name="attention"
             />
           </FormGroup>
-          {/* <FormGroup switch className="pt-3">
-            <Label check for="default_load_on_invoice_toggle">
-              Default Load On Invoice
-            </Label>
-            <Input
-              type="switch"
-              id="default_load_on_invoice_toggle"
-              onChange={handleNewShippingInputs}
-              checked={newShippingDetail.default_load_on_invoice === 1}
-              name="default_load_on_invoice"
-              role="switch"
-            />
-          </FormGroup> */}
         </Col>
 
         <Col md="12" className="text-right mt-3">
@@ -256,7 +241,7 @@ export default function CustomerShippingDetail( ) {
           </thead>
           <tbody>
             {shippingDetailList.map((detail, index) => (
-              <tr key={detail.id}>
+              <tr key={detail.delivery_address_id}>
                 <td>{index + 1}</td>
                 <td>{detail.delivery_name}</td>
                 <td>{detail.delivery_address1}</td>
@@ -268,9 +253,13 @@ export default function CustomerShippingDetail( ) {
                 <td>{detail.email}</td>
                 <td>{detail.country_postal}</td>
                 <td>{detail.attention}</td>
-                <td>{detail.default_load_on_invoice }</td>
+                <td>{detail.default_load_on_invoice ? 'Yes' : 'No'}</td>
                 <td>
-                  <Button color="danger" size="sm" onClick={() => deleteShippingDetail(detail.id)}>
+                  <Button
+                    color="danger"
+                    size="sm"
+                    onClick={() => deleteShippingDetail(detail.delivery_address_id)}
+                  >
                     Delete
                   </Button>
                 </td>
@@ -285,7 +274,6 @@ export default function CustomerShippingDetail( ) {
   );
 }
 
-// CustomerShippingDetail.propTypes = {
-//   contentDetails: PropTypes.object,
-  // handleInputs is not passed to this component directly, as it manages its own list.
-  // You'd typically have a separate prop like onShippingDetailsChange to update the parent.
+CustomerShippingDetail.propTypes = {
+  contactId: PropTypes.string.isRequired,
+};
