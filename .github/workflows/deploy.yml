@@ -23,16 +23,22 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: 🔧 Install Dependencies
+      - name: 🔧 Install Dependencies & Build
         run: |
           npm install --force
           npm run build
 
-      - name: 📤 Deploy to aaPanel Domain Folder
+          # ✅ Move contents from build/ to project root
+          shopt -s dotglob
+          mv build/* . || true
+          mv build/.* . || true
+          rm -rf build
+
+      - name: 📤 Deploy to aaPanel (after move)
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "build/*"
-          target: "/www/wwwroot/amproadmin.zaitunsoftsolutions.com"
+          source: "*"
+          target: "/www/wwwroot/amproadmin.zaitunsoftsolutions.com/"
