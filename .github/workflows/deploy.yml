@@ -5,12 +5,11 @@ on:
     branches:
       - main
   schedule:
-    - cron: '15 7 * * *'
-  workflow_dispatch:
+    - cron: '30 7 * * *'
 
 jobs:
   deploy:
-    if: ${{ github.event_name == 'schedule' || github.actor == 'Sy1991' }}
+    if: ${{ github.event_name == 'schedule' || github.actor == 'SyedJasne1991' }}
     runs-on: ubuntu-latest
 
     steps:
