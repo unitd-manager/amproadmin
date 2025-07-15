@@ -293,6 +293,8 @@ const PayrollManagementDetails = Loadable(
 const CpfSummaryReports=Loadable(lazy(() => import('../views/smartconTables/CpfSummaryReports')))
 const PurchaseGstReport=Loadable(lazy(() => import('../views/smartconTables/PurchaseGstReport')))
 
+const UnapprovedModules = Loadable(lazy(() => import('../views/smartconTables/UnapprovedModules')));
+
 const Routernew = () => {
   const { token, setToken } = UserToken();
 
@@ -623,6 +625,7 @@ const Routernew = () => {
           <Route path="/salesOrder" name="supplierdata" element={<SalesOrderTable />}></Route>
 
           <Route path="/Leave" name="clienttdata" element={<LeaveTable />}></Route>
+          <Route path="/UnapprovedModules" name="clienttdata" element={<UnapprovedModules />}></Route>
           <Route path="/LeaveDetails" name="clienttdata" element={<LeaveDetailsTable />}></Route>
           <Route path="/Loan" name="clienttdata" element={<LoanTable />}></Route>
           <Route path="/LoanDetails" name="clienttdata" element={<LoanDeatilsTable />}></Route>
