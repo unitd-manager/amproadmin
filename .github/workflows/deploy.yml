@@ -4,10 +4,12 @@ on:
   push:
     branches:
       - main
+  schedule:
+    - cron: '5 12 * * *' # Runs every day at 2pm UTC
 
 jobs:
   deploy:
-    if: ${{ github.actor == 'SyedJasmine1991' }}
+    if: ${{ github.event_name == 'schedule' || github.actor == 'SyedJasmine1991' }}
     runs-on: ubuntu-latest
 
     steps:
