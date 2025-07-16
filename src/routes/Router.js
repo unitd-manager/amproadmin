@@ -116,6 +116,7 @@ const StaffTable = Loadable(lazy(() => import('../views/smartconTables/Staff')))
 const TaskTable = Loadable(lazy(() => import('../views/smartconTables/Task')));
 const ProductTable = Loadable(lazy(() => import('../views/smartconTables/product')));
 const ProductCLTable = Loadable(lazy(() => import('../views/smartconTables/ProductCL')));
+const CatalogueCL = Loadable(lazy(() => import('../views/smartconTables/CatalogueCL')));
 const TestTable = Loadable(lazy(() => import('../views/smartconTables/Test')));
 const EmployeetrainingreportsTable = Loadable(lazy(() => import('../views/smartconTables/Employeetrainingreports')));
 const StatementofAccountsReport = Loadable(lazy(() => import('../views/Reports/StatementofAccountsReport')));
@@ -182,7 +183,8 @@ const DeliveryOrderDetails = Loadable(lazy(() => import('../views/detailTable/De
 
 const InvoiceDetails = Loadable(lazy(() => import('../views/detailTable/InvoiceDetails')));
 const ClientDetailsTable = Loadable(lazy(() => import('../views/detailTable/ClientDetails')));
-
+const CatalogueDetailsCL = Loadable(lazy(() => import('../views/detailTable/CatalogueDetailsCL')));
+const CatalogueEdit = Loadable(lazy(() => import('../views/EditData/CatalogueEdit')));
 
 const PurchaseOrderEdit = Loadable(lazy(() => import('../views/EditData/PurchaseOrderEdit')));
 //SupplierModal
@@ -547,14 +549,21 @@ const Routernew = () => {
           <Route path="/InvoiceDetails" name="invoiceDetaildata" element={<InvoiceDetails />}></Route>
           <Route path="/Client" name="clienttdata" element={<ClientTable />}></Route>
           <Route path="/ClientDetails" name="clienttdata" element={<ClientDetailsTable />}></Route>
+          <Route path="/CatalogueDetailsCL" name="clienttdata" element={<CatalogueDetailsCL />}></Route>
 
           <Route path="/Product" name="productdata" element={<ProductTable />}></Route>
           <Route path="/ProductCL" name="productdata" element={<ProductCLTable />}></Route>
+          <Route path="/CatalogueCL" name="productdata" element={<CatalogueCL />}></Route>
           <Route path="/Orders" name="ordersdata" element={<FinanceTable />}></Route>
           <Route
             path="/PurchaseOrderEdit/:id"
             name="purchaseorderdata"
             element={<PurchaseOrderEdit />}
+          ></Route>
+          <Route
+            path="/CatalogueEdit/:id"
+            name="CatalogueProductData"
+            element={<CatalogueEdit />}
           ></Route>
           <Route path="/Blog" name="blogdata" element={<Blog />}></Route>
           <Route path="/Inventory" name="inventorydata" element={<Inventory />}></Route>
