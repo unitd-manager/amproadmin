@@ -17,9 +17,9 @@ import CommonTable from '../../components/CommonTable';
 import PrintPerfoma from '../../components/PDF/PrintPerfoma';
 
 import SalesOrderPrintWithCost from '../../components/PDF/SalesOrderPrintWithCost';
-// import PdfPickingList from '../../components/PDF/PdfPick';
-// import PdfPackingList from '../../components/PDF/PdfPack';
-// import PdfSalesQuote from '../../components/PDF/PdfSalesOrderQuote';
+ import PdfPickingList from '../../components/PDF/PdfPick';
+import PdfPackingList from '../../components/PDF/PdfPack';
+import PdfSalesQuote from '../../components/PDF/PdfSalesOrderQuote';
 
 
 const Test = () => {
@@ -90,15 +90,28 @@ const Test = () => {
     { name: 'Created By', selector: 'created_by', sortable: true, grow: 0, wrap: true },
   ];
 
-  const generateCodes = () => {
-    return api
-      .post('/commonApi/getCodeValues', { type: 'invoice' })
-      .then((res) => res.data.data)
-      .catch((error) => {
-        message('Failed to generate code', 'error');
-        throw error;
-      });
+  const generateCodes = async () => {
+    try {
+      const res = await api
+        .post('/commonApi/getCodeValues', { type: 'invoice' });
+      return res.data.data;
+    } catch (error) {
+      message('Failed to generate code', 'error');
+      throw error;
+    }
   };
+
+  const generateDeliveryCodes = async () => {
+    try {
+      const res = await api
+        .post('/commonApi/getCodeValues', { type: 'delivery' });
+      return res.data.data;
+    } catch (error) {
+      message('Failed to generate code', 'error');
+      throw error;
+    }
+  };
+
 
   const generateInvoice = async () => {
     if (!selectedOrder) {
@@ -124,6 +137,33 @@ const Test = () => {
           }, 400);
     } catch (error) {
       message(error.response?.data?.message || 'Failed to generate invoice', 'error');
+    }
+  };
+
+  const generateDeliveryOrder = async () => {
+    if (!selectedOrder) {
+      message('Please select a sales order first', 'error');
+      return;
+    }
+    try {
+      const deliveryCode = await generateDeliveryCodes();
+      const payload = {
+        sales_order_id: selectedOrder.sales_order_id,
+        company_id: selectedOrder.company_id,
+        sub_total: selectedOrder.sub_total,
+        tax: selectedOrder.tax,
+        net_total: selectedOrder.net_total,
+        delivery_code: deliveryCode,
+        tran_date: selectedOrder.tran_date,
+        delivery_type: 'Sales Order Delivery',
+      };
+      const response = await api.post('/salesOrder/generateDeliveryFromDeliveryOrder', payload);
+      message(response.data.message, 'success');
+      setTimeout(() => {
+        window.location.reload();
+      }, 400);
+    } catch (error) {
+      message(error.response?.data?.message || 'Failed to generate delivery order', 'error');
     }
   };
 const id = selectedOrder?.sales_order_id || '';
@@ -152,6 +192,30 @@ useEffect(() => {
   getSettingById();
       getLineItem();
 }, [id]);
+
+  const repeatSalesOrder = async () => {
+    if (!selectedOrder) {
+      message('Please select a sales order first', 'error');
+      return;
+    }
+    try {
+      // Get new delivery code from your API
+      const codeRes = await api.post('/commonApi/getCodeValues', { type: 'salesorder' });
+      const deliveryCode = codeRes.data.data;
+
+      // Call repeatSalesOrder API with delivery_code
+      const response = await api.post('/salesOrder/repeatSalesOrder', {
+        sales_order_id: selectedOrder.sales_order_id,
+        delivery_code: deliveryCode,
+      });
+      message(response.data.msg, 'success');
+      setTimeout(() => {
+        window.location.reload();
+      }, 400);
+    } catch (error) {
+      message(error.response?.data?.msg || 'Failed to repeat sales order', 'error');
+    }
+  };
 
   return (
     <div className="MainDiv">
@@ -184,25 +248,50 @@ useEffect(() => {
               </DropdownToggle>
               <DropdownMenu>
                 <DropdownItem onClick={generateInvoice}>Convert To Sales Invoice</DropdownItem>
-                {/* <DropdownItem>  <PdfPickingList
-            id={id}
-            ></PdfPickingList></DropdownItem> */}
-                {/* <DropdownItem>  <PdfPackingList
-            id={id}
-            ></PdfPackingList></DropdownItem> */}
-                {/* <DropdownItem> <PdfSalesQuote
-            id={id}
-            ></PdfSalesQuote></DropdownItem> */}
-                <DropdownItem>  <SalesOrderPrintWithCost
-          id={id}
-                   settingdetails={settingdetails}
-                   lineItem={lineItem}
-                ></SalesOrderPrintWithCost></DropdownItem>
-                <DropdownItem>    <PrintPerfoma
-                   id={id}
-                   settingdetails={settingdetails}
-                   lineItem={lineItem}
-                ></PrintPerfoma></DropdownItem>
+                <DropdownItem onClick={generateDeliveryOrder}>Convert To Delivery Order</DropdownItem>
+                <DropdownItem onClick={repeatSalesOrder}>Repeat Sales Order</DropdownItem>
+                <DropdownItem>
+                  <PdfPickingList
+                    id={id}
+                    settingdetails={settingdetails}
+                    lineItem={lineItem}
+                  />
+                 
+                </DropdownItem>
+                <DropdownItem>
+                  <PdfPackingList
+                    id={id}
+                    settingdetails={settingdetails}
+                    lineItem={lineItem}
+                  />
+                
+                </DropdownItem>
+                <DropdownItem>
+                  <PdfSalesQuote
+                    id={id}
+                    settingdetails={settingdetails}
+                    lineItem={lineItem}
+                  />
+               
+                </DropdownItem>
+                <DropdownItem onClick={() => { /* TODO: Add tracking images logic */ }}>Tracking Images</DropdownItem>
+                <DropdownItem>
+                  <SalesOrderPrintWithCost
+                    id={id}
+                    settingdetails={settingdetails}
+                    lineItem={lineItem}
+                  />
+                 
+                </DropdownItem>
+                <DropdownItem onClick={() => { /* TODO: Add updated weight info logic */ }}>Updated Weight Info</DropdownItem>
+                <DropdownItem>
+                  <PrintPerfoma
+                    id={id}
+                    settingdetails={settingdetails}
+                    lineItem={lineItem}
+                  />
+                
+                </DropdownItem>
               </DropdownMenu>
             </Dropdown>
           }

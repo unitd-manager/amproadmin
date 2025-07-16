@@ -11,7 +11,7 @@ import {
   PaginationLink
 } from 'reactstrap';
 import { FaTrash, FaPlus, FaFilter, FaSearch } from 'react-icons/fa';
-import moment from 'moment';
+//import moment from 'moment';
 import api from '../../constants/api';
 
 
@@ -108,14 +108,14 @@ const [isLoadingPO, setIsLoadingPO] = useState(false);
         <thead className="table-light">
           <tr>
             <th>Action</th>
-            <th>Bin Name</th>
-            <th>Floor Level</th>
-            <th>Rack No</th>
-            <th>Rack Level</th>
-            <th>Max Occupancy</th>
-            <th>Status</th>
-            <th>Modified On</th>
-            <th>Modified By</th>
+            <th>Product Code</th>
+            <th>Product Name</th>
+            <th>Supplier</th>
+            <th>Available Qty</th>
+            <th>Minimum Qty</th>
+            <th>Reorder Qty</th>
+            <th>Purchase Unit cost</th>
+            <th> Wholesale Price</th>
                                 
           </tr>
         </thead>
@@ -125,14 +125,14 @@ const [isLoadingPO, setIsLoadingPO] = useState(false);
               <td style={{ textAlign: 'center' }}>
                 <FaTrash style={{ cursor: 'pointer' }} onClick={() => handleDelete(cat.reorder_cli_id)} />
               </td>
-              <td>{cat.bin_name}</td>
-              <td>{cat.floor_level}</td>
-              <td>{cat.rack_no}</td>
-               <td>{cat.rack_level}</td>
-              <td>{cat.max_occupancy}</td>
-              <td>{cat.status}</td>
-              <td>{moment(cat.updatet_at).format('DD/MM/YYYY')}</td>
-              <td>{cat.updatet_by}</td>
+              <td>{cat.product_code}</td>
+              <td>{cat.product_name}</td>
+              <td>{cat.supplier_name}</td>
+               <td>{cat.available_qty}</td>
+              <td>{cat.minimum_qty}</td>
+              <td>{cat.reorder_qty}</td>
+              <td>{cat.purchase_unit_cost}</td>
+              <td>{cat.wholesale_price}</td>
             </tr>
           ))}
         </tbody>

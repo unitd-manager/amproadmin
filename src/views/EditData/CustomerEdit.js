@@ -53,7 +53,7 @@ const ContentUpdate = () => {
 
   const getContentById = () => {
     api
-      .post('/contact/getContactssById', { contact_id: id })
+      .post('/contact/getContactssById', { company_id: id })
       .then((res) => {
         const fetchedData = res.data.data[0];
         if (fetchedData) {
@@ -286,11 +286,11 @@ const ContentUpdate = () => {
               </TabPane>
               <TabPane tabId="3">
                 {/* Assuming ContactPerson needs customerId or contentDetails */}
-                <ContactPerson customerId={id} contentDetails={contentDetails} />
+                <ContactPerson contactId={id} contentDetails={contentDetails} />
               </TabPane>
               <TabPane tabId="4">
                  {/* Assuming CustomerShippingDetail needs customerId or contentDetails */}
-                <CustomerShippingDetail customerId={id} contentDetails={contentDetails} />
+                <CustomerShippingDetail contactId={id} contentDetails={contentDetails} />
               </TabPane>
 
               <TabPane tabId="5">

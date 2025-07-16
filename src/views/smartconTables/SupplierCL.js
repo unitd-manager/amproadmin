@@ -53,7 +53,7 @@ const SupplierCL = () => {
     if (window.confirm('Are you sure you want to delete this supplier?')) {
       setLoading(true);
       api
-        .post('/supplier/deleteSupplier', { supplierId })
+        .post('/supplier/deleteSupplier', { supplier_id: supplierId })
         .then(() => {
           setSupplier((prev) => prev.filter((s) => s.supplier_id !== supplierId));
           setLoading(false);

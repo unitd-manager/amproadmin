@@ -51,7 +51,7 @@ const Customer = () => {
   const handleDeleteCustomer = async (contactId) => {
     if (window.confirm('Are you sure you want to delete this customer?')) {
       try {
-        await api.post('/contact/deleteContact', { contact_id: contactId });
+        await api.post('/contact/deleteContact', { company_id: contactId });
         message('Customer deleted successfully', 'success');
         getCustomer();
       } catch (error) {
@@ -69,7 +69,7 @@ const Customer = () => {
   const handleActivateCustomer = async () => {
     try {
       await api.post('/contact/updateContactStatus', {
-        contact_id: selectedCustomerId,
+        company_id: selectedCustomerId,
         is_active: 1,
       });
       message('Customer activated successfully', 'success');
@@ -189,17 +189,17 @@ const Customer = () => {
         </thead>
         <tbody>
           {customer.map((element, index) => (
-            <tr key={element.contact_id}>
+            <tr key={element.company_id}>
               <td>
                 <input
                   type="checkbox"
-                  checked={selectedCustomerIds.includes(element.contact_id)}
-                  onChange={(e) => handleCheckboxChange(element.contact_id, e.target.checked)}
+                  checked={selectedCustomerIds.includes(element.company_id)}
+                  onChange={(e) => handleCheckboxChange(element.company_id, e.target.checked)}
                 />
               </td>
               <td>{index + 1}</td>
               <td>
-                <Link to={`/CustomerEdit/${element.contact_id}`}>
+                <Link to={`/CustomerEdit/${element.company_id}`}>
                   <Icon.Edit2 />
                 </Link>
               </td>
@@ -208,7 +208,7 @@ const Customer = () => {
                   <Button
                     color="success"
                     className="shadow-none btn-sm"
-                    onClick={() => handleActivateClick(element.contact_id)}
+                    onClick={() => handleActivateClick(element.company_id)}
                     style={{ padding: '0.25rem 0.5rem', lineHeight: 1 }}
                   >
                     <Icon.Check size={16} />
@@ -217,7 +217,7 @@ const Customer = () => {
                   <Button
                     color="danger"
                     className="shadow-none btn-sm"
-                    onClick={() => handleDeleteCustomer(element.contact_id)}
+                    onClick={() => handleDeleteCustomer(element.company_id)}
                     style={{ padding: '0.25rem 0.5rem', lineHeight: 1 }}
                   >
                     <Icon.Trash2 size={16} />

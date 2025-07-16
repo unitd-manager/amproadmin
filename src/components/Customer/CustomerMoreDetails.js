@@ -16,37 +16,19 @@ export default function ContentMoreDetails({
       <Row>
         <Col md="6">
           <Row> 
-            <Col md="6">
+            {/* <Col md="6">
               <FormGroup>
                 <Label>Contact Id</Label>
                 <Input type="text" onChange={handleInputs} value={contentDetails.contact_id || ''} name="contact_id" disabled />
               </FormGroup>
-            </Col>
-            <Col md="6">
+            </Col> */}
+            {/* <Col md="6">
               <FormGroup>
                 <Label>Name</Label>
                 <Input type="text" onChange={handleInputs} value={contentDetails.first_name || ''} name="first_name" />
               </FormGroup>
-            </Col>
-            <Col md="6">
-              <FormGroup>
-                <Label>Mobile</Label>
-                <Input type="text" onChange={handleInputs} value={contentDetails.mobile || ''} name="mobile" />
-              </FormGroup>
-            </Col>
-            <Col md="6">
-              <FormGroup>
-                <Label>Email</Label>
-                <Input type="text" onChange={handleInputs} value={contentDetails.email || ''} name="email" />
-              </FormGroup>
-            </Col>
-            <Col md="6">
-              <FormGroup>
-                <Label>Password</Label>
-                <Input type="text" onChange={handleInputs} value={contentDetails.pass_word || ''} name="pass_word" />
-              </FormGroup>
-            </Col>
-            <Col md="6">
+            </Col> */}
+              <Col md="6">
               <FormGroup>
                 <Label>Address1</Label>
                 <Input type="text" onChange={handleInputs} value={contentDetails.address || ''} name="address" />
@@ -61,13 +43,26 @@ export default function ContentMoreDetails({
             <Col md="6">
               <FormGroup>
                 <Label>Address3</Label>
-                <Input type="text" onChange={handleInputs} value={contentDetails.address3 || ''} name="address3" />
+                <Input type="text" onChange={handleInputs} value={contentDetails.address_street1 || ''} name="address_street1" />
               </FormGroup>
             </Col>
             <Col md="6">
               <FormGroup>
+                <Label>Mobile</Label>
+                <Input type="text" onChange={handleInputs} value={contentDetails.mobile || ''} name="mobile" />
+              </FormGroup>
+            </Col>
+            <Col md="6">
+              <FormGroup>
+                <Label>Email</Label>
+                <Input type="text" onChange={handleInputs} value={contentDetails.email || ''} name="email" />
+              </FormGroup>
+            </Col>
+        
+            <Col md="6">
+              <FormGroup>
                 <Label>Tax</Label>
-                <Input type="text" onChange={handleInputs} value={contentDetails.tax || ''} name="tax" />
+                <Input type="text" onChange={handleInputs} value={contentDetails.tax_type || ''} name="tax_type" />
               </FormGroup>
             </Col>
             <Col md="6">
@@ -109,7 +104,7 @@ export default function ContentMoreDetails({
             <Col md="6">
               <FormGroup>
                 <Label>Phone Number</Label>
-                <Input type="text" onChange={handleInputs} value={contentDetails.phone_number || ''} name="phone_number" />
+                <Input type="text" onChange={handleInputs} value={contentDetails.phone || ''} name="phone" />
               </FormGroup>
             </Col>
             <Col md="6">
