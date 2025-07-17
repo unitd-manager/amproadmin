@@ -1,191 +1,4 @@
 /*eslint-disable*/
-// import React, { useState } from "react";
-// import {
-//   Container,
-//   Row,
-//   Col,
-//   Form,
-//   FormGroup,
-//   Label,
-//   Input,
-//   Table,
-//   Button,
-// } from "reactstrap";
-// import "bootstrap/dist/css/bootstrap.min.css";
-
-// const GoodsReceivePage = () => {
-//   const [products, setProducts] = useState([
-//     { productCode: "", productName: "", cartonQty: 0, looseQty: 0, price: 0, discount: 0, grossTotal: 0 },
-//   ]);
-
-//   const addProductRow = () => {
-//     setProducts([...products, { productCode: "", productName: "", cartonQty: 0, looseQty: 0, price: 0, discount: 0, grossTotal: 0 }]);
-//   };
-
-//   const handleProductChange = (index, field, value) => {
-//     const updatedProducts = [...products];
-//     updatedProducts[index][field] = value;
-//     setProducts(updatedProducts);
-//   };
-
-//   return (
-//     <Container fluid className="p-4">
-//       <h4>Add/Edit Goods Receive</h4>
-//       <Form>
-//         <Row className="mb-4">
-//           <Col md={6}>
-//             <FormGroup>
-//               <Label for="tranNo">Tran No</Label>
-//               <Input type="text" id="tranNo" disabled value="GRA202502-000024" />
-//             </FormGroup>
-//           </Col>
-//           <Col md={6}>
-//             <FormGroup>
-//               <Label for="tranDate">Tran Date</Label>
-//               <Input type="date" id="tranDate" value="2025-02-05" />
-//             </FormGroup>
-//           </Col>
-//         </Row>
-
-//         <Row>
-//           <Col md={6}>
-//             <h5>Supplier</h5>
-//             <FormGroup>
-//               <Label for="supplierCode">Supplier Code</Label>
-//               <Input type="text" id="supplierCode" value="00002" />
-//             </FormGroup>
-//             <FormGroup>
-//               <Label for="supplierName">Supplier Name</Label>
-//               <Input type="text" id="supplierName" value="ALIN FOOD PRODUCT LIMITED" />
-//             </FormGroup>
-//             <FormGroup>
-//               <Label for="invoiceDate">Invoice Date</Label>
-//               <Input type="date" id="invoiceDate" value="2025-02-04" />
-//             </FormGroup>
-//             <FormGroup>
-//               <Label for="remarks">Remarks</Label>
-//               <Input type="textarea" id="remarks" />
-//             </FormGroup>
-//           </Col>
-
-//           <Col md={6}>
-//             <h5>Contact Details</h5>
-//             <FormGroup>
-//               <Label for="address1">Contact Address 1</Label>
-//               <Input type="text" id="address1" value="RAHMANIA INT. COMPLEX (11TH FLOOR)" />
-//             </FormGroup>
-//             <FormGroup>
-//               <Label for="country">Country/Postal</Label>
-//               <Row>
-//                 <Col md={8}>
-//                   <Input type="text" id="country" value="BANGLADESH" />
-//                 </Col>
-//                 <Col md={4}>
-//                   <Input type="text" id="postal" />
-//                 </Col>
-//               </Row>
-//             </FormGroup>
-//             <FormGroup>
-//               <Label for="invoiceNo">Invoice No</Label>
-//               <Input type="text" id="invoiceNo" value="1" />
-//             </FormGroup>
-//           </Col>
-//         </Row>
-
-//         <h5 className="mt-4">Product Details</h5>
-//         <Table bordered responsive>
-//           <thead>
-//             <tr>
-//               <th>S No</th>
-//               <th>Product Code</th>
-//               <th>Product Name</th>
-//               <th>Carton Qty</th>
-//               <th>Loose Qty</th>
-//               <th>Price</th>
-//               <th>Total</th>
-//               <th>% Discount</th>
-//               <th>Gross Total</th>
-//               <th>Actions</th>
-//             </tr>
-//           </thead>
-//           <tbody>
-//             {products.map((product, index) => (
-//               <tr key={index}>
-//                 <td>{index + 1}</td>
-//                 <td>
-//                   <Input
-//                     type="text"
-//                     value={product.productCode}
-//                     onChange={(e) => handleProductChange(index, "productCode", e.target.value)}
-//                   />
-//                 </td>
-//                 <td>
-//                   <Input
-//                     type="text"
-//                     value={product.productName}
-//                     onChange={(e) => handleProductChange(index, "productName", e.target.value)}
-//                   />
-//                 </td>
-//                 <td>
-//                   <Input
-//                     type="number"
-//                     value={product.cartonQty}
-//                     onChange={(e) => handleProductChange(index, "cartonQty", e.target.value)}
-//                   />
-//                 </td>
-//                 <td>
-//                   <Input
-//                     type="number"
-//                     value={product.looseQty}
-//                     onChange={(e) => handleProductChange(index, "looseQty", e.target.value)}
-//                   />
-//                 </td>
-//                 <td>
-//                   <Input
-//                     type="number"
-//                     value={product.price}
-//                     onChange={(e) => handleProductChange(index, "price", e.target.value)}
-//                   />
-//                 </td>
-//                 <td>{product.cartonQty * product.price}</td>
-//                 <td>
-//                   <Input
-//                     type="number"
-//                     value={product.discount}
-//                     onChange={(e) => handleProductChange(index, "discount", e.target.value)}
-//                   />
-//                 </td>
-//                 <td>{(product.cartonQty * product.price) - product.discount}</td>
-//                 <td>
-//                   <Button color="danger" size="sm">Delete</Button>
-//                 </td>
-//               </tr>
-//             ))}
-//             <tr>
-//               <td colSpan="10">
-//                 <Button color="primary" size="sm" onClick={addProductRow}>
-//                   + Add Product
-//                 </Button>
-//               </td>
-//             </tr>
-//           </tbody>
-//         </Table>
-
-//         <Row className="mt-3">
-//           <Col md={6}></Col>
-//           <Col md={6} className="text-right">
-//             <Button color="primary">Save</Button>
-//             <Button color="secondary" className="ml-2">Cancel</Button>
-//           </Col>
-//         </Row>
-//       </Form>
-//     </Container>
-//   );
-// };
-
-// export default GoodsReceivePage;
-
-/*eslint-disable*/
 import React, { useState, useEffect } from "react";
 import {
   Container,
@@ -279,17 +92,17 @@ const PurchaseOrderPage = () => {
     });
     
     // Fetch table data
-    api.post("/purchaseorder/getcsproductLineItemById",{goods_receipt_id:id}).then((response) => { 
+    api.post("/purchaseorder/getcsproductLineItemById",{goods_return_id:id}).then((response) => { 
       setRows(response.data.data);
       setTableData(response.data.data);
     });
 
     // Fetch supplier options for dropdown
-    api.post("/purchaseorder/getGoodsReceiptById",{goods_receipt_id:id}).then((response) => {
+    api.post("/purchaseorder/getGoodsReceiptById",{goods_return_id:id}).then((response) => {
       setFormData(response.data.data[0]);
     });
   
-    api.post("/currency/getCuerrencyByGoodsReceiptId",{goods_receipt_id:id}).then((response) => {
+    api.post("/currency/getCuerrencyByGoodsReceiptId",{goods_return_id:id}).then((response) => {
       setCurrency(response.data.data[0]);
     });
 
@@ -352,7 +165,7 @@ useEffect(() => {
       Number((rows.reduce((sum, row) => sum + row.total_price, 0) * 0.09).toFixed(2))
     ).toFixed(2);
     api
-    .post('/purchaseorder/editGoodsReceipt', formData)
+    .post('/purchaseorder/editGoodsReturn', formData)
     .then(() => {
       api
       .post('/currency/editGoodsCurrency', currency) 
@@ -361,7 +174,7 @@ useEffect(() => {
       rows?.forEach((el)=>{
        
         api
-      .post('/purchaseorder/editGrProduct', el) 
+      .post('/purchaseorder/editGoodsReturnProduct', el) 
       .then(() => {
         message('Record edited successfully.', 'success'); })})
      
