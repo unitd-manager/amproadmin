@@ -28,8 +28,8 @@ export default function CustomerLogin({ contentDetails, handleInputs }) {
           <Input
             type={showPassword ? 'text' : 'password'} // Toggle type based on showPassword state
             onChange={handleInputs}
-            value={contentDetails.password || ''} // Assuming 'password' is the field in contentDetails
-            name="password"
+            value={contentDetails.pass_word || ''} // Assuming 'password' is the field in contentDetails
+            name="pass_word"
           />
         </FormGroup>
       </Col>

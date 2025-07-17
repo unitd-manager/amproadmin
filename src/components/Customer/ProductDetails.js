@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Row,
   Col,
@@ -8,29 +8,24 @@ import {
   Button,
   Table,
 } from 'reactstrap';
-// import PropTypes from 'prop-types';
+import api from '../../constants/api';
 
 export default function CustomerProductDetails() {
-  // State for a new product being added
   const [newProduct, setNewProduct] = useState({
     product_code: '',
     product_name: '',
     wholesale_price: '',
-    fixed_price: '', // New field for Fixed Price
+    fixed_price: '',
   });
 
-  // State to hold the list of products associated with this customer
   const [customerProductList, setCustomerProductList] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
 
-  // Synchronize internal state with prop data when contentDetails.products changes
-//   useEffect(() => {
-//     // Using optional chaining for contentDetails?.products for safety
-//     if (contentDetails?.products && Array.isArray(contentDetails.products)) {
-//       setCustomerProductList(contentDetails.products);
-//     } else {
-//       setCustomerProductList([]); // Ensure it's an empty array if data isn't available
-//     }
-//   }, [contentDetails.products]);
+  useEffect(() => {
+    api.get('/product/getProducts').then((res) => {
+      setAllProducts(res.data.data);
+    });
+  }, []);
 
   const handleNewProductInputs = (e) => {
     const { name, value } = e.target;
@@ -38,29 +33,37 @@ export default function CustomerProductDetails() {
       ...newProduct,
       [name]: value,
     });
+
+    if (name === 'product_code') {
+      const selectedProduct = allProducts.find(p => p.product_code === value);
+      if (selectedProduct) {
+        setNewProduct(prev => ({
+          ...prev,
+          product_id: selectedProduct.product_id,
+          product_name: selectedProduct.title,
+          wholesale_price: selectedProduct.wholesale_price,
+        }));
+      }
+    }
   };
 
   const addProduct = () => {
     if (newProduct.product_code && newProduct.product_name) {
       setCustomerProductList([
         ...customerProductList,
-        { ...newProduct, id: Date.now() + Math.random() }, // Add a unique ID
+        { ...newProduct, id: Date.now() + Math.random() },
       ]);
-      // Clear the form fields after adding
       setNewProduct({
         product_code: '',
         product_name: '',
         wholesale_price: '',
         fixed_price: '',
       });
-      // IMPORTANT: You'll need to pass this updated list to the parent (ContentUpdate)
-      // e.g., via a prop like onProductsChange(updatedList)
     } else {
       alert('Please fill at least Product Code and Product Name.');
     }
   };
 
-  // Function to handle changes directly in the table (e.g., Fixed Price)
   const handleTableInputChange = (id, fieldName, value) => {
     setCustomerProductList(
       customerProductList.map((product) =>
@@ -70,17 +73,12 @@ export default function CustomerProductDetails() {
   };
 
   const handleTickAction = (id) => {
-    // This action typically means saving or confirming the edit for a specific row.
-    // In a real app, you might trigger an API call to update this specific product.
     console.log(`Tick action for product ID: ${id}`);
     alert(`Product ID ${id} marked as 'Fixed' or saved.`);
-    // You might also want to update the fixed_price in contentDetails or save to backend here
-    // based on how you implement editing.
   };
 
   const handleDeleteAction = (id) => {
     setCustomerProductList(customerProductList.filter((product) => product.id !== id));
-    // IMPORTANT: Pass updated list to parent if you want changes to persist on save
   };
 
   return (
@@ -90,11 +88,18 @@ export default function CustomerProductDetails() {
           <FormGroup>
             <Label>Product Code</Label>
             <Input
-              type="text"
+              type="select"
               onChange={handleNewProductInputs}
               value={newProduct.product_code}
               name="product_code"
-            />
+            >
+              <option value="">Select Product</option>
+              {allProducts.map((p) => (
+                <option key={p.product_id} value={p.product_code}>
+                  {p.product_code}
+                </option>
+              ))}
+            </Input>
           </FormGroup>
         </Col>
         <Col md="4">
@@ -105,6 +110,7 @@ export default function CustomerProductDetails() {
               onChange={handleNewProductInputs}
               value={newProduct.product_name}
               name="product_name"
+              readOnly
             />
           </FormGroup>
         </Col>
@@ -112,10 +118,11 @@ export default function CustomerProductDetails() {
           <FormGroup>
             <Label>Wholesale Price</Label>
             <Input
-              type="number" // Use type="number" for prices
+              type="number"
               onChange={handleNewProductInputs}
               value={newProduct.wholesale_price}
               name="wholesale_price"
+              readOnly
             />
           </FormGroup>
         </Col>
@@ -158,10 +165,10 @@ export default function CustomerProductDetails() {
                 </td>
                 <td>
                   <Button color="success" size="sm" onClick={() => handleTickAction(product.id)} className="me-2">
-                    <i className="fa fa-check"></i> {/* Tick Icon */}
+                    <i className="fa fa-check"></i>
                   </Button>
                   <Button color="danger" size="sm" onClick={() => handleDeleteAction(product.id)}>
-                    <i className="fa fa-trash"></i> {/* Delete Icon */}
+                    <i className="fa fa-trash"></i>
                   </Button>
                 </td>
               </tr>
@@ -174,7 +181,3 @@ export default function CustomerProductDetails() {
     </div>
   );
 }
-
-// CustomerProductDetails.propTypes = {
-//   contentDetails: PropTypes.object,
-// };

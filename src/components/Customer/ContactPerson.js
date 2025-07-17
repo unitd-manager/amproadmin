@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Row,
   Col,
@@ -6,65 +6,86 @@ import {
   Label,
   Input,
   Button,
-  Table // Import Table for displaying contacts
+  Table,
 } from 'reactstrap';
-// import PropTypes from 'prop-types';
+import PropTypes from 'prop-types';
+import api from '../../constants/api';
+import message from '../Message';
 
-export default function ContactPerson(
-) {
-  // State for a new contact being added
+export default function ContactPerson({ contactId }) {
   const [newContact, setNewContact] = useState({
-    contact_person: '',
+    first_name: '',
     email: '',
-    phone_no: '',
-    handphone_no: '',
-    fax_no: '',
+    mobile: '',
+    phone: '',
+    fax: '',
     designation: '',
+    company_id: contactId,
   });
 
-  // State to hold the list of contacts for this customer
-  // This will likely be an array of objects
   const [contactList, setContactList] = useState([]);
 
-  // Assuming contentDetails might initially have a list of contacts
-  // You might need to adjust this based on how your API provides contacts
-//   useEffect(() => {
-//     if (contentDetails.contacts &&  Array.isArray(contentDetails.contacts)) {
-//       setContactList(contentDetails.contacts);
-//     }
-//   }, [contentDetails.contacts]);
+  const getContact = () => {
+    api
+      .post('/contact/getContactByContactId', { company_id: contactId })
+      .then((res) => {
+        setContactList(res.data.data);
+      })
+      .catch(() => {
+        message('Contact not found', 'error');
+      });
+  };
 
+  useEffect(() => {
+    if (contactId) {
+      getContact();
+    }
+  }, [contactId]);
 
   const handleNewContactInputs = (e) => {
-    const { name, value } = e.target;
-    setNewContact({
-      ...newContact,
-      [name]: value,
-    });
+    setNewContact({ ...newContact, [e.target.name]: e.target.value });
   };
 
   const addContact = () => {
-    if (newContact.contact_person && newContact.email) { // Basic validation
-      setContactList([...contactList, { ...newContact, id: Date.now() }]); // Add unique ID
-      setNewContact({ // Clear the form fields after adding
-        contact_person: '',
-        email: '',
-        phone_no: '',
-        handphone_no: '',
-        fax_no: '',
-        designation: '',
-      });
-      // You might also want to pass this updated contactList to the parent here
-      // e.g., handleInputs({ target: { name: 'contacts', value: updatedList }});
-      // or a dedicated prop like onContactsChange(updatedList);
+    if (newContact.first_name && newContact.email) {
+      const contactData = {
+        ...newContact,
+        contact_id: contactId,
+      };
+      api
+        .post('/contact/insertContact', contactData)
+        .then((res) => {
+          setContactList([...contactList, res.data.data]);
+          setNewContact({
+            first_name: '',
+            email: '',
+            mobile: '',
+            phone: '',
+            fax: '',
+            designation: '',
+            company_id: contactId,
+          });
+          message('Contact added successfully', 'success');
+          getContact(); // Refresh the list
+        })
+        .catch(() => {
+          message('Failed to add contact', 'error');
+        });
     } else {
-      alert('Please fill at least Contact Person and Email.');
+      message('Please fill at least Contact Person and Email.', 'warning');
     }
   };
 
-  const deleteContact = (id) => {
-    setContactList(contactList.filter(contact => contact.id !== id));
-    // Again, potentially pass this updated list to the parent
+  const deleteContact = (contactIdToDelete) => {
+    api
+      .post('/contact/deleteContactss', { contact_id: contactIdToDelete })
+      .then(() => {
+        message('Contact deleted successfully', 'success');
+        getContact(); // Refresh the list
+      })
+      .catch(() => {
+        message('Failed to delete contact', 'error');
+      });
   };
 
   return (
@@ -76,8 +97,8 @@ export default function ContactPerson(
             <Input
               type="text"
               onChange={handleNewContactInputs}
-              value={newContact.contact_person}
-              name="contact_person"
+              value={newContact.first_name}
+              name="first_name"
             />
           </FormGroup>
         </Col>
@@ -98,8 +119,8 @@ export default function ContactPerson(
             <Input
               type="text"
               onChange={handleNewContactInputs}
-              value={newContact.phone_no}
-              name="phone_no"
+              value={newContact.mobile}
+              name="mobile"
             />
           </FormGroup>
         </Col>
@@ -109,8 +130,8 @@ export default function ContactPerson(
             <Input
               type="text"
               onChange={handleNewContactInputs}
-              value={newContact.handphone_no}
-              name="handphone_no"
+              value={newContact.phone}
+              name="phone"
             />
           </FormGroup>
         </Col>
@@ -120,8 +141,8 @@ export default function ContactPerson(
             <Input
               type="text"
               onChange={handleNewContactInputs}
-              value={newContact.fax_no}
-              name="fax_no"
+              value={newContact.fax}
+              name="fax"
             />
           </FormGroup>
         </Col>
@@ -143,7 +164,7 @@ export default function ContactPerson(
         </Col>
       </Row>
 
-      <hr /> {/* Separator between form and table */}
+      <hr />
 
       <h4>Existing Contacts</h4>
       {contactList.length > 0 ? (
@@ -162,19 +183,22 @@ export default function ContactPerson(
           </thead>
           <tbody>
             {contactList.map((contact, index) => (
-              <tr key={contact.id}>
+              <tr key={contact.contact_id}>
                 <td>{index + 1}</td>
-                <td>{contact.contact_person}</td>
+                <td>{contact.first_name}</td>
                 <td>{contact.email}</td>
-                <td>{contact.phone_no}</td>
-                <td>{contact.handphone_no}</td>
-                <td>{contact.fax_no}</td>
+                <td>{contact.mobile}</td>
+                <td>{contact.phone}</td>
+                <td>{contact.fax}</td>
                 <td>{contact.designation}</td>
                 <td>
-                  <Button color="danger" size="sm" onClick={() => deleteContact(contact.id)}>
+                  <Button
+                    color="danger"
+                    size="sm"
+                    onClick={() => deleteContact(contact.contact_id)}
+                  >
                     Delete
                   </Button>
-                  {/* You could add an Edit button here */}
                 </td>
               </tr>
             ))}
@@ -187,6 +211,6 @@ export default function ContactPerson(
   );
 }
 
-// ContactPerson.propTypes = {
-//   contentDetails: PropTypes.object // This prop is passed but not directly used in the current version of this component for individual contact updates. It would be used if you wanted to update contentDetails directly with the entire contactList.
-// };
+ContactPerson.propTypes = {
+  contactId: PropTypes.string.isRequired,
+};

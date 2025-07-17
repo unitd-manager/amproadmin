@@ -16,7 +16,7 @@ import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
 import SalesInvoicePickingListPdf from '../../components/PDF/SalesInvoicePickingListPdf';
 import PrintLetterPdf from '../../components/PDF/PrintLetterPdf';
-
+import PrintPackingPdf from '../../components/PDF/PrintPackingPdf';
 
 
 const Test = () => {
@@ -133,6 +133,32 @@ useEffect(() => {
   getSettingById();
       getLineItem();
 }, [id]);
+
+
+const handleRepeatInvoice = async () => {
+  if (!selectedOrder) {
+    message('Please select a invoice first', 'error');
+    return;
+  }
+  try {
+    // Get new delivery code from your API
+    const codeRes = await api.post('/commonApi/getCodeValues', { type: 'invoice' });
+    const deliveryCode = codeRes.data.data;
+
+    // Call repeatSalesOrder API with delivery_code
+    const response = await api.post('/invoice/repeatInvoice', {
+      invoice_id: selectedOrder.invoice_id,
+      invoice_code: deliveryCode,
+    });
+    message(response.data.msg, 'success');
+    setTimeout(() => {
+      window.location.reload();
+    }, 400);
+  } catch (error) {
+    message(error.response?.data?.msg || 'Failed to repeat sales order', 'error');
+  }
+};
+
   return (
     <div className="MainDiv">
       <div className="pt-xs-25">
@@ -164,17 +190,28 @@ useEffect(() => {
               </DropdownToggle>
               <DropdownMenu>
                 <DropdownItem onClick={generateReceipt}>Receive Payment</DropdownItem>
-                <DropdownItem> <SalesInvoicePickingListPdf
+                <DropdownItem>
+    <PrintLetterPdf id={id} settingdetails={settingdetails} lineItem={lineItem} />
+
+  </DropdownItem>
+  <DropdownItem>
+    <SalesInvoicePickingListPdf id={id} settingdetails={settingdetails} lineItem={lineItem} />
+  
+  </DropdownItem>
+  <DropdownItem>   <PrintPackingPdf
           id={id}
-                   settingdetails={settingdetails}
-                   lineItem={lineItem}
-                ></SalesInvoicePickingListPdf></DropdownItem>
-                 <DropdownItem> <PrintLetterPdf
-          id={id}
-                   settingdetails={settingdetails}
-                   lineItem={lineItem}
-                ></PrintLetterPdf></DropdownItem>
-              
+          settingdetails={settingdetails}
+          lineItem={lineItem}
+          
+        /></DropdownItem>
+  <DropdownItem>Print Delivery Order</DropdownItem>
+  <DropdownItem onClick={handleRepeatInvoice}>Repeat Invoice</DropdownItem>
+  <DropdownItem>Recap</DropdownItem>
+  <DropdownItem>Tracking Images</DropdownItem>
+  <DropdownItem>Convert to Sales Return</DropdownItem>
+  <DropdownItem>Delivery Verification</DropdownItem>
+  <DropdownItem>Sales Info</DropdownItem>
+  <DropdownItem>Send E-Invoice</DropdownItem>
               </DropdownMenu>
             </Dropdown>
           }
@@ -222,6 +259,7 @@ useEffect(() => {
           </tbody>
         </CommonTable>
       </div>
+     
     </div>
   );
 };

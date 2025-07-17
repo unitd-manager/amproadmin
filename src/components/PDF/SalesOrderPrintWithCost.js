@@ -268,7 +268,7 @@ const PrintPerfoma = ({ id }) => {
   return (
     <>
       <a onClick={GetPdf}>
-        Print Picking List
+        Print With Cost
       </a>
     </>
   );
