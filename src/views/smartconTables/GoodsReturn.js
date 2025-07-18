@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   Button, Input, Table, Row, Col, DropdownToggle, DropdownMenu,
-  DropdownItem, ButtonDropdown
+  DropdownItem, UncontrolledDropdown, ButtonDropdown
 } from 'reactstrap';
-import moment from 'moment';
 import api from '../../constants/api';
+import moment from 'moment';
 
 const GoodsReturnList = () => {
   const [filters, setFilters] = useState({
@@ -27,7 +27,7 @@ const [selectedTranNos, setSelectedTranNos] = useState([]);
 
   const fetchData = async () => {
     try {
-      const res = await api.post('purchaseorder/getFilteredGoodsReceipt', {
+      const res = await api.post('purchaseorder/getFilteredGoodsReturns', {
         ...filters,
         page: currentPage
       });
@@ -66,7 +66,7 @@ const handleConvertToDebitNote = async () => {
   }
 
   try {
-    await api.post('purchaseorder/convertToPurchaseInvoice', {
+    const res = await api.post('purchaseorder/convertToDebitNote', {
       tran_nos: selectedTranNos
     });
     alert('Successfully converted to debit note!');
@@ -84,7 +84,7 @@ const handleRepeatGoodsReturn = async () => {
   }
 
   try {
-     await api.post('purchaseorder/repeatGoodsReceipt', {
+    const res = await api.post('purchaseorder/repeatGoodsReturn', {
       tran_no: selectedTranNos[0]
     });
     alert('Goods Return repeated successfully.');
@@ -98,7 +98,7 @@ const handleRepeatGoodsReturn = async () => {
 
   return (
     <div className="p-4 bg-light">
-      <h4 className="mb-4">Goods Receipt Management</h4>
+      <h4 className="mb-4">Goods Return Management</h4>
 
       <Row className="mb-3">
         <Col md={2}><Input name="tran_no" placeholder="Tran No" value={filters.tran_no} onChange={handleFilterChange} /></Col>
@@ -128,8 +128,8 @@ const handleRepeatGoodsReturn = async () => {
             </Button>
             <DropdownToggle caret color="primary" />
             <DropdownMenu end>
-              <DropdownItem onClick={() => handleConvertToDebitNote}>Convert to Purchase Invoice</DropdownItem>
-              <DropdownItem onClick={() => handleRepeatGoodsReturn}>Repeat Goods Receipt </DropdownItem>
+              <DropdownItem onClick={() => handleConertToDebitNote}>Convert to Debit Note</DropdownItem>
+              <DropdownItem onClick={() => handleRepeatGoodsReturn}>Repeat Goods Return </DropdownItem>
             </DropdownMenu>
           </ButtonDropdown>
         </Col>
@@ -150,8 +150,8 @@ const handleRepeatGoodsReturn = async () => {
           </tr>
         </thead>
         <tbody>
-          {goodsReturns.length > 0 ? goodsReturns.map((item) => (
-            <tr key={item.goods_receipt_id}>
+          {goodsReturns.length > 0 ? goodsReturns.map((item, index) => (
+            <tr key={index}>
              <td>
   <Input
     type="checkbox"

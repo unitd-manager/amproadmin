@@ -23,21 +23,35 @@ const ReorderCli = () => {
   const [totalRecords, setTotalRecords] = useState(0);
 const [isLoadingPO, setIsLoadingPO] = useState(false);
 
+
+
+const purchaseOrders = [];
+
+categories.forEach(product => {
+  let group = purchaseOrders.find(
+    po => po.supplier_id === product.supplier_id
+  );
+
+  if (!group) {
+    group = {
+      supplier_id: product.supplier_id,
+      products: []
+    };
+    purchaseOrders.push(group);
+  }
+
+  group.products.push(product);
+});
+
+console.log('purchaseorders',JSON.stringify(purchaseOrders, null, 2));
+
+
  const handleLoadPO = async () => {
   try {
     setIsLoadingPO(true);
-    const res = await api.get('/reordercli/load_po');
+     await api.post('/reordercli/load_po',purchaseOrders);
 
-    if (res.data && res.data.length > 0) {
-      // Append or replace, based on your logic:
-      // Option A: Replace current list
-      setCategories(res.data);
-
-      // Option B (if you want to append): 
-      // setCategories(prev => [...prev, ...res.data]);
-    } else {
-      alert('No PO items to load.');
-    }
+   
   } catch (err) {
     console.error('Error loading PO:', err);
     alert('Failed to load PO.');
