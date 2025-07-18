@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import * as Icon from 'react-feather';
 import { Button, Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
+import { Trash2 } from 'react-feather';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'datatables.net-dt/js/dataTables.dataTables';
 import 'datatables.net-dt/css/jquery.dataTables.min.css';
@@ -24,7 +25,9 @@ import PdfSalesQuote from '../../components/PDF/PdfSalesOrderQuote';
 
 const Test = () => {
   const [supplier, setSupplier] = useState(null);
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  // const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedOrders, setSelectedOrders] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null); // Keep for single-select logic elsewhere
   const [loading, setLoading] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -217,6 +220,24 @@ useEffect(() => {
     }
   };
 
+  // Add delete handler
+  const handleDeleteOrders = async () => {
+    if (selectedOrders.length === 0) {
+      message('Please select at least one sales order to delete', 'error');
+      return;
+    }
+    if (!window.confirm('Are you sure you want to delete the selected sales orders?')) return;
+    try {
+      await api.post('/salesOrder/deleteSalesOrder', { sales_order_id: selectedOrders });
+      message('Selected sales orders deleted successfully', 'success');
+      setSelectedOrders([]);
+      setSelectedOrder(null);
+      getSupplier();
+    } catch (error) {
+      message(error.response?.data?.message || 'Failed to delete sales orders', 'error');
+    }
+  };
+
   return (
     <div className="MainDiv">
       <div className="pt-xs-25">
@@ -234,6 +255,14 @@ useEffect(() => {
             <option value="Closed">Closed</option>
           </select>
           <Button color="primary" onClick={getSupplier}>Search</Button>
+          <Button
+            color="danger"
+            className="ms-2"
+            disabled={selectedOrders.length === 0}
+            onClick={handleDeleteOrders}
+          >
+            <Trash2 size={16} />
+          </Button>
         </div>
 
         <CommonTable
@@ -310,8 +339,16 @@ useEffect(() => {
                   <td>
                     <input
                       type="checkbox"
-                      checked={selectedOrder?.sales_order_id === element.sales_order_id}
-                      onChange={() => setSelectedOrder(element)}
+                      checked={selectedOrders.includes(element.sales_order_id)}
+                      onChange={() => {
+                        setSelectedOrders((prev) =>
+                          prev.includes(element.sales_order_id)
+                            ? prev.filter((ids) => ids !== element.sales_order_id)
+                            : [...prev, element.sales_order_id]
+                        );
+                        // For single-select logic elsewhere
+                        setSelectedOrder(element);
+                      }}
                     />
                   </td>
                   <td>{index + 1}</td>

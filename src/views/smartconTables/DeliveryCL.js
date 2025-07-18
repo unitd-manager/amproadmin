@@ -9,7 +9,7 @@ import message from '../../components/Message';
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
-import PrintPerfoma from '../../components/PDF/PrintDelivery';
+//import PrintPerfoma from '../../components/PDF/PrintDelivery';
 
 
 const DeliveryOrderList = () => {
@@ -166,7 +166,7 @@ const [newDeliveryDate, setNewDeliveryDate] = useState(() => new Date().toISOStr
 
   const id = selectedOrder?.delivery_order_id || '';
     const [settingdetails, setSettingDetails] = useState();
-  
+  console.log(settingdetails);
   const getSettingById = () => {
     api
       .post('/salesorder/getDeliveryorderById', { delivery_order_id: id })
@@ -178,7 +178,7 @@ const [newDeliveryDate, setNewDeliveryDate] = useState(() => new Date().toISOStr
       });
   };
      const [lineItem, setLineItem] = useState();
-   
+   console.log(lineItem);
     const getLineItem = () => {
       api.post('/invoice/getDeliveryLineItemsById', { delivery_order_id: id }).then((res) => {
         setLineItem(res.data.data);
@@ -354,7 +354,7 @@ const [newDeliveryDate, setNewDeliveryDate] = useState(() => new Date().toISOStr
                   }
                   handleActionClick('track');
                 }}>Tracking Images</DropdownItem>
-                <DropdownItem onClick={() => {
+                {/* <DropdownItem onClick={() => {
                   if (!selectedOrder) {
                     message('Please select a delivery order first by checking the checkbox', 'warning');
                     return;
@@ -366,7 +366,7 @@ const [newDeliveryDate, setNewDeliveryDate] = useState(() => new Date().toISOStr
             settingdetails={settingdetails}
             lineItem={lineItem}
           />
-      </DropdownItem>
+      </DropdownItem> */}
               </DropdownMenu>
             </Dropdown>
           }
