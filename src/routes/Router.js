@@ -3,9 +3,15 @@ import React, { lazy } from 'react';
 import Loadable from '../layouts/loader/Loadable';
 import UserToken from '../components/UserToken';
 
+const WeeklySchedule = Loadable(lazy(() => import('../components/WeeklySchedule/WeeklySchedule')));
+
 const FullLayout = Loadable(lazy(() => import('../layouts/FullLayout')));
 /***** Pages ****/
-
+ <Route
+            path="/WeeklySchedule"
+            name="enquirydata"
+            element={<WeeklySchedule />}
+            ></Route>
 // Modals
 const EditCostingSummaryModal = Loadable(
   lazy(() => import('../components/Tender/EditCostingSummaryModal')),
@@ -650,6 +656,7 @@ const Routernew = () => {
             element={<TrainingDetailsTable />}
           ></Route>
           <Route path="/Training" name="clienttdata" element={<TrainingTable />}></Route>
+          <Route path="/WeeklySchedule" name="weeklyschedule" element={<WeeklySchedule />}></Route>
           <Route
             path="/JobInformation"
             name="clienttdata"

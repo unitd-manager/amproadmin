@@ -11,7 +11,6 @@ import {
 } from 'reactstrap';
 import Swal from 'sweetalert2';
 import { Link } from 'react-router-dom';
-import ReactDOM from 'react-dom/client'; // For rendering in new tab
 import DataTable from 'react-data-table-component';
 import message from '../../components/Message';
 import api from '../../constants/api';
@@ -28,6 +27,7 @@ const CatalogueManagement = () => {
   const [printModalOpen, setPrintModalOpen] = useState(false);
   const [selectedPrintOption, setSelectedPrintOption] = useState('');
   const [selectedCatalogueId, setSelectedCatalogueId] = useState(null);
+  const [showPdf, setShowPdf] = useState(false);
 
   const [showStatusFilter, setShowStatusFilter] = useState(false);
 
@@ -112,22 +112,8 @@ const CatalogueManagement = () => {
       message('Please select a catalogue by checkbox', 'info');
       return;
     }
-
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write('<div id="pdf-root"></div>');
-      const container = printWindow.document.getElementById('pdf-root');
-      const root = ReactDOM.createRoot(container);
-      root.render(
-        <CataloguePrintWithCostPdf
-          catalogueId={selectedCatalogueId}
-          printOption={selectedPrintOption}
-        />
-      );
-    }
-
-    togglePrintModal();
-  };
+    setShowPdf(true);
+      };
 
   const columns = [
     {
@@ -263,6 +249,13 @@ const CatalogueManagement = () => {
           </Button>
         </ModalBody>
       </Modal>
+      {showPdf && (
+        <CataloguePrintWithCostPdf
+          catalogueId={selectedCatalogueId}
+          printOption={selectedPrintOption}
+          onClose={() => setShowPdf(false)}
+        />
+      )}
     </div>
   );
 };

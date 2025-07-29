@@ -19,7 +19,7 @@ import api from '../../constants/api';
 // import ViewNote from '../../components/Tender/ViewNote';
 import creationdatetime from '../../constants/creationdatetime';
 import Tab from '../../components/project/Tab';
-
+ 
 const ClientsEdit = () => {
   //Const Variables
   const [activeTab, setActiveTab] = useState('1');
