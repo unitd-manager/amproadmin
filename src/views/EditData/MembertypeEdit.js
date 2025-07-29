@@ -18,15 +18,19 @@ const MemberTypeEdit = () => {
     member_type_name: '',
     type: '',
     is_active: true,
+    modified_by: '',
+    modified_on: '',
   });
 
   const handleInputs = (e) => {
     const { name, value, type, checked } = e.target;
     const newValue = type === 'checkbox' ? checked : value;
-    setMemberTypeDetails({ ...memberTypeDetails, [name]: newValue });
+    setMemberTypeDetails((prevState) => ({
+      ...prevState,
+      [name]: newValue,
+    }));
   };
 
-  // Get data by ID
   const getMemberTypeById = () => {
     api
       .post('/membertype/getMemberTypeById', { member_type_id: id })
@@ -34,8 +38,11 @@ const MemberTypeEdit = () => {
         if (res.data.data && res.data.data.length > 0) {
           const data = res.data.data[0];
           setMemberTypeDetails({
-            ...data,
+            member_type_name: data.member_type_name || '',
+            type: data.type || '',
             is_active: data.is_active === 1,
+            modified_by: data.modified_by || '',
+            modified_on: data.modified_on || '',
           });
         } else {
           message('Member Type not found', 'info');
@@ -46,14 +53,13 @@ const MemberTypeEdit = () => {
       });
   };
 
-  // Update member type
   const editMemberType = () => {
     if (memberTypeDetails.member_type_name !== '') {
       const payload = {
         ...memberTypeDetails,
         is_active: memberTypeDetails.is_active ? 1 : 0,
         modification_date: creationdatetime,
-        modified_by: loggedInuser.first_name,
+        modified_by: loggedInuser?.first_name || 'Admin',
         member_type_id: id,
       };
 
@@ -61,6 +67,7 @@ const MemberTypeEdit = () => {
         .post('/membertype/editMemberType', payload)
         .then(() => {
           message('Member Type updated successfully', 'success');
+          // navigate('/MemberType'); // Uncomment if you want to redirect after update
         })
         .catch(() => {
           message('Unable to update Member Type', 'error');
@@ -71,7 +78,9 @@ const MemberTypeEdit = () => {
   };
 
   useEffect(() => {
-    getMemberTypeById();
+    if (id) {
+      getMemberTypeById();
+    }
   }, [id]);
 
   return (
@@ -83,7 +92,9 @@ const MemberTypeEdit = () => {
           <Row>
             <Col md="6">
               <FormGroup>
-                <Label for="member_type_name">Member Type Name<span className="text-danger">*</span></Label>
+                <Label for="member_type_name">
+                  Member Type Name <span className="text-danger">*</span>
+                </Label>
                 <Input
                   type="text"
                   id="member_type_name"
@@ -108,7 +119,6 @@ const MemberTypeEdit = () => {
                   <option value="">Select a Type</option>
                   <option value="Internal">Internal</option>
                   <option value="External">External</option>
-                  {/* Add other options as needed */}
                 </Input>
               </FormGroup>
             </Col>
@@ -122,16 +132,20 @@ const MemberTypeEdit = () => {
                     name="is_active"
                     checked={memberTypeDetails.is_active}
                     onChange={handleInputs}
-                  />
-                  {' '}Is Active
+                  />{' '}
+                  Is Active
                 </Label>
               </FormGroup>
             </Col>
           </Row>
           <Row className="mt-3">
             <Col>
-              <Button color="primary" onClick={editMemberType}>Save</Button>{' '}
-              <Button color="secondary" onClick={() => navigate('/MemberType')}>Back to List</Button>
+              <Button color="primary" onClick={editMemberType}>
+                Save
+              </Button>{' '}
+              <Button color="secondary" onClick={() => navigate('/MemberType')}>
+                Back to List
+              </Button>
             </Col>
           </Row>
         </ComponentCard>
