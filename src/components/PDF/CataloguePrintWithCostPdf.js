@@ -17,7 +17,7 @@ const CataloguePrintWithCostPdf = ({ catalogueId, printOption }) => {
   useEffect(() => {
     if (catalogueId) {
       api
-        .get(`/catalogue/getCatalogueProduct/${catalogueId}`)
+        .get(`/catalogue/getCatalogueProductsByCatalogueId/${catalogueId}`)
         .then((res) => {
           const data = res.data.data || [];
           setProducts(data);
@@ -62,11 +62,11 @@ const CataloguePrintWithCostPdf = ({ catalogueId, printOption }) => {
         const priceDetails = [];
 
         if (['Print With Price', 'Print With Retail Price', 'Print With Stock'].includes(printOption)) {
-          priceDetails.push({ text: `RPrice : $${(item.rprice || 0).toFixed(2)}`, style: 'priceText' });
+          priceDetails.push({ text: `RPrice : $${(item.retail_price || 0).toFixed(2)}`, style: 'priceText' });
         }
         if (['Print With Price', 'Print With Stock'].includes(printOption)) {
-          priceDetails.push({ text: `CPrice : $${(item.cprice || 0).toFixed(2)}`, style: 'priceText' });
-          priceDetails.push({ text: `WPrice : $${(item.wprice || 0).toFixed(2)}`, style: 'priceText' });
+          priceDetails.push({ text: `CPrice : $${(item.carton_price || 0).toFixed(2)}`, style: 'priceText' });
+          priceDetails.push({ text: `WPrice : $${(item.wholesale_price || 0).toFixed(2)}`, style: 'priceText' });
         }
         if (printOption === 'Print With Stock') {
           priceDetails.push({ text: `Stock : ${item.stock || 'N/A'}`, style: 'priceText' });

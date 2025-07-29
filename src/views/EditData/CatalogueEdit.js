@@ -9,7 +9,7 @@ import ComponentCard from '../../components/ComponentCard';
 import message from '../../components/Message';
 
 
-const BASE_IMAGE_URL = 'http://localhost:2001/uploads/';
+const BASE_IMAGE_URL = 'https://amproadmin.zaitunsoftsolutions.com/storage/uploads/';
 
 const CatalogueEdit = () => {
   const [filters, setFilters] = useState({
