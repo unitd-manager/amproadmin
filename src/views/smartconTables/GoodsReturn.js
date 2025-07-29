@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import {
   Button, Input, Table, Row, Col, DropdownToggle, DropdownMenu,
-  DropdownItem, UncontrolledDropdown, ButtonDropdown
+  DropdownItem, ButtonDropdown
 } from 'reactstrap';
-import api from '../../constants/api';
 import moment from 'moment';
+import { Link } from 'react-router-dom';
+import api from '../../constants/api';
 
 const GoodsReturnList = () => {
   const [filters, setFilters] = useState({
     tran_no: '',
     from_date: '',
     to_date: '',
-    status: 'Open',
+    status: '',
     supplier: '',
     invoice_no: ''
   });
@@ -25,14 +26,23 @@ const [selectedTranNos, setSelectedTranNos] = useState([]);
 
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
 
+  
+  
   const fetchData = async () => {
     try {
-      const res = await api.post('purchaseorder/getFilteredGoodsReturns', {
-        ...filters,
-        page: currentPage
+      const res = await api.get('/purchaseorder/getFilteredGoodsReturn', {
+        params: {
+          tran_no: filters.tran_no || '',
+          from_date: filters.from_date || '',
+          to_date: filters.to_date || '',
+          status: filters.status || '',
+          supplier_id: filters.supplier_id || '',
+          invoice_no: filters.invoice_no || '',
+        }
       });
+  
       setGoodsReturns(res.data.data);
-      setTotalRecords(res.data.total || res.data.data.length);
+      setTotalRecords(res.data.total);
     } catch (err) {
       console.error(err);
     }
@@ -66,7 +76,7 @@ const handleConvertToDebitNote = async () => {
   }
 
   try {
-    const res = await api.post('purchaseorder/convertToDebitNote', {
+    await api.post('purchaseorder/convertToDebitNote', {
       tran_nos: selectedTranNos
     });
     alert('Successfully converted to debit note!');
@@ -84,7 +94,7 @@ const handleRepeatGoodsReturn = async () => {
   }
 
   try {
-    const res = await api.post('purchaseorder/repeatGoodsReturn', {
+     await api.post('purchaseorder/repeatGoodsReturn', {
       tran_no: selectedTranNos[0]
     });
     alert('Goods Return repeated successfully.');
@@ -106,6 +116,7 @@ const handleRepeatGoodsReturn = async () => {
         <Col md={2}><Input type="date" name="to_date" value={filters.to_date} onChange={handleFilterChange} /></Col>
         <Col md={2}>
           <Input type="select" name="status" value={filters.status} onChange={handleFilterChange}>
+          <option></option>
             <option>Open</option>
             <option>Closed</option>
             <option>Cancelled</option>
@@ -128,8 +139,8 @@ const handleRepeatGoodsReturn = async () => {
             </Button>
             <DropdownToggle caret color="primary" />
             <DropdownMenu end>
-              <DropdownItem onClick={() => handleConertToDebitNote}>Convert to Debit Note</DropdownItem>
-              <DropdownItem onClick={() => handleRepeatGoodsReturn}>Repeat Goods Return </DropdownItem>
+              <DropdownItem onClick={() => handleConvertToDebitNote}>Convert to Purchase Invoice</DropdownItem>
+              <DropdownItem onClick={() => handleRepeatGoodsReturn}>Repeat Goods Receipt </DropdownItem>
             </DropdownMenu>
           </ButtonDropdown>
         </Col>
@@ -150,8 +161,8 @@ const handleRepeatGoodsReturn = async () => {
           </tr>
         </thead>
         <tbody>
-          {goodsReturns.length > 0 ? goodsReturns.map((item, index) => (
-            <tr key={index}>
+          {goodsReturns.length > 0 ? goodsReturns.map((item) => (
+            <tr key={item.goods_receipt_id}>
              <td>
   <Input
     type="checkbox"
@@ -166,8 +177,8 @@ const handleRepeatGoodsReturn = async () => {
   />
 </td>
 
-              <td>{item.tran_no}</td>
-              <td>{moment(item.tran_date).format('YYYY-MM-DD')}</td>
+              <td><Link to={`/GoodsReturnEdit/${item.goods_return_id}`}>{item.tran_no}</Link></td>
+              <td>{item.tran_date?moment(item.tran_date).format('YYYY-MM-DD'):''}</td>
               <td>{item.supplier_name}</td>
               <td>{item.status}</td>
               <td>{item.invoice_no}</td>

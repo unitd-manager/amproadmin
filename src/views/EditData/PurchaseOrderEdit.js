@@ -652,7 +652,7 @@ useEffect(() => {
   // Handle form submit (example API call structure)
   const handleSubmit = async () => {
     formData.sub_total=rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2);
-    formData.tax_amount=parseFloat(sub_total *0.09.toFixed(2));
+    formData.tax_amount=parseFloat(formData.sub_total *0.09.toFixed(2));
     
     formData.net_total=(
       Number(rows.reduce((sum, row) => sum + row.total_price, 0)) +
@@ -944,13 +944,13 @@ useEffect(() => {
                         <Col md="6">
                           <FormGroup>
                             <label>Currency Code</label>
-                            <Input type="text" placeholder="Enter Currency code" name="currency_code" value={currency.currency_code || ""}  onChange={handleCurrencyChange}/>
+                            <Input type="text" placeholder="Enter Currency code" name="currency_code" value={currency?.currency_code || ""}  onChange={handleCurrencyChange}/>
                           </FormGroup>
                         </Col>
                         <Col md="6">
                           <FormGroup>
                             <label>Currency Name</label>
-                            <Input type="text" name="currency_name" value={currency.currency_name || ""} onChange={handleCurrencyChange}>
+                            <Input type="text" name="currency_name" value={currency?.currency_name || ""} onChange={handleCurrencyChange}>
                             
                             </Input>
                           </FormGroup>
@@ -958,7 +958,7 @@ useEffect(() => {
                         <Col md="6">
                           <FormGroup>
                             <label>Currency Rate</label>
-                            <Input type="text" placeholder="Enter Currency Rate " name="currency_rate" value={currency.currency_rate || ""} 
+                            <Input type="text" placeholder="Enter Currency Rate " name="currency_rate" value={currency?.currency_rate || ""} 
                             onChange={handleCurrencyChange}/>
                           </FormGroup>
                         </Col>

@@ -286,7 +286,7 @@ const PurchaseOrderPage = () => {
 
     // Fetch supplier options for dropdown
     api.post("/purchaseorder/getGoodsReceiptById",{goods_receipt_id:id}).then((response) => {
-      setFormData(response.data.data[0]);
+      setFormData(response.data.data);
     });
   
     api.post("/currency/getCuerrencyByGoodsReceiptId",{goods_receipt_id:id}).then((response) => {
@@ -441,7 +441,7 @@ useEffect(() => {
   };
   return (
     <Container className="mt-4">
-      <h2>Add/Edit Purchase Order</h2>
+      <h2>Add/Edit Goods Receipt</h2>
       <Row>
       <Col md="6">
           <FormGroup>
@@ -689,13 +689,13 @@ useEffect(() => {
                         <Col md="6">
                           <FormGroup>
                             <label>Currency Code</label>
-                            <Input type="text" placeholder="Enter Currency code" name="currency_code" value={currency.currency_code || ""}  onChange={handleCurrencyChange}/>
+                            <Input type="text" placeholder="Enter Currency code" name="currency_code" value={currency?.currency_code || ""}  onChange={handleCurrencyChange}/>
                           </FormGroup>
                         </Col>
                         <Col md="6">
                           <FormGroup>
                             <label>Currency Name</label>
-                            <Input type="text" name="currency_name" value={currency.currency_name || ""} onChange={handleCurrencyChange}>
+                            <Input type="text" name="currency_name" value={currency?.currency_name || ""} onChange={handleCurrencyChange}>
                             
                             </Input>
                           </FormGroup>
@@ -703,10 +703,10 @@ useEffect(() => {
                         <Col md="6">
                           <FormGroup>
                             <label>Currency Rate</label>
-                            <Input type="text" placeholder="Enter Currency Rate " name="currency_rate" value={currency.currency_rate || ""} 
+                            <Input type="text" placeholder="Enter Currency Rate " name="currency_rate" value={currency?.currency_rate || ""} 
                             onChange={handleCurrencyChange}/>
                           </FormGroup>
-                        </Col>
+                        </Col> 
                        
                       </Row>
                     </Form>

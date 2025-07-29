@@ -144,7 +144,8 @@ const FinanceTable = Loadable(lazy(() => import('../views/smartconTables/Orders'
 // Admin
 
 
-const GoodsReceived = Loadable(lazy(() => import('../views/smartconTables/GoodsReceived')));
+const GoodsReturn = Loadable(lazy(() => import('../views/smartconTables/GoodsReturn')));
+const GoodsReceipt = Loadable(lazy(() => import('../views/smartconTables/GoodsReceipt')));
 const CustomerSupplierPrice = Loadable(lazy(() => import('../views/smartconTables/CustomerSupplierPrice')));
 
 const Content = Loadable(lazy(() => import('../views/smartconTables/Content')));
@@ -157,7 +158,8 @@ const SupplierDetailsTable = Loadable(lazy(() => import('../views/detailTable/Su
 const SupplierCLDetailsTable = Loadable(lazy(() => import('../views/detailTable/SupplierCLDetails')));
 
 const CustomerSupplierPriceDetailTable = Loadable(lazy(() => import('../views/detailTable/CustomerSupplierPriceDetails')));
-const GoodsReceivedDetailTable = Loadable(lazy(() => import('../views/detailTable/GoodsReceivedDetails')));
+const GoodsReceiptDetailTable = Loadable(lazy(() => import('../views/detailTable/GoodsReceiptDetails')));
+const GoodsReturnDetailTable = Loadable(lazy(() => import('../views/detailTable/GoodsReturnDetails')));
 
 const SubCategoryDetailsTable = Loadable(
   lazy(() => import('../views/detailTable/SubCategoryDetails')),
@@ -189,7 +191,8 @@ const CatalogueEdit = Loadable(lazy(() => import('../views/EditData/CatalogueEdi
 const PurchaseOrderEdit = Loadable(lazy(() => import('../views/EditData/PurchaseOrderEdit')));
 //SupplierModal
 const CustomerSupplierPriceEdit = Loadable(lazy(() => import('../views/EditData/CustomerSupplierPriceEdit')));
-const GoodsReceivedEdit = Loadable(lazy(() => import('../views/EditData/GoodsReceivedEdit')));
+const GoodsReceiptEdit = Loadable(lazy(() => import('../views/EditData/GoodsReceiptEdit')));
+const GoodsReturnEdit = Loadable(lazy(() => import('../views/EditData/GoodsReturnEdit')));
 
 const SupportDetails = Loadable(lazy(() => import('../views/detailTable/SupportDetails')));
 
@@ -328,7 +331,8 @@ const Routernew = () => {
             ></Route>
 
 <Route path="/CustomerSupplierPriceDetails" name="blogDetaildata" element={<CustomerSupplierPriceDetailTable />}></Route>
-          <Route path="/GoodsReceivedDetails" name="supplierDetaildata" element={<GoodsReceivedDetailTable />}></Route>
+          <Route path="/GoodsReceiptDetails" name="supplierDetaildata" element={<GoodsReceiptDetailTable />}></Route>
+          <Route path="/GoodsReturnDetails" name="supplierDetaildata" element={<GoodsReturnDetailTable />}></Route>
         {/* product group */}
         <Route path="/Brand" name="Brand" element={<BrandCli />}></Route>
          <Route path="/Bin" name="Bin" element={<BinCli />}></Route>
@@ -403,7 +407,8 @@ const Routernew = () => {
           <Route path="/sectionEdit/:id" name="sectiondata" element={<SectionEdit />}></Route>
          
           <Route path="/CustomerSupplierPriceEdit/:id" name="productdata" element={<CustomerSupplierPriceEdit />}></Route>
-          <Route path="/GoodsReceivedEdit/:id" name="orderdata" element={<GoodsReceivedEdit />}></Route>
+          <Route path="/GoodsReceiptEdit/:id" name="orderdata" element={<GoodsReceiptEdit />}></Route>
+          <Route path="/GoodsReturnEdit/:id" name="orderdata" element={<GoodsReturnEdit />}></Route>
           <Route path="/clientEdit/:id" name="clienttdata" element={<ClientEdit />}></Route>
          
           
@@ -598,7 +603,8 @@ const Routernew = () => {
           <Route path="/UserGroupDetails" name="usergroupdetailsdata" element={<UserGroupDetails />}></Route>
         
           <Route path="/CustomerSupplierPrice" name="contentdata" element={<CustomerSupplierPrice />}></Route>
-          <Route path="/GoodsReceived" name="customerdata" element={<GoodsReceived />}></Route>
+          <Route path="/GoodsReceipt" name="customerdata" element={<GoodsReceipt />}></Route>
+          <Route path="/GoodsReturn" name="customerdata" element={<GoodsReturn />}></Route>
 
           <Route path="/Content" name="contentdata" element={<Content />}></Route>
           <Route path="/Customer" name="customerdata" element={<Customer />}></Route>
