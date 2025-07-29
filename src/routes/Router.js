@@ -195,7 +195,8 @@ const InvoiceDetails = Loadable(lazy(() => import('../views/detailTable/InvoiceD
 const ClientDetailsTable = Loadable(lazy(() => import('../views/detailTable/ClientDetails')));
 const CatalogueDetailsCL = Loadable(lazy(() => import('../views/detailTable/CatalogueDetailsCL')));
 const PaymodeDetailsCL = Loadable(lazy(() => import('../views/detailTable/PaymodeDetailsCL')));
-const CatalogueEdit = Loadable(lazy(() => import('../views/EditData/CatalogueEdit')));
+const CatalogueCLEdit = Loadable(lazy(() => import('../views/EditData/CatalogueCLEdit')));
+const CatalogueAddProduct = Loadable(lazy(() => import('../views/EditData/CatalogueAddProduct')));
 const PaymodeEditCL = Loadable(lazy(() => import('../views/EditData/PaymodeEditCL')));
 
 const PurchaseOrderEdit = Loadable(lazy(() => import('../views/EditData/PurchaseOrderEdit')));
@@ -581,9 +582,14 @@ const Routernew = () => {
             element={<PurchaseOrderEdit />}
           ></Route>
           <Route
-            path="/CatalogueEdit/:id"
+            path="/CatalogueCLEdit/:id"
             name="CatalogueProductData"
-            element={<CatalogueEdit />}
+            element={<CatalogueCLEdit />}
+          ></Route>
+           <Route
+            path="/CatalogueAddProduct/:id"
+            name="CatalogueProductData"
+            element={<CatalogueAddProduct />}
           ></Route>
             <Route
             path="/PaymodeEditCL/:id"
