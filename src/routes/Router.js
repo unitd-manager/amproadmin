@@ -143,6 +143,9 @@ const Inventory = Loadable(lazy(() => import('../views/smartconTables/Inventory'
 const ProductDetailsTable = Loadable(lazy(() => import('../views/detailTable/ProductDetails')));
 const ProductCLDetailsTable = Loadable(lazy(() => import('../views/detailTable/ProductCLDetails')));
 const ClientTable = Loadable(lazy(() => import('../views/smartconTables/Client')));
+const MemberType = Loadable(lazy(() => import('../views/smartconTables/membertype')));
+const PriceGroupList = Loadable(lazy(() => import('../views/smartconTables/pricegroup')));
+
 
 // Finance Admin
 const FinanceTable = Loadable(lazy(() => import('../views/smartconTables/Orders')));
@@ -193,6 +196,8 @@ const DeliveryOrderDetails = Loadable(lazy(() => import('../views/detailTable/De
 
 const InvoiceDetails = Loadable(lazy(() => import('../views/detailTable/InvoiceDetails')));
 const ClientDetailsTable = Loadable(lazy(() => import('../views/detailTable/ClientDetails')));
+const MemberTypeDetails = Loadable(lazy(() => import('../views/detailTable/memberDetails')));
+const PriceGroupAdd = Loadable(lazy(() => import('../views/detailTable/pricegroupDetails')));
 const CatalogueDetailsCL = Loadable(lazy(() => import('../views/detailTable/CatalogueDetailsCL')));
 const PaymodeDetailsCL = Loadable(lazy(() => import('../views/detailTable/PaymodeDetailsCL')));
 const CatalogueEdit = Loadable(lazy(() => import('../views/EditData/CatalogueEdit')));
@@ -229,6 +234,8 @@ const BlogEdit = Loadable(lazy(() => import('../views/EditData/BlogEdit')));
 const EnquiryEdit = Loadable(lazy(() => import('../views/EditData/EnquiryEdit')));
 const SalesOrderEdit = Loadable(lazy(() => import('../views/EditData/SalesOrderEdit')));
 const ClientEdit = Loadable(lazy(() => import('../views/EditData/ClientEdit')));
+const MemberTypeEdit = Loadable(lazy(() => import('../views/EditData/MembertypeEdit')));
+const PriceGroupEdit = Loadable(lazy(() => import('../views/EditData/pricegroupedit')));
 
 
 const LoanEdit = Loadable(lazy(() => import('../views/EditData/LoanEdit')));
@@ -420,6 +427,9 @@ const Routernew = () => {
           <Route path="/GoodsReceiptEdit/:id" name="orderdata" element={<GoodsReceiptEdit />}></Route>
           <Route path="/GoodsReturnEdit/:id" name="orderdata" element={<GoodsReturnEdit />}></Route>
           <Route path="/clientEdit/:id" name="clienttdata" element={<ClientEdit />}></Route>
+          <Route path="/MembertypeEdit/:id" name="memberedit" element={<MemberTypeEdit />}></Route>
+          <Route path="/pricegroupedit/:id" name="priceedit" element={<PriceGroupEdit />}></Route>
+
          
           
           
@@ -565,7 +575,11 @@ const Routernew = () => {
 
           <Route path="/InvoiceDetails" name="invoiceDetaildata" element={<InvoiceDetails />}></Route>
           <Route path="/Client" name="clienttdata" element={<ClientTable />}></Route>
+          <Route path="/membertype" name="membertype" element={<MemberType />}></Route>
+          <Route path="/pricegroup" name="pricegroup" element={<PriceGroupList />}></Route>
           <Route path="/ClientDetails" name="clienttdata" element={<ClientDetailsTable />}></Route>
+          <Route path="/memberDetails" name="clienttdata" element={<MemberTypeDetails />}></Route>
+          <Route path="/pricegroupDetails" name="clienttdata" element={<PriceGroupAdd />}></Route>
           <Route path="/CatalogueDetailsCL" name="clienttdata" element={<CatalogueDetailsCL />}></Route>
           <Route path="/PaymodeDetailsCL" name="clienttdata" element={<PaymodeDetailsCL />}></Route>
 
