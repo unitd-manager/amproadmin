@@ -30,12 +30,13 @@ const CatalogueDetails = () => {
   };
 
   // Insert catalogue
-  const insertCatalogue = () => {
+  const insertCatalogue = (code) => {
     if (catalogueDetails.catalogue_name !== '') {
       const payload = {
         ...catalogueDetails,
         creation_date: creationdatetime,
         created_by: loggedInuser.first_name,
+        catalogue_code : code,
       };
       api
         .post('/catalogue/insertCatalogue', payload)
@@ -43,7 +44,7 @@ const CatalogueDetails = () => {
           const insertedId = res.data.data.insertId;
           message('Catalogue saved successfully.', 'success');
           setTimeout(() => {
-            navigate(`/CatalogueEdit/${insertedId}`);
+            navigate(`/CatalogueCLEdit/${insertedId}`);
           }, 500);
         })
         .catch(() => {
@@ -52,6 +53,17 @@ const CatalogueDetails = () => {
     } else {
       message('Please enter Catalogue Name.', 'warning');
     }
+  };
+
+  const generateCode = () => {
+    api
+      .post('/commonApi/getCodeValues', { type: 'Catalogue' })
+      .then((res) => {
+        insertCatalogue(res.data.data);
+      })
+      .catch(() => {
+        insertCatalogue('');
+      });
   };
 
   return (
@@ -99,7 +111,7 @@ const CatalogueDetails = () => {
                 />
               </FormGroup>
               <div className="pt-3 mt-3 d-flex align-items-center gap-2">
-                <Button color="primary" onClick={insertCatalogue}>Save</Button>
+                <Button color="primary" onClick={generateCode}>Save</Button>
                 <Button className="btn btn-dark" onClick={() => navigate(-1)}>Cancel</Button>
               </div>
             </Form>

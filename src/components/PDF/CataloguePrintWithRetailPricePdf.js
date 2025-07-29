@@ -4,11 +4,11 @@ import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 import api from '../../constants/api'; // Ensure this is correctly set
 
-const CataloguePrintWithCostPdf = ({ catalogueId, printOption }) => {
+const CataloguePrintWithRetailPricePdf = ({ catalogueId, printOption }) => {
   const [products, setProducts] = useState([]);
   const baseURL = 'https://amproadmin.zaitunsoftsolutions.com'; // Moved here for scope
 
-  CataloguePrintWithCostPdf.propTypes = {
+  CataloguePrintWithRetailPricePdf.propTypes = {
     catalogueId: PropTypes.number.isRequired,
     printOption: PropTypes.string.isRequired,
   };
@@ -161,4 +161,4 @@ const CataloguePrintWithCostPdf = ({ catalogueId, printOption }) => {
   return null;
 };
 
-export default CataloguePrintWithCostPdf;
+export default CataloguePrintWithRetailPricePdf;
