@@ -17,6 +17,7 @@ import CommonTable from '../../components/CommonTable';
 import SalesInvoicePickingListPdf from '../../components/PDF/SalesInvoicePickingListPdf';
 import PrintLetterPdf from '../../components/PDF/PrintLetterPdf';
 import PrintPackingPdf from '../../components/PDF/PrintPackingPdf';
+import SalesInfoModal from '../../components/SalesInfoModal'; // adjust path as needed
 
 
 const Test = () => {
@@ -30,7 +31,7 @@ const Test = () => {
   const [toDate, setToDate] = useState('');
   const [customerFilter, setCustomerFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('Not Paid');
-
+  
   const toggleDropdown = () => setDropdownOpen((prevState) => !prevState);
 
   const getSupplier = () => {
@@ -159,6 +160,58 @@ const handleRepeatInvoice = async () => {
   }
 };
 
+const handleConvertToSalesReturn = async () => {
+  if (!selectedOrder) {
+    message('Please select an invoice first', 'error');
+    return;
+  }
+  try {
+    const codeRes = await api.post('/commonApi/getCodeValues', { type: 'salesreturn' });
+    const deliveryCode = codeRes.data.data;
+
+    const response = await api.post('/invoice/convertToSalesReturn', {
+      invoice_id: selectedOrder.invoice_id,
+      sales_return_code: deliveryCode,
+
+    });
+    message(response.data.msg || 'Converted to Sales Return successfully', 'success');
+    // setTimeout(() => {
+    //   window.location.reload();
+    // }, 400);
+  } catch (error) {
+    message(error.response?.data?.msg || 'Failed to convert to Sales Return', 'error');
+  }
+};
+
+
+const handleConvertToDelivryVerification = async () => {
+  if (!selectedOrder) {
+    message('Please select an invoice first', 'error');
+    return;
+  }
+  try {
+    const response = await api.post('/invoice/convertToDelivryVerification', {
+      invoice_id: selectedOrder.invoice_id,
+    });
+    message(response.data.msg || 'Converted to Sales Return successfully', 'success');
+    // setTimeout(() => {
+    //   window.location.reload();
+    // }, 400);
+  } catch (error) {
+    message(error.response?.data?.msg || 'Failed to convert to Sales Return', 'error');
+  }
+};
+
+  const [salesInfoOpen, setSalesInfoOpen] = useState(false);
+
+  const handleSalesInfo = () => {
+    if (!selectedOrder || !selectedOrder.sales_order_id) {
+      message('Please select an invoice with a sales order', 'error');
+      return;
+    }
+    setSalesInfoOpen(true);
+  };
+
   return (
     <div className="MainDiv">
       <div className="pt-xs-25">
@@ -208,9 +261,9 @@ const handleRepeatInvoice = async () => {
   <DropdownItem onClick={handleRepeatInvoice}>Repeat Invoice</DropdownItem>
   <DropdownItem>Recap</DropdownItem>
   <DropdownItem>Tracking Images</DropdownItem>
-  <DropdownItem>Convert to Sales Return</DropdownItem>
-  <DropdownItem>Delivery Verification</DropdownItem>
-  <DropdownItem>Sales Info</DropdownItem>
+  <DropdownItem onClick={handleConvertToSalesReturn}>Convert to Sales Return</DropdownItem>
+  <DropdownItem onClick={handleConvertToDelivryVerification}>Delivery Verification</DropdownItem>
+  <DropdownItem onClick={handleSalesInfo}>Sales Info</DropdownItem>
   <DropdownItem>Send E-Invoice</DropdownItem>
               </DropdownMenu>
             </Dropdown>
@@ -259,7 +312,11 @@ const handleRepeatInvoice = async () => {
           </tbody>
         </CommonTable>
       </div>
-     
+      <SalesInfoModal
+        isOpen={salesInfoOpen}
+        toggle={() => setSalesInfoOpen(false)}
+        salesOrderId={selectedOrder?.sales_order_id}
+      />
     </div>
   );
 };

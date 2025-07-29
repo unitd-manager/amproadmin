@@ -6,7 +6,7 @@ import api from '../../constants/api'; // Ensure this is correctly set
 
 const CataloguePrintWithCostPdf = ({ catalogueId, printOption }) => {
   const [products, setProducts] = useState([]);
-  const baseURL = 'https://amproadmin.zaitunsoftsolutions.com'; // Replace if needed
+  const baseURL = 'https://amproadmin.zaitunsoftsolutions.com'; // Moved here for scope
 
   CataloguePrintWithCostPdf.propTypes = {
     catalogueId: PropTypes.number.isRequired,
@@ -29,25 +29,25 @@ const CataloguePrintWithCostPdf = ({ catalogueId, printOption }) => {
   }, [catalogueId]);
 
   // Convert image URL to base64
- const loadImageToBase64 = (url) => {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = 'Anonymous'; // important for CORS
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      resolve(canvas.toDataURL('image/png'));
-    };
-    img.onerror = () => {
-      console.error('Image load failed (workaround)');
-      resolve(null);
-    };
-    img.src = url;
-  });
-};
+  const loadImageToBase64 = (url) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous'; // important for CORS
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = () => {
+        console.error('Image load failed (workaround)');
+        resolve(null);
+      };
+      img.src = url;
+    });
+  };
 
 
   // Generate PDF
@@ -56,17 +56,20 @@ const CataloguePrintWithCostPdf = ({ catalogueId, printOption }) => {
 
     const productContent = await Promise.all(
       products.map(async (item) => {
-        const imageUrl = item.file_name ? `${baseURL}/storage/uploads/${item.file_name}` : null;
+        // Use the backend proxy to fetch images and avoid CORS issues
+        const imageUrl = item.file_name
+          ? `https://amproadmin.zaitunsoftsolutions.com:2002/image-proxy?url=${encodeURIComponent(`${baseURL}/storage/uploads/${item.file_name}`)}`
+          : null;
         const imageBase64 = imageUrl ? await loadImageToBase64(imageUrl) : null;
 
         const priceDetails = [];
 
-        if (['Print With Price', 'Print With Retail Price', 'Print With Stock'].includes(printOption)) {
-          priceDetails.push({ text: `RPrice : $${(item.retail_price || 0).toFixed(2)}`, style: 'priceText' });
+        if (["Print With Price", "Print With Retail Price", "Print With Stock"].includes(printOption)) {
+          priceDetails.push({ text: `RPrice : $${typeof item.rprice === 'number' ? item.rprice.toFixed(2) : Number(item.rprice) ? Number(item.rprice).toFixed(2) : '0.00'}`, style: 'priceText' });
         }
-        if (['Print With Price', 'Print With Stock'].includes(printOption)) {
-          priceDetails.push({ text: `CPrice : $${(item.carton_price || 0).toFixed(2)}`, style: 'priceText' });
-          priceDetails.push({ text: `WPrice : $${(item.wholesale_price || 0).toFixed(2)}`, style: 'priceText' });
+        if (["Print With Price", "Print With Stock"].includes(printOption)) {
+          priceDetails.push({ text: `CPrice : $${typeof item.cprice === 'number' ? item.cprice.toFixed(2) : Number(item.cprice) ? Number(item.cprice).toFixed(2) : '0.00'}`, style: 'priceText' });
+          priceDetails.push({ text: `WPrice : $${typeof item.wprice === 'number' ? item.wprice.toFixed(2) : Number(item.wprice) ? Number(item.wprice).toFixed(2) : '0.00'}`, style: 'priceText' });
         }
         if (printOption === 'Print With Stock') {
           priceDetails.push({ text: `Stock : ${item.stock || 'N/A'}`, style: 'priceText' });
@@ -81,8 +84,9 @@ const CataloguePrintWithCostPdf = ({ catalogueId, printOption }) => {
               columns: [
                 {
                   width: 'auto',
-                  image: imageBase64 || '',
-                  fit: [80, 80],
+                  ...(imageBase64
+                    ? { image: imageBase64, fit: [80, 80] }
+                    : { text: 'No Image', color: 'gray', italics: true, fontSize: 8 }),
                   alignment: 'center',
                 },
                 {
@@ -141,7 +145,9 @@ const CataloguePrintWithCostPdf = ({ catalogueId, printOption }) => {
       },
     };
 
-    pdfMake.createPdf(docDefinition).open(); // You can also use .download('filename.pdf')
+
+    pdfMake.vfs = pdfFonts.pdfMake.vfs;
+    pdfMake.createPdf(docDefinition, null, null, pdfFonts.pdfMake.vfs).open();
   };
 
   // Trigger PDF generation once products are loaded

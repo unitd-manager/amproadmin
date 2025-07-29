@@ -1,273 +1,3 @@
-// import React, { useState, useEffect,useContext } from 'react';
-// import { Row, Col, Form, FormGroup, Label, Input, Button } from 'reactstrap';
-// import { ToastContainer } from 'react-toastify';
-// import { useNavigate, useParams } from 'react-router-dom';
-// import moment from 'moment';
-// import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
-// import ComponentCard from '../../components/ComponentCard';
-// import api from '../../constants/api';
-// import creationdatetime from '../../constants/creationdatetime';
-// import message from '../../components/Message';
-// import AppContext from '../../context/AppContext';
-
-
-// const PurchaseOrderDetails = () => {
-//   //All state variables
-//   const [supplier, setSupplier] = useState();
-//   const [purchaseForms, setPurchaseForms] = useState({
-//     supplier_id: '',
-//     company_name: '',
-//   });
-
-//   //Navigation and Parameters
-//   const { id } = useParams();
-//   const navigate = useNavigate();
-//   // Gettind data from Job By Id
-//   const editPurchaseById = () => {
-//     api
-//       .get('/purchaseorder/getSupplier')
-//       .then((res) => {
-//         setSupplier(res.data.data);
-//       })
-//       .catch(() => {});
-//   };
-//   //PurchaseOrder data in PurchaseOrderDetails
-//   const handleInputs = (e) => {
-//     setPurchaseForms({ ...purchaseForms, [e.target.name]: e.target.value });
-//   };
-//   const { loggedInuser } = useContext(AppContext);
-//    //inserting data of Purchase Order
-//    const insertPurchaseOrder = (code) => { 
-//     purchaseForms.purchase_order_date = moment();
-//     purchaseForms.creation_date = creationdatetime;
-//     purchaseForms.created_by = loggedInuser.first_name;
-
-//     purchaseForms.po_code=code;
-//     if (purchaseForms.supplier_id !== '') {
-//       api
-//         .post('/purchaseorder/insertPurchaseOrder', purchaseForms)
-//         .then((res) => {
-//           const insertedDataId = res.data.data.insertId;
-//           message('Purchase Order inserted successfully.', 'success');
-//           setTimeout(() => {
-//             navigate(`/PurchaseOrderEdit/${insertedDataId}`);
-//           }, 500);
-//         })
-//         .catch(() => {
-//           message('Unable to edit record.', 'error');
-//         });
-//     } else {
-//       message('Please fill all required fields.', 'warning');
-//     }
-//   };
-
-//   const generateCode = () => {
-//     api
-//       .post('/commonApi/getCodeValues', { type: 'purchaseOrder' })
-//       .then((res) => {
-//         insertPurchaseOrder(res.data.data);
-//       })
-//       .catch(() => {
-//         insertPurchaseOrder('');
-//       });
-//   };
-
-//   useEffect(() => {
-//     editPurchaseById();
-//   }, [id]);
-//   return (
-//     <div>
-//       <BreadCrumbs />
-//       <Row>
-//         <ToastContainer></ToastContainer>
-//         <Col md="6">
-//           <ComponentCard title="Key Details">
-//             <Form>
-//               <FormGroup>
-//                 <Row>
-//                   <Label>supplier Name </Label>
-//                   <Input
-//                     type="select"
-//                     name="supplier_id"
-//                     onChange={(e) => {
-//                       handleInputs(e);
-//                     }}
-//                   >
-//                     <option value="" selected>
-//                       Please Select
-//                     </option>
-//                     {supplier &&
-//                       supplier.map((ele) => {
-//                         return (
-//                           <option key={ele.supplier_id} value={ele.supplier_id}>
-//                             {ele.company_name}
-//                           </option>
-//                         );
-//                       })}
-//                   </Input>
-//                 </Row>
-
-//                 <FormGroup>
-//                   <Row>
-//                     <div className="pt-3 mt-3 d-flex align-items-center gap-2">
-//                       <Button
-//                         color="primary"
-//                         type="button"
-//                         className="btn mr-2 shadow-none"
-//                         onClick={() => {
-//                           generateCode();
-//                         }}
-//                       >
-//                         Save & Continue
-//                       </Button>
-//                       <Button
-//                         onClick={() => {
-//                           navigate('/PurchaseOrder');
-//                         }}
-//                         type="button"
-//                         className="btn btn-dark shadow-none"
-//                       >
-//                        Go to List
-//                       </Button>
-//                     </div>
-//                   </Row>
-//                 </FormGroup>
-//               </FormGroup>
-//             </Form>
-//           </ComponentCard>
-//         </Col>
-//       </Row>
-//     </div>
-//   );
-// };
-// export default PurchaseOrderDetails;
-
-
-// import React, { useState, useEffect } from 'react';
-// import { Row, Col, Form, FormGroup, Label, Input, Button } from 'reactstrap';
-// import { ToastContainer } from 'react-toastify';
-// import { useNavigate, useParams } from 'react-router-dom';
-// import moment from 'moment';
-// import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
-// import ComponentCard from '../../components/ComponentCard';
-// import api from '../../constants/api';
-// import message from '../../components/Message';
-
-// const PurchaseOrderDetails = () => {
-//   //All state variables
-//   const [supplier, setSupplier] = useState();
-//   const [purchaseForms, setPurchaseForms] = useState({
-//     supplier_id: '',
-//     company_name: '',
-//   });
-
-//   //Navigation and Parameters
-//   const { id } = useParams();
-//   const navigate = useNavigate();
-//   // Gettind data from Job By Id
-//   const editPurchaseById = () => {
-//     api
-//       .get('/purchaseorder/getSupplier')
-//       .then((res) => {
-//         setSupplier(res.data.data);
-//       })
-//       .catch(() => {});
-//   };
-//   //PurchaseOrder data in PurchaseOrderDetails
-//   const handleInputs = (e) => {
-//     setPurchaseForms({ ...purchaseForms, [e.target.name]: e.target.value });
-//   };
-//   //inserting data of Purchase Order
-//   const insertPurchaseOrder = () => {
-//     purchaseForms.purchase_order_date = moment();
-
-//     if (purchaseForms.supplier_id !== '') {
-//       api
-//         .post('/purchaseorder/insertPurchaseOrder', purchaseForms)
-//         .then((res) => {
-//           const insertedDataId = res.data.data.insertId;
-//           message('Purchase Order inserted successfully.', 'success');
-//           setTimeout(() => {
-//             navigate(`/PurchaseOrderEdit/${insertedDataId}`);
-//           }, 300);
-//         })
-//         .catch(() => {
-//           message('Unable to edit record.', 'error');
-//         });
-//     } else {
-//       message('Please fill all required fields.', 'warning');
-//     }
-//   };
-//   useEffect(() => {
-//     editPurchaseById();
-//   }, [id]);
-//   return (
-//     <div>
-//       <BreadCrumbs />
-//       <Row>
-//         <ToastContainer></ToastContainer>
-//         <Col md="6">
-//           <ComponentCard title="Key Details">
-//             <Form>
-//               <FormGroup>
-//                 <Row>
-//                   <Label>supplier Name </Label>
-//                   <Input
-//                     type="select"
-//                     name="supplier_id"
-//                     onChange={(e) => {
-//                       handleInputs(e);
-//                     }}
-//                   >
-//                     <option value="" selected>
-//                       Please Select
-//                     </option>
-//                     {supplier &&
-//                       supplier.map((ele) => {
-//                         return (
-//                           <option key={ele.supplier_id} value={ele.supplier_id}>
-//                             {ele.company_name}
-//                           </option>
-//                         );
-//                       })}
-//                   </Input>
-//                 </Row>
-
-//                 <FormGroup>
-//                   <Row>
-//                     <div className="pt-3 mt-3 d-flex align-items-center gap-2">
-//                       <Button
-//                         color="primary"
-//                         type="button"
-//                         className="btn mr-2 shadow-none"
-//                         onClick={() => {
-//                           insertPurchaseOrder();
-//                         }}
-//                       >
-//                         Save & Continue
-//                       </Button>
-//                       <Button
-//                         onClick={() => {
-//                           navigate('/PurchaseOrderEdit');
-//                         }}
-//                         type="button"
-//                         className="btn btn-dark shadow-none"
-//                       >
-//                        Go to List
-//                       </Button>
-//                     </div>
-//                   </Row>
-//                 </FormGroup>
-//               </FormGroup>
-//             </Form>
-//           </ComponentCard>
-//         </Col>
-//       </Row>
-//     </div>
-//   );
-// };
-// export default PurchaseOrderDetails;
-
 /*eslint-disable*/
 import React, { useState, useEffect } from "react";
 import {
@@ -311,7 +41,13 @@ const PurchaseOrderPage = () => {
      req_delivery_date: "",
      postal_code: "",
      sub_total:"",
-     net_total:""
+     net_total:"",
+     tax_percent:"",
+     tax_amount:"",
+     invoice_date:"",
+     invoice_no:"",
+     delivery_date:"",
+     do_no:""
    });
   const [currency, setCurrency] = useState({
      currency_code: "",
@@ -396,25 +132,31 @@ const PurchaseOrderPage = () => {
   const handleSubmit = async () => {
     if(currency.currency_rate !==''){
       formData.sub_total=rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2);
-      formData.net_total=rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2);
+      formData.tax_amount=parseFloat(sub_total *0.09.toFixed(2));
+    
+      formData.net_total=(
+        Number(rows.reduce((sum, row) => sum + row.total_price, 0)) +
+        Number((rows.reduce((sum, row) => sum + row.total_price, 0) * 0.09).toFixed(2))
+      ).toFixed(2);
+      
     api
-    .post('/purchaseorder/insertPurchaseOrder', formData)
+    .post('/purchaseorder/insertGoodsReceipt', formData)
     .then((res) => {
       const insertedDataId = res.data.data.insertId;
-      currency.purchase_order_id=insertedDataId;
+      currency.goods_receipt_id=insertedDataId;
       api
-      .post('/currency/insertCurrency', currency) 
+      .post('/currency/insertGoodsCurrency', currency) 
       .then(() => {})
       rows?.forEach((el)=>{
        
-        el.purchase_order_id=insertedDataId;
+        el.goods_receipt_id=insertedDataId;
         api
-      .post('/purchaseorder/insertPoProducts', el) 
+      .post('/purchaseorder/insertGrProduct', el) 
       .then(() => {
         console.log(insertedDataId,'insertedDataId');})})
       message('enquiry inserted successfully.', 'success');
       setTimeout(() => {
-        navigate(`/PurchaseorderEdit/${insertedDataId}`);
+        navigate(`/GoodsReceivedEdit/${insertedDataId}`);
       }, 300);
     })
     .catch(() => {
@@ -664,17 +406,69 @@ const PurchaseOrderPage = () => {
             />
           </FormGroup>
         </Col>
-        <Col md="6">
-          <FormGroup>
-            <label>Request Delivery Date</label>
-            <Input
-              type="date"
-              name="req_delivery_date"
-              value={formData.req_delivery_date}
-              onChange={handleChange}
-            />
-          </FormGroup>
-        </Col>
+         <Col md="6">
+                  <FormGroup>
+                    <label>Delivery Date</label>
+                    <Input
+                      type="date"
+                      name="delivery_date"
+                      value={formData.delivery_date}
+                      onChange={handleChange}
+                    />
+                  </FormGroup>
+                </Col>
+                <Col md="6">
+                  <FormGroup>
+                    <label>Invoice Date</label>
+                    <Input
+                      type="date"
+                      placeholder=""
+                      name="invoice_date"
+                      value={formData.invoice_date}
+                      onChange={handleChange}
+                      
+                    />
+                  </FormGroup>
+                </Col>
+                <Col md="6">
+                  <FormGroup>
+                    <label>Invoice No</label>
+                   
+                    <Input
+                      type="text"
+                      placeholder="invoice_no"
+                      name="invoice_no"
+                      value={formData.invoice_no}
+                      onChange={handleChange}
+                    
+                    />
+                      
+                   
+                  </FormGroup>
+                </Col>
+                <Col md="6">
+                  <FormGroup>
+                    <label>Delivery Date</label>
+                    <Input
+                      type="date"
+                      name="delivery_date"
+                      placeholder="delivery_date"
+                      value={formData.delivery_date}
+                      onChange={handleChange}
+                    />
+                  </FormGroup>
+                </Col>
+                <Col md="6">
+                  <FormGroup>
+                    <label> Delivery No</label>
+                    <Input
+                      type="text"
+                      name="do_no"
+                      value={formData.do_no}
+                      onChange={handleChange}
+                    />
+                  </FormGroup>
+                </Col>
       </Row>
      
     </Form>

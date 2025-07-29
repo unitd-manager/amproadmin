@@ -1,273 +1,3 @@
-// import React, { useState, useEffect,useContext } from 'react';
-// import { Row, Col, Form, FormGroup, Label, Input, Button } from 'reactstrap';
-// import { ToastContainer } from 'react-toastify';
-// import { useNavigate, useParams } from 'react-router-dom';
-// import moment from 'moment';
-// import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
-// import ComponentCard from '../../components/ComponentCard';
-// import api from '../../constants/api';
-// import creationdatetime from '../../constants/creationdatetime';
-// import message from '../../components/Message';
-// import AppContext from '../../context/AppContext';
-
-
-// const PurchaseOrderDetails = () => {
-//   //All state variables
-//   const [supplier, setSupplier] = useState();
-//   const [purchaseForms, setPurchaseForms] = useState({
-//     supplier_id: '',
-//     company_name: '',
-//   });
-
-//   //Navigation and Parameters
-//   const { id } = useParams();
-//   const navigate = useNavigate();
-//   // Gettind data from Job By Id
-//   const editPurchaseById = () => {
-//     api
-//       .get('/purchaseorder/getSupplier')
-//       .then((res) => {
-//         setSupplier(res.data.data);
-//       })
-//       .catch(() => {});
-//   };
-//   //PurchaseOrder data in PurchaseOrderDetails
-//   const handleInputs = (e) => {
-//     setPurchaseForms({ ...purchaseForms, [e.target.name]: e.target.value });
-//   };
-//   const { loggedInuser } = useContext(AppContext);
-//    //inserting data of Purchase Order
-//    const insertPurchaseOrder = (code) => { 
-//     purchaseForms.purchase_order_date = moment();
-//     purchaseForms.creation_date = creationdatetime;
-//     purchaseForms.created_by = loggedInuser.first_name;
-
-//     purchaseForms.po_code=code;
-//     if (purchaseForms.supplier_id !== '') {
-//       api
-//         .post('/purchaseorder/insertPurchaseOrder', purchaseForms)
-//         .then((res) => {
-//           const insertedDataId = res.data.data.insertId;
-//           message('Purchase Order inserted successfully.', 'success');
-//           setTimeout(() => {
-//             navigate(`/PurchaseOrderEdit/${insertedDataId}`);
-//           }, 500);
-//         })
-//         .catch(() => {
-//           message('Unable to edit record.', 'error');
-//         });
-//     } else {
-//       message('Please fill all required fields.', 'warning');
-//     }
-//   };
-
-//   const generateCode = () => {
-//     api
-//       .post('/commonApi/getCodeValues', { type: 'purchaseOrder' })
-//       .then((res) => {
-//         insertPurchaseOrder(res.data.data);
-//       })
-//       .catch(() => {
-//         insertPurchaseOrder('');
-//       });
-//   };
-
-//   useEffect(() => {
-//     editPurchaseById();
-//   }, [id]);
-//   return (
-//     <div>
-//       <BreadCrumbs />
-//       <Row>
-//         <ToastContainer></ToastContainer>
-//         <Col md="6">
-//           <ComponentCard title="Key Details">
-//             <Form>
-//               <FormGroup>
-//                 <Row>
-//                   <Label>supplier Name </Label>
-//                   <Input
-//                     type="select"
-//                     name="supplier_id"
-//                     onChange={(e) => {
-//                       handleInputs(e);
-//                     }}
-//                   >
-//                     <option value="" selected>
-//                       Please Select
-//                     </option>
-//                     {supplier &&
-//                       supplier.map((ele) => {
-//                         return (
-//                           <option key={ele.supplier_id} value={ele.supplier_id}>
-//                             {ele.company_name}
-//                           </option>
-//                         );
-//                       })}
-//                   </Input>
-//                 </Row>
-
-//                 <FormGroup>
-//                   <Row>
-//                     <div className="pt-3 mt-3 d-flex align-items-center gap-2">
-//                       <Button
-//                         color="primary"
-//                         type="button"
-//                         className="btn mr-2 shadow-none"
-//                         onClick={() => {
-//                           generateCode();
-//                         }}
-//                       >
-//                         Save & Continue
-//                       </Button>
-//                       <Button
-//                         onClick={() => {
-//                           navigate('/PurchaseOrder');
-//                         }}
-//                         type="button"
-//                         className="btn btn-dark shadow-none"
-//                       >
-//                        Go to List
-//                       </Button>
-//                     </div>
-//                   </Row>
-//                 </FormGroup>
-//               </FormGroup>
-//             </Form>
-//           </ComponentCard>
-//         </Col>
-//       </Row>
-//     </div>
-//   );
-// };
-// export default PurchaseOrderDetails;
-
-
-// import React, { useState, useEffect } from 'react';
-// import { Row, Col, Form, FormGroup, Label, Input, Button } from 'reactstrap';
-// import { ToastContainer } from 'react-toastify';
-// import { useNavigate, useParams } from 'react-router-dom';
-// import moment from 'moment';
-// import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
-// import ComponentCard from '../../components/ComponentCard';
-// import api from '../../constants/api';
-// import message from '../../components/Message';
-
-// const PurchaseOrderDetails = () => {
-//   //All state variables
-//   const [supplier, setSupplier] = useState();
-//   const [purchaseForms, setPurchaseForms] = useState({
-//     supplier_id: '',
-//     company_name: '',
-//   });
-
-//   //Navigation and Parameters
-//   const { id } = useParams();
-//   const navigate = useNavigate();
-//   // Gettind data from Job By Id
-//   const editPurchaseById = () => {
-//     api
-//       .get('/purchaseorder/getSupplier')
-//       .then((res) => {
-//         setSupplier(res.data.data);
-//       })
-//       .catch(() => {});
-//   };
-//   //PurchaseOrder data in PurchaseOrderDetails
-//   const handleInputs = (e) => {
-//     setPurchaseForms({ ...purchaseForms, [e.target.name]: e.target.value });
-//   };
-//   //inserting data of Purchase Order
-//   const insertPurchaseOrder = () => {
-//     purchaseForms.purchase_order_date = moment();
-
-//     if (purchaseForms.supplier_id !== '') {
-//       api
-//         .post('/purchaseorder/insertPurchaseOrder', purchaseForms)
-//         .then((res) => {
-//           const insertedDataId = res.data.data.insertId;
-//           message('Purchase Order inserted successfully.', 'success');
-//           setTimeout(() => {
-//             navigate(`/PurchaseOrderEdit/${insertedDataId}`);
-//           }, 300);
-//         })
-//         .catch(() => {
-//           message('Unable to edit record.', 'error');
-//         });
-//     } else {
-//       message('Please fill all required fields.', 'warning');
-//     }
-//   };
-//   useEffect(() => {
-//     editPurchaseById();
-//   }, [id]);
-//   return (
-//     <div>
-//       <BreadCrumbs />
-//       <Row>
-//         <ToastContainer></ToastContainer>
-//         <Col md="6">
-//           <ComponentCard title="Key Details">
-//             <Form>
-//               <FormGroup>
-//                 <Row>
-//                   <Label>supplier Name </Label>
-//                   <Input
-//                     type="select"
-//                     name="supplier_id"
-//                     onChange={(e) => {
-//                       handleInputs(e);
-//                     }}
-//                   >
-//                     <option value="" selected>
-//                       Please Select
-//                     </option>
-//                     {supplier &&
-//                       supplier.map((ele) => {
-//                         return (
-//                           <option key={ele.supplier_id} value={ele.supplier_id}>
-//                             {ele.company_name}
-//                           </option>
-//                         );
-//                       })}
-//                   </Input>
-//                 </Row>
-
-//                 <FormGroup>
-//                   <Row>
-//                     <div className="pt-3 mt-3 d-flex align-items-center gap-2">
-//                       <Button
-//                         color="primary"
-//                         type="button"
-//                         className="btn mr-2 shadow-none"
-//                         onClick={() => {
-//                           insertPurchaseOrder();
-//                         }}
-//                       >
-//                         Save & Continue
-//                       </Button>
-//                       <Button
-//                         onClick={() => {
-//                           navigate('/PurchaseOrderEdit');
-//                         }}
-//                         type="button"
-//                         className="btn btn-dark shadow-none"
-//                       >
-//                        Go to List
-//                       </Button>
-//                     </div>
-//                   </Row>
-//                 </FormGroup>
-//               </FormGroup>
-//             </Form>
-//           </ComponentCard>
-//         </Col>
-//       </Row>
-//     </div>
-//   );
-// };
-// export default PurchaseOrderDetails;
-
 /*eslint-disable*/
 import React, { useState, useEffect } from "react";
 import {
@@ -286,54 +16,61 @@ import {
   Button,
 } from "reactstrap";
 import classnames from "classnames";
+import { useParams } from "react-router-dom";
 import Select from "react-select";
-import { useNavigate } from "react-router-dom";
 import message from '../../components/Message';
 import { FaTrashAlt, FaPlusCircle } from "react-icons/fa";
 import api from "../../constants/api";
 
 const PurchaseOrderPage = () => {
+  const { id } = useParams();
   const [activeTab, setActiveTab] = useState("1");
   const [supplierData, setSupplierData] = useState({});
   const [products, setProducts] = useState([]);
   const [tableData, setTableData] = useState([]);
- const [formData, setFormData] = useState({
-     tran_no: "",
-     tran_date: "",
-     supplier_code: "",
-     supplier_id: "",
-     contact_person: "",
-     contact_address1: "",
-     contact_address2: "",
-     contact_address3: "",
-     country: "",
-     remarks: "",
-     req_delivery_date: "",
-     postal_code: "",
-     sub_total:"",
-     net_total:""
-   });
-  const [currency, setCurrency] = useState({
-     currency_code: "",
-     currency_rate: "",
-     currency_name: "",
-   });
-   const [supplierOptions, setSupplierOptions] = useState([]);
-   const [rows, setRows] = useState([
-     {
-       product_code: "",
-       product_name: "",
-       carton_qty: 0,
-       loose_qty: 0,
-       carton_price: 0,
-       qty: 0,
-       price: 0,
-       total: 0,
-       discount: 0,
-       total_price: 0,
-     },
-   ]);
- 
+  const [formData, setFormData] = useState({
+    tran_no: "",
+    tran_date: "",
+    supplier_code: "",
+    supplier_id: "",
+    contact_person: "",
+    contact_address1: "",
+    contact_address2: "",
+    contact_address3: "",
+    country: "",
+    remarks: "",
+    req_delivery_date: "",
+    postal_code: "",
+    sub_total:"",
+    net_total:"",
+     tax_percent:"",
+      tax_amount:"",
+      invoice_date:"",
+      invoice_no:"",
+      delivery_date:"",
+      do_no:""
+  });
+ const [currency, setCurrency] = useState({
+    currency_code: "",
+    currency_rate: "",
+    currency_name: "",
+  });
+  const [supplierOptions, setSupplierOptions] = useState([]);
+  const [rows, setRows] = useState([
+    {
+      product_code: "",
+      product_name: "",
+      carton_qty: 0,
+      loose_qty: 0,
+      carton_price: 0,
+      qty: 0,
+      price: 0,
+      total: 0,
+      discount: 0,
+      total_price: 0,
+    },
+  ]);
+
   useEffect(() => {
     // Fetch supplier form data
     api.get("/api/supplier-info").then((response) => {
@@ -351,16 +88,42 @@ const PurchaseOrderPage = () => {
     });
     api.get("/product/getProducts").then((response) => {
       setProducts(response.data.data);
+      console.log('productselects',response.data.data)
     });
+    
+    // Fetch table data
+    api.post("/purchaseorder/getcsproductLineItemById",{goods_return_id:id}).then((response) => { 
+      setRows(response.data.data);
+      setTableData(response.data.data);
+    });
+
+    // Fetch supplier options for dropdown
+    api.post("/purchaseorder/getGoodsReturnById",{goods_return_id:id}).then((response) => {
+      setFormData(response.data.data);
+    });
+  
+    api.post("/currency/getCuerrencyByGoodsReturnId",{goods_return_id:id}).then((response) => {
+      setCurrency(response.data.data[0]);
+    });
+
   }, []);
 
-  const navigate = useNavigate();
   const toggleTab = (tab) => {
     if (activeTab !== tab) {
       setActiveTab(tab);
     }
   };
+// Function to calculate total for a row
+const calculateRowTotal = (row) => {
+  const total = row.carton_qty * row.carton_price + row.loose_qty * row.price;
+  const total_price = total - (total * (row.discount / 100));
+  return { ...row, total, total_price };
+};
 
+// Update totals on initial render and when rows change
+useEffect(() => {
+  setRows((prevRows) => prevRows.map(calculateRowTotal));
+}, []);
   const handleCurrencyChange = (e) => {
     const { name, value } = e.target;
     setCurrency((prev) => ({
@@ -394,36 +157,36 @@ const PurchaseOrderPage = () => {
     };
   // Handle form submit (example API call structure)
   const handleSubmit = async () => {
-    if(currency.currency_rate !==''){
-      formData.sub_total=rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2);
-      formData.net_total=rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2);
+    formData.sub_total=rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2);
+    formData.tax_amount=parseFloat(sub_total *0.09.toFixed(2));
+    
+    formData.net_total=(
+      Number(rows.reduce((sum, row) => sum + row.total_price, 0)) +
+      Number((rows.reduce((sum, row) => sum + row.total_price, 0) * 0.09).toFixed(2))
+    ).toFixed(2);
     api
-    .post('/purchaseorder/insertPurchaseOrder', formData)
-    .then((res) => {
-      const insertedDataId = res.data.data.insertId;
-      currency.purchase_order_id=insertedDataId;
+    .post('/purchaseorder/editGoodsReturn', formData)
+    .then(() => {
       api
-      .post('/currency/insertCurrency', currency) 
+      .post('/currency/editGoodsCurrency', currency) 
       .then(() => {})
+      
       rows?.forEach((el)=>{
        
-        el.purchase_order_id=insertedDataId;
         api
-      .post('/purchaseorder/insertPoProducts', el) 
+      .post('/purchaseorder/editGoodsReturnProduct', el) 
       .then(() => {
-        console.log(insertedDataId,'insertedDataId');})})
-      message('enquiry inserted successfully.', 'success');
+        message('Record edited successfully.', 'success'); })})
+     
       setTimeout(() => {
-        navigate(`/PurchaseorderEdit/${insertedDataId}`);
+        // navigate(`/EnquiryEdit/${insertedDataId}`);
       }, 300);
     })
     .catch(() => {
       message('Network connection error.', 'error');
     });
-  }else{
-    message('Please enter currency rate.', 'error');
-  }
   };
+
   const handleRowChange = (index, field, value) => {
     const updatedRows = [...rows];
     updatedRows[index][field] = value;
@@ -454,7 +217,7 @@ const PurchaseOrderPage = () => {
       const looseTotal = updatedRows[index].loose_qty * (updatedRows[index].carton_price / 12);
       const Total = updatedRows[index].qty * updatedRows[index].price;
       const grossTotal = cartonTotal + looseTotal + Total;
-      const finalTotal = grossTotal - updatedRows[index].discount;
+      const finalTotal = grossTotal - (updatedRows[index].discount ||0);
   
       updatedRows[index].qty = updatedRows[index].carton_qty + updatedRows[index].loose_qty;
       updatedRows[index].total = parseFloat(grossTotal.toFixed(2));
@@ -491,7 +254,7 @@ const PurchaseOrderPage = () => {
   };
   return (
     <Container className="mt-4">
-      <h2>Add/Edit Purchase Order</h2>
+      <h2>Add/Edit Goods Return</h2>
       <Row>
       <Col md="6">
           <FormGroup>
@@ -666,11 +429,63 @@ const PurchaseOrderPage = () => {
         </Col>
         <Col md="6">
           <FormGroup>
-            <label>Request Delivery Date</label>
+            <label>Delivery Date</label>
             <Input
               type="date"
-              name="req_delivery_date"
-              value={formData.req_delivery_date}
+              name="delivery_date"
+              value={formData.delivery_date}
+              onChange={handleChange}
+            />
+          </FormGroup>
+        </Col>
+        <Col md="6">
+          <FormGroup>
+            <label>Invoice Date</label>
+            <Input
+              type="date"
+              placeholder=""
+              name="invoice_date"
+              value={formData.invoice_date}
+              onChange={handleChange}
+              
+            />
+          </FormGroup>
+        </Col>
+        <Col md="6">
+          <FormGroup>
+            <label>Invoice No</label>
+           
+            <Input
+              type="text"
+              placeholder="invoice_no"
+              name="invoice_no"
+              value={formData.invoice_no}
+              onChange={handleChange}
+            
+            />
+              
+           
+          </FormGroup>
+        </Col>
+        <Col md="6">
+          <FormGroup>
+            <label>Delivery Date</label>
+            <Input
+              type="date"
+              name="delivery_date"
+              placeholder="delivery_date"
+              value={formData.delivery_date}
+              onChange={handleChange}
+            />
+          </FormGroup>
+        </Col>
+        <Col md="6">
+          <FormGroup>
+            <label> Delivery No</label>
+            <Input
+              type="text"
+              name="do_no"
+              value={formData.do_no}
               onChange={handleChange}
             />
           </FormGroup>
@@ -687,13 +502,13 @@ const PurchaseOrderPage = () => {
                         <Col md="6">
                           <FormGroup>
                             <label>Currency Code</label>
-                            <Input type="text" placeholder="Enter Currency code" name="currency_code" value={currency.currency_code || ""}  onChange={handleCurrencyChange}/>
+                            <Input type="text" placeholder="Enter Currency code" name="currency_code" value={currency?.currency_code || ""}  onChange={handleCurrencyChange}/>
                           </FormGroup>
                         </Col>
                         <Col md="6">
                           <FormGroup>
                             <label>Currency Name</label>
-                            <Input type="text" name="currency_name" value={currency.currency_name || ""} onChange={handleCurrencyChange}>
+                            <Input type="text" name="currency_name" value={currency?.currency_name || ""} onChange={handleCurrencyChange}>
                             
                             </Input>
                           </FormGroup>
@@ -701,7 +516,7 @@ const PurchaseOrderPage = () => {
                         <Col md="6">
                           <FormGroup>
                             <label>Currency Rate</label>
-                            <Input type="text" placeholder="Enter Currency Rate " name="currency_rate" value={currency.currency_rate || ""} 
+                            <Input type="text" placeholder="Enter Currency Rate " name="currency_rate" value={currency?.currency_rate || ""} 
                             onChange={handleCurrencyChange}/>
                           </FormGroup>
                         </Col>
@@ -861,7 +676,12 @@ const PurchaseOrderPage = () => {
         </Col>
         <Col><strong>Total Products:</strong> {rows.length}</Col>
         <Col><strong>Sub Total (USD):</strong> ${rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2)}</Col>
-        <Col><strong>Net Total (USD):</strong> ${rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2)}</Col>
+        <Col><strong>Tax (USD):</strong> ${ (rows.reduce((sum, row) => sum + row.total_price, 0) * 0.09).toFixed(2) }</Col>
+        <Col><strong>Net Total (USD):</strong> $
+  {(
+    Number(rows.reduce((sum, row) => sum + row.total_price, 0)) +
+    Number((rows.reduce((sum, row) => sum + row.total_price, 0) * 0.09).toFixed(2))
+  ).toFixed(2)}</Col>
       </Row>
 
       <div className="mt-4">
