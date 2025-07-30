@@ -52,9 +52,9 @@ export default function ContactPriceButton({
         itemId: '', // contact_id for customer
         unit: '',
         qty: '',
-        price: '', // wholesale_price
-        mrp: '', // carton_price
-        gst: '', // fixed_price (renamed from gst for clarity in UI/backend mapping)
+        wholesale_price: '', // wholesale_price
+        carton_price: '', // carton_price
+        fixed_price: '', // fixed_price (renamed from gst for clarity in UI/backend mapping)
         description: '',
         code: '', // customer_code
         title: '', // company_name
@@ -142,75 +142,87 @@ export default function ContactPriceButton({
         message('Supplier Product Data Not Found', 'info');
       });
   };
-
+  
   const EditCSProductLineItems = async () => {
-    const processItems = addMoreItem.filter(item => item.itemId && item.price);
+  console.log('🚀 Starting EditCSProductLineItems...');
 
-    if (processItems.length === 0) {
-      message('No valid items to submit. Please select a customer and enter a wholesale price.', 'warning');
-      return;
-    }
+  const validItems = addMoreItem.filter(
+    (item) =>
+      item.itemId &&
+      !Number.isNaN(Number(item.wholesale_price)) &&
+      Number(item.wholesale_price) > 0
+  );
 
-    const promises = processItems.map(async (item) => {
-      console.log(`EditCSProductLineItems: Processing item (id: ${item.id}, itemId: ${item.itemId}, cs_product_id: ${item.cs_product_id})`);
+  if (validItems.length === 0) {
+    message('No valid items to submit.', 'warning');
+    return;
+  }
+
+  await Promise.all(
+    validItems.map(async (item) => {
       try {
-        if (item.cs_product_id) {
-          console.log(`EditCSProductLineItems: Updating existing record for cs_product_id: ${item.cs_product_id}`);
-          await api.post('/product/updateCSProductCustomerPrice', {
-            cs_product_id: item.cs_product_id,
-            wholesale_price: item.price,
-            carton_price: item.mrp,
-            fixed_price: item.gst || 0,
-            modified_by: loggedInuser.first_name,
-            modification_date: creationdatetime,
-          });
-          message(`Customer product price for ${item.title} updated successfully`, 'success');
+        console.log(`🔍 Checking: ${item.itemId}, ProductId=${ProductId}`);
+        const checkRes = await api.post('/product/checkCSProductByCustomerAndProduct', {
+          contact_id: item.itemId,
+          product_id: ProductId,
+        });
+
+        const exists = checkRes?.data?.exists;
+        const csProductId = checkRes?.data?.data?.cs_product_id;
+        let customerSupplierPriceId = checkRes?.data?.data?.customer_supplier_price_id;
+
+        if (exists && csProductId) {
+          const confirmUpdate = window.confirm(
+            `Price for "${item.title}" already exists. Do you want to update it?`
+          );
+          if (confirmUpdate) {
+            await api.post('/product/updateCSProductCustomerPrice', {
+              cs_product_id: csProductId,
+              wholesale_price: Number(item.wholesale_price),
+              carton_price: Number(item.carton_price) || 0,
+              fixed_price: Number(item.fixed_price) || 0,
+              modified_by: loggedInuser.first_name,
+              modification_date: creationdatetime,
+            });
+            message(`✔️ Updated price for ${item.title}`, 'success');
+          } else {
+            message(`⚠️ Skipped updating ${item.title}`, 'warning');
+          }
         } else {
-          console.log(`EditCSProductLineItems: Creating new record for itemId: ${item.itemId}`);
-          const checkCustomerPriceRes = await api.post('/product/checkCustomerSupplierPrice', {
+          // Step 1: Insert customer_supplier_price
+          const addCustomerRes = await api.post('/product/addCustomerSupplierPrice', {
             contact_id: item.itemId,
             customer: 1,
             supplier: 0,
-          });
-
-          const { exists, customer_supplier_price_id: customerSupplierPriceId } = checkCustomerPriceRes.data;
-          let currentCustomerSupplierPriceId = customerSupplierPriceId;
-
-          if (!exists) {
-            console.log(`EditCSProductLineItems: Customer_supplier_price entry not found, creating new one for contact_id: ${item.itemId}`);
-            const insertPriceRes = await api.post('/product/addCustomerSupplierPrice', {
-              contact_id: item.itemId,
-              customer: 1,
-              supplier: 0,
-              created_by: loggedInuser.first_name,
-              creation_date: creationdatetime,
-            });
-            currentCustomerSupplierPriceId = insertPriceRes.data.customer_supplier_price_id;
-            console.log(`EditCSProductLineItems: New customer_supplier_price_id created: ${currentCustomerSupplierPriceId}`);
-          }
-
-          console.log(`EditCSProductLineItems: Adding new cs_product history for customer_supplier_price_id: ${currentCustomerSupplierPriceId}`);
-          await api.post('/product/addCSProductHistory', {
-            customer_supplier_price_id: currentCustomerSupplierPriceId,
-            product_id: ProductId,
-            contact_id: item.itemId,
-            wholesale_price: item.price,
-            carton_price: item.mrp,
-            fixed_price: item.gst || 0,
             created_by: loggedInuser.first_name,
             creation_date: creationdatetime,
           });
-          message(`New price history added for customer ${item.title}`, 'success');
+
+          customerSupplierPriceId = addCustomerRes.data.customer_supplier_price_id;
+
+          // Step 2: Insert cs_product
+          await api.post('/product/addCSProductHistory', {
+            customer_supplier_price_id: customerSupplierPriceId,
+            product_id: ProductId,
+            contact_id: item.itemId,
+            wholesale_price: Number(item.wholesale_price),
+            carton_price: Number(item.carton_price) || 0,
+            fixed_price: Number(item.fixed_price) || 0,
+            created_by: loggedInuser.first_name,
+            creation_date: creationdatetime,
+          });
+
+          message(`🆕 Added new price for ${item.title}`, 'success');
         }
       } catch (error) {
-        console.error(`Error processing customer price item for ${item.title}:`, error);
-        message(`Failed to process customer price for ${item.title}`, 'error');
+        console.error(`❌ Error with ${item.title}:`, error);
+        message(`❌ Failed for ${item.title}`, 'error');
       }
-    });
+    })
+  );
 
-    await Promise.all(promises);
-    console.log('EditCSProductLineItems: All items processed.');
-  };
+  console.log('✅ All items processed.');
+};
 
 
   const updateState = (index, property, e) => {
@@ -244,10 +256,10 @@ export default function ContactPriceButton({
       updatedItem.itemId = selectedOption.contact_id;
       updatedItem.code = selectedOption.customer_code;
       updatedItem.title = selectedOption.company_name;
-      updatedItem.price = '';
-      updatedItem.mrp = '';
-      updatedItem.gst = '';
-      updatedItem.cs_product_id = null;
+      updatedItem.wholesale_price = '';
+      updatedItem.carton_price = '';
+      updatedItem.fixed_price = '';
+      updatedItem.cs_product_id = 'null';
 
       console.log('onchangeItem: Basic info updated. Checking for existing price...');
 
@@ -264,9 +276,9 @@ export default function ContactPriceButton({
           const existingData = response.data.cs_product_data;
           message(`Price for ${selectedOption.company_name} and product ${productDetails?.title} already exists. It will be updated.`, 'warning');
 
-          updatedItem.price = existingData.wholesale_price || '';
-          updatedItem.mrp = existingData.carton_price || '';
-          updatedItem.gst = existingData.fixed_price || '';
+          updatedItem.wholesale_price = existingData.wholesale_price || '';
+          updatedItem.carton_price = existingData.carton_price || '';
+          updatedItem.fixed_price = existingData.fixed_price || '';
           updatedItem.cs_product_id = existingData.cs_product_id;
           console.log('onchangeItem: Existing price found. Pre-filling data. cs_product_id:', updatedItem.cs_product_id);
         } else {
@@ -416,9 +428,9 @@ export default function ContactPriceButton({
                       <td>
                         <Input value={showCode && el.itemId ? (selectedCompany ? selectedCompany.company_name : el.title) : (selectedCompany ? selectedCompany.company_name : '')} readOnly />
                       </td>
-                      <td><Input value={el.price} onChange={(e) => updateState(index, 'price', e)} /></td>
-                      <td><Input value={el.mrp} onChange={(e) => updateState(index, 'mrp', e)} /></td>
-                      <td><Input value={el.gst} onChange={(e) => updateState(index, 'gst', e)} /></td>
+                      <td><Input value={el.wholesale_price} onChange={(e) => updateState(index, 'wholesale_price', e)} /></td>
+                      <td><Input value={el.carton_price} onChange={(e) => updateState(index, 'carton_price', e)} /></td>
+                    <td><Input value={el.fixed_price} onChange={(e) => updateState(index, 'fixed_price', e)} /></td>
                       <td><Button color="link" onClick={() => ClearValue(el)}>Clear</Button></td>
                     </tr>
                   );

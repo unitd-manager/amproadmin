@@ -1,7 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { Form, Input, Label, Button, FormGroup, Col } from 'reactstrap'; // Added Row, Col
+import { ToastContainer } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import message from '../../components/Message';
 import api from '../../constants/api';
+import creationdatetime from '../../constants/creationdatetime';
+import AppContext from '../../context/AppContext';
 
 const PaymodeInsert = () => {
   const [paymode, setPaymode] = useState({
@@ -12,11 +16,22 @@ const PaymodeInsert = () => {
     need_reference_image: false,
     need_reference_no: false,
     is_active: true,
-    location: [], // Initialize as an empty array for multi-select
+    location_ids: [], // Initialize as an empty array for multi-select
   });
+  const handleLocationChange = (locationId) => {
+  let updatedLocations = paymode.location_ids || [];
+  if (updatedLocations.includes(locationId)) {
+    updatedLocations = updatedLocations.filter((filterid) => filterid !== locationId);
+  } else {
+    updatedLocations.push(locationId);
+  }
+  setPaymode({ ...paymode, location_ids: updatedLocations });
+};
+
   const [paymentTypes, setPaymentTypes] = useState([]);
   const [locations, setLocations] = useState([]); // State for locations
   const navigate = useNavigate();
+  const { loggedInuser } = useContext(AppContext);
 
   useEffect(() => {
     // Fetch payment types
@@ -40,46 +55,64 @@ const PaymodeInsert = () => {
   };
 
   // Handle multi-select for locations
-  const handleLocationChange = (e) => {
-    const selectedOptions = Array.from(e.target.selectedOptions).map(
-      (option) => option.value
-    );
-    setPaymode((prevPaymode) => ({
-      ...prevPaymode,
-      location: selectedOptions, // Store as an array of selected locations
-    }));
-  };
+//   const handleLocationChange = (e) => {
+//   const selectedOptions = Array.from(e.target.selectedOptions).map(
+//     (option) => option.value
+//   );
+//   setPaymode((prevPaymode) => ({
+//     ...prevPaymode,
+//     location: selectedOptions, // Store as an array of selected locations
+//   }));
+// };
 
  const saveData = () => {
-  api
-    .post('/paymode/insertPaymode', paymode)
-    .then((response) => {
-      console.log('API response:', response.data); // <-- Log this
+  if (
+    paymode.paymode_name?.trim() &&
+    paymode.payment_type?.trim()
+  ) {
+    const dataToInsert = {
+      ...paymode,
+      created_by: loggedInuser.first_name,
+      creation_date: creationdatetime,
+      location: (paymode.location_ids || [])
+  .map((id) => {
+    const match = locations.find((loc) => loc.valuelist_id === id);
+    return match?.value;
+  })
+  .filter(Boolean)
+  .join(','),
+    };
 
-      const insertedId = response?.data?.data?.id;
-      if (!insertedId) {
-        console.error('Inserted ID missing in response');
-        return;
-      }
+    delete dataToInsert.location_ids; // 👈 Optional: clean unused field
 
-      alert('Paymode inserted successfully');
-      navigate(`/PaymodeEditCL/${insertedId}`);
-    })
-    .catch((error) => {
-      console.error('Error inserting paymode:', error);
-      alert('Failed to insert Paymode');
-    });
+    api.post('/paymode/insertPaymode', dataToInsert)
+      .then((res) => {
+        const insertedId = res.data.data.insertId;
+        message('Paymode inserted successfully.', 'success');
+        setTimeout(() => {
+          navigate(`/PaymodeEditCL/${insertedId}?tab=1`);
+        }, 300);
+      })
+      .catch((err) => {
+        console.error('Insert error:', err);
+        message('Unable to insert paymode.', 'error');
+      });
+  } else {
+    message('Please fill all required fields.', 'warning');
+  }
 };
 
 
   return (
+    
     <div className="container">
+            <ToastContainer></ToastContainer>
       <h4>Add New Paymode</h4>
       <Form>
         {/* Paymode Name */}
         <FormGroup row>
           <Label sm={4} for="paymode_name">
-            Paymode Name
+            Paymode Name<span className='required'> *</span>
           </Label>
           <Col sm={8}>
             <Input
@@ -127,7 +160,7 @@ const PaymodeInsert = () => {
         {/* Payment Type */}
         <FormGroup row>
           <Label sm={4} for="payment_type">
-            Payment Type
+            Payment Type<span className='required'> *</span>
           </Label>
           <Col sm={8}>
             <Input
@@ -369,7 +402,7 @@ const PaymodeInsert = () => {
         </FormGroup>
 
         {/* Location Dropdown */}
-       <FormGroup row>
+       {/* <FormGroup row>
           <Label sm={4} for="location">
             Location
           </Label>
@@ -389,7 +422,37 @@ const PaymodeInsert = () => {
               ))}
             </Input>
           </Col>
-        </FormGroup>
+        </FormGroup> */}
+
+        {/* Location Multi-select */}
+<FormGroup row>
+  <Label sm={4}>Location</Label>
+  <Col sm={8}>
+    <div style={{ border: '1px solid #ccc', padding: '10px', maxHeight: '150px', overflowY: 'auto' }}>
+      <div>
+  <Input
+    type="checkbox"
+    checked={paymode.location_ids?.length === 0}
+    onChange={() => setPaymode({ ...paymode, location_ids: [] })}
+  />{' '}
+  Unselect All
+</div>
+
+      {locations.map((loc) => (
+  <div key={loc.valuelist_id}>
+    <Input
+      type="checkbox"
+      checked={paymode.location_ids?.includes(loc.valuelist_id) || false}
+      onChange={() => handleLocationChange(loc.valuelist_id)} // ✅ Use the clean function
+    />
+    {loc.value}
+  </div>
+))}
+
+    </div>
+  </Col>
+</FormGroup>
+
 
         {/* Save Button - You can place it within a Col if you want it aligned */}
         <FormGroup row className="mt-4">
