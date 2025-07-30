@@ -26,6 +26,7 @@ import EcommerceSetting from '../../components/ProductTable/EcommerceSetting';
 import Stock from '../../components/ProductTable/Stock';
 import ProductStockMovement from '../../components/Product/ProductStockMovement';
 import ContactPriceButton from '../../components/ProductTable/ContactPriceButton';
+import BarCode from '../../components/ProductTable/BarCode';
 
 const ProductUpdate = () => {
   // All state variables
@@ -62,14 +63,16 @@ const ProductUpdate = () => {
   };
 
   const tabs = [
-    { id: '1', name: 'Product Description'},
+     { id: '1', name: 'Product Description'},
+    
     { id: '2', name: 'Image'},
-    { id: '3', name: 'Product UOM'},
-    { id: '4', name: 'Product Variation'},
-    { id: '5', name: 'Analysis'},
-     { id: '6', name: 'Ecommerce Settings'},
-     { id: '7', name: 'Contact Price'},
-     { id: '8', name: 'Product Stock Movement'},
+    { id: '3', name: 'BarCode'},
+    { id: '4', name: 'Product UOM'},
+    { id: '5', name: 'Product Variation'},
+    { id: '6', name: 'Analysis'},
+     { id: '7', name: 'Ecommerce Settings'},
+     { id: '8', name: 'Contact Price'},
+     { id: '9', name: 'Product Stock Movement'},
 
   ];
   const toggle = (tab) => {
@@ -289,19 +292,32 @@ const getSupplier = () => {
             />
             <ViewFileComponentV2 moduleId={id} roomName="Product" recordType="RelatedPicture" />
         </TabPane>
-        <TabPane tabId="3">
+         <TabPane tabId="3">
+        <Col md="3" className="addNew">
+                    <Button color="primary" className="shadow-none" onClick={toggletype.bind(null)}>
+                        Add New
+                    </Button>
+                  </Col>
+              <BarCode
+                ProductId={id}
+                addPurchaseOrderModal={modal}
+                setAddPurchaseOrderModal={setModal}
+                productDetails={productDetails}
+              ></BarCode> 
+        </TabPane> 
+        <TabPane tabId="4">
     <ProductUOM productId={id} />
 </TabPane>
-<TabPane tabId="4">
+<TabPane tabId="5">
  
     <ProductVariation productId={id} />
 </TabPane>
 
-        <TabPane tabId="5">
+        <TabPane tabId="6">
  
     <ProductAnalysis productId={id} />
 </TabPane>
- <TabPane tabId="6">
+ <TabPane tabId="7">
  
      <Col md="3" className="addNew">
                     <Button color="primary" className="shadow-none" onClick={toggletype.bind(null)}>
@@ -316,7 +332,7 @@ const getSupplier = () => {
               ></EcommerceSetting> 
         </TabPane>
         
-       <TabPane tabId="7">
+       <TabPane tabId="8">
         <Col md="3" className="addNew">
                     <Button color="primary" className="shadow-none" onClick={toggletype.bind(null)}>
                         Add New
@@ -330,7 +346,7 @@ const getSupplier = () => {
               ></ContactPriceButton> 
         </TabPane> 
 
-        <TabPane tabId="8">
+        <TabPane tabId="9">
           
             <ProductStockMovement productId={id} />
         </TabPane>

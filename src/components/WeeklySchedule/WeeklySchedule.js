@@ -96,7 +96,7 @@ const WeeklySchedule = () => {
       // Refresh the companies list
       const response = await weeklyScheduleApi.getCompanies();
       setCompanies(response.data.data);
-      
+       
       // Clear the updates
       setCompanyUpdates({});
     } catch (error) {

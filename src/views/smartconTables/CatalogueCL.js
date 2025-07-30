@@ -16,7 +16,9 @@ import message from '../../components/Message';
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CataloguePrintWithCostPdf from '../../components/PDF/CataloguePrintWithCostPdf';
-
+import CataloguePrintWithRetailPrice from '../../components/PDF/CataloguePrintWithRetailPricePdf';
+import CataloguePrintWithoutPrice from '../../components/PDF/CataloguePrintWithoutPricePdf';
+import CataloguePrintWithStock from '../../components/PDF/CataloguePrintWithStockPdf';
 
 const CatalogueManagement = () => {
   const [catalogue, setCatalogue] = useState([]);
@@ -28,10 +30,14 @@ const CatalogueManagement = () => {
   const [selectedPrintOption, setSelectedPrintOption] = useState('');
   const [selectedCatalogueId, setSelectedCatalogueId] = useState(null);
   const [showPdf, setShowPdf] = useState(false);
-
   const [showStatusFilter, setShowStatusFilter] = useState(false);
 
-  const togglePrintModal = () => setPrintModalOpen((prev) => !prev);
+  const togglePrintModal = () => {
+    setPrintModalOpen((prev) => !prev);
+    if (printModalOpen) {
+      setSelectedPrintOption('');
+    }
+  };
 
   const toggleShowStatusFilter = () => {
     setShowStatusFilter((prev) => !prev);
@@ -62,20 +68,17 @@ const CatalogueManagement = () => {
 
   useEffect(() => {
     let filtered = catalogue;
-
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter((item) =>
         item.catalogue_name?.toLowerCase().includes(term)
       );
     }
-
     if (statusFilter !== '') {
       filtered = filtered.filter(
         (item) => item.status?.toString() === statusFilter
       );
     }
-
     setFilteredCatalogue(filtered);
   }, [searchTerm, statusFilter, catalogue]);
 
@@ -112,8 +115,9 @@ const CatalogueManagement = () => {
       message('Please select a catalogue by checkbox', 'info');
       return;
     }
-    setShowPdf(true);
-      };
+    setPrintModalOpen(false); // Close the modal
+    setShowPdf(true);         // Show the PDF
+  };
 
   const columns = [
     {
@@ -136,7 +140,7 @@ const CatalogueManagement = () => {
       selector: (row) => row.catalogue_name,
       sortable: true,
       cell: (row) => (
-        <Link to={`/ProductCLDetails/${row.catalogue_id}`}>{row.catalogue_name}</Link>
+        <Link to={`/CatalogueCLEdit/${row.catalogue_id}`}>{row.catalogue_name}</Link>
       ),
       width: '250px',
     },
@@ -164,7 +168,7 @@ const CatalogueManagement = () => {
           >
             <Icon.Trash2 size={14} />
           </Button>
-          <Link to={`/CatalogueEdit/${row.catalogue_id}`}>
+          <Link to={`/CatalogueAddProduct/${row.catalogue_id}`}>
             <Icon.Edit2 size={14} />
           </Link>
         </>
@@ -230,7 +234,7 @@ const CatalogueManagement = () => {
         <ModalBody>
           {['Print With Price', 'Print With Retail Price', 'Print Without Price', 'Print With Stock'].map(
             (option) => (
-              <FormGroup check className="mb-2" key={option.catalogue_id}>
+              <FormGroup check className="mb-2" key={option}>
                 <Input
                   type="radio"
                   name="printOption"
@@ -239,7 +243,6 @@ const CatalogueManagement = () => {
                   checked={selectedPrintOption === option}
                   onChange={(e) => setSelectedPrintOption(e.target.value)}
                 />
-                {' '}
                 <Label check for={option}>{option}</Label>
               </FormGroup>
             )
@@ -249,11 +252,57 @@ const CatalogueManagement = () => {
           </Button>
         </ModalBody>
       </Modal>
-      {showPdf && (
+
+      {/* Conditionally Render PDFs Based on Selected Option */}
+      {showPdf && selectedPrintOption === 'Print With Price' && (
         <CataloguePrintWithCostPdf
           catalogueId={selectedCatalogueId}
           printOption={selectedPrintOption}
-          onClose={() => setShowPdf(false)}
+          onClose={() => {
+            setShowPdf(false);
+            setSelectedPrintOption('');
+            setSelectedCatalogueId(null);
+            getCatalogue();
+          }}
+        />
+      )}
+
+      {showPdf && selectedPrintOption === 'Print With Retail Price' && (
+        <CataloguePrintWithRetailPrice
+          catalogueId={selectedCatalogueId}
+          printOption={selectedPrintOption}
+          onClose={() => {
+            setShowPdf(false);
+            setSelectedPrintOption('');
+            setSelectedCatalogueId(null);
+            getCatalogue();
+          }}
+        />
+      )}
+
+      {showPdf && selectedPrintOption === 'Print Without Price' && (
+        <CataloguePrintWithoutPrice
+          catalogueId={selectedCatalogueId}
+          printOption={selectedPrintOption}
+          onClose={() => {
+            setShowPdf(false);
+            setSelectedPrintOption('');
+            setSelectedCatalogueId(null);
+            getCatalogue();
+          }}
+        />
+      )}
+
+      {showPdf && selectedPrintOption === 'Print With Stock' && (
+        <CataloguePrintWithStock
+          catalogueId={selectedCatalogueId}
+          printOption={selectedPrintOption}
+          onClose={() => {
+            setShowPdf(false);
+            setSelectedPrintOption('');
+            setSelectedCatalogueId(null);
+            getCatalogue();
+          }}
         />
       )}
     </div>
