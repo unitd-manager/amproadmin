@@ -22,7 +22,7 @@ const GoodsReturnList = () => {
   const [totalRecords, setTotalRecords] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
 const [selectedTranNos, setSelectedTranNos] = useState([]);
-
+const [supplierOptions, setSupplierOptions] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
@@ -51,9 +51,15 @@ const [selectedTranNos, setSelectedTranNos] = useState([]);
   };
 
   useEffect(() => {
+   
     fetchData();
   }, [currentPage]);
 
+  useEffect(() => {
+     api.get("/supplier/getSupplier").then((response) => {
+      setSupplierOptions(response.data.data);
+    });
+  }, []);
   const handleFilterChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
@@ -121,14 +127,30 @@ const handleRepeatGoodsReturn = async () => {
         <Col md={2}><Input type="date" name="from_date" value={filters.from_date} onChange={handleFilterChange} /></Col>
         <Col md={2}><Input type="date" name="to_date" value={filters.to_date} onChange={handleFilterChange} /></Col>
         <Col md={2}>
-          <Input type="select" name="status" value={filters.status} onChange={handleFilterChange}>
+          <Input type="select" name="status" placeholder="Status" value={filters.status} onChange={handleFilterChange}>
           <option></option>
             <option>Open</option>
             <option>Closed</option>
             <option>Cancelled</option>
           </Input>
         </Col>
-        <Col md={2}><Input name="supplier" placeholder="Select All Supplier" value={filters.supplier} onChange={handleFilterChange} /></Col>
+        <Col md={2}>
+        {/* <Input name="supplier" placeholder="Select All Supplier" value={filters.supplier} onChange={handleFilterChange} /> */}
+        <Input
+                     type="select"
+                     name="supplier_id"
+                     value={filters.supplier_id}
+                     onChange={handleFilterChange}
+                   >
+                     <option value="">Select Supplier</option>
+                     {supplierOptions.map((supplier, index) => (
+                       <option key={index} value={supplier.supplier_id}>
+                         {supplier.company_name}
+                       </option>
+                     ))}
+                   </Input>
+        </Col>
+        
         <Col md={2}><Input name="invoice_no" placeholder="Invoice No" value={filters.invoice_no} onChange={handleFilterChange} /></Col>
       </Row>
 

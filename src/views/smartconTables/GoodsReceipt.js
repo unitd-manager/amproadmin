@@ -23,6 +23,7 @@ const GoodsReturnList = () => {
   const [currentPage, setCurrentPage] = useState(1);
 const [selectedTranNos, setSelectedTranNos] = useState([]);
 
+const [supplierOptions, setSupplierOptions] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 const navigate =useNavigate();
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
@@ -47,6 +48,11 @@ const fetchData = async () => {
   }
 };
 
+  useEffect(() => {
+     api.get("/supplier/getSupplier").then((response) => {
+      setSupplierOptions(response.data.data);
+    });
+  }, []);
   useEffect(() => {
     fetchData();
   }, [currentPage]);
@@ -122,7 +128,22 @@ const handleRepeatGoodsReceipt = async () => {
             <option>Cancelled</option>
           </Input>
         </Col>
-        <Col md={2}><Input name="supplier" placeholder="Select All Supplier" value={filters.supplier} onChange={handleFilterChange} /></Col>
+        <Col md={2}>
+        {/* <Input name="supplier" placeholder="Select All Supplier" value={filters.supplier} onChange={handleFilterChange} /> */}
+         <Input
+                             type="select"
+                             name="supplier_id"
+                             value={filters.supplier_id}
+                             onChange={handleFilterChange}
+                           >
+                             <option value="">Select Supplier</option>
+                             {supplierOptions.map((supplier, index) => (
+                               <option key={index} value={supplier.supplier_id}>
+                                 {supplier.company_name}
+                               </option>
+                             ))}
+                           </Input>
+        </Col>
         <Col md={2}><Input name="invoice_no" placeholder="Invoice No" value={filters.invoice_no} onChange={handleFilterChange} /></Col>
       </Row>
 

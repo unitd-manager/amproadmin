@@ -108,16 +108,33 @@ const PurchaseOrderPage = () => {
     }));
     console.log(currency,'currency');
   };
+const handleChange = (e) => {
+  const { name, value } = e.target;
+
+  if (name === 'supplier_id') {
+    const selectedSupplier = supplierOptions.find(s => s.supplier_id === value);
+    setFormData((prevData) => ({
+      ...prevData,
+      supplier_id: value,
+      supplier_code: selectedSupplier ? selectedSupplier.supplier_code : ''
+    }));
+  } else {
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value
+    }));
+  }
+};
 
   // Handle input change
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    console.log(formData,'formdata');
-  };
+  // const handleChange = (e) => {
+  //   const { name, value } = e.target;
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     [name]: value,
+  //   }));
+  //   console.log(formData,'formdata');
+  // };
   const getColumnSum = (key) => {
     return rows.reduce((sum, row) => sum + (parseFloat(row[key]) || 0), 0);
   };
@@ -166,6 +183,8 @@ const PurchaseOrderPage = () => {
       message('Network connection error.', 'error');
     });
   }else{
+    
+    alert('Please enter currency Details.');
     message('Please enter currency rate.', 'error');
   }
   };
@@ -297,8 +316,8 @@ const PurchaseOrderPage = () => {
               placeholder="Enter supplier code"
               name="supplier_code"
               value={formData.supplier_code}
-              onChange={handleChange}
-              
+              //onChange={handleChange}
+               disabled
             />
           </FormGroup>
         </Col>
@@ -656,10 +675,10 @@ const PurchaseOrderPage = () => {
         <p>Total Products: {rows.length}</p>
         <p>Total Amount: ${rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2)}</p> */}
         <Button color="success" onClick={handleSubmit} >Save</Button>
-        <Button color="secondary" className="ms-2">
+        {/* <Button color="secondary" className="ms-2">
           Print
-        </Button>
-        <Button color="danger" className="ms-2">
+        </Button> */}
+        <Button color="danger" className="ms-2" onClick={() => navigate('/GoodsReceipt')}>
           Cancel
         </Button>
       </div>

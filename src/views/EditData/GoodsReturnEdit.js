@@ -16,7 +16,7 @@ import {
   Button,
 } from "reactstrap";
 import classnames from "classnames";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Select from "react-select";
 import message from '../../components/Message';
 import { FaTrashAlt, FaPlusCircle } from "react-icons/fa";
@@ -70,7 +70,7 @@ const PurchaseOrderPage = () => {
       total_price: 0,
     },
   ]);
-
+const navigate=useNavigate();
   useEffect(() => {
     // Fetch supplier form data
     api.get("/api/supplier-info").then((response) => {
@@ -132,7 +132,7 @@ useEffect(() => {
     }));
     console.log(currency,'currency');
   };
-
+  console.log(rows,'rows');
   // Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -230,7 +230,14 @@ useEffect(() => {
   
   console.log('rows',rows);
   console.log('formdata',formData);
-  const deleteRow = (index) => {
+  const deleteRow = (index,id) => {
+    if(id){
+      api.post('/purchaseorder/deleteGoodsReturnProduct',{goods_return_product_id:id}).then(() => {
+        message('Record deleted successfully.', 'success');
+      }).catch(() => {
+        message('Network connection error.', 'error');
+      });
+    }
     if (rows.length > 1) {
       setRows(rows.filter((_, i) => i !== index));
     }
@@ -315,8 +322,8 @@ useEffect(() => {
               placeholder="Enter supplier code"
               name="supplier_code"
               value={formData?.supplier_code}
-              onChange={handleChange}
-              
+              //onChange={handleChange}
+              disabled
             />
           </FormGroup>
         </Col>
@@ -516,20 +523,34 @@ useEffect(() => {
         </thead>
         <tbody>
           {rows.map((row, index) => (
-            <tr key={index}>
+            <tr key={row.goods_return_product_id}>
               <td>{index + 1}</td>
-              <td>
-              <Select
-                options={products.map((p) => ({
-                  value: p.product_id,
-                  label: `${p.product_code} - ${p.product_name}`,
-                  ...p,
-                }))}
-                value={products.find((p) => p.product_id === row.product_id) || null} 
-                onChange={(selectedOption) => handleProductSelect(index, selectedOption)}
-                placeholder="Select Product"
-              />
-              </td>
+             
+              <td style={{ width: '200px' }}>
+  <div style={{ width: '100%' }}>
+    <Select
+      styles={{
+        container: (base) => ({
+          ...base,
+          width: '100%',
+        }),
+      }}
+      options={products.map((p) => ({
+        value: p.product_id,
+        label: `${p.product_code} - ${p.product_name}`,
+        ...p,
+      }))}
+      value={
+        products.find(
+          (p) => parseFloat(p.product_id) === parseFloat(row.product_id)
+        ) || null
+      }
+      onChange={(selectedOption) => handleProductSelect(index, selectedOption)}
+      placeholder="Select Product"
+    />
+  </div>
+</td>
+
               <td>
                 <Input
                   type="text"
@@ -597,7 +618,7 @@ useEffect(() => {
               <td>
                 <FaTrashAlt
                   style={{ color: "red", cursor: "pointer", marginRight: "10px" }}
-                  onClick={() => deleteRow(index)}
+                  onClick={() => deleteRow(index,row.goods_return_product_id)}
                 />
                 <FaPlusCircle
                   style={{ color: "green", cursor: "pointer" }}
@@ -658,10 +679,10 @@ useEffect(() => {
         <p>Total Products: {rows.length}</p>
         <p>Total Amount: ${rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2)}</p> */}
         <Button color="success" onClick={handleSubmit} >Save</Button>
-        <Button color="secondary" className="ms-2">
+        {/* <Button color="secondary" className="ms-2">
           Print
-        </Button>
-        <Button color="danger" className="ms-2">
+        </Button> */}
+        <Button color="danger" className="ms-2" onClick={() => navigate('/GoodsReturn')}>
           Cancel
         </Button>
       </div>
