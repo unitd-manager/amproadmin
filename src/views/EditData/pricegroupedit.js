@@ -13,7 +13,7 @@ const PriceGroupEdit = () => {
 
   const fetchGroup = () => {
     api
-      .post('/pricegroup/getById', { id })
+      .post('/pricegroup/getPriceGroupById', { id })
       .then((res) => setGroupData(res.data.data[0]))
       .catch(() => message('Unable to fetch group', 'error'));
   };
@@ -31,7 +31,7 @@ const PriceGroupEdit = () => {
   };
 
   const handleSubmit = () => {
-    if (!groupData.group_name) {
+    if (!groupData.price_group_name) {
       message('Group name is required', 'warning');
       return;
     }
@@ -50,7 +50,7 @@ const PriceGroupEdit = () => {
       <h3>Edit Price Group</h3>
       <FormGroup>
         <Label>Group Name *</Label>
-        <Input name="group_name" onChange={handleChange} value={groupData.group_name || ''} />
+        <Input name="price_group_name" onChange={handleChange} value={groupData.price_group_name || ''} />
       </FormGroup>
       <FormGroup check>
         <Label check>

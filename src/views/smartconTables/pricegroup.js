@@ -39,7 +39,7 @@ const PriceGroupList = () => {
   return (
     <>
       <h3>Price Group Management</h3>
-      <Button color="primary" onClick={() => navigate('/PriceGroupAdd')}>
+      <Button color="primary" onClick={() => navigate('/pricegroupDetails')}>
         Add New(+)
       </Button>
       <Input
@@ -58,16 +58,16 @@ const PriceGroupList = () => {
         </thead>
         <tbody>
           {priceGroups
-            .filter((pg) => pg.group_name.toLowerCase().includes(search))
+            .filter((pg) => pg.price_group_name.toLowerCase().includes(search))
             .map((pg) => (
               <tr key={pg.id}>
                 <td>
                   <Button size="sm" color="warning" onClick={() => navigate(`/PriceGroupEdit/${pg.id}`)}>Edit</Button>{' '}
                   <Button size="sm" color="danger" onClick={() => deletePriceGroup(pg.id)}>Delete</Button>
                 </td>
-                <td>{pg.group_name}</td>
+                <td>{pg.price_group_name}</td>
                 <td>{pg.is_active ? 'Active' : 'Inactive'}</td>
-                <td>{pg.modified_on}</td>
+                <td>{pg.updated_at}</td>
               </tr>
             ))}
         </tbody>
