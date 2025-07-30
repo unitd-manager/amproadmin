@@ -109,7 +109,7 @@ const MemberTypeEdit = () => {
       .post('/membertype/editMemberType', payload)
       .then(() => {
         message('Member Type updated successfully', 'success');
-        // navigate('/MemberType'); // Uncomment if you want to redirect after update
+        navigate('/MemberType'); // Uncomment if you want to redirect after update
       })
       .catch((error) => {
         console.error('Error updating Member Type:', error); // Log the error object
