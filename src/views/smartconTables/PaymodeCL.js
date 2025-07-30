@@ -45,6 +45,19 @@ const Paymode = () => {
     setFilteredPaymodes(filtered);
     setCurrentPage(1);
   }, [searchTerm, statusFilter, paymodes]);
+const handleDelete = (id) => {
+  if (window.confirm('Are you sure you want to delete this paymode?')) {
+    api
+      .delete(`/paymode/delete/${id}`)
+      .then(() => {
+        // Refresh data after deletion
+        const updated = paymodes.filter((item) => item.paymode_id !== id);
+        setPaymodes(updated);
+        setFilteredPaymodes(updated);
+      })
+      .catch((err) => console.error('Delete error:', err));
+  }
+};
 
   // Pagination logic
   const indexOfLastRecord = currentPage * recordsPerPage;
@@ -108,12 +121,13 @@ const Paymode = () => {
             <tr key={item.paymode_id}>
               <td>
                 <Button
-                  color="danger"
-                  size="sm"
-                  onClick={() => navigate(`/PaymodeEditCL/${item.paymode_id}`)}
-                >
-                  🗑️
-                </Button>
+  color="danger"
+  size="sm"
+  onClick={() => handleDelete(item.paymode_id)}
+>
+  🗑️
+</Button>
+
               </td>
               <td>
                 <span
