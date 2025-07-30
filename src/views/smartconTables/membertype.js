@@ -19,7 +19,7 @@ const MemberType = () => {
   const [selectedId, setSelectedId] = useState(null);
   const [modal, setModal] = useState(false);
   const dataTableRef = useRef(null);
-
+console.log(setSelectedId);
   const getMemberTypes = async () => {
     setLoading(true);
     try {
@@ -46,18 +46,18 @@ const MemberType = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this Member Type?')) {
-      try {
-        await api.post('/membertype/delete', { id });
-        message('Member Type deleted successfully', 'success');
-        getMemberTypes();
-      } catch (error) {
-        message('Error deleting Member Type', 'error');
-        console.error('Delete error:', error);
-      }
-    }
-  };
+  // const handleDelete = async (id) => {
+  //   if (window.confirm('Are you sure you want to delete this Member Type?')) {
+  //     try {
+  //       await api.post('/membertype/delete', { id });
+  //       message('Member Type deleted successfully', 'success');
+  //       getMemberTypes();
+  //     } catch (error) {
+  //       message('Error deleting Member Type', 'error');
+  //       console.error('Delete error:', error);
+  //     }
+  //   }
+  // };
 
   const handleActivate = async () => {
     try {
@@ -159,20 +159,20 @@ const MemberType = () => {
         <tbody>
           {memberTypes && memberTypes.length > 0 ? (
             memberTypes.map((item) => (
-              <tr key={item.id}>
+              <tr key={item.member_type_id}>
                 <td>
                   <div className="d-flex gap-1">
-                    <Link to={`/MembertypeEdit/${item.id}`}>
+                    <Link to={`/MembertypeEdit/${item.member_type_id}`}>
                       <Button color="primary" className="shadow-none btn-sm">
                         <Icon.Edit size={16} />
                       </Button>
                     </Link>
-                    {item.is_active !== 1 ? (
+                    {/* {item.is_active !== 1 ? (
                       <Button
                         color="success"
                         className="shadow-none btn-sm"
                         onClick={() => {
-                          setSelectedId(item.id);
+                          setSelectedId(item.member_type_id);
                           setModal(true);
                         }}
                       >
@@ -182,11 +182,11 @@ const MemberType = () => {
                       <Button
                         color="danger"
                         className="shadow-none btn-sm"
-                        onClick={() => handleDelete(item.id)}
+                        onClick={() => handleDelete(item.member_type_id)}
                       >
                         <Icon.Trash2 size={16} />
                       </Button>
-                    )}
+                    )} */}
                   </div>
                 </td>
                 <td>{item.member_type_name || 'N/A'}</td>
