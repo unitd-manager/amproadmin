@@ -409,7 +409,7 @@ const PurchaseOrderPage = () => {
        
         el.purchase_order_id=insertedDataId;
         api
-      .post('/purchaseorder/insertPoProducts', el) 
+      .post('/purchaseorder/insertPoProduct', el) 
       .then(() => {
         console.log(insertedDataId,'insertedDataId');})})
       message('enquiry inserted successfully.', 'success');

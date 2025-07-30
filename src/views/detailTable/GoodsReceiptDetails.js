@@ -27,7 +27,8 @@ const PurchaseOrderPage = () => {
   const [supplierData, setSupplierData] = useState({});
   const [products, setProducts] = useState([]);
   const [tableData, setTableData] = useState([]);
- const [formData, setFormData] = useState({
+  const [billDiscount, setBillDiscount] = useState(0);
+  const [formData, setFormData] = useState({
      tran_no: "",
      tran_date: "",
      supplier_code: "",
@@ -69,7 +70,9 @@ const PurchaseOrderPage = () => {
        total_price: 0,
      },
    ]);
- 
+ console.log('bill discount'
+  , billDiscount
+ );
   useEffect(() => {
     // Fetch supplier form data
     api.get("/api/supplier-info").then((response) => {
@@ -132,7 +135,7 @@ const PurchaseOrderPage = () => {
   const handleSubmit = async () => {
     if(currency.currency_rate !==''){
       formData.sub_total=rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2);
-      formData.tax_amount=parseFloat(sub_total *0.09.toFixed(2));
+      formData.tax_amount=parseFloat(formData.sub_total *0.09.toFixed(2));
     
       formData.net_total=(
         Number(rows.reduce((sum, row) => sum + row.total_price, 0)) +
@@ -156,7 +159,7 @@ const PurchaseOrderPage = () => {
         console.log(insertedDataId,'insertedDataId');})})
       message('enquiry inserted successfully.', 'success');
       setTimeout(() => {
-        navigate(`/GoodsReceivedEdit/${insertedDataId}`);
+        navigate(`/GoodsReceiptEdit/${insertedDataId}`);
       }, 300);
     })
     .catch(() => {
@@ -233,7 +236,7 @@ const PurchaseOrderPage = () => {
   };
   return (
     <Container className="mt-4">
-      <h2>Add/Edit Purchase Order</h2>
+      <h2>Add/Edit Goods Receipt</h2>
       <Row>
       <Col md="6">
           <FormGroup>
@@ -406,17 +409,7 @@ const PurchaseOrderPage = () => {
             />
           </FormGroup>
         </Col>
-         <Col md="6">
-                  <FormGroup>
-                    <label>Delivery Date</label>
-                    <Input
-                      type="date"
-                      name="delivery_date"
-                      value={formData.delivery_date}
-                      onChange={handleChange}
-                    />
-                  </FormGroup>
-                </Col>
+         
                 <Col md="6">
                   <FormGroup>
                     <label>Invoice Date</label>

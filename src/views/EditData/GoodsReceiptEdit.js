@@ -279,7 +279,7 @@ const PurchaseOrderPage = () => {
     });
     
     // Fetch table data
-    api.post("/purchaseorder/getcsproductLineItemById",{goods_receipt_id:id}).then((response) => { 
+    api.post("/purchaseorder/getGrProductByGrId",{goods_receipt_id:id}).then((response) => { 
       setRows(response.data.data);
       setTableData(response.data.data);
     });
@@ -345,7 +345,7 @@ useEffect(() => {
   // Handle form submit (example API call structure)
   const handleSubmit = async () => {
     formData.sub_total=rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2);
-    formData.tax_amount=parseFloat(sub_total *0.09.toFixed(2));
+    formData.tax_amount=parseFloat(formData.sub_total *0.09.toFixed(2));
     
     formData.net_total=(
       Number(rows.reduce((sum, row) => sum + row.total_price, 0)) +
@@ -614,17 +614,7 @@ useEffect(() => {
             />
           </FormGroup>
         </Col>
-        <Col md="6">
-          <FormGroup>
-            <label>Delivery Date</label>
-            <Input
-              type="date"
-              name="delivery_date"
-              value={formData.delivery_date}
-              onChange={handleChange}
-            />
-          </FormGroup>
-        </Col>
+       
         <Col md="6">
           <FormGroup>
             <label>Invoice Date</label>
@@ -733,7 +723,7 @@ useEffect(() => {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, index) => (
+          {rows?.map((row, index) => (
             <tr key={index}>
               <td>{index + 1}</td>
               <td>
@@ -790,7 +780,7 @@ useEffect(() => {
                   onChange={(e) => handleRowChange(index, "price", parseFloat(e.target.value) || 0)}
                 />
               </td>
-              <td>{row.total?.toFixed(2)}</td>
+              <td>{Number(row.total)?.toFixed(2)}</td>
               <td>
                 <Input
                   type="number"

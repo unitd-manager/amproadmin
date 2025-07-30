@@ -1,10 +1,11 @@
+/*eslint-disable*/
 import React, { useState, useEffect } from 'react';
 import {
   Button, Input, Table, Row, Col, DropdownToggle, DropdownMenu,
   DropdownItem, ButtonDropdown
 } from 'reactstrap';
 import moment from 'moment';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../../constants/api';
 
 const GoodsReturnList = () => {
@@ -23,7 +24,7 @@ const GoodsReturnList = () => {
 const [selectedTranNos, setSelectedTranNos] = useState([]);
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
-
+const navigate =useNavigate();
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
 
 const fetchData = async () => {
@@ -64,10 +65,11 @@ const fetchData = async () => {
 
   const handleNewTransactionClick = () => {
     console.log('Main "New Transaction" button clicked');
+     navigate('/GoodsReceiptDetails'); // Example
     // e.g., navigate to /createGoodsReturn
   };
 
-const handleConvertToDebitNote = async () => {
+const handleConvertToPurchaseInvoice = async () => {
   if (selectedTranNos.length === 0) {
     alert('Please select at least one Goods Return to convert.');
     return;
@@ -85,7 +87,7 @@ const handleConvertToDebitNote = async () => {
   }
 };
 
-const handleRepeatGoodsReturn = async () => {
+const handleRepeatGoodsReceipt = async () => {
   if (selectedTranNos.length !== 1) {
     alert('Please select one Goods Return to repeat.');
     return;
@@ -127,8 +129,8 @@ const handleRepeatGoodsReturn = async () => {
       <Row className="mb-3">
         <Col md={10}>
           <Button color="primary" onClick={handleSearch}><i className="fa fa-search" /></Button>{' '}
-          <Button color="secondary"><i className="fa fa-print" /></Button>{' '}
-          <Button color="danger"><i className="fa fa-trash" /></Button>
+          {/* <Button color="secondary"><i className="fa fa-print" /></Button>{' '}
+          <Button color="danger"><i className="fa fa-trash" /></Button> */}
         </Col>
         <Col md={2} className="text-right">
           <ButtonDropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
@@ -136,10 +138,10 @@ const handleRepeatGoodsReturn = async () => {
               New Transaction
             </Button>
             <DropdownToggle caret color="primary" />
-            <DropdownMenu end>
-              <DropdownItem onClick={() => handleConvertToDebitNote}>Convert to Purchase Invoice</DropdownItem>
-              <DropdownItem onClick={() => handleRepeatGoodsReturn}>Repeat Goods Receipt </DropdownItem>
-            </DropdownMenu>
+            {/* <DropdownMenu end>
+              <DropdownItem onClick={() => handleConvertToPurchaseInvoice}>Convert to Purchase Invoice</DropdownItem>
+              <DropdownItem onClick={() => handleRepeatGoodsReceipt}>Repeat Goods Receipt </DropdownItem>
+            </DropdownMenu> */}
           </ButtonDropdown>
         </Col>
       </Row>

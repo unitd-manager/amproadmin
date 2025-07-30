@@ -1045,7 +1045,7 @@ useEffect(() => {
                   onChange={(e) => handleRowChange(index, "price", parseFloat(e.target.value) || 0)}
                 />
               </td>
-              <td>{row.total?.toFixed(2)}</td>
+              <td>{Number(row.total)?.toFixed(2)}</td>
               <td>
                 <Input
                   type="number"

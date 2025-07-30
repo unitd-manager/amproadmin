@@ -26,6 +26,7 @@ const PurchaseOrderPage = () => {
   const [activeTab, setActiveTab] = useState("1");
   const [supplierData, setSupplierData] = useState({});
   const [products, setProducts] = useState([]);
+  const [billDiscount, setBillDiscount] = useState(0);
   const [tableData, setTableData] = useState([]);
  const [formData, setFormData] = useState({
      tran_no: "",
@@ -69,7 +70,7 @@ const PurchaseOrderPage = () => {
        total_price: 0,
      },
    ]);
- 
+ console.log('billDiscount',billDiscount);
   useEffect(() => {
     // Fetch supplier form data
     api.get("/api/supplier-info").then((response) => {
@@ -132,7 +133,7 @@ const PurchaseOrderPage = () => {
   const handleSubmit = async () => {
     if(currency.currency_rate !==''){
       formData.sub_total=rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2);
-      formData.tax_amount=parseFloat(sub_total *0.09.toFixed(2));
+      formData.tax_amount=parseFloat(formData.sub_total *0.09.toFixed(2));
     
       formData.net_total=(
         Number(rows.reduce((sum, row) => sum + row.total_price, 0)) +
@@ -140,23 +141,23 @@ const PurchaseOrderPage = () => {
       ).toFixed(2);
       
     api
-    .post('/purchaseorder/insertGoodsReceipt', formData)
+    .post('/purchaseorder/insertGoodsReturn', formData)
     .then((res) => {
       const insertedDataId = res.data.data.insertId;
-      currency.purchase_order_id=insertedDataId;
+      currency.goods_return_id=insertedDataId;
       api
       .post('/currency/insertGoodsCurrency', currency) 
       .then(() => {})
       rows?.forEach((el)=>{
        
-        el.purchase_order_id=insertedDataId;
+        el.goods_return_id=insertedDataId;
         api
-      .post('/purchaseorder/insertCsProducts', el) 
+      .post('/purchaseorder/insertGoodsReturnProduct', el) 
       .then(() => {
         console.log(insertedDataId,'insertedDataId');})})
       message('enquiry inserted successfully.', 'success');
       setTimeout(() => {
-        navigate(`/GoodsReceivedEdit/${insertedDataId}`);
+        navigate(`/GoodsReturnEdit/${insertedDataId}`);
       }, 300);
     })
     .catch(() => {
@@ -233,7 +234,7 @@ const PurchaseOrderPage = () => {
   };
   return (
     <Container className="mt-4">
-      <h2>Add/Edit Purchase Order</h2>
+      <h2>Add/Edit Goods Return</h2>
       <Row>
       <Col md="6">
           <FormGroup>
@@ -406,17 +407,7 @@ const PurchaseOrderPage = () => {
             />
           </FormGroup>
         </Col>
-         <Col md="6">
-                  <FormGroup>
-                    <label>Delivery Date</label>
-                    <Input
-                      type="date"
-                      name="delivery_date"
-                      value={formData.delivery_date}
-                      onChange={handleChange}
-                    />
-                  </FormGroup>
-                </Col>
+        
                 <Col md="6">
                   <FormGroup>
                     <label>Invoice Date</label>
@@ -446,29 +437,8 @@ const PurchaseOrderPage = () => {
                    
                   </FormGroup>
                 </Col>
-                <Col md="6">
-                  <FormGroup>
-                    <label>Delivery Date</label>
-                    <Input
-                      type="date"
-                      name="delivery_date"
-                      placeholder="delivery_date"
-                      value={formData.delivery_date}
-                      onChange={handleChange}
-                    />
-                  </FormGroup>
-                </Col>
-                <Col md="6">
-                  <FormGroup>
-                    <label> Delivery No</label>
-                    <Input
-                      type="text"
-                      name="do_no"
-                      value={formData.do_no}
-                      onChange={handleChange}
-                    />
-                  </FormGroup>
-                </Col>
+                
+                
       </Row>
      
     </Form>
@@ -582,7 +552,7 @@ const PurchaseOrderPage = () => {
                   onChange={(e) => handleRowChange(index, "price", parseFloat(e.target.value) || 0)}
                 />
               </td>
-              <td>{row.total?.toFixed(2)}</td>
+              <td>{Number(row.total)?.toFixed(2)}</td>
               <td>
                 <Input
                   type="number"
