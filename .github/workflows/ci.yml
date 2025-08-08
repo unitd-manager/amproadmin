@@ -18,7 +18,9 @@ jobs:
           node-version: 16.18.0
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          rm -f package-lock.json
+          npm install
 
       # - name: Generate tests with HuggingFace API
       #   env:
