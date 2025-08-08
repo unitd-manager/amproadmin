@@ -261,6 +261,21 @@ const PurchaseOrderTable = Loadable(lazy(() => import('../views/smartconTables/P
 const SupportNewTable = Loadable(lazy(() => import('../views/smartconTables/SupportNew')));
 //product group
 
+const TransferOutTable = Loadable(lazy(() => import('../views/smartconTables/TransferOut')));
+const TransferOutDetails = Loadable(lazy(() => import('../views/detailTable/TransferOutDetails')));
+const TransferOutEdit = Loadable(lazy(() => import('../views/EditData/TransferOutEdit')));
+
+const SalesCreditTable = Loadable(lazy(() => import('../views/smartconTables/SalesCredit')));
+const DeliveryVerificationTable = Loadable(lazy(() => import('../views/smartconTables/DeliveryVerification')));
+
+const DeliveryVerificationDetail = Loadable(lazy(() => import('../views/detailTable/DeliveryVerificationDetail')));
+const SalesCreditDetails = Loadable(lazy(() => import('../views/detailTable/SalesCreditDetails')));
+
+const DeliveryVerificationEdit = Loadable(lazy(() => import('../views/EditData/DeliveryVerificationEdit')));
+const SalesCreditEdit = Loadable(lazy(() => import('../views/EditData/SalesCreditEdit')));
+
+
+
 const DepartmentCli = Loadable(lazy(() => import('../views/smartconTables/DepartmentCli')));
 const CategoryCli = Loadable(lazy(() => import('../views/smartconTables/CategoryCli')));
 const BrandCli = Loadable(lazy(() => import('../views/smartconTables/BrandCli')));
@@ -413,6 +428,34 @@ const Routernew = () => {
             name="SubCategoriesEdit"
             element={<SubCategoryCliEdit />}
           ></Route>
+          <Route
+            path="/TransferOutEdit/:id"
+            name="TransferOutEditdata"
+            element={<TransferOutEdit />}
+          ></Route>
+
+          <Route path="/TransferOutDetails" name="transferOutDetailsdata" element={<TransferOutDetails />}></Route>
+          <Route path="/TransferOut" name="supplierdata" element={<TransferOutTable />}></Route>
+
+          <Route path="/SalesCredit" name="supplierdata" element={<SalesCreditTable />}></Route>
+
+
+          <Route path="/DeliveryVerification" name="supplierdata" element={<DeliveryVerificationTable />}></Route>
+
+          <Route
+          path="/DeliveryVerificationEdit/:id"
+          name="DeliveryVerificationEditdata"
+          element={<DeliveryVerificationEdit />}
+        ></Route>
+        <Route
+          path="/SalesCreditEdit/:id"
+          name="SalesCreditEditdata"
+          element={<SalesCreditEdit />}
+        ></Route>
+
+        <Route path="/DeliveryVerificationDetail" name="DeliveryVerificationDetaildata" element={<DeliveryVerificationDetail />}></Route>
+
+        <Route path="/SalesCreditDetails" name="salesCreditDetaildata" element={<SalesCreditDetails />}></Route>
           
       {/* Table Edit's */}
        
