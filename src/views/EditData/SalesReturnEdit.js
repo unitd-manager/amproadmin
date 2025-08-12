@@ -70,7 +70,7 @@ const SalesOrderEdit = () => {
 
     // Get Line Item
   const getLineItem = () => {
-    api.post('/invoice/getQuoteLineItemsById', { invoice_id: id }).then((res) => {
+    api.post('/salesreturn/getQuoteLineItemsById', { sales_return_id: id }).then((res) => {
       setLineItem(res.data.data);
       //setAddLineItemModal(true);
     });
@@ -88,7 +88,7 @@ const SalesOrderEdit = () => {
       confirmButtonText: 'Yes, delete it!',
     }).then((result) => {
       if (result.isConfirmed) {
-        api.post('/invoice/deleteProjectQuote', { invoice_item_id: deleteID }).then(() => {
+        api.post('/salesreturn/deleteProjectQuote', { invoice_item_id: deleteID }).then(() => {
           Swal.fire('Deleted!', 'Your Line Items has been deleted.', 'success');
           window.location.reload();
         });
@@ -103,7 +103,7 @@ const handleInputs = (e) => {
 
 const getSettingById = () => {
   api
-    .post('/invoice/getSalesorderById', { invoice_id: id })
+    .post('/salesreturn/getSalesorderById', { sales_return_id: id })
     .then((res) => {
       setSettingDetails(res.data.data[0]);
     })
@@ -117,7 +117,7 @@ const editSettingData = () => {
       settingdetails.modified_by= loggedInuser.first_name;
     api
     
-      .post('/invoice/editSalesOrder', settingdetails)
+      .post('/salesreturn/editSalesOrder', settingdetails)
       .then(() => {
         message('Record editted successfully', 'success');
       })

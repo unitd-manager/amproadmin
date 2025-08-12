@@ -199,7 +199,7 @@ const Customer = () => {
               </td>
               <td>{index + 1}</td>
               <td>
-                <Link to={`/CustomerEdit/${element.company_id}`}>
+                <Link to={`/CustomerEdit/${element.company_id}`} data-testid="edit-button">
                   <Icon.Edit2 />
                 </Link>
               </td>
@@ -210,6 +210,7 @@ const Customer = () => {
                     className="shadow-none btn-sm"
                     onClick={() => handleActivateClick(element.company_id)}
                     style={{ padding: '0.25rem 0.5rem', lineHeight: 1 }}
+                    data-testid="activate-button"
                   >
                     <Icon.Check size={16} />
                   </Button>
@@ -219,6 +220,7 @@ const Customer = () => {
                     className="shadow-none btn-sm"
                     onClick={() => handleDeleteCustomer(element.company_id)}
                     style={{ padding: '0.25rem 0.5rem', lineHeight: 1 }}
+                    data-testid="delete-button"
                   >
                     <Icon.Trash2 size={16} />
                   </Button>
