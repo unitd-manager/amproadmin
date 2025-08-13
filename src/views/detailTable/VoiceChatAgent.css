@@ -1,0 +1,42 @@
+.voice-agent-container {
+  width: 100%;
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.voice-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.chat-box {
+  background: #fff;
+  border: 2px solid orange;
+  border-radius: 10px;
+  padding: 20px;
+  height: 500px;
+  overflow-y: auto;
+}
+
+.message {
+  margin: 10px 0;
+  padding: 10px 15px;
+  border-radius: 10px;
+  max-width: 70%;
+  word-wrap: break-word;
+}
+
+.agent {
+  background: #f0f0f0;
+  align-self: flex-start;
+}
+
+.user {
+  background: #d4fdd4;
+  align-self: flex-end;
+  margin-left: auto;
+}

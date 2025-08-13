@@ -1,23 +1,22 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client'; // <-- change here
+import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import { HashRouter } from 'react-router-dom';
 import reportWebVitals from './reportWebVitals';
 import { store } from './store/Store';
 import App from './App';
 import './data'; 
+// import 'mdb-react-ui-kit/dist/css/mdb.min.css';
 import '@fortawesome/fontawesome-free/css/all.css';
 
-// Create a root
-const root = ReactDOM.createRoot(document.getElementById('root'));
-
-// Render the app
-root.render(
+ReactDOM.render(
   <Provider store={store}>
     <HashRouter>
       <App />
     </HashRouter>
-  </Provider>
+  </Provider>,
+
+  document.getElementById('root'),
 );
 
 // If you want to start measuring performance in your app, pass a function
