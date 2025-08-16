@@ -260,6 +260,7 @@ useEffect(() => {
             className="ms-2"
             disabled={selectedOrders.length === 0}
             onClick={handleDeleteOrders}
+            data-testid="delete-button"
           >
             <Trash2 size={16} />
           </Button>
