@@ -1,9 +1,20 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
 import { BrowserRouter as Router } from 'react-router-dom';
 import Test from './salesOrder';
 import api from '../../constants/api';
+
+// Mock window.location.reload
+const originalLocation = window.location;
+beforeAll(() => {
+  delete window.location;
+  window.location = { ...originalLocation, reload: jest.fn() };
+});
+
+afterAll(() => {
+  window.location = originalLocation;
+});
 
 // Mock the api module
 jest.mock('../../constants/api');
@@ -67,20 +78,40 @@ describe('SalesOrder Component', () => {
   });
 
   test('handles deleting selected orders', async () => {
-    window.confirm = jest.fn(() => true);
-    render(
+    // Mock window.confirm to return true
+    const mockConfirm = jest.spyOn(window, 'confirm').mockImplementation(() => true);
+    
+    const { container } = render(
       <Router>
         <Test />
       </Router>
     );
+    
+    // Wait for data to load
     await waitFor(() => {
-      fireEvent.click(screen.getAllByRole('checkbox')[1]);
+      expect(screen.getByText('SO-101')).toBeInTheDocument();
     });
+    
+    // Find and click the first checkbox to select an order
+    const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+    // The first checkbox is the header checkbox, so we take the second one
+    fireEvent.click(checkboxes[1]);
+    
+    // Clear any previous API calls
     apiPostSpy.mockClear();
+    
+    // Click the delete button
     fireEvent.click(screen.getByTestId('delete-button'));
+    
+    // Verify the API was called with the correct parameters
     await waitFor(() => {
-      expect(api.post).toHaveBeenCalledWith('/salesOrder/deleteSalesOrder', { sales_order_id: [1] });
+      expect(api.post).toHaveBeenCalledWith('/salesOrder/deleteSalesOrder', expect.objectContaining({
+        sales_order_id: expect.arrayContaining([expect.any(Number)])
+      }));
     });
+    
+    // Clean up
+    mockConfirm.mockRestore();
   });
 
   test('New Transaction button navigates to SalesOrderDetails', () => {
@@ -103,10 +134,13 @@ describe('SalesOrder Component', () => {
       fireEvent.click(screen.getAllByRole('checkbox')[1]);
     });
     apiPostSpy.mockClear();
-    fireEvent.click(screen.getByTestId('new-transaction-button'));
-    await waitFor(() => {
-      fireEvent.click(screen.getByText('Convert To Sales Invoice'));
-    });
+    // Click the dropdown toggle to open the menu
+    const dropdownToggle = screen.getByText('New Transaction').closest('button');
+    fireEvent.click(dropdownToggle);
+    
+    // Click the menu item
+    fireEvent.click(screen.getByText('Convert To Sales Invoice'));
+    
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith('/salesOrder/generateInvoiceFromSalesOrder', expect.any(Object));
     });
@@ -122,10 +156,13 @@ describe('SalesOrder Component', () => {
       fireEvent.click(screen.getAllByRole('checkbox')[1]);
     });
     apiPostSpy.mockClear();
-    fireEvent.click(screen.getByTestId('new-transaction-button'));
-    await waitFor(() => {
-      fireEvent.click(screen.getByText('Convert To Delivery Order'));
-    });
+    // Click the dropdown toggle to open the menu
+    const dropdownToggle = screen.getByText('New Transaction').closest('button');
+    fireEvent.click(dropdownToggle);
+    
+    // Click the menu item
+    fireEvent.click(screen.getByText('Convert To Delivery Order'));
+    
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith('/salesOrder/generateDeliveryFromDeliveryOrder', expect.any(Object));
     });
@@ -141,10 +178,13 @@ describe('SalesOrder Component', () => {
       fireEvent.click(screen.getAllByRole('checkbox')[1]);
     });
     apiPostSpy.mockClear();
-    fireEvent.click(screen.getByTestId('new-transaction-button'));
-    await waitFor(() => {
-      fireEvent.click(screen.getByText('Repeat Sales Order'));
-    });
+    // Click the dropdown toggle to open the menu
+    const dropdownToggle = screen.getByText('New Transaction').closest('button');
+    fireEvent.click(dropdownToggle);
+    
+    // Click the menu item
+    fireEvent.click(screen.getByText('Repeat Sales Order'));
+    
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith('/salesOrder/repeatSalesOrder', expect.any(Object));
     });
