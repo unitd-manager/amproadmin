@@ -155,6 +155,7 @@ const FinanceTable = Loadable(lazy(() => import('../views/smartconTables/Orders'
 
 // Admin
 
+const StockRequest = Loadable(lazy(() => import('../views/smartconTables/StockRequest')));
 
 const GoodsReturn = Loadable(lazy(() => import('../views/smartconTables/GoodsReturn')));
 const GoodsReceipt = Loadable(lazy(() => import('../views/smartconTables/GoodsReceipt')));
@@ -172,6 +173,7 @@ const SupplierCLDetailsTable = Loadable(lazy(() => import('../views/detailTable/
 const CustomerSupplierPriceDetailTable = Loadable(lazy(() => import('../views/detailTable/CustomerSupplierPriceDetails')));
 const GoodsReceiptDetailTable = Loadable(lazy(() => import('../views/detailTable/GoodsReceiptDetails')));
 const GoodsReturnDetailTable = Loadable(lazy(() => import('../views/detailTable/GoodsReturnDetails')));
+const StockRequestDetailTable = Loadable(lazy(() => import('../views/detailTable/StockRequestDetails')));
 
 const SubCategoryDetailsTable = Loadable(
   lazy(() => import('../views/detailTable/SubCategoryDetails')),
@@ -211,6 +213,7 @@ const PurchaseOrderEdit = Loadable(lazy(() => import('../views/EditData/Purchase
 const CustomerSupplierPriceEdit = Loadable(lazy(() => import('../views/EditData/CustomerSupplierPriceEdit')));
 const GoodsReceiptEdit = Loadable(lazy(() => import('../views/EditData/GoodsReceiptEdit')));
 const GoodsReturnEdit = Loadable(lazy(() => import('../views/EditData/GoodsReturnEdit')));
+const StockRequestEdit = Loadable(lazy(() => import('../views/EditData/StockRequestEdit')));
 
 const SupportDetails = Loadable(lazy(() => import('../views/detailTable/SupportDetails')));
 
@@ -369,6 +372,7 @@ const Routernew = () => {
 <Route path="/CustomerSupplierPriceDetails" name="blogDetaildata" element={<CustomerSupplierPriceDetailTable />}></Route>
           <Route path="/GoodsReceiptDetails" name="supplierDetaildata" element={<GoodsReceiptDetailTable />}></Route>
           <Route path="/GoodsReturnDetails" name="supplierDetaildata" element={<GoodsReturnDetailTable />}></Route>
+          <Route path="/StockRequestDetails" name="stockRequestdata" element={<StockRequestDetailTable />}></Route>
         {/* product group */}
         <Route path="/Brand" name="Brand" element={<BrandCli />}></Route>
          <Route path="/Bin" name="Bin" element={<BinCli />}></Route>
@@ -473,6 +477,7 @@ const Routernew = () => {
           <Route path="/CustomerSupplierPriceEdit/:id" name="productdata" element={<CustomerSupplierPriceEdit />}></Route>
           <Route path="/GoodsReceiptEdit/:id" name="orderdata" element={<GoodsReceiptEdit />}></Route>
           <Route path="/GoodsReturnEdit/:id" name="orderdata" element={<GoodsReturnEdit />}></Route>
+          <Route path="/StockRequestEdit/:id" name="productdata" element={<StockRequestEdit />}></Route>
           <Route path="/clientEdit/:id" name="clienttdata" element={<ClientEdit />}></Route>
           <Route path="/MembertypeEdit/:id" name="memberedit" element={<MemberTypeEdit />}></Route>
           <Route path="/pricegroupedit/:id" name="priceedit" element={<PriceGroupEdit />}></Route>
@@ -692,6 +697,7 @@ const Routernew = () => {
           <Route path="/CustomerSupplierPrice" name="contentdata" element={<CustomerSupplierPrice />}></Route>
           <Route path="/GoodsReceipt" name="customerdata" element={<GoodsReceipt />}></Route>
           <Route path="/GoodsReturn" name="customerdata" element={<GoodsReturn />}></Route>
+          <Route path="/StockRequest" name="stockdata" element={<StockRequest />}></Route>
 
           <Route path="/Content" name="contentdata" element={<Content />}></Route>
           <Route path="/Customer" name="customerdata" element={<Customer />}></Route>
