@@ -6,10 +6,10 @@ import {
   Button,
   Table,
 } from 'reactstrap';
-import PropTypes from 'prop-types';
-import api from '../../constants/api';
+import weeklyScheduleApi from '../../constants/weeklyScheduleApi';
 
-const WeeklySchedule = ({ customerId }) => {
+const WeeklySchedule = () => {
+  const [companies, setCompanies] = useState([]);
   const [companyUpdates, setCompanyUpdates] = useState({});
   const [filters, setFilters] = useState({
     customer: '',
@@ -24,30 +24,30 @@ const WeeklySchedule = ({ customerId }) => {
 
   // Fetch companies on component mount
   useEffect(() => {
-    const fetchSchedule = async () => {
-      if (!customerId) return;
+    const fetchCompanies = async () => {
       try {
-        const response = await api.post('/contact/getContactssById', { company_id: customerId });
-        const scheduleData = response.data.data;
-        // The API returns an array, so we need to get the first element.
-        if (Array.isArray(scheduleData) && scheduleData.length > 0) {
-          const customerData = scheduleData[0];
-          setCompanyUpdates(prev => ({
-            ...prev,
-            [customerId]: {
-              company_id: customerId,
-              sales_man: customerData.sales_man || '',
-              day: customerData.day || '',
-              action: customerData.action === '1' || customerData.action === 1 || false,
-            },
-          }));
-        }
+        const response = await weeklyScheduleApi.getCompanies();
+        setCompanies(response.data.data);
+        
+        // Initialize companyUpdates with existing values from database
+        const updates = {};
+        response.data.data.forEach(company => {
+          if (company.sales_man || company.day || company.action) {
+            updates[company.company_id] = {
+              company_id: company.company_id,
+              sales_man: company.sales_man || '',
+              day: company.day || '',
+              action: company.action === '1' || company.action === 1 || false
+            };
+          }
+        });
+        setCompanyUpdates(updates);
       } catch (error) {
-        console.error('Error fetching schedule:', error);
+        console.error('Error fetching companies:', error);
       }
     };
-    fetchSchedule();
-  }, [customerId]);
+    fetchCompanies();
+  }, []);
 
   // Handle filter changes
   const handleFilterChange = (e) => {
@@ -70,24 +70,38 @@ const WeeklySchedule = ({ customerId }) => {
     }));
   };
 
-  // Handle update for a single customer
-  const handleUpdateSchedule = async () => {
-    if (!customerId) return;
-
-    const updateData = companyUpdates[customerId];
-
-    if (!updateData || !updateData.sales_man || !updateData.day) {
-      alert('Please select both a Sales Man and a Day.');
-      return;
-    }
-
+  // Handle update all button click
+  const handleUpdateAll = async () => {
     try {
-      await api.post('/company/updateSchedule', updateData);
-      alert('Successfully updated schedule');
-      // No need to refresh here as the data is self-contained
+      const updates = Object.values(companyUpdates);
+      
+      // Filter out companies that have both sales_man and day selected
+      const validUpdates = updates.filter(update => 
+        update.sales_man && update.day && update.action !== undefined
+      );
+
+      if (validUpdates.length === 0) {
+        alert('Please select values for at least one company to update');
+        return;
+      }
+
+      // Update all companies concurrently
+      await Promise.all(
+        validUpdates.map(updateData => weeklyScheduleApi.updateSchedule(updateData))
+      );
+
+      alert('Successfully updated schedules');
+                window.location.reload()
+
+      // Refresh the companies list
+      const response = await weeklyScheduleApi.getCompanies();
+      setCompanies(response.data.data);
+       
+      // Clear the updates
+      setCompanyUpdates({});
     } catch (error) {
-      console.error('Error updating schedule:', error);
-      alert('Error updating schedule. Please try again.');
+      console.error('Error updating schedules:', error);
+      alert('Error updating schedules. Please try again.');
     }
   };
 
@@ -96,7 +110,6 @@ const WeeklySchedule = ({ customerId }) => {
       <h2>Salesman Schedule Weekly</h2>
       
       {/* Filters */}
-      {!customerId && (
       <Row className="mb-4">
         <Col md={2}>
           <Input
@@ -158,21 +171,13 @@ const WeeklySchedule = ({ customerId }) => {
         <Col md={1}>
           <Button color="primary" onClick={() => {}}>Search</Button>
         </Col>
+        <Col md={1}>
+          <Button color="success" onClick={handleUpdateAll}>Update All</Button>
+        </Col>
       </Row>
-      )}
-
-      {customerId && (
-        <Row>
-          <Col>
-            <Button color="success" onClick={handleUpdateSchedule}>Save Schedule</Button>
-          </Col>
-        </Row>
-      )}
-
 
       {/* Company List Table */}
       <Table responsive bordered>
-        {!customerId && (
         <thead>
           <tr>
             <th>CustomerName</th>
@@ -183,37 +188,29 @@ const WeeklySchedule = ({ customerId }) => {
             <th>Action</th>
           </tr>
         </thead>
-        )}
-        {customerId && (
-          <thead>
-            <tr>
-              <th>Sales Man</th>
-              <th>Day</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-        )}
         <tbody>
-          {/* Render a single row for the customer when customerId is provided */}
-          {customerId && (
-            <tr key={customerId}>
+          {companies.map((company) => (
+            <tr key={company.company_id}>
+              <td>{company.company_name}</td>
+              <td>{company.address_street}</td>
+              <td>{company.area || '-'}</td>
               <td>
-                <Input
+                <Input 
                   type="select"
-                  value={companyUpdates[customerId]?.sales_man || ''}
-                  onChange={(e) => handleCompanyFieldChange(customerId, 'sales_man', e.target.value)}
+                  value={companyUpdates[company.company_id]?.sales_man || ''}
+                  onChange={(e) => handleCompanyFieldChange(company.company_id, 'sales_man', e.target.value)}
                 >
-                  <option value="">Select Salesman</option>
+                    <option value="">Select Salesman</option>
                   {salesmen.map(man => (
                     <option key={man} value={man}>{man}</option>
                   ))}
                 </Input>
               </td>
               <td>
-                <Input
+                <Input 
                   type="select"
-                  value={companyUpdates[customerId]?.day || ''}
-                  onChange={(e) => handleCompanyFieldChange(customerId, 'day', e.target.value)}
+                  value={companyUpdates[company.company_id]?.day || ''}
+                  onChange={(e) => handleCompanyFieldChange(company.company_id, 'day', e.target.value)}
                 >
                   <option value="">Select Day</option>
                   {days.map(day => (
@@ -222,27 +219,19 @@ const WeeklySchedule = ({ customerId }) => {
                 </Input>
               </td>
               <td>
-                <Input
-                  type="checkbox"
+                <Input 
+                  type="checkbox" 
                   style={{ width: '20px', height: '20px' }}
-                  checked={companyUpdates[customerId]?.action || false}
-                  onChange={(e) => handleCompanyFieldChange(customerId, 'action', e.target.checked)}
+                  checked={companyUpdates[company.company_id]?.action || false}
+                  onChange={(e) => handleCompanyFieldChange(company.company_id, 'action', e.target.checked)}
                 />
               </td>
             </tr>
-          )}
+          ))}
         </tbody>
       </Table>
     </div>
   );
-};
-
-WeeklySchedule.propTypes = {
-  customerId: PropTypes.string,
-};
-
-WeeklySchedule.defaultProps = {
-  customerId: '',
 };
 
 export default WeeklySchedule;

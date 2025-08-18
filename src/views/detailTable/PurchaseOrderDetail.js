@@ -401,16 +401,37 @@ const PurchaseOrderPage = () => {
   const getColumnSum = (key) => {
     return rows.reduce((sum, row) => sum + (parseFloat(row[key]) || 0), 0);
   };
+  const [selectedProductCode, setSelectedProductCode] = useState('');
+const [productName, setProductName] = useState('');
+const [productId, setProductId] = useState('');
+
+// onChange handler
+const handleProductChange = (e) => {
+  const selectedCode = e.target.value;
+  setSelectedProductCode(selectedCode);
+
+  const selectedProduct = products.find(
+    (product) => product.product_code === selectedCode
+  );
+  if (selectedProduct) {
+    setProductName(selectedProduct.product_name);
+    
+    
+    setProductId(selectedProduct.product_id);
+    // set other values like cost, uom, etc.
+  }
+};
+
+
   
-  
-    // Handle product selection
-    const handleProductSelect = (index, selectedProduct) => {
-      const updatedRows = [...rows];
-      updatedRows[index].product_id = selectedProduct.product_id;
-      updatedRows[index].product_code = selectedProduct.product_code;
-      updatedRows[index].product_name = selectedProduct.product_name;
-      setRows(updatedRows);
-    };
+    // // Handle product selection
+    // const handleProductSelect = (index, selectedProduct) => {
+    //   const updatedRows = [...rows];
+    //   updatedRows[index].product_id = selectedProduct.product_id;
+    //   updatedRows[index].product_code = selectedProduct.product_code;
+    //   updatedRows[index].product_name = selectedProduct.product_name;
+    //   setRows(updatedRows);
+    // };
   // Handle form submit (example API call structure)
   const handleSubmit = async () => {
     if(currency.currency_rate !==''){
@@ -756,16 +777,30 @@ const PurchaseOrderPage = () => {
             <tr key={index}>
               <td>{index + 1}</td>
               <td>
-              <Select
+              {/* <Select
                 options={products.map((p) => ({
-                  value: p.product_id,
+                  value: p.product_code,
                   label: `${p.product_code} - ${p.product_name}`,
                   ...p,
                 }))}
-                value={products.find((p) => p.product_id === row.product_id) || null} 
+                value={products.find((p) => p.product_code === row.product_code) || null} 
                 onChange={(selectedOption) => handleProductSelect(index, selectedOption)}
                 placeholder="Select Product"
-              />
+              /> */}
+              <select
+  className="form-control"
+  value={selectedProductCode}
+  onChange={handleProductChange}
+>
+  <option value="">Select Product</option>
+  {products.map((product) => (
+    <option key={product.product_code} value={product.product_code}>
+      {product.product_code}
+    </option>
+  ))}
+</select>
+
+
               </td>
               <td>
                 <Input

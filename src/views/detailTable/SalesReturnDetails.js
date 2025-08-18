@@ -114,7 +114,7 @@ const OpportunityDetails = () => {
   //const[tenderDetails,setTenderDetails]=useState();
   const getTendersById = () => {
     api
-      .post('/invoice/getSalesorderById', { invoice_id: id })
+      .post('/salesreturn/getSalesorderById', { sales_return_id: id })
       .then((res) => {
         setTenderForms(res.data.data);
         // getContact(res.data.data.company_id);
@@ -137,7 +137,7 @@ const OpportunityDetails = () => {
       tenderForms.creation_date = creationdatetime
       tenderForms.created_by = loggedInuser.first_name;
       api
-        .post('/invoice/insertInvoice', tenderForms)
+        .post('/salesreturn/insertInvoice', tenderForms)
        .then((res) => {
     console.log("Insert Response:", res); // log full res object
   console.log("Insert Response data:", res.data); // log res.data
@@ -145,7 +145,7 @@ const OpportunityDetails = () => {
   if (insertedDataId) {
     message('Order inserted successfully.', 'success');
     setTimeout(() => {
-      navigate(`/InvoiceEdit/${insertedDataId}?tab=1`);
+      navigate(`/SalesReturnEdit/${insertedDataId}?tab=1`);
     }, 300);
   } else {
     throw new Error('Invalid insert ID');

@@ -32,7 +32,6 @@ import CustomerShippingDetail from '../../components/Customer/ShippingDetail';
 import CustomerSalesmen from '../../components/Customer/SalesMan';
 import CustomerTransactions from '../../components/Customer/Module';
 import CustomerProductDetails from '../../components/Customer/ProductDetails';
-import WeeklySchedule from '../../components/WeeklySchedule/WeeklySchedule';
 
 const ContentUpdate = () => {
   const [contentDetails, setContentDetails] = useState({});
@@ -267,16 +266,6 @@ const ContentUpdate = () => {
                   ProductDetails
                 </NavLink>
               </NavItem>
-              <NavItem>
-                <NavLink
-                  className={classnames({ active: activeTab === '8' })}
-                  onClick={() => {
-                    toggle('8');
-                  }}
-                >
-                  Weekly Schedule
-                </NavLink>
-              </NavItem>
 
             </Nav>
             <TabContent activeTab={activeTab} className="p-4">
@@ -315,10 +304,6 @@ const ContentUpdate = () => {
               <TabPane tabId="7">
                 {/* Assuming CustomerProductDetails needs customerId or contentDetails */}
                 <CustomerProductDetails customerId={id} contentDetails={contentDetails} />
-              </TabPane>
-
-              <TabPane tabId="8">
-                <WeeklySchedule customerId={id} />
               </TabPane>
 
             </TabContent>
