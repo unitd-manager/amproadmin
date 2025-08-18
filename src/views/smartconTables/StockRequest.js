@@ -22,7 +22,7 @@ const StockRequest = () => {
   const getStockRequests = () => {
     setLoading(true);
     api
-      .post("/stockRequest/getstockrequest", {
+      .get("/stockRequest/getstockrequest", {
         stock_req_no: stockReqNoFilter,
         from_location: fromLocationFilter,
         to_location: toLocationFilter,

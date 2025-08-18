@@ -1,12 +1,17 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Form, Row, Col, FormGroup, Label, Input, Button, Table } from 'reactstrap';
+import { Form, Row, Col, FormGroup, Label, Input, Button, Table ,  TabContent,
+  TabPane,
+  Nav,
+  NavItem,
+  NavLink,} from 'reactstrap';
+  import classnames from 'classnames';
 import { ToastContainer } from 'react-toastify';
 import Swal from 'sweetalert2';
 import { useNavigate, useParams } from 'react-router-dom';
 import ComponentCard from '../../components/ComponentCard';
 import ComponentCardV2 from '../../components/ComponentCardV2';
 //import Tabs from '../../components/Tabs';
-import Tabs from '../../components/ProjectTabs/Tab';
+// import Tabs from '../../components/ProjectTabs/Tab';
 import message from '../../components/Message';
 import api from '../../constants/api';
 import creationdatetime from '../../constants/creationdatetime';
@@ -16,6 +21,11 @@ const StockRequestEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { loggedInuser } = useContext(AppContext);
+    const [activeTab, setActiveTab] = useState('1');
+    // Function to toggle tabs
+  const toggle = (tab) => {
+    if (activeTab !== tab) setActiveTab(tab);
+  };
 
   const [stockRequestDetails, setStockRequestDetails] = useState({});
   const [products, setProducts] = useState([]);
@@ -151,13 +161,236 @@ const StockRequestEdit = () => {
     getStockRequestProducts();
   }, [id]);
 
-  const tabs = [
-    {
-      id: '1',
-      title: 'Details',
-      content: (
-        <FormGroup>
-          <ComponentCard title="Stock Request Details" creationModificationDate={stockRequestDetails}>
+  
+
+  // const tabs = [
+  //   {
+  //     id: '1',
+  //     title: 'Details',
+  //     content: (
+  //       <FormGroup>
+  //         <ComponentCard title="Stock Request Details" creationModificationDate={stockRequestDetails}>
+  //           <Row>
+  //             <Col md="4">
+  //               <FormGroup>
+  //                 <Label>Stock Request No</Label>
+  //                 <Input
+  //                   type="text"
+  //                   name="stock_req_no"
+  //                   value={stockRequestDetails.stock_req_no || ''}
+  //                   onChange={handleInputs}
+  //                 />
+  //               </FormGroup>
+  //             </Col>
+  //             <Col md="4">
+  //               <FormGroup>
+  //                 <Label>From Location</Label>
+  //                 <Input
+  //                   type="text"
+  //                   name="from_location"
+  //                   value={stockRequestDetails.from_location || ''}
+  //                   onChange={handleInputs}
+  //                 />
+  //               </FormGroup>
+  //             </Col>
+  //             <Col md="4">
+  //               <FormGroup>
+  //                 <Label>To Location</Label>
+  //                 <Input
+  //                   type="text"
+  //                   name="to_location"
+  //                   value={stockRequestDetails.to_location || ''}
+  //                   onChange={handleInputs}
+  //                 />
+  //               </FormGroup>
+  //             </Col>
+  //           </Row>
+  //           <Row>
+  //             <Col md="4">
+  //               <FormGroup>
+  //                 <Label>Status</Label>
+  //                 <Input
+  //                   type="select"
+  //                   name="status"
+  //                   value={stockRequestDetails.status || ''}
+  //                   onChange={handleInputs}
+  //                 >
+  //                   <option value="">Select</option>
+  //                   <option value="Draft">Draft</option>
+  //                   <option value="Submitted">Submitted</option>
+  //                   <option value="Completed">Completed</option>
+  //                 </Input>
+  //               </FormGroup>
+  //             </Col>
+  //             <Col md="4">
+  //               <FormGroup>
+  //                 <Label>Stock Request Date</Label>
+  //                 <Input
+  //                   type="date"
+  //                   name="stock_req_date"
+  //                   value={stockRequestDetails.stock_req_date || ''}
+  //                   onChange={handleInputs}
+  //                 />
+  //               </FormGroup>
+  //             </Col>
+  //             <Col md="4">
+  //               <FormGroup>
+  //                 <Label>Remarks</Label>
+  //                 <Input
+  //                   type="text"
+  //                   name="remarks"
+  //                   value={stockRequestDetails.remarks || ''}
+  //                   onChange={handleInputs}
+  //                 />
+  //               </FormGroup>
+  //             </Col>
+  //           </Row>
+  //         </ComponentCard>
+  //       </FormGroup>
+  //     ),
+  //   },
+  //   {
+  //     id: '2',
+  //     title: 'Products',
+  //     content: (
+  //       <ComponentCard title="Stock Request Products">
+  //         <Row>
+  //           <Col md="4">
+  //             <Input
+  //               type="text"
+  //               placeholder="Product Name"
+  //               name="product_name"
+  //               value={newProduct.product_name || ''}
+  //               onChange={handleProductInputs}
+  //             />
+  //           </Col>
+  //           <Col md="2">
+  //             <Input
+  //               type="number"
+  //               placeholder="Quantity"
+  //               name="quantity"
+  //               value={newProduct.quantity || ''}
+  //               onChange={handleProductInputs}
+  //             />
+  //           </Col>
+  //           <Col md="2">
+  //             <Button color="primary" onClick={addProduct}>
+  //               Add
+  //             </Button>
+  //           </Col>
+  //         </Row>
+  //         <Table className="mt-3" bordered>
+  //           <thead>
+  //             <tr>
+  //               <th>#</th>
+  //               <th>Product</th>
+  //               <th>Qty</th>
+  //               <th>Action</th>
+  //             </tr>
+  //           </thead>
+  //           <tbody>
+  //             {products.map((prod, index) => (
+  //               <tr key={prod.stock_request_product_id}>
+  //                 <td>{index + 1}</td>
+  //                 <td>{prod.product_name}</td>
+  //                 <td>{prod.quantity}</td>
+  //                 <td>
+  //                   <Button
+  //                     color="danger"
+  //                     size="sm"
+  //                     onClick={() => deleteProduct(prod.stock_request_product_id)}
+  //                   >
+  //                     Delete
+  //                   </Button>
+  //                 </td>
+  //               </tr>
+  //             ))}
+  //           </tbody>
+  //         </Table>
+  //       </ComponentCard>
+  //     ),
+  //   },
+  // ];
+
+  return (
+    <div>
+      <Form>
+        <ComponentCardV2>
+          <Row>
+            <Col>
+              <Button
+                color="primary"
+                onClick={() => {
+                  editStockRequest();
+                  setTimeout(() => {
+                    navigate('/stockRequest');
+                    window.location.reload();
+                  }, 1100);
+                }}
+              >
+                Save
+              </Button>
+            </Col>
+            <Col>
+              <Button
+                color="primary"
+                onClick={() => {
+                  editStockRequest();
+                }}
+              >
+                Apply
+              </Button>
+            </Col>
+            <Col>
+              <Button
+                color="dark"
+                onClick={() => {
+                  navigate('/stockRequest');
+                }}
+              >
+                Back to List
+              </Button>
+            </Col>
+            <Col>
+              <Button color="danger" onClick={deleteStockRequest}>
+                Delete
+              </Button>
+            </Col>
+          </Row>
+        </ComponentCardV2>
+      </Form>
+
+      <ToastContainer />
+
+     <ComponentCard >
+              <ToastContainer />
+              <Nav tabs>
+                <NavItem>
+                  <NavLink
+                    className={classnames({ active: activeTab === '1' })}
+                    onClick={() => {
+                      toggle('1');
+                    }}
+                  >
+                    Details
+                  </NavLink>
+                </NavItem>
+                <NavItem>
+                  <NavLink
+                    className={classnames({ active: activeTab === '2' })}
+                    onClick={() => {
+                      toggle('2');
+                    }}
+                  >
+                    Products
+                  </NavLink>
+                </NavItem>
+  
+              </Nav>
+              <TabContent activeTab={activeTab} className="p-4">
+                {/* Tab 1: Additional/More Details (your ContentMoreDetails) */}
+                <TabPane tabId="1">
+                   <ComponentCard title="Stock Request Details" creationModificationDate={stockRequestDetails}>
             <Row>
               <Col md="4">
                 <FormGroup>
@@ -234,14 +467,11 @@ const StockRequestEdit = () => {
               </Col>
             </Row>
           </ComponentCard>
-        </FormGroup>
-      ),
-    },
-    {
-      id: '2',
-      title: 'Products',
-      content: (
-        <ComponentCard title="Stock Request Products">
+                </TabPane>
+  
+                {/* Tab 2: Customer Login Info */}
+                <TabPane tabId="2">
+                 <ComponentCard title="Stock Request Products">
           <Row>
             <Col md="4">
               <Input
@@ -296,61 +526,9 @@ const StockRequestEdit = () => {
             </tbody>
           </Table>
         </ComponentCard>
-      ),
-    },
-  ];
-
-  return (
-    <div>
-      <Form>
-        <ComponentCardV2>
-          <Row>
-            <Col>
-              <Button
-                color="primary"
-                onClick={() => {
-                  editStockRequest();
-                  setTimeout(() => {
-                    navigate('/stockRequest');
-                    window.location.reload();
-                  }, 1100);
-                }}
-              >
-                Save
-              </Button>
-            </Col>
-            <Col>
-              <Button
-                color="primary"
-                onClick={() => {
-                  editStockRequest();
-                }}
-              >
-                Apply
-              </Button>
-            </Col>
-            <Col>
-              <Button
-                color="dark"
-                onClick={() => {
-                  navigate('/stockRequest');
-                }}
-              >
-                Back to List
-              </Button>
-            </Col>
-            <Col>
-              <Button color="danger" onClick={deleteStockRequest}>
-                Delete
-              </Button>
-            </Col>
-          </Row>
-        </ComponentCardV2>
-      </Form>
-
-      <ToastContainer />
-
-      <Tabs tabs={tabs} />
+                </TabPane>
+              </TabContent>
+            </ComponentCard>
     </div>
   );
 };
