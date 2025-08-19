@@ -71,11 +71,64 @@ export default function ContactPriceButton({
         id: random.int(0, 9999).toString(),
         contact_id: '',
         name: '',
-        wholesale_price: 0,
-        carton_price: 0,
-        fixed_price: 0
+        wholesale_price: '',
+        carton_price: '',
+        fixed_price: '',
+        cs_product_id: null
       }
     ]);
+  };
+  // Supplier tab: onChange for supplier select
+  const onSupplierChange = async (selectedOption, index) => {
+    const copy = [...purchaserequesteditdetails];
+    let updatedItem = { ...copy[index] };
+
+    if (!selectedOption) {
+      updatedItem = {
+        ...updatedItem,
+        contact_id: '',
+        name: '',
+        wholesale_price: '',
+        carton_price: '',
+        fixed_price: '',
+        cs_product_id: null
+      };
+      copy[index] = updatedItem;
+      setPurchaseRequestEditDetails(copy);
+      return;
+    }
+
+    updatedItem.contact_id = selectedOption.value;
+    updatedItem.name = selectedOption.label;
+    updatedItem.wholesale_price = '';
+    updatedItem.carton_price = '';
+    updatedItem.fixed_price = '';
+    updatedItem.cs_product_id = null;
+
+    try {
+      const response = await api.post('/product/checkSupplierProductPrice', {
+        contact_id: selectedOption.value,
+        product_id: ProductId,
+        customer: 0,
+        supplier: 1,
+      });
+      if (response.data && response.data.cs_product_exists && response.data.cs_product_data) {
+        const existingData = response.data.cs_product_data;
+        message('Supplier already exists for this product. You can edit the price.', 'warning');
+        updatedItem.wholesale_price = existingData.wholesale_price || '';
+        updatedItem.carton_price = existingData.carton_price || '';
+        updatedItem.fixed_price = existingData.fixed_price || '';
+        updatedItem.cs_product_id = existingData.cs_product_id;
+      }
+    } catch (error) {
+      let errMsg = 'Error checking existing supplier price. Please try again.';
+      if (error.response && error.response.data && error.response.data.error) {
+        errMsg += ` (${error.response.data.error})`;
+      }
+      message(errMsg, 'error');
+    }
+    copy[index] = updatedItem;
+    setPurchaseRequestEditDetails(copy);
   };
 
   const getCustomer = () => {
@@ -314,29 +367,50 @@ export default function ContactPriceButton({
     console.log(`updateSupplierState: Item ${copy[index].id} updated. Property: ${property}, Value: ${e.target.value}`);
   };
 
-  const editPurchaseRequestItems = () => {
-    purchaserequesteditdetails.forEach((item) => {
-      console.log(`editPurchaseRequestItems: Processing supplier item (id: ${item.id}, cs_product_id: ${item.cs_product_id})`);
-      if (!item.cs_product_id) {
-        message('Cannot update item without a valid product ID for supplier.', 'error');
-        console.warn('editPurchaseRequestItems: Missing cs_product_id for supplier item:', item);
-        return;
-      }
-      api
-        .post('/product/EditCSProductLineItemsBYSupplierID', {
-          cs_product_id: item.cs_product_id,
-          wholesale_price: item.wholesale_price,
-          carton_price: item.carton_price,
-          fixed_price: item.fixed_price,
-          modification_date: creationdatetime,
-          modified_by: loggedInuser.first_name
-        })
-        .then(() => message('Supplier Line Item Edited Successfully', 'success'))
-        .catch((err) => {
-          console.error('editPurchaseRequestItems: Cannot Edit Supplier Line Items', err);
-          message('Cannot Edit Supplier Line Items', 'error');
-        });
-    });
+  const editPurchaseRequestItems = async () => {
+    await Promise.all(
+      purchaserequesteditdetails.map(async (item) => {
+        try {
+          if (item.contact_id && item.cs_product_id) {
+            // Update existing
+            await api.post('/product/EditCSProductLineItemsBYSupplierID', {
+              cs_product_id: item.cs_product_id,
+              wholesale_price: item.wholesale_price,
+              carton_price: item.carton_price,
+              fixed_price: item.fixed_price,
+              modification_date: creationdatetime,
+              modified_by: loggedInuser.first_name
+            });
+            message(`Supplier price for ${item.name} updated successfully`, 'success');
+          } else if (item.contact_id) {
+            // Create new customer_supplier_price
+            const addSupplierRes = await api.post('/product/addCustomerSupplierPrice', {
+              contact_id: item.contact_id,
+              customer: 0,
+              supplier: 1,
+              created_by: loggedInuser.first_name,
+              creation_date: creationdatetime,
+            });
+            const customerSupplierPriceId = addSupplierRes.data.customer_supplier_price_id;
+            // Create new cs_product
+            await api.post('/product/addCSProductHistory', {
+              customer_supplier_price_id: customerSupplierPriceId,
+              product_id: ProductId,
+              contact_id: item.contact_id,
+              wholesale_price: item.wholesale_price,
+              carton_price: item.carton_price,
+              fixed_price: item.fixed_price,
+              created_by: loggedInuser.first_name,
+              creation_date: creationdatetime,
+            });
+            message(`New supplier price for ${item.name} added`, 'success');
+          }
+        } catch (error) {
+          console.error('editPurchaseRequestItems: Error processing supplier item', error);
+          message(`Failed to process supplier price for ${item.name}`, 'error');
+        }
+      })
+    );
     console.log('editPurchaseRequestItems: All supplier items processed.');
   };
 
@@ -467,20 +541,14 @@ export default function ContactPriceButton({
                   return (
                     <tr key={item.id}>
                       <td>
-                        {item.code ? (
-                          <Input value={item.code} readOnly />
-                        ) : (
-                          <Select
-                            options={getsupplier}
-                            value={selectedSupplier}
-                            onChange={(e) =>
-                              updateSupplierState(index, 'contact_id', { target: { value: e.value, name: e.label } })
-                            }
-                            getOptionLabel={(option) => option.label}
-                            getOptionValue={(option) => option.value}
-                            placeholder="Select Supplier"
-                          />
-                        )}
+                        <Select
+                          options={getsupplier}
+                          value={selectedSupplier}
+                          onChange={(e) => onSupplierChange(e, index)}
+                          getOptionLabel={(option) => option.label}
+                          getOptionValue={(option) => option.value}
+                          placeholder="Select Supplier"
+                        />
                       </td>
                       <td>
                         <Input value={item.name} onChange={(e) => updateSupplierState(index, 'name', e)} />

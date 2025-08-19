@@ -10,7 +10,7 @@ import message from '../../components/Message';
 import creationdatetime from '../../constants/creationdatetime';
 import AppContext from '../../context/AppContext';
 
-const OpportunityDetails = () => {
+const SalesOrderDetails = () => {
   const [company, setCompany] = useState();
   const [currency, setCurrency] = useState();
 
@@ -40,83 +40,24 @@ const OpportunityDetails = () => {
     });
   };
 
-  //Logic for adding company in db
-  // const [companyInsertData, setCompanyInsertData] = useState({
-  //   company_name: '',
-  //   address_street: '',
-  //   address_town: '',
-  //   address_country: 'Singapore',
-  //   address_po_code: '',
-  //   phone: '',
-  //   fax: '',
-  //   website: '',
-  //   supplier_type: '',
-  //   industry: '',
-  //   company_size: '',
-  //   source: '',
-  // });
-
-  // const handleInputs = (e) => {
-  //   console.log("companyInsertData",{ ...companyInsertData, [e.target.name]: e.target.value })
-  //   setCompanyInsertData({ ...companyInsertData, [e.target.name]: e.target.value });
-  // };
-
-  // const insertCompany = () => {
-  //   if (
-  //     companyInsertData.company_name !== '' &&
-  //     companyInsertData.address_street !== '' &&
-  //     companyInsertData.address_po_code !== '' &&
-  //     companyInsertData.address_country !== ''
-  //   ) {
-  //     api
-  //       .post('/company/insertCompany', companyInsertData)
-  //       .then(() => {
-  //         message('Company inserted successfully.', 'success');
-  //         getCompany();
-  //         setTimeout(() => {
-  //           toggle()
-  //         }, 1000)
-
-  //       })
-  //       .catch(() => {
-  //         message('Network connection error.', 'error');
-  //       });
-  //   } else {
-  //     setAddFormSubmitted(true)
-  //     message('Please fill all required fields.', 'warning');
-  //   }
-  // };
-
-  //Logic for adding tender in db
-  const [tenderForms, setTenderForms] = useState({
-    company_name: '',
+  const [salesOrderForms, setSalesOrderForms] = useState({
+    company_id: '',
    currency_id: '',
   });
 
-  const handleInputsTenderForms = (e) => {
+  const handleInputsSalesOrderForms = (e) => {
 
-    console.log("handleInputsTenderForms",{ ...tenderForms, [e.target.name]: e.target.value })
+    console.log("handleInputsSalesOrderForms",{ ...salesOrderForms, [e.target.name]: e.target.value })
 
-    setTenderForms({ ...tenderForms, [e.target.name]: e.target.value });
+    setSalesOrderForms({ ...salesOrderForms, [e.target.name]: e.target.value });
   };
 
-  //Api for getting all countries
-  // const getAllCountries = () => {
-  //   api
-  //     .get('/clients/getCountry')
-  //     .then((res) => {
-  //       setallCountries(res.data.data);
-  //     })
-  //     .catch(() => {
-  //       message('Country Data Not Found', 'info');
-  //     });
-  // };
-  //const[tenderDetails,setTenderDetails]=useState();
-  const getTendersById = () => {
+
+  const getSalesOrderById = () => {
     api
       .post('/salesorder/getSalesorderById', { sales_order_id: id })
       .then((res) => {
-        setTenderForms(res.data.data);
+        setSalesOrderForms(res.data.data[0]);
         // getContact(res.data.data.company_id);
       })
       .catch(() => { });
@@ -130,19 +71,19 @@ const OpportunityDetails = () => {
   //   });
   // };
 
-  const insertTender = (code) => {
-    if (tenderForms.company_id !== '' ) {
+  const insertSalesOrder = (code) => {
+    if (salesOrderForms.company_id !== '' ) {
 
-      tenderForms.tran_no = code;
-      tenderForms.tran_date = new Date().toISOString().slice(0, 10);
-      tenderForms.creation_date = creationdatetime
-      tenderForms.created_by = loggedInuser.first_name;
-      tenderForms.status = 'Open';
+      salesOrderForms.tran_no = code;
+      salesOrderForms.tran_date = new Date().toISOString().slice(0, 10);
+      salesOrderForms.creation_date = creationdatetime
+      salesOrderForms.created_by = loggedInuser.first_name;
+      salesOrderForms.status = 'Open';
       api
-        .post('/salesOrder/insertSalesOrder', tenderForms)
+        .post('/salesOrder/insertSalesOrder', salesOrderForms)
         .then((res) => {
           const insertedDataId = res.data.data.insertId;
-          getTendersById();
+          getSalesOrderById();
 
           message('Order inserted successfully.', 'success');
           setTimeout(() => {
@@ -163,17 +104,21 @@ const OpportunityDetails = () => {
     api
       .post('/commonApi/getCodeValues', { type: 'salesorder' })
       .then((res) => {
-        insertTender(res.data.data);
+        insertSalesOrder(res.data.data);
       })
       .catch(() => {
-        insertTender('');
+        insertSalesOrder('');
       });
   }; 
 
   useEffect(() => {
     getCompany();
     getCurrency();
-    // getAllCountries();
+    
+    // If id is provided, fetch existing sales order data
+    if (id) {
+      getSalesOrderById();
+    }
   }, [id]);
 
   return (
@@ -194,14 +139,13 @@ const OpportunityDetails = () => {
                     <Input
                       type="select"
                       name="company_id"
-                      className={`form-control ${formSubmitted && tenderForms && (tenderForms.company_id === undefined || tenderForms.company_id.trim() === '')
+                      className={`form-control ${formSubmitted && salesOrderForms && (salesOrderForms.company_id === undefined || salesOrderForms.company_id.trim() === '')
                           ? 'highlight'
                           : ''
                         }`}
-                      //value={tenderForms && tenderForms.company_id}
-                      // onChange={handleInputsTenderForms}
+                      value={salesOrderForms && salesOrderForms.company_id}
                       onChange={(e) => {
-                        handleInputsTenderForms(e)
+                        handleInputsSalesOrderForms(e)
                       }}
 
                     >
@@ -215,7 +159,7 @@ const OpportunityDetails = () => {
                           );
                         })}
                     </Input>
-                    {formSubmitted && tenderForms && (tenderForms.company_id === undefined || tenderForms.company_id.trim() === '') && (
+                    {formSubmitted && salesOrderForms && (salesOrderForms.company_id === undefined || salesOrderForms.company_id.trim() === '') && (
                       <div className="error-message">Please select the company name</div>
                     )}
                   </Col>
@@ -248,14 +192,9 @@ const OpportunityDetails = () => {
                     <Input
                       type="select"
                       name="currency_id"
-                      // className={`form-control ${formSubmitted && tenderForms && (tenderForms.currency_id === undefined || tenderForms.currency_id.trim() === '')
-                      //     ? 'highlight'
-                      //     : ''
-                      //   }`}
-                      //value={tenderForms && tenderForms.currency_id}
-                      // onChange={handleInputsTenderForms}
+                      value={salesOrderForms && salesOrderForms.currency_id}
                       onChange={(e) => {
-                        handleInputsTenderForms(e)
+                        handleInputsSalesOrderForms(e)
                       }}
 
                     >
@@ -279,14 +218,14 @@ const OpportunityDetails = () => {
               <Row>
                 <div className="pt-3 mt-3 d-flex align-items-center gap-2">
                   <Button
-                    type="button"
+                    type="submit"
                     color="primary"
                     className="btn mr-2 shadow-none"
                     onClick={() => {
                       generateCode();
                     }}
                   >
-                    Save & Continue
+                    Submit
                   </Button>
                   <Button
                     className="shadow-none"
@@ -313,4 +252,4 @@ const OpportunityDetails = () => {
   );
 };
 
-export default OpportunityDetails;
+export default SalesOrderDetails;
