@@ -200,6 +200,7 @@ const MemberTypeDetails = Loadable(lazy(() => import('../views/detailTable/membe
 const PriceGroupAdd = Loadable(lazy(() => import('../views/detailTable/pricegroupDetails')));
 const CatalogueDetailsCL = Loadable(lazy(() => import('../views/detailTable/CatalogueDetailsCL')));
 const PaymodeDetailsCL = Loadable(lazy(() => import('../views/detailTable/PaymodeDetailsCL')));
+const PaymentDetailsCL = Loadable(lazy(() => import('../views/detailTable/PaymentDetailsCL')));
 const CatalogueCLEdit = Loadable(lazy(() => import('../views/EditData/CatalogueCLEdit')));
 const CatalogueAddProduct = Loadable(lazy(() => import('../views/EditData/CatalogueAddProduct')));
 const PaymodeEditCL = Loadable(lazy(() => import('../views/EditData/PaymodeEditCL')));
@@ -583,6 +584,7 @@ const Routernew = () => {
           <Route path="/pricegroupDetails" name="clienttdata" element={<PriceGroupAdd />}></Route>
           <Route path="/CatalogueDetailsCL" name="clienttdata" element={<CatalogueDetailsCL />}></Route>
           <Route path="/PaymodeDetailsCL" name="clienttdata" element={<PaymodeDetailsCL />}></Route>
+          <Route path="/PaymentDetailsCL" name="clienttdata" element={<PaymentDetailsCL />}></Route>
 
           <Route path="/Product" name="productdata" element={<ProductTable />}></Route>
           <Route path="/ProductCL" name="productdata" element={<ProductCLTable />}></Route>
