@@ -36,16 +36,10 @@ const Test = () => {
 
   const toggleDropdown = () => setDropdownOpen((prevState) => !prevState);
 
-  const getSupplier = () => {
+  const getDeliveryVerifi = () => {
     setLoading(true);
     api
-      .post('/salesOrder/getsalesorder', {
-        tran_no: tranNoFilter,
-        from_date: fromDate,
-        to_date: toDate,
-        customer: customerFilter,
-        status: statusFilter,
-      })
+      .get('/salesreturn/getDeliveryVerification')
       .then((res) => {
         setSupplier(res.data.data);
         setTimeout(() => {
@@ -72,7 +66,7 @@ const Test = () => {
   };
 
   useEffect(() => {
-    getSupplier();
+    getDeliveryVerifi();
   }, []);
 
   const columns = [
@@ -169,7 +163,7 @@ useEffect(() => {
             <option value="Open">Open</option>
             <option value="Closed">Closed</option>
           </select>
-          <Button color="primary" onClick={getSupplier}>Search</Button>
+          <Button color="primary" onClick={getDeliveryVerifi}>Search</Button>
         </div>
 
         <CommonTable
