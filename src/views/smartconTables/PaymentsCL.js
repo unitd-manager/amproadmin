@@ -137,17 +137,17 @@ const PaymentsCL = () => {
     console.log("🔍 Printing payment with ID:", selectedPayment.payments_id);
   };
 
-  const handleVoucher = () => {
-  if (!selectedPayment) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Select Atleast One Payment',
-      confirmButtonText: 'OK',
-    });
-    return;
-  }
-  setVoucherModalOpen(true);
-};
+//   const handleVoucher = () => {
+//   if (!selectedPayment) {
+//     Swal.fire({
+//       icon: 'warning',
+//       title: 'Select Atleast One Payment',
+//       confirmButtonText: 'OK',
+//     });
+//     return;
+//   }
+//   setVoucherModalOpen(true);
+// };
 
 
   const columns = [
@@ -264,15 +264,19 @@ const PaymentsCL = () => {
     </DropdownToggle>
     <DropdownMenu end/>
       <DropdownMenu end>
-        <DropdownItem onClick={handleVoucher}>Payment Voucher</DropdownItem>
+        {/* <DropdownItem onClick={handleVoucher}>Payment Voucher</DropdownItem> */}
         <DropdownItem onClick={() => { /* Implement recap */ message('Recap clicked', 'info'); }}>Recap</DropdownItem>
         <DropdownItem onClick={handleEditClick}>Edit</DropdownItem>
-        <DropdownItem onClick={() => { /* Implement print */ message('Print clicked', 'info'); }}>Print Payment Voucher</DropdownItem>
       </DropdownMenu>
     </UncontrolledDropdown>
     <Button color="secondary" type="button" onClick={handlePrintClick}>
           <Icon.Printer size={16} className="me-1" />
-          Print Payment Voucher
+         
+            <DropdownItem>   <PaymentsPrintPdf
+         
+            paymentId={printPaymentId}
+          onClose={() => setPrintPaymentId(null)}
+        /></DropdownItem>
         </Button>
       </div>
 
@@ -302,13 +306,7 @@ const PaymentsCL = () => {
   toggle={() => setVoucherModalOpen(false)}
   payment={selectedPayment}
 />
-      {/* Print PDF */}
-      {printPaymentId && (
-        <PaymentsPrintPdf
-          paymentId={printPaymentId}
-          onClose={() => setPrintPaymentId(null)}
-        />
-      )}
+     
     </div>
   );
 };

@@ -5,51 +5,42 @@ import PropTypes from 'prop-types';
 import moment from 'moment';
 import api from '../../constants/api';
 import message from '../Message';
-import PdfFooter from './PdfFooter'; // Your footer component
+import PdfFooter from './PdfFooter';
 
-const InvoicePurchase = ({ id }) => {
-  InvoicePurchase.propTypes = {
+const PdfPurchaseInvoice = ({ id }) => {
+  PdfPurchaseInvoice.propTypes = {
     id: PropTypes.any,
   };
 
-  const [salesOrder, setSalesOrder] = useState({});
+  const [invoice, setInvoice] = useState({});
   const [lineItems, setLineItems] = useState([]);
-  const [hfdata, setHeaderFooterData] = useState();
+  const [supplier, setSupplier] = useState({});
 
-  useEffect(() => {
-    api.get('/setting/getSettingsForCompany').then((res) => {
-      setHeaderFooterData(res.data.data);
-    });
-  }, []);
-
-  const findCompany = (key) => {
-    const filteredResult = hfdata?.find((e) => e.key_text === key);
-    return filteredResult?.value || '';
-  };
-
-  const fetchSalesOrderData = () => {
+  // Fetch invoice + supplier + items
+  const fetchInvoiceData = () => {
     api
-      .post('/salesorder/getSalesorderById', { sales_order_id: id })
+      .post('/purchaseinvoice/getPurchaseInvoiceById', { purchase_invoice_id: id })
       .then((res) => {
-        setSalesOrder(res.data.data[0] || {});
+        setInvoice(res.data.data[0] || {});
+        setSupplier(res.data.supplier || {});
       })
       .catch(() => {
-        message('Sales Order Data Not Found', 'info');
+        message('Purchase Invoice Not Found', 'info');
       });
 
     api
-      .post('/salesorder/getQuoteLineItemsById', { sales_order_id: id })
+      .post('/purchaseinvoice/getPurchaseInvoiceItems', { purchase_invoice_id: id })
       .then((res) => {
         setLineItems(res.data.data || []);
       })
       .catch(() => {
-        message('Sales Order Line Items Not Found', 'info');
+        message('Invoice Line Items Not Found', 'info');
       });
   };
 
   useEffect(() => {
     if (id) {
-      fetchSalesOrderData();
+      fetchInvoiceData();
     }
   }, [id]);
 
@@ -75,7 +66,7 @@ const InvoicePurchase = ({ id }) => {
         { text: `${index + 1}`, style: 'tableBody', alignment: 'center' },
         { text: item.product_name || '', style: 'tableBody' },
         { text: item.uom || '', style: 'tableBody', alignment: 'center' },
-        { text: item.carton_qty || '', style: 'tableBody', alignment: 'center' },
+        { text: item.ctn || '', style: 'tableBody', alignment: 'center' },
         { text: item.pcs || '', style: 'tableBody', alignment: 'center' },
         { text: item.foc || '', style: 'tableBody', alignment: 'center' },
         { text: item.cpri || '', style: 'tableBody', alignment: 'right' },
@@ -90,10 +81,10 @@ const InvoicePurchase = ({ id }) => {
       pageMargins: [20, 160, 20, 60],
       footer: PdfFooter,
       content: [
-        // Header with company + title
+        // Header
         {
           columns: [
-            { text: findCompany('company_name') || 'AMPRO PTE LTD', style: 'header' },
+            { text: 'AMPRO PTE LTD', style: 'header' },
             { text: 'PURCHASE INVOICE', style: 'headerRight', alignment: 'right' },
           ],
         },
@@ -106,25 +97,25 @@ const InvoicePurchase = ({ id }) => {
           alignment: 'center',
           margin: [0, 10, 0, 10],
         },
-        // Customer + Invoice Details
+        // Supplier + Invoice Details
         {
           columns: [
             {
               stack: [
-                { text: 'CUSTOMER :', bold: true },
-                { text: salesOrder.customer_name || '', style: 'boldText' },
-                { text: salesOrder.customer_address || '' },
-                { text: `Tel : ${salesOrder.customer_phone || ''}` },
+                { text: 'SUPPLIER :', bold: true },
+                { text: supplier.supplier_name || '', style: 'boldText' },
+                { text: supplier.address || '' },
+                { text: `Tel : ${supplier.phone || ''}` },
               ],
               style: 'box',
             },
             {
               stack: [
-                { text: `TRAN NO : ${salesOrder.tran_no || ''}` },
-                { text: `TRAN DATE : ${moment(salesOrder.tran_date).format('DD/MM/YYYY')}` },
-                { text: `TERMS : ${salesOrder.terms || ''}` },
+                { text: `TRAN NO : ${invoice.tran_no || ''}` },
+                { text: `TRAN DATE : ${moment(invoice.tran_date).format('DD/MM/YYYY')}` },
+                { text: `TERMS : ${invoice.carry_days || ''}` },
                 { text: `PAGE : 1/1` },
-                { text: `AGENT NAME : ${salesOrder.agent_name || ''}` },
+                { text: `AGENT NAME : ${invoice.created_by || ''}` },
               ],
               style: 'box',
             },
@@ -140,15 +131,17 @@ const InvoicePurchase = ({ id }) => {
           layout: 'lightHorizontalLines',
           margin: [0, 10, 0, 10],
         },
-        // Totals + Remarks
+        // Totals
         {
           columns: [
             { text: 'Remarks :', bold: true },
             {
               stack: [
-                { text: `Sub Total : ${salesOrder.sub_total || ''}`, alignment: 'right' },
-                { text: `GST : ${salesOrder.gst || ''}`, alignment: 'right' },
-                { text: `Net Total : ${salesOrder.net_total || ''}`, alignment: 'right', bold: true },
+                { text: `Sub Total : ${invoice.sub_total || ''}`, alignment: 'right' },
+                { text: `GST : ${invoice.gst || ''}`, alignment: 'right' },
+                { text: `Net Total : ${invoice.net_total || ''}`, alignment: 'right', bold: true },
+                { text: `Paid Amount : ${invoice.paid_amount || ''}`, alignment: 'right' },
+                { text: `Balance Amount : ${invoice.balance_amount || ''}`, alignment: 'right' },
               ],
               width: 'auto',
             },
@@ -179,7 +172,7 @@ const InvoicePurchase = ({ id }) => {
     };
 
     pdfMake.vfs = pdfFonts.pdfMake.vfs;
-    pdfMake.createPdf(dd, null, null, pdfFonts.pdfMake.vfs).open();
+       pdfMake.createPdf(dd, null, null, pdfFonts.pdfMake.vfs).open();
   };
 
   return (
@@ -189,4 +182,4 @@ const InvoicePurchase = ({ id }) => {
   );
 };
 
-export default InvoicePurchase;
+export default PdfPurchaseInvoice;
