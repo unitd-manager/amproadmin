@@ -7,7 +7,7 @@ import api from '../../constants/api';
 import message from '../../components/Message';
 
 const PriceGroupAdd = () => {
-  const [groupData, setGroupData] = useState({ group_name: '', is_active: 1 });
+  const [groupData, setGroupData] = useState({ price_group_name: '', is_active: 1 });
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -19,13 +19,13 @@ const PriceGroupAdd = () => {
   };
 
   const handleSubmit = () => {
-    if (!groupData.group_name) {
+    if (!groupData.price_group_name) {
       message('Group name is required', 'warning');
       return;
     }
 
     api
-      .post('/pricegroup/insert', groupData)
+      .post('/pricegroup/insertPriceGroup', groupData)
       .then(() => {
         message('Group added successfully', 'success');
         navigate('/PriceGroup');
@@ -38,7 +38,7 @@ const PriceGroupAdd = () => {
       <h3>Add/Edit Price Group</h3>
       <FormGroup>
         <Label>Group Name *</Label>
-        <Input name="group_name" onChange={handleChange} value={groupData.group_name} />
+        <Input name="price_group_name" onChange={handleChange} value={groupData.price_group_name} />
       </FormGroup>
       <FormGroup check>
         <Label check>

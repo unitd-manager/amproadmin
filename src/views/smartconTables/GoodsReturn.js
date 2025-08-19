@@ -1,10 +1,11 @@
+/*eslint-disable*/
 import React, { useState, useEffect } from 'react';
 import {
   Button, Input, Table, Row, Col, DropdownToggle, DropdownMenu,
   DropdownItem, ButtonDropdown
 } from 'reactstrap';
 import moment from 'moment';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../../constants/api';
 
 const GoodsReturnList = () => {
@@ -21,12 +22,13 @@ const GoodsReturnList = () => {
   const [totalRecords, setTotalRecords] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
 const [selectedTranNos, setSelectedTranNos] = useState([]);
-
+const [supplierOptions, setSupplierOptions] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
 
-  
+  console.log('selected trans nos:', selectedTranNos);
+  const navigate=useNavigate();
   
   const fetchData = async () => {
     try {
@@ -49,9 +51,15 @@ const [selectedTranNos, setSelectedTranNos] = useState([]);
   };
 
   useEffect(() => {
+   
     fetchData();
   }, [currentPage]);
 
+  useEffect(() => {
+     api.get("/supplier/getSupplier").then((response) => {
+      setSupplierOptions(response.data.data);
+    });
+  }, []);
   const handleFilterChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
@@ -66,10 +74,12 @@ const [selectedTranNos, setSelectedTranNos] = useState([]);
 
   const handleNewTransactionClick = () => {
     console.log('Main "New Transaction" button clicked');
+    navigate('/GoodsReturnDetails');
     // e.g., navigate to /createGoodsReturn
   };
 
 const handleConvertToDebitNote = async () => {
+  console.log('selected trans nos:', selectedTranNos);
   if (selectedTranNos.length === 0) {
     alert('Please select at least one Goods Return to convert.');
     return;
@@ -88,6 +98,8 @@ const handleConvertToDebitNote = async () => {
 };
 
 const handleRepeatGoodsReturn = async () => {
+  
+  console.log('selected trans nos:', selectedTranNos);
   if (selectedTranNos.length !== 1) {
     alert('Please select one Goods Return to repeat.');
     return;
@@ -115,22 +127,38 @@ const handleRepeatGoodsReturn = async () => {
         <Col md={2}><Input type="date" name="from_date" value={filters.from_date} onChange={handleFilterChange} /></Col>
         <Col md={2}><Input type="date" name="to_date" value={filters.to_date} onChange={handleFilterChange} /></Col>
         <Col md={2}>
-          <Input type="select" name="status" value={filters.status} onChange={handleFilterChange}>
+          <Input type="select" name="status" placeholder="Status" value={filters.status} onChange={handleFilterChange}>
           <option></option>
             <option>Open</option>
             <option>Closed</option>
             <option>Cancelled</option>
           </Input>
         </Col>
-        <Col md={2}><Input name="supplier" placeholder="Select All Supplier" value={filters.supplier} onChange={handleFilterChange} /></Col>
+        <Col md={2}>
+        {/* <Input name="supplier" placeholder="Select All Supplier" value={filters.supplier} onChange={handleFilterChange} /> */}
+        <Input
+                     type="select"
+                     name="supplier_id"
+                     value={filters.supplier_id}
+                     onChange={handleFilterChange}
+                   >
+                     <option value="">Select Supplier</option>
+                     {supplierOptions.map((supplier, index) => (
+                       <option key={index} value={supplier.supplier_id}>
+                         {supplier.company_name}
+                       </option>
+                     ))}
+                   </Input>
+        </Col>
+        
         <Col md={2}><Input name="invoice_no" placeholder="Invoice No" value={filters.invoice_no} onChange={handleFilterChange} /></Col>
       </Row>
 
       <Row className="mb-3">
         <Col md={10}>
           <Button color="primary" onClick={handleSearch}><i className="fa fa-search" /></Button>{' '}
-          <Button color="secondary"><i className="fa fa-print" /></Button>{' '}
-          <Button color="danger"><i className="fa fa-trash" /></Button>
+          {/* <Button color="secondary"><i className="fa fa-print" /></Button>{' '}
+          <Button color="danger"><i className="fa fa-trash" /></Button> */}
         </Col>
         <Col md={2} className="text-right">
           <ButtonDropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
@@ -138,10 +166,10 @@ const handleRepeatGoodsReturn = async () => {
               New Transaction
             </Button>
             <DropdownToggle caret color="primary" />
-            <DropdownMenu end>
-              <DropdownItem onClick={() => handleConvertToDebitNote}>Convert to Purchase Invoice</DropdownItem>
-              <DropdownItem onClick={() => handleRepeatGoodsReturn}>Repeat Goods Receipt </DropdownItem>
-            </DropdownMenu>
+            {/* <DropdownMenu end>
+              <DropdownItem onClick={() => handleConvertToDebitNote}>Convert to Debit Note</DropdownItem>
+              <DropdownItem onClick={() => handleRepeatGoodsReturn}>Repeat Goods Return</DropdownItem>
+            </DropdownMenu> */}
           </ButtonDropdown>
         </Col>
       </Row>
@@ -179,7 +207,7 @@ const handleRepeatGoodsReturn = async () => {
 
               <td><Link to={`/GoodsReturnEdit/${item.goods_return_id}`}>{item.tran_no}</Link></td>
               <td>{item.tran_date?moment(item.tran_date).format('YYYY-MM-DD'):''}</td>
-              <td>{item.supplier_name}</td>
+              <td>{item.company_name}</td>
               <td>{item.status}</td>
               <td>{item.invoice_no}</td>
               <td>{item.sub_total}</td>

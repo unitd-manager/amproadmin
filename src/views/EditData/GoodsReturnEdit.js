@@ -16,7 +16,7 @@ import {
   Button,
 } from "reactstrap";
 import classnames from "classnames";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Select from "react-select";
 import message from '../../components/Message';
 import { FaTrashAlt, FaPlusCircle } from "react-icons/fa";
@@ -70,7 +70,7 @@ const PurchaseOrderPage = () => {
       total_price: 0,
     },
   ]);
-
+const navigate=useNavigate();
   useEffect(() => {
     // Fetch supplier form data
     api.get("/api/supplier-info").then((response) => {
@@ -92,14 +92,14 @@ const PurchaseOrderPage = () => {
     });
     
     // Fetch table data
-    api.post("/purchaseorder/getcsproductLineItemById",{goods_return_id:id}).then((response) => { 
+    api.post("/purchaseorder/getGoodsReturnProductByGoodsReturnId",{goods_return_id:id}).then((response) => { 
       setRows(response.data.data);
       setTableData(response.data.data);
     });
 
     // Fetch supplier options for dropdown
     api.post("/purchaseorder/getGoodsReturnById",{goods_return_id:id}).then((response) => {
-      setFormData(response.data.data);
+      setFormData(response.data.data[0]);
     });
   
     api.post("/currency/getCuerrencyByGoodsReturnId",{goods_return_id:id}).then((response) => {
@@ -132,7 +132,7 @@ useEffect(() => {
     }));
     console.log(currency,'currency');
   };
-
+  console.log(rows,'rows');
   // Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -158,7 +158,7 @@ useEffect(() => {
   // Handle form submit (example API call structure)
   const handleSubmit = async () => {
     formData.sub_total=rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2);
-    formData.tax_amount=parseFloat(sub_total *0.09.toFixed(2));
+    formData.tax_amount=parseFloat(formData.sub_total *0.09.toFixed(2));
     
     formData.net_total=(
       Number(rows.reduce((sum, row) => sum + row.total_price, 0)) +
@@ -168,7 +168,7 @@ useEffect(() => {
     .post('/purchaseorder/editGoodsReturn', formData)
     .then(() => {
       api
-      .post('/currency/editGoodsCurrency', currency) 
+      .post('/currency/editGoodsReturnCurrency', currency) 
       .then(() => {})
       
       rows?.forEach((el)=>{
@@ -230,7 +230,14 @@ useEffect(() => {
   
   console.log('rows',rows);
   console.log('formdata',formData);
-  const deleteRow = (index) => {
+  const deleteRow = (index,id) => {
+    if(id){
+      api.post('/purchaseorder/deleteGoodsReturnProduct',{goods_return_product_id:id}).then(() => {
+        message('Record deleted successfully.', 'success');
+      }).catch(() => {
+        message('Network connection error.', 'error');
+      });
+    }
     if (rows.length > 1) {
       setRows(rows.filter((_, i) => i !== index));
     }
@@ -263,7 +270,7 @@ useEffect(() => {
               type="text"
               placeholder="Enter Tran No"
               name="tran_no"
-              value={formData.tran_no}
+              value={formData?.tran_no}
               onChange={handleChange}
               
             />
@@ -276,7 +283,7 @@ useEffect(() => {
               type="date"
               
               name="tran_date"
-              value={formData.tran_date}
+              value={formData?.tran_date}
               onChange={handleChange}
               
             />
@@ -314,9 +321,9 @@ useEffect(() => {
               type="text"
               placeholder="Enter supplier code"
               name="supplier_code"
-              value={formData.supplier_code}
-              onChange={handleChange}
-              
+              value={formData?.supplier_code}
+              //onChange={handleChange}
+              disabled
             />
           </FormGroup>
         </Col>
@@ -326,7 +333,7 @@ useEffect(() => {
             <Input
               type="select"
               name="supplier_id"
-              value={formData.supplier_id}
+              value={formData?.supplier_id}
               onChange={handleChange}
             >
               <option value="">Select Supplier</option>
@@ -345,7 +352,7 @@ useEffect(() => {
               type="text"
               placeholder="Enter contact person"
               name="contact_person"
-              value={formData.contact_person}
+              value={formData?.contact_person}
               onChange={handleChange}
               
             />
@@ -358,7 +365,7 @@ useEffect(() => {
               type="text"
               placeholder="Enter contact address"
               name="contact_address1"
-              value={formData.contact_address1}
+              value={formData?.contact_address1}
               onChange={handleChange}
               
             />
@@ -371,7 +378,7 @@ useEffect(() => {
               type="text"
               placeholder="Enter contact address"
               name="contact_address2"
-              value={formData.contact_address2}
+              value={formData?.contact_address2}
               onChange={handleChange}
               
             />
@@ -384,7 +391,7 @@ useEffect(() => {
               type="text"
               placeholder="Enter contact address"
               name="contact_address3"
-              value={formData.contact_address3}
+              value={formData?.contact_address3}
               onChange={handleChange}
               
             />
@@ -399,7 +406,7 @@ useEffect(() => {
               type="text"
               placeholder="Country"
               name="country"
-              value={formData.country}
+              value={formData?.country}
               onChange={handleChange}
             
             /></Col>
@@ -408,7 +415,7 @@ useEffect(() => {
               type="text"
               placeholder="Postal code"
               name="postal_code"
-              value={formData.postal_code}
+              value={formData?.postal_code}
               onChange={handleChange}
             
             /></Col>
@@ -422,22 +429,12 @@ useEffect(() => {
               type="textarea"
               name="remarks"
               placeholder="Remarks"
-              value={formData.remarks}
+              value={formData?.remarks}
               onChange={handleChange}
             />
           </FormGroup>
         </Col>
-        <Col md="6">
-          <FormGroup>
-            <label>Delivery Date</label>
-            <Input
-              type="date"
-              name="delivery_date"
-              value={formData.delivery_date}
-              onChange={handleChange}
-            />
-          </FormGroup>
-        </Col>
+       
         <Col md="6">
           <FormGroup>
             <label>Invoice Date</label>
@@ -445,7 +442,7 @@ useEffect(() => {
               type="date"
               placeholder=""
               name="invoice_date"
-              value={formData.invoice_date}
+              value={formData?.invoice_date}
               onChange={handleChange}
               
             />
@@ -459,7 +456,7 @@ useEffect(() => {
               type="text"
               placeholder="invoice_no"
               name="invoice_no"
-              value={formData.invoice_no}
+              value={formData?.invoice_no}
               onChange={handleChange}
             
             />
@@ -467,29 +464,8 @@ useEffect(() => {
            
           </FormGroup>
         </Col>
-        <Col md="6">
-          <FormGroup>
-            <label>Delivery Date</label>
-            <Input
-              type="date"
-              name="delivery_date"
-              placeholder="delivery_date"
-              value={formData.delivery_date}
-              onChange={handleChange}
-            />
-          </FormGroup>
-        </Col>
-        <Col md="6">
-          <FormGroup>
-            <label> Delivery No</label>
-            <Input
-              type="text"
-              name="do_no"
-              value={formData.do_no}
-              onChange={handleChange}
-            />
-          </FormGroup>
-        </Col>
+       
+        
       </Row>
      
     </Form>
@@ -547,20 +523,34 @@ useEffect(() => {
         </thead>
         <tbody>
           {rows.map((row, index) => (
-            <tr key={index}>
+            <tr key={row.goods_return_product_id}>
               <td>{index + 1}</td>
-              <td>
-              <Select
-                options={products.map((p) => ({
-                  value: p.product_id,
-                  label: `${p.product_code} - ${p.product_name}`,
-                  ...p,
-                }))}
-                value={products.find((p) => p.product_id === row.product_id) || null} 
-                onChange={(selectedOption) => handleProductSelect(index, selectedOption)}
-                placeholder="Select Product"
-              />
-              </td>
+             
+              <td style={{ width: '200px' }}>
+  <div style={{ width: '100%' }}>
+    <Select
+      styles={{
+        container: (base) => ({
+          ...base,
+          width: '100%',
+        }),
+      }}
+      options={products.map((p) => ({
+        value: p.product_id,
+        label: `${p.product_code} - ${p.product_name}`,
+        ...p,
+      }))}
+      value={
+        products.find(
+          (p) => parseFloat(p.product_id) === parseFloat(row.product_id)
+        ) || null
+      }
+      onChange={(selectedOption) => handleProductSelect(index, selectedOption)}
+      placeholder="Select Product"
+    />
+  </div>
+</td>
+
               <td>
                 <Input
                   type="text"
@@ -603,7 +593,7 @@ useEffect(() => {
                   onChange={(e) => handleRowChange(index, "price", parseFloat(e.target.value) || 0)}
                 />
               </td>
-              <td>{row.total?.toFixed(2)}</td>
+              <td>{Number(row.total)?.toFixed(2)}</td>
               <td>
                 <Input
                   type="number"
@@ -628,7 +618,7 @@ useEffect(() => {
               <td>
                 <FaTrashAlt
                   style={{ color: "red", cursor: "pointer", marginRight: "10px" }}
-                  onClick={() => deleteRow(index)}
+                  onClick={() => deleteRow(index,row.goods_return_product_id)}
                 />
                 <FaPlusCircle
                   style={{ color: "green", cursor: "pointer" }}
@@ -689,10 +679,10 @@ useEffect(() => {
         <p>Total Products: {rows.length}</p>
         <p>Total Amount: ${rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2)}</p> */}
         <Button color="success" onClick={handleSubmit} >Save</Button>
-        <Button color="secondary" className="ms-2">
+        {/* <Button color="secondary" className="ms-2">
           Print
-        </Button>
-        <Button color="danger" className="ms-2">
+        </Button> */}
+        <Button color="danger" className="ms-2" onClick={() => navigate('/GoodsReturn')}>
           Cancel
         </Button>
       </div>

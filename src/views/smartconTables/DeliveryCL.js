@@ -268,33 +268,33 @@ const [newDeliveryDate, setNewDeliveryDate] = useState(() => new Date().toISOStr
         <BreadCrumbs />
         <div className="d-flex flex-wrap gap-2 mb-3">
           <input
-            className="form-control"
+            
             placeholder="Tran No"
             value={tranNoFilter}
             onChange={(e) => setTranNoFilter(e.target.value)}
           />
           <input
             type="date"
-            className="form-control"
+            
             placeholder="From Date"
             value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
           />
           <input
             type="date"
-            className="form-control"
+            
             placeholder="To Date"
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
           />
           <input
-            className="form-control"
+            
             placeholder="Customer"
             value={customerFilter}
             onChange={(e) => setCustomerFilter(e.target.value)}
           />
           <select
-            className="form-select"
+            className="form-select"  style={{ width: '15%' }}
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
@@ -423,7 +423,7 @@ const [newDeliveryDate, setNewDeliveryDate] = useState(() => new Date().toISOStr
         <div className="modal-body">
           <input
             type="date"
-            className="form-control"
+            
             value={newDeliveryDate}
             onChange={(e) => setNewDeliveryDate(e.target.value)}
           />

@@ -370,28 +370,68 @@ const PurchaseOrderPage = () => {
     console.log(currency,'currency');
   };
 
-  // Handle input change
+  // // Handle input change
+  // const handleChange = (e) => {
+  //   const { name, value } = e.target;
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     [name]: value,
+  //   }));
+  //   console.log(formData,'formdata');
+  // };
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
+  const { name, value } = e.target;
+
+  if (name === 'supplier_id') {
+    const selectedSupplier = supplierOptions.find(s => s.supplier_id === value);
+    setFormData((prevData) => ({
+      ...prevData,
+      supplier_id: value,
+      supplier_code: selectedSupplier ? selectedSupplier.supplier_code : ''
     }));
-    console.log(formData,'formdata');
-  };
+  } else {
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value
+    }));
+  }
+};
+
   const getColumnSum = (key) => {
     return rows.reduce((sum, row) => sum + (parseFloat(row[key]) || 0), 0);
   };
+  const [selectedProductCode, setSelectedProductCode] = useState('');
+const [productName, setProductName] = useState('');
+const [productId, setProductId] = useState('');
+
+// onChange handler
+const handleProductChange = (e) => {
+  const selectedCode = e.target.value;
+  setSelectedProductCode(selectedCode);
+
+  const selectedProduct = products.find(
+    (product) => product.product_code === selectedCode
+  );
+  if (selectedProduct) {
+    setProductName(selectedProduct.product_name);
+    
+    
+    setProductId(selectedProduct.product_id);
+    // set other values like cost, uom, etc.
+  }
+};
+
+
   
-  
-    // Handle product selection
-    const handleProductSelect = (index, selectedProduct) => {
-      const updatedRows = [...rows];
-      updatedRows[index].product_id = selectedProduct.product_id;
-      updatedRows[index].product_code = selectedProduct.product_code;
-      updatedRows[index].product_name = selectedProduct.product_name;
-      setRows(updatedRows);
-    };
+    // // Handle product selection
+    // const handleProductSelect = (index, selectedProduct) => {
+    //   const updatedRows = [...rows];
+    //   updatedRows[index].product_id = selectedProduct.product_id;
+    //   updatedRows[index].product_code = selectedProduct.product_code;
+    //   updatedRows[index].product_name = selectedProduct.product_name;
+    //   setRows(updatedRows);
+    // };
   // Handle form submit (example API call structure)
   const handleSubmit = async () => {
     if(currency.currency_rate !==''){
@@ -409,7 +449,7 @@ const PurchaseOrderPage = () => {
        
         el.purchase_order_id=insertedDataId;
         api
-      .post('/purchaseorder/insertPoProducts', el) 
+      .post('/purchaseorder/insertPoProduct', el) 
       .then(() => {
         console.log(insertedDataId,'insertedDataId');})})
       message('enquiry inserted successfully.', 'success');
@@ -421,6 +461,8 @@ const PurchaseOrderPage = () => {
       message('Network connection error.', 'error');
     });
   }else{
+    
+    alert('Please enter currency Details.');
     message('Please enter currency rate.', 'error');
   }
   };
@@ -552,8 +594,8 @@ const PurchaseOrderPage = () => {
               placeholder="Enter supplier code"
               name="supplier_code"
               value={formData.supplier_code}
-              onChange={handleChange}
-              
+              //onChange={handleChange}
+               disabled
             />
           </FormGroup>
         </Col>
@@ -735,16 +777,30 @@ const PurchaseOrderPage = () => {
             <tr key={index}>
               <td>{index + 1}</td>
               <td>
-              <Select
+              {/* <Select
                 options={products.map((p) => ({
-                  value: p.product_id,
+                  value: p.product_code,
                   label: `${p.product_code} - ${p.product_name}`,
                   ...p,
                 }))}
-                value={products.find((p) => p.product_id === row.product_id) || null} 
+                value={products.find((p) => p.product_code === row.product_code) || null} 
                 onChange={(selectedOption) => handleProductSelect(index, selectedOption)}
                 placeholder="Select Product"
-              />
+              /> */}
+              <select
+  className="form-control"
+  value={selectedProductCode}
+  onChange={handleProductChange}
+>
+  <option value="">Select Product</option>
+  {products.map((product) => (
+    <option key={product.product_code} value={product.product_code}>
+      {product.product_code}
+    </option>
+  ))}
+</select>
+
+
               </td>
               <td>
                 <Input
@@ -869,10 +925,10 @@ const PurchaseOrderPage = () => {
         <p>Total Products: {rows.length}</p>
         <p>Total Amount: ${rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2)}</p> */}
         <Button color="success" onClick={handleSubmit} >Save</Button>
-        <Button color="secondary" className="ms-2">
+        {/* <Button color="secondary" className="ms-2">
           Print
-        </Button>
-        <Button color="danger" className="ms-2">
+        </Button> */}
+        <Button color="danger" className="ms-2" onClick={() => navigate('/PurchaseOrder')}>
           Cancel
         </Button>
       </div>

@@ -203,7 +203,7 @@ import {
   Button,
 } from "reactstrap";
 import classnames from "classnames";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Select from "react-select";
 import message from '../../components/Message';
 import { FaTrashAlt, FaPlusCircle } from "react-icons/fa";
@@ -257,7 +257,7 @@ const PurchaseOrderPage = () => {
       total_price: 0,
     },
   ]);
-
+const navigate=useNavigate();
   useEffect(() => {
     // Fetch supplier form data
     api.get("/api/supplier-info").then((response) => {
@@ -279,7 +279,7 @@ const PurchaseOrderPage = () => {
     });
     
     // Fetch table data
-    api.post("/purchaseorder/getcsproductLineItemById",{goods_receipt_id:id}).then((response) => { 
+    api.post("/purchaseorder/getGrProductByGrId",{goods_receipt_id:id}).then((response) => { 
       setRows(response.data.data);
       setTableData(response.data.data);
     });
@@ -345,7 +345,7 @@ useEffect(() => {
   // Handle form submit (example API call structure)
   const handleSubmit = async () => {
     formData.sub_total=rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2);
-    formData.tax_amount=parseFloat(sub_total *0.09.toFixed(2));
+    formData.tax_amount=parseFloat(formData.sub_total *0.09.toFixed(2));
     
     formData.net_total=(
       Number(rows.reduce((sum, row) => sum + row.total_price, 0)) +
@@ -417,7 +417,18 @@ useEffect(() => {
   
   console.log('rows',rows);
   console.log('formdata',formData);
-  const deleteRow = (index) => {
+
+  const deleteRow = (index, id) => {
+    if(id){
+    api
+      .post('/purchaseorder/deleteGrProduct', { gr_product_id:id })
+      .then(() => {
+        message('Record deleted successfully.', 'success');
+      })
+      .catch(() => {
+        message('Unable to delete record.', 'error');
+      });
+    }
     if (rows.length > 1) {
       setRows(rows.filter((_, i) => i !== index));
     }
@@ -502,8 +513,8 @@ useEffect(() => {
               placeholder="Enter supplier code"
               name="supplier_code"
               value={formData.supplier_code}
-              onChange={handleChange}
-              
+              //onChange={handleChange}
+               disabled
             />
           </FormGroup>
         </Col>
@@ -614,17 +625,7 @@ useEffect(() => {
             />
           </FormGroup>
         </Col>
-        <Col md="6">
-          <FormGroup>
-            <label>Delivery Date</label>
-            <Input
-              type="date"
-              name="delivery_date"
-              value={formData.delivery_date}
-              onChange={handleChange}
-            />
-          </FormGroup>
-        </Col>
+       
         <Col md="6">
           <FormGroup>
             <label>Invoice Date</label>
@@ -733,7 +734,7 @@ useEffect(() => {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, index) => (
+          {rows?.map((row, index) => (
             <tr key={index}>
               <td>{index + 1}</td>
               <td>
@@ -790,7 +791,7 @@ useEffect(() => {
                   onChange={(e) => handleRowChange(index, "price", parseFloat(e.target.value) || 0)}
                 />
               </td>
-              <td>{row.total?.toFixed(2)}</td>
+              <td>{Number(row.total)?.toFixed(2)}</td>
               <td>
                 <Input
                   type="number"
@@ -815,7 +816,7 @@ useEffect(() => {
               <td>
                 <FaTrashAlt
                   style={{ color: "red", cursor: "pointer", marginRight: "10px" }}
-                  onClick={() => deleteRow(index)}
+                  onClick={() => deleteRow(index,row.gr_product_id)}
                 />
                 <FaPlusCircle
                   style={{ color: "green", cursor: "pointer" }}
@@ -876,10 +877,10 @@ useEffect(() => {
         <p>Total Products: {rows.length}</p>
         <p>Total Amount: ${rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2)}</p> */}
         <Button color="success" onClick={handleSubmit} >Save</Button>
-        <Button color="secondary" className="ms-2">
+        {/* <Button color="secondary" className="ms-2">
           Print
-        </Button>
-        <Button color="danger" className="ms-2">
+        </Button> */}
+        <Button color="danger" className="ms-2" onClick={() => navigate('/GoodsReceipt')}>
           Cancel
         </Button>
       </div>

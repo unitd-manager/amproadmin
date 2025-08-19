@@ -27,7 +27,8 @@ const PurchaseOrderPage = () => {
   const [supplierData, setSupplierData] = useState({});
   const [products, setProducts] = useState([]);
   const [tableData, setTableData] = useState([]);
- const [formData, setFormData] = useState({
+  const [billDiscount, setBillDiscount] = useState(0);
+  const [formData, setFormData] = useState({
      tran_no: "",
      tran_date: "",
      supplier_code: "",
@@ -69,7 +70,9 @@ const PurchaseOrderPage = () => {
        total_price: 0,
      },
    ]);
- 
+ console.log('bill discount'
+  , billDiscount
+ );
   useEffect(() => {
     // Fetch supplier form data
     api.get("/api/supplier-info").then((response) => {
@@ -105,16 +108,33 @@ const PurchaseOrderPage = () => {
     }));
     console.log(currency,'currency');
   };
+const handleChange = (e) => {
+  const { name, value } = e.target;
+
+  if (name === 'supplier_id') {
+    const selectedSupplier = supplierOptions.find(s => s.supplier_id === value);
+    setFormData((prevData) => ({
+      ...prevData,
+      supplier_id: value,
+      supplier_code: selectedSupplier ? selectedSupplier.supplier_code : ''
+    }));
+  } else {
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value
+    }));
+  }
+};
 
   // Handle input change
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    console.log(formData,'formdata');
-  };
+  // const handleChange = (e) => {
+  //   const { name, value } = e.target;
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     [name]: value,
+  //   }));
+  //   console.log(formData,'formdata');
+  // };
   const getColumnSum = (key) => {
     return rows.reduce((sum, row) => sum + (parseFloat(row[key]) || 0), 0);
   };
@@ -132,7 +152,7 @@ const PurchaseOrderPage = () => {
   const handleSubmit = async () => {
     if(currency.currency_rate !==''){
       formData.sub_total=rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2);
-      formData.tax_amount=parseFloat(sub_total *0.09.toFixed(2));
+      formData.tax_amount=parseFloat(formData.sub_total *0.09.toFixed(2));
     
       formData.net_total=(
         Number(rows.reduce((sum, row) => sum + row.total_price, 0)) +
@@ -156,13 +176,15 @@ const PurchaseOrderPage = () => {
         console.log(insertedDataId,'insertedDataId');})})
       message('enquiry inserted successfully.', 'success');
       setTimeout(() => {
-        navigate(`/GoodsReceivedEdit/${insertedDataId}`);
+        navigate(`/GoodsReceiptEdit/${insertedDataId}`);
       }, 300);
     })
     .catch(() => {
       message('Network connection error.', 'error');
     });
   }else{
+    
+    alert('Please enter currency Details.');
     message('Please enter currency rate.', 'error');
   }
   };
@@ -233,7 +255,7 @@ const PurchaseOrderPage = () => {
   };
   return (
     <Container className="mt-4">
-      <h2>Add/Edit Purchase Order</h2>
+      <h2>Add/Edit Goods Receipt</h2>
       <Row>
       <Col md="6">
           <FormGroup>
@@ -294,8 +316,8 @@ const PurchaseOrderPage = () => {
               placeholder="Enter supplier code"
               name="supplier_code"
               value={formData.supplier_code}
-              onChange={handleChange}
-              
+              //onChange={handleChange}
+               disabled
             />
           </FormGroup>
         </Col>
@@ -406,17 +428,7 @@ const PurchaseOrderPage = () => {
             />
           </FormGroup>
         </Col>
-         <Col md="6">
-                  <FormGroup>
-                    <label>Delivery Date</label>
-                    <Input
-                      type="date"
-                      name="delivery_date"
-                      value={formData.delivery_date}
-                      onChange={handleChange}
-                    />
-                  </FormGroup>
-                </Col>
+         
                 <Col md="6">
                   <FormGroup>
                     <label>Invoice Date</label>
@@ -663,10 +675,10 @@ const PurchaseOrderPage = () => {
         <p>Total Products: {rows.length}</p>
         <p>Total Amount: ${rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2)}</p> */}
         <Button color="success" onClick={handleSubmit} >Save</Button>
-        <Button color="secondary" className="ms-2">
+        {/* <Button color="secondary" className="ms-2">
           Print
-        </Button>
-        <Button color="danger" className="ms-2">
+        </Button> */}
+        <Button color="danger" className="ms-2" onClick={() => navigate('/GoodsReceipt')}>
           Cancel
         </Button>
       </div>
