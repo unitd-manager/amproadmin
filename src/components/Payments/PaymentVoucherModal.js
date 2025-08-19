@@ -38,7 +38,7 @@ const PaymentVoucherModal = ({ isOpen, toggle }) => {
   const [accounts, setAccounts] = useState([]);
   const [account, setAccount] = useState('');
   const [billNo, setBillNo] = useState('');
-
+console.log(setSupplierCode,setPaymode,paymodes);
   // Expense rows, now with a unique ID for better keying
   const [expenseGroups, setExpenseGroups] = useState([]);
   const [expenses, setExpenses] = useState([{ id: crypto.randomUUID(), group: '', account: '', amount: '' }]);
@@ -163,20 +163,20 @@ const PaymentVoucherModal = ({ isOpen, toggle }) => {
           <TabPane tabId="1">
             <Row className="mt-3">
               <Col md={6}>
-                <FormGroup>
+                {/* <FormGroup>
                   <Label>Supplier Code</Label>
                   <Input type="select" value={supplierCode} onChange={(e) => setSupplierCode(e.target.value)}>
                     <option value="">Select</option>
-                    {supplierList.map((s) => (
+                    {supplierList && supplierList.map((s) => (
                       <option key={s.code} value={s.code}>{s.code}</option>
                     ))}
                   </Input>
-                </FormGroup>
+                </FormGroup> */}
                 <FormGroup>
                   <Label>Remarks</Label>
                   <Input type="text" value={remarks} onChange={(e) => setRemarks(e.target.value)} />
                 </FormGroup>
-                <FormGroup>
+                {/* <FormGroup>
                   <Label>Paymode</Label>
                   <Input type="select" value={paymode} onChange={(e) => setPaymode(e.target.value)}>
                     <option value="">Select</option>
@@ -184,7 +184,7 @@ const PaymentVoucherModal = ({ isOpen, toggle }) => {
                       <option key={p.id} value={p.code}>{p.name}</option>
                     ))}
                   </Input>
-                </FormGroup>
+                </FormGroup> */}
               </Col>
               <Col md={6}>
                 <FormGroup>

@@ -8,9 +8,10 @@ import message from '../Message';
 import PdfHeader from './PdfHeader';
 import PdfFooter from './PdfFooter';
 
-pdfMake.vfs = pdfFonts.pdfMake.vfs; // ✅ load Roboto fonts once
 
 const PaymentsPrintPdf = ({ paymentId, onClose }) => {
+      pdfMake.vfs = pdfFonts.pdfMake.vfs;
+
   PaymentsPrintPdf.propTypes = {
     paymentId: PropTypes.any,
     onClose: PropTypes.func,
@@ -185,11 +186,8 @@ ${supplier.address_country || ''}`,
       };
 
       // ✅ Open in a new tab
-      pdfMake.createPdf(dd).getBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        console.log("✅ PDF Blob created, opening in new tab:", url);
-        window.open(url, "_blank");
-      });
+     pdfMake.vfs = pdfFonts.pdfMake.vfs;
+    pdfMake.createPdf(dd, null, null, pdfFonts.pdfMake.vfs).open();
 
       if (onClose) {
         console.log("🔒 Closing after PDF generation...");
@@ -200,7 +198,11 @@ ${supplier.address_country || ''}`,
     }
   }, [paymentId, supplier, transactions, payments, hfdata, onClose]);
 
-  return null;
+   return (
+    <a  onClick={PaymentsPrintPdf} >
+      Print Packing List
+    </a>
+  );
 };
 
 export default PaymentsPrintPdf;
