@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Form, Row, Col, FormGroup, Label, Input, Button, Table ,  TabContent,
+import { Form, Row, Col, FormGroup, Label, Input, Button,  TabContent,
   TabPane,
   Nav,
   NavItem,
@@ -16,6 +16,7 @@ import message from '../../components/Message';
 import api from '../../constants/api';
 import creationdatetime from '../../constants/creationdatetime';
 import AppContext from '../../context/AppContext';
+import StockRequestProducts from '../../components/StockRequest/StockRequestProducts';
 
 const StockRequestEdit = () => {
   const { id } = useParams();
@@ -28,17 +29,49 @@ const StockRequestEdit = () => {
   };
 
   const [stockRequestDetails, setStockRequestDetails] = useState({});
-  const [products, setProducts] = useState([]);
-  const [newProduct, setNewProduct] = useState({});
+  //const [products, setProducts] = useState([]);
 
   // Handle input changes
   const handleInputs = (e) => {
     setStockRequestDetails({ ...stockRequestDetails, [e.target.name]: e.target.value });
   };
 
-  // Handle new product input changes
-  const handleProductInputs = (e) => {
-    setNewProduct({ ...newProduct, [e.target.name]: e.target.value });
+  const [addLineItemModal, setAddLineItemModal] = useState(false);
+  const [lineItem, setLineItem] = useState();
+  const [viewLineModal, setViewLineModal] = useState(false);
+
+  const [editLineModelItem, setEditLineModelItem] = useState(null);
+  const [editLineModal, setEditLineModal] = useState(false);
+
+  const viewLineToggle = () => {
+    setViewLineModal(!viewLineModal);
+  };
+  console.log(viewLineToggle);
+
+  const getLineItem = () => {
+      api.post('/stockRequest/getStockRequestProducts', { stock_request_id: id }).then((res) => {
+        setLineItem(res.data.data);
+        //setAddLineItemModal(true);
+      });
+  };
+
+  const deleteRecord = (deleteID) => {
+    Swal.fire({
+      title: `Are you sure? ${deleteID}`,
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        api.post('/salesOrder/deleteProjectQuote', { sales_order_item_id: deleteID }).then(() => {
+          Swal.fire('Deleted!', 'Your Line Items has been deleted.', 'success');
+          window.location.reload();
+        });
+      }
+    });
   };
 
   // Fetch stock request details
@@ -54,16 +87,16 @@ const StockRequestEdit = () => {
   };
 
   // Fetch products
-  const getStockRequestProducts = () => {
-    api
-      .post('/stockRequest/getStockRequestProducts', { stock_request_id: id })
-      .then((res) => {
-        setProducts(res.data.data);
-      })
-      .catch(() => {
-        message('Products not found', 'info');
-      });
-  };
+  // const getStockRequestProducts = () => {
+  //   api
+  //     .post('/stockRequest/getStockRequestProducts', { stock_request_id: id })
+  //     .then((res) => {
+  //       setProducts(res.data.data);
+  //     })
+  //     .catch(() => {
+  //       message('Products not found', 'info');
+  //     });
+  // };
 
   // Update stock request
   const editStockRequest = () => {
@@ -108,209 +141,9 @@ const StockRequestEdit = () => {
     });
   };
 
-  // Add new product
-  const addProduct = () => {
-    if (!newProduct.product_name) {
-      message('Please enter product name', 'error');
-      return;
-    }
-
-    api
-      .post('/stockRequest/insertStockRequestProduct', {
-        ...newProduct,
-        stock_request_id: id,
-        creation_date: creationdatetime,
-        created_by: loggedInuser.first_name,
-      })
-      .then(() => {
-        message('Product added', 'success');
-        setNewProduct({});
-        getStockRequestProducts();
-      })
-      .catch(() => {
-        message('Unable to add product.', 'error');
-      });
-  };
-
-  // Delete product
-  const deleteProduct = (productId) => {
-    Swal.fire({
-      title: 'Delete product?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, delete it!',
-    }).then((result) => {
-      if (result.isConfirmed) {
-        api
-          .post('/stockRequest/deleteStockRequestProduct', { stock_request_product_id: productId })
-          .then(() => {
-            message('Product deleted', 'success');
-            getStockRequestProducts();
-          })
-          .catch(() => {
-            message('Unable to delete product.', 'error');
-          });
-      }
-    });
-  };
-
   useEffect(() => {
     getStockRequestById();
-    getStockRequestProducts();
   }, [id]);
-
-  
-
-  // const tabs = [
-  //   {
-  //     id: '1',
-  //     title: 'Details',
-  //     content: (
-  //       <FormGroup>
-  //         <ComponentCard title="Stock Request Details" creationModificationDate={stockRequestDetails}>
-  //           <Row>
-  //             <Col md="4">
-  //               <FormGroup>
-  //                 <Label>Stock Request No</Label>
-  //                 <Input
-  //                   type="text"
-  //                   name="stock_req_no"
-  //                   value={stockRequestDetails.stock_req_no || ''}
-  //                   onChange={handleInputs}
-  //                 />
-  //               </FormGroup>
-  //             </Col>
-  //             <Col md="4">
-  //               <FormGroup>
-  //                 <Label>From Location</Label>
-  //                 <Input
-  //                   type="text"
-  //                   name="from_location"
-  //                   value={stockRequestDetails.from_location || ''}
-  //                   onChange={handleInputs}
-  //                 />
-  //               </FormGroup>
-  //             </Col>
-  //             <Col md="4">
-  //               <FormGroup>
-  //                 <Label>To Location</Label>
-  //                 <Input
-  //                   type="text"
-  //                   name="to_location"
-  //                   value={stockRequestDetails.to_location || ''}
-  //                   onChange={handleInputs}
-  //                 />
-  //               </FormGroup>
-  //             </Col>
-  //           </Row>
-  //           <Row>
-  //             <Col md="4">
-  //               <FormGroup>
-  //                 <Label>Status</Label>
-  //                 <Input
-  //                   type="select"
-  //                   name="status"
-  //                   value={stockRequestDetails.status || ''}
-  //                   onChange={handleInputs}
-  //                 >
-  //                   <option value="">Select</option>
-  //                   <option value="Draft">Draft</option>
-  //                   <option value="Submitted">Submitted</option>
-  //                   <option value="Completed">Completed</option>
-  //                 </Input>
-  //               </FormGroup>
-  //             </Col>
-  //             <Col md="4">
-  //               <FormGroup>
-  //                 <Label>Stock Request Date</Label>
-  //                 <Input
-  //                   type="date"
-  //                   name="stock_req_date"
-  //                   value={stockRequestDetails.stock_req_date || ''}
-  //                   onChange={handleInputs}
-  //                 />
-  //               </FormGroup>
-  //             </Col>
-  //             <Col md="4">
-  //               <FormGroup>
-  //                 <Label>Remarks</Label>
-  //                 <Input
-  //                   type="text"
-  //                   name="remarks"
-  //                   value={stockRequestDetails.remarks || ''}
-  //                   onChange={handleInputs}
-  //                 />
-  //               </FormGroup>
-  //             </Col>
-  //           </Row>
-  //         </ComponentCard>
-  //       </FormGroup>
-  //     ),
-  //   },
-  //   {
-  //     id: '2',
-  //     title: 'Products',
-  //     content: (
-  //       <ComponentCard title="Stock Request Products">
-  //         <Row>
-  //           <Col md="4">
-  //             <Input
-  //               type="text"
-  //               placeholder="Product Name"
-  //               name="product_name"
-  //               value={newProduct.product_name || ''}
-  //               onChange={handleProductInputs}
-  //             />
-  //           </Col>
-  //           <Col md="2">
-  //             <Input
-  //               type="number"
-  //               placeholder="Quantity"
-  //               name="quantity"
-  //               value={newProduct.quantity || ''}
-  //               onChange={handleProductInputs}
-  //             />
-  //           </Col>
-  //           <Col md="2">
-  //             <Button color="primary" onClick={addProduct}>
-  //               Add
-  //             </Button>
-  //           </Col>
-  //         </Row>
-  //         <Table className="mt-3" bordered>
-  //           <thead>
-  //             <tr>
-  //               <th>#</th>
-  //               <th>Product</th>
-  //               <th>Qty</th>
-  //               <th>Action</th>
-  //             </tr>
-  //           </thead>
-  //           <tbody>
-  //             {products.map((prod, index) => (
-  //               <tr key={prod.stock_request_product_id}>
-  //                 <td>{index + 1}</td>
-  //                 <td>{prod.product_name}</td>
-  //                 <td>{prod.quantity}</td>
-  //                 <td>
-  //                   <Button
-  //                     color="danger"
-  //                     size="sm"
-  //                     onClick={() => deleteProduct(prod.stock_request_product_id)}
-  //                   >
-  //                     Delete
-  //                   </Button>
-  //                 </td>
-  //               </tr>
-  //             ))}
-  //           </tbody>
-  //         </Table>
-  //       </ComponentCard>
-  //     ),
-  //   },
-  // ];
 
   return (
     <div>
@@ -467,65 +300,23 @@ const StockRequestEdit = () => {
               </Col>
             </Row>
           </ComponentCard>
-                </TabPane>
+        </TabPane>
   
-                {/* Tab 2: Customer Login Info */}
-                <TabPane tabId="2">
-                 <ComponentCard title="Stock Request Products">
-          <Row>
-            <Col md="4">
-              <Input
-                type="text"
-                placeholder="Product Name"
-                name="product_name"
-                value={newProduct.product_name || ''}
-                onChange={handleProductInputs}
-              />
-            </Col>
-            <Col md="2">
-              <Input
-                type="number"
-                placeholder="Quantity"
-                name="quantity"
-                value={newProduct.quantity || ''}
-                onChange={handleProductInputs}
-              />
-            </Col>
-            <Col md="2">
-              <Button color="primary" onClick={addProduct}>
-                Add
-              </Button>
-            </Col>
-          </Row>
-          <Table className="mt-3" bordered>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Product</th>
-                <th>Qty</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {products.map((prod, index) => (
-                <tr key={prod.stock_request_product_id}>
-                  <td>{index + 1}</td>
-                  <td>{prod.product_name}</td>
-                  <td>{prod.quantity}</td>
-                  <td>
-                    <Button
-                      color="danger"
-                      size="sm"
-                      onClick={() => deleteProduct(prod.stock_request_product_id)}
-                    >
-                      Delete
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </ComponentCard>
+        {/* Tab 2: Customer Login Info */}
+        <TabPane tabId="2">
+            <StockRequestProducts
+        addLineItemModal={addLineItemModal}
+        setAddLineItemModal={setAddLineItemModal}
+        lineItem={lineItem}
+        setEditLineModelItem={setEditLineModelItem}
+        setEditLineModal={setEditLineModal}
+        editLineModal={editLineModal}
+        editLineModelItem={editLineModelItem}
+        getLineItem={getLineItem}
+        deleteRecord={deleteRecord}
+        id={id}
+        setViewLineModal={setViewLineModal}
+      />
                 </TabPane>
               </TabContent>
             </ComponentCard>
