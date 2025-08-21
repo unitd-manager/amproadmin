@@ -79,27 +79,42 @@ const StockRequestLineItem = ({
   };
 
   // Insert line item API
-  const addLineItemApi = (obj) => {
+  const addLineItemApi = async (obj) => {
     obj.creation_date = creationdatetime;
     obj.created_by = loggedInuser.employee_id;
     obj.stock_request_id = stockRequestId;
 
-    api
-      .post('/stockRequest/insertStockRequestProduct', obj)
-      .then(() => {
-        message('Line Item Added Successfully', 'success');
-        getLineItem(stockRequestId);
-      })
-      .catch(() => {
-        message('Cannot Add Line Items', 'error');
-      });
+    try {
+      await api.post('/stockRequest/insertStockRequestProduct', obj);
+      return true;
+    } catch (error) {
+      console.error('Error adding line item:', error);
+      return false;
+    }
   };
 
   // Collect all values
-  const getAllValues = () => {
-    addLineItem.forEach((item) => {
-      addLineItemApi(item);
-    });
+  const getAllValues = async () => {
+    // Validate products first
+    if (addLineItem.some(item => !item.product_id)) {
+      message('Please select products for all line items', 'error');
+      return;
+    }
+
+    // Process all items in parallel
+    const results = await Promise.all(
+      addLineItem.map(item => addLineItemApi(item))
+    );
+
+    // Check if any item failed
+    if (results.includes(false)) {
+      message('Error adding some line items', 'error');
+      return;
+    }
+
+    message('Line Items Added Successfully', 'success');
+    getLineItem(); // Refresh the line items list
+    setAddLineItemModal(false); // Close the modal
   };
 
   // Handle product change
@@ -280,7 +295,7 @@ const StockRequestLineItem = ({
                 <Button
                   className="shadow-none"
                   color="primary"
-                  onClick={getAllValues}
+                  onClick={() => getAllValues()}
                 >
                   Submit
                 </Button>
