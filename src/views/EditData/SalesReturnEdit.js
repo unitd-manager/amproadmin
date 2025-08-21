@@ -88,7 +88,7 @@ const SalesOrderEdit = () => {
       confirmButtonText: 'Yes, delete it!',
     }).then((result) => {
       if (result.isConfirmed) {
-        api.post('/salesreturn/deleteProjectQuote', { invoice_item_id: deleteID }).then(() => {
+        api.post('/salesreturn/deleteProjectQuote', { sales_return_item_id: deleteID }).then(() => {
           Swal.fire('Deleted!', 'Your Line Items has been deleted.', 'success');
           window.location.reload();
         });
@@ -140,7 +140,7 @@ useEffect(() => {
                               onClick={() => {
                                 editSettingData();
                                 setTimeout(() => {
-                                  navigate('/Invoice');
+                                  navigate('/SalesReturn');
                                   window.location.reload();
                                 }, 1100);
                               }}
@@ -162,7 +162,7 @@ useEffect(() => {
                             <Button
                               color="dark"
                               onClick={() => {
-                                navigate('/Invoice');
+                                navigate('/SalesReturn');
                                 console.log('back to list');
                               }}
                             >
@@ -184,8 +184,8 @@ useEffect(() => {
                   <Input
                     type="text"
                     onChange={handleInputs}
-                    value={settingdetails && settingdetails.invoice_code}
-                    name="tran_no"
+                    value={settingdetails && settingdetails.sales_return_code}
+                    name="sales_return_code"
                   ></Input>
                 </FormGroup>
               </Col>
@@ -195,8 +195,8 @@ useEffect(() => {
                   <Input
                     type="date"
                     onChange={handleInputs}
-                    value={settingdetails && settingdetails.invoice_date}
-                    name="invoice_date"
+                    value={settingdetails && settingdetails.sales_return_date}
+                    name="sales_return_date"
                   />
                 </FormGroup>
               </Col>

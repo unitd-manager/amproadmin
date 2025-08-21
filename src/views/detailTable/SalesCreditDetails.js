@@ -114,10 +114,10 @@ const OpportunityDetails = () => {
   //const[tenderDetails,setTenderDetails]=useState();
   const getTendersById = () => {
     api
-      .post('/salesorder/getSalesorderById', { sales_order_id: id })
+      .post('/salesreturn/getCreditNoteById', { credit_note_id: id })
       .then((res) => {
         setTenderForms(res.data.data);
-        // getContact(res.data.data.company_id);
+        
       })
       .catch(() => { });
   };
@@ -133,20 +133,19 @@ const OpportunityDetails = () => {
   const insertTender = (code) => {
     if (tenderForms.company_id !== '' ) {
 
-      tenderForms.tran_no = code;
-      tenderForms.tran_date = new Date().toISOString().slice(0, 10);
+      tenderForms.credit_note_code = code;
+      tenderForms.credit_note_date = new Date().toISOString().slice(0, 10);
       tenderForms.creation_date = creationdatetime
       tenderForms.created_by = loggedInuser.first_name;
-      tenderForms.status = 'Open';
+      tenderForms.status = 'Not Paid';
       api
-        .post('/salesOrder/insertSalesOrder', tenderForms)
+        .post('/salesOrder/insertCreditNote', tenderForms)
         .then((res) => {
           const insertedDataId = res.data.data.insertId;
           getTendersById();
-
           message('Order inserted successfully.', 'success');
           setTimeout(() => {
-            navigate(`/salesorderEdit/${insertedDataId}?tab=1`);
+            navigate(`/SalesCreditEdit/${insertedDataId}?tab=1`);
           }, 300);
         })
         .catch(() => {
@@ -161,7 +160,7 @@ const OpportunityDetails = () => {
   //QUTO GENERATED CODE
   const generateCode = () => {
     api
-      .post('/commonApi/getCodeValues', { type: 'salesorder' })
+      .post('/commonApi/getCodeValues', { type: 'creditNote' })
       .then((res) => {
         insertTender(res.data.data);
       })

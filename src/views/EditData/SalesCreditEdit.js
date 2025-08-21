@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {  Form,  TabContent,TabPane,  Row, Col, FormGroup, Label, Input,Button} from 'reactstrap';
 import { ToastContainer } from 'react-toastify';
 // import * as Icon from 'react-feather';
@@ -21,19 +21,13 @@ import Tab from '../../components/ProjectTabs/Tab';
 import creationdatetime from '../../constants/creationdatetime';
 
 //import ApiButton from '../../components/ApiButton';
-import Customer from '../../components/SalesOrder/Customer';
-import Currency from '../../components/SalesOrder/Currency';
-import Shipping from '../../components/SalesOrder/Shipping';
-import SalesMan from '../../components/SalesOrder/SalesMan';
-// import QuoteLineItem from '../../components/SalesOrder/QuoteLineItem';
-// import EditLineItemModal from '../../components/SalesOrder/EditLineItemModal';
-import SalesOrderProducts from '../../components/SalesOrder/SalesOrderProducts';
+import Customer from '../../components/SalesCredit/Customer';
+import Currency from '../../components/SalesCredit/Currency';
+import Shipping from '../../components/SalesCredit/Shipping';
+import SalesMan from '../../components/SalesCredit/SalesMan';
 
-// import SalesOrderPrintWithCost from '../../components/PDF/SalesOrderPrintWithCost';
-// import PdfPickingList from '../../components/PDF/PdfPick';
-// import PdfPackingList from '../../components/PDF/PdfPack';
-// import PdfSalesQuote from '../../components/PDF/PdfSalesOrderQuote';
-// import PrintPerfoma from '../../components/PDF/PrintPerfoma';
+import SalesOrderProducts from '../../components/SalesCredit/SalesOrderProducts';
+
 import AppContext from '../../context/AppContext';
 
 
@@ -50,14 +44,7 @@ const SalesOrderEdit = () => {
       { id: '2', name: 'Currency' },
       { id: '3', name: 'Shipping' },
       { id: '4', name: 'Sales Man' },
-      //  { id: '5', name: 'Pdf Pick' },
-      //  { id: '6', name: 'Pdf Pack' },
-      //  { id: '10', name: 'Pdf quote' },
-
-
-     
-      //  { id: '6', name: 'Pdf Pick' },
-      //  { id: '7', name: 'Pdf Pick' },
+    
     ];
     const toggle = (tab) => {
       setActiveTab(tab);
@@ -83,7 +70,7 @@ const SalesOrderEdit = () => {
 
     // Get Line Item
   const getLineItem = () => {
-    api.post('/salesOrder/getQuoteLineItemsById', { sales_order_id: id }).then((res) => {
+    api.post('/salesreturn/getCreditLineItemsById', { credit_note_id: id }).then((res) => {
       setLineItem(res.data.data);
       //setAddLineItemModal(true);
     });
@@ -101,7 +88,7 @@ const SalesOrderEdit = () => {
       confirmButtonText: 'Yes, delete it!',
     }).then((result) => {
       if (result.isConfirmed) {
-        api.post('/salesOrder/deleteProjectQuote', { sales_order_item_id: deleteID }).then(() => {
+        api.post('/salesreturn/deleteCreditNote', { credit_note_item_id: deleteID }).then(() => {
           Swal.fire('Deleted!', 'Your Line Items has been deleted.', 'success');
           window.location.reload();
         });
@@ -116,7 +103,7 @@ const handleInputs = (e) => {
 
 const getSettingById = () => {
   api
-    .post('/salesorder/getSalesorderById', { sales_order_id: id })
+    .post('/salesreturn/getCreditNoteById', { credit_note_id: id })
     .then((res) => {
       setSettingDetails(res.data.data[0]);
     })
@@ -126,10 +113,11 @@ const getSettingById = () => {
 };
 //Update Setting
 const editSettingData = () => {
-   settingdetails.modification_date = creationdatetime;
+    settingdetails.modification_date = creationdatetime;
       settingdetails.modified_by= loggedInuser.first_name;
     api
-      .post('/salesorder/editSalesOrder', settingdetails)
+    
+      .post('/salesreturn/editcreditnote', settingdetails)
       .then(() => {
         message('Record editted successfully', 'success');
       })
@@ -152,7 +140,7 @@ useEffect(() => {
                               onClick={() => {
                                 editSettingData();
                                 setTimeout(() => {
-                                  navigate('/salesOrder');
+                                  navigate('/SalesCredit');
                                   window.location.reload();
                                 }, 1100);
                               }}
@@ -174,7 +162,7 @@ useEffect(() => {
                             <Button
                               color="dark"
                               onClick={() => {
-                                navigate('/salesOrder');
+                                navigate('/SalesCredit');
                                 console.log('back to list');
                               }}
                             >
@@ -187,7 +175,7 @@ useEffect(() => {
       <ToastContainer></ToastContainer>
       <Form>
         <FormGroup>
-          <ComponentCard title="Add/Edit Sales Credit Note" creationModificationDate={settingdetails}>
+          <ComponentCard title="Setting Details" creationModificationDate={settingdetails}>
             {' '}
             <Row>
               <Col md="4">
@@ -196,8 +184,8 @@ useEffect(() => {
                   <Input
                     type="text"
                     onChange={handleInputs}
-                    value={settingdetails && settingdetails.tran_no}
-                    name="tran_no"
+                    value={settingdetails && settingdetails.credit_note_code}
+                    name="credit_note_code"
                   ></Input>
                 </FormGroup>
               </Col>
@@ -207,8 +195,8 @@ useEffect(() => {
                   <Input
                     type="date"
                     onChange={handleInputs}
-                    value={settingdetails && settingdetails.tran_date}
-                    name="tran_date"
+                    value={settingdetails && settingdetails.credit_note_date}
+                    name="credit_note_date"
                   />
                 </FormGroup>
               </Col>
@@ -248,34 +236,9 @@ useEffect(() => {
              handleInputs={handleInputs}
              ></SalesMan>
           </TabPane>
-          {/* <TabPane tabId="5">
-            <PdfPickingList
-            id={id}
-            ></PdfPickingList>
-          </TabPane> */}
-          {/* <TabPane tabId="6">
-            <PdfPackingList
-            id={id}
-            ></PdfPackingList>
-          </TabPane>
-          <TabPane tabId="10">
-            <PdfSalesQuote
-            id={id}
-            ></PdfSalesQuote>
-            </TabPane> */}
-          {/* <TabPane tabId="7">
-          <SalesOrderPrintWithCost
-          id={id}
-                   settingdetails={settingdetails}
-                   lineItem={lineItem}
-                ></SalesOrderPrintWithCost>
-                <PrintPerfoma
-                   id={id}
-                   settingdetails={settingdetails}
-                   lineItem={lineItem}
-                ></PrintPerfoma>
-          </TabPane> */}
+       
          
+        
         </TabContent>
       </ComponentCard>
       <>

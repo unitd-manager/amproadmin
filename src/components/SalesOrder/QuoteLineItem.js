@@ -189,7 +189,7 @@ const QuoteLineItem = ({
   }, []);
   return (
     <>
-      <Modal size="xl" isOpen={addLineItemModal}>
+  <Modal size="xl" isOpen={addLineItemModal} style={{ maxWidth: '95vw', width: '95vw' }}>
         <ModalHeader>
          Add Sales Items
           <Button
@@ -226,8 +226,9 @@ const QuoteLineItem = ({
                     <table className="lineitem">
                       <thead>
                         <tr>
-                          <th scope="col">Product Name </th>
+                          <th scope="col">S No</th>
                           <th scope="col">Product Code</th>
+                          <th scope="col">Product Name</th>
                           <th scope="col">Carton Qty</th>
                           <th scope="col">Loose Qty</th>
                           <th scope="col">Qty</th>
@@ -236,143 +237,237 @@ const QuoteLineItem = ({
                           <th scope="col">Total</th>
                           <th scope="col">Discount</th>
                           <th scope="col">Gross Total</th>
-                          <th scope="col"></th>
+                          <th scope="col">Action</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {addLineItem &&
-                          addLineItem.map((item) => {
-                            return (
-                              <tr key={item.id}>
-                                  <td data-label="title">
-                        <Select
-                          key={item.id}
-                          defaultValue={{ value: item.product_id, label: item.product_name }}
-                          onChange={(e) => {
-                            onchangeItem1(e, item.id);
-                          }}
-                          options={getProductValue}
-                        />
-                        <Input value={item.product_id} type="hidden" name="product_id"></Input>
-                        <Input value={item.product_name} type="hidden" name="title"></Input>
-                        
-                      </td>
-                                <td data-label="Product Name">
-                                  <Input value={item.product_code} type="text" name="product_code" />
-                                </td>
+                        {[...addLineItem, ...Array(Math.max(0, 3 - addLineItem.length)).fill({})].map((item, idx) => {
+                          const isEmpty = !item.id;
+                          return (
+                            <tr key={item.id || `empty-${idx}`}> 
+                              <td>{idx + 1}</td>
+                              <td>
                                 <Input
-  type="number"
-  name="carton_qty"
-  value={item.carton_qty}
-  onChange={(e) => {
-    const cartonQty = parseFloat(e.target.value) || 0;
-    const pcsPerCarton = item.pcs_per_carton || 0;
-    const cartonPrice = parseFloat(item.carton_price) || 0;
-    const discount = parseFloat(item.discount) || 0;
-
-    const quantity = cartonQty * pcsPerCarton;
-    const total = cartonQty * cartonPrice;
-    const grosstotal = total - discount;
-
-    setAddLineItem((prevItems) =>
-      prevItems.map((el) =>
-        el.id === item.id
-          ? {
-              ...el,
-              carton_qty: cartonQty,
-              quantity,
-              total: total.toFixed(2),
-              gross_total: grosstotal.toFixed(2),
-            }
-          : el
-      )
-    );
-  }}
-/>
-
-
-
-<td data-label="Loose Qty">
-  <Input
-    type="number"
-    name="loose_qty"
-    value={item.loose_qty}
-    onChange={(e) => {
-      const looseQty = parseFloat(e.target.value) || 0;
-      const cartonQty = parseFloat(item.carton_qty) || 0;
-      const pcsPerCarton = parseFloat(item.pcs_per_carton) || 0;
-      const cartonPrice = parseFloat(item.carton_price) || 0;
-      const wholesalePrice = parseFloat(item.wholesale_price) || 0;
-      const discount = parseFloat(item.discount) || 0;
-
-      const quantity = cartonQty * pcsPerCarton + looseQty;
-      const cartonTotal = cartonQty * cartonPrice;
-      const looseTotal = looseQty * wholesalePrice;
-      const total = cartonTotal + looseTotal;
-      const grossTotal = total - discount;
-
-      setAddLineItem((prevItems) =>
-        prevItems.map((el) =>
-          el.id === item.id
-            ? {
-                ...el,
-                loose_qty: looseQty,
-                quantity,
-                total: total.toFixed(2),
-                gross_total: grossTotal.toFixed(2),
-              }
-            : el
-        )
-      );
-    }}
-  />
-</td>
-
-                                <td data-label="Quantity">
-                                  <Input
-                                    value={item.quantity}
-                                  
-                                    type="number"
-                                    name="quantity"
-                                  />
-                                </td>
-                                <td data-label="Carton Price">
-                                  <Input value={item.carton_price} type="text" name="carton_price" />
-                                </td>
-                                <td data-label="wholesale price">
-                                  <Input value={item.wholesale_price} type="text" name="wholesale_price" />
-                                </td>
-                                <td data-label="total">
-                                  <Input value={item.total} type="text" name="total" />
-                                </td>
+                                  style={{ width: '100px', fontSize: '0.95em', padding: '4px' }}
+                                  value={item.product_code || ''}
+                                  type="text"
+                                  name="product_code"
+                                  disabled={isEmpty}
+                                  autoFocus={idx === 0}
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter') {
+                                      document.getElementById(`cartonQty-${idx}`)?.focus();
+                                    }
+                                  }}
+                                />
+                              </td>
+                              <td>
+                                <Select
+                                  key={item.id}
+                                  styles={{
+                                    control: (base) => ({ ...base, minWidth: 140, fontSize: '0.95em', padding: '1px' }),
+                                    menu: (base) => ({ ...base, fontSize: '0.95em' })
+                                  }}
+                                  defaultValue={item.product_name ? { value: item.product_id, label: item.product_name } : null}
+                                  onChange={e => {
+                                    if (!isEmpty) {
+                                      onchangeItem1(e, item.id);
+                                      setTimeout(() => {
+                                        document.getElementById(`cartonQty-${idx}`)?.focus();
+                                      }, 100);
+                                    }
+                                  }}
+                                  options={getProductValue}
+                                  isDisabled={isEmpty}
+                                />
+                              </td>
+                              <td>
                                 <Input
-  value={item.discount}
-  type="number"
-  name="discount_value"
-  onChange={(e) => {
-    const discount = parseFloat(e.target.value) || 0;
-    const total = parseFloat(item.total) || 0;
-    const grosstotal = total - discount;
-
-    setAddLineItem((prevItems) =>
-      prevItems.map((el) =>
-        el.id === item.id
-          ? {
-              ...el,
-              discount,
-              gross_total: grosstotal.toFixed(2),
-            }
-          : el
-      )
-    );
-  }}
-/>
-
-                                <td data-label="gross_total">
-                                  <Input Value={item.gross_total} type="text" name="gross_total" />
-                                </td>
-                                <td data-label="Action">
-                                  <Input type="hidden" name="id" Value={item.id}></Input>
+                                  id={`cartonQty-${idx}`}
+                                  style={{ width: '80px', fontSize: '0.95em', padding: '4px' }}
+                                  type="number"
+                                  name="carton_qty"
+                                  value={item.carton_qty || ''}
+                                  disabled={isEmpty}
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter') {
+                                      document.getElementById(`looseQty-${idx}`)?.focus();
+                                    }
+                                  }}
+                                  onChange={e => {
+                                    if (!isEmpty) {
+                                      const cartonQty = parseFloat(e.target.value) || 0;
+                                      const pcsPerCarton = item.pcs_per_carton || 0;
+                                      const cartonPrice = parseFloat(item.carton_price) || 0;
+                                      const discount = parseFloat(item.discount) || 0;
+                                      const quantity = cartonQty * pcsPerCarton;
+                                      const total = cartonQty * cartonPrice;
+                                      const grosstotal = total - discount;
+                                      setAddLineItem(prevItems =>
+                                        prevItems.map((el, i) =>
+                                          i === idx
+                                            ? {
+                                                ...el,
+                                                carton_qty: cartonQty,
+                                                quantity,
+                                                total: total.toFixed(2),
+                                                gross_total: grosstotal.toFixed(2),
+                                              }
+                                            : el
+                                        )
+                                      );
+                                    }
+                                  }}
+                                />
+                              </td>
+                              <td>
+                                <Input
+                                  id={`looseQty-${idx}`}
+                                  style={{ width: '80px', fontSize: '0.95em', padding: '4px' }}
+                                  type="number"
+                                  name="loose_qty"
+                                  value={item.loose_qty || ''}
+                                  disabled={isEmpty}
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter') {
+                                      document.getElementById(`qty-${idx}`)?.focus();
+                                    }
+                                  }}
+                                  onChange={e => {
+                                    if (!isEmpty) {
+                                      const looseQty = parseFloat(e.target.value) || 0;
+                                      const cartonQty = parseFloat(item.carton_qty) || 0;
+                                      const pcsPerCarton = parseFloat(item.pcs_per_carton) || 0;
+                                      const cartonPrice = parseFloat(item.carton_price) || 0;
+                                      const wholesalePrice = parseFloat(item.wholesale_price) || 0;
+                                      const discount = parseFloat(item.discount) || 0;
+                                      const quantity = cartonQty * pcsPerCarton + looseQty;
+                                      const cartonTotal = cartonQty * cartonPrice;
+                                      const looseTotal = looseQty * wholesalePrice;
+                                      const total = cartonTotal + looseTotal;
+                                      const grossTotal = total - discount;
+                                      setAddLineItem(prevItems =>
+                                        prevItems.map((el, i) =>
+                                          i === idx
+                                            ? {
+                                                ...el,
+                                                loose_qty: looseQty,
+                                                quantity,
+                                                total: total.toFixed(2),
+                                                gross_total: grossTotal.toFixed(2),
+                                              }
+                                            : el
+                                        )
+                                      );
+                                    }
+                                  }}
+                                />
+                              </td>
+                              <td>
+                                <Input
+                                  id={`qty-${idx}`}
+                                  style={{ width: '80px', fontSize: '0.95em', padding: '4px' }}
+                                  value={item.quantity || ''}
+                                  type="number"
+                                  name="quantity"
+                                  disabled={isEmpty}
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter') {
+                                      document.getElementById(`cartonPrice-${idx}`)?.focus();
+                                    }
+                                  }}
+                                />
+                              </td>
+                              <td>
+                                <Input
+                                  id={`cartonPrice-${idx}`}
+                                  style={{ width: '80px', fontSize: '0.95em', padding: '4px' }}
+                                  value={item.carton_price || ''}
+                                  type="text"
+                                  name="carton_price"
+                                  disabled={isEmpty}
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter') {
+                                      document.getElementById(`price-${idx}`)?.focus();
+                                    }
+                                  }}
+                                />
+                              </td>
+                              <td>
+                                <Input
+                                  id={`price-${idx}`}
+                                  style={{ width: '80px', fontSize: '0.95em', padding: '4px' }}
+                                  value={item.wholesale_price || ''}
+                                  type="text"
+                                  name="wholesale_price"
+                                  disabled={isEmpty}
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter') {
+                                      document.getElementById(`total-${idx}`)?.focus();
+                                    }
+                                  }}
+                                />
+                              </td>
+                              <td>
+                                <Input
+                                  id={`total-${idx}`}
+                                  style={{ width: '80px', fontSize: '0.95em', padding: '4px' }}
+                                  value={item.total || ''}
+                                  type="text"
+                                  name="total"
+                                  disabled={isEmpty}
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter') {
+                                      document.getElementById(`discount-${idx}`)?.focus();
+                                    }
+                                  }}
+                                />
+                              </td>
+                              <td>
+                                <Input
+                                  id={`discount-${idx}`}
+                                  style={{ width: '100px', fontSize: '1.1em', padding: '8px' }}
+                                  value={item.discount || ''}
+                                  type="number"
+                                  name="discount_value"
+                                  disabled={isEmpty}
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter') {
+                                      document.getElementById(`grossTotal-${idx}`)?.focus();
+                                    }
+                                  }}
+                                  onChange={e => {
+                                    if (!isEmpty) {
+                                      const discount = parseFloat(e.target.value) || 0;
+                                      const total = parseFloat(item.total) || 0;
+                                      const grosstotal = total - discount;
+                                      setAddLineItem(prevItems =>
+                                        prevItems.map((el, i) =>
+                                          i === idx
+                                            ? {
+                                                ...el,
+                                                discount,
+                                                gross_total: grosstotal.toFixed(2),
+                                              }
+                                            : el
+                                        )
+                                      );
+                                    }
+                                  }}
+                                />
+                              </td>
+                              <td>
+                                <Input
+                                  id={`grossTotal-${idx}`}
+                                  style={{ width: '100px', fontSize: '1.1em', padding: '8px' }}
+                                  value={item.gross_total || ''}
+                                  type="text"
+                                  name="gross_total"
+                                  disabled={isEmpty}
+                                />
+                              </td>
+                              <td>
+                                {!isEmpty && (
                                   <span
                                     className="addline"
                                     onClick={() => {
@@ -381,10 +476,11 @@ const QuoteLineItem = ({
                                   >
                                     Clear
                                   </span>
-                                </td>
-                              </tr>
-                            );
-                          })}
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   
