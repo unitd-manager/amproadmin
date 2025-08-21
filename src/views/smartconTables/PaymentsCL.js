@@ -162,7 +162,7 @@ const PaymentsCL = () => {
       name: 'Action',
       cell: (row) => (
         <>
-          <Icon.Edit2
+          {/* <Icon.Edit2
             size={16}
             className="me-2"
             style={{ cursor: 'pointer' }}
@@ -171,7 +171,7 @@ const PaymentsCL = () => {
               setEditModalOpen(true);
             }}
             title="Edit"
-          />
+          /> */}
           <Icon.Trash2
             size={16}
             color="red"

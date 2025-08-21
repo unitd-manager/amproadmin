@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Container,
   Row,
@@ -21,6 +21,8 @@ import classnames from 'classnames';
 import { FaTrash } from 'react-icons/fa';
 import message from '../../components/Message';
 import api from '../../constants/api';
+import AppContext from '../../context/AppContext';
+import creationdatetime from '../../constants/creationdatetime';
 
 
 
@@ -44,12 +46,14 @@ const PaymentManagement = () => {
     currencyName: 'US DOLLAR',
   });
   const [invoices, setInvoices] = useState([]);
+  const [selectedInvoices, setSelectedInvoices] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [payModes, setPayModes] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const navigate = useNavigate();
+  const { loggedInuser } = useContext(AppContext);
   // Fetch suppliers
   const fetchSuppliers = async () => {
     try {
@@ -113,6 +117,15 @@ const PaymentManagement = () => {
     setCurrencyDetails((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleInvoiceSelection = (e, invoiceId) => {
+    if (e.target.checked) {
+      setSelectedInvoices((prev) => [...prev, invoiceId]);
+    } else {
+      setSelectedInvoices((prev) => prev.filter((id) => id !== invoiceId));
+    }
+  };
+
+
   const fetchInvoices = async () => {
     if (!supplierDetails.supplierId) {
       message('Please select a supplier first', 'warning');
@@ -134,31 +147,54 @@ const PaymentManagement = () => {
   };
 
  const handleSave = async () => {
-  try {
-    const payload = {
-      supplierId: supplierDetails.supplierId,
-      paymentDate: supplierDetails.paymentDate,
-      remarks: supplierDetails.remarks,
-      criticalRemarks: supplierDetails.criticalRemarks,
-      paidAmountToSupplier: supplierDetails.paidAmountToSupplier,
-      voucherno: supplierDetails.voucherno,
-      paymode: supplierDetails.paymode,
-      accounts: supplierDetails.accounts,
-      currency: currencyDetails.currency,
-      currencyRate: currencyDetails.currencyRate,
-    };
-
-    const res = await api.post('/payments/insertPayment', payload);
-    if (res.data.success) {
-      message('Payment saved successfully', 'success');
-    } else {
-      message('Failed to save payment', 'error');
+    if (!supplierDetails.supplierId || !supplierDetails.paymentDate || !supplierDetails.paidAmountToSupplier) {
+      message('Please fill all required fields', 'warning');
+      return;
     }
-  } catch (err) {
-    console.error('Error saving payment:', err);
-    message('Error saving payment', 'error');
-  }
-};
+    if (selectedInvoices.length === 0) {
+      message('Please select at least one invoice to pay', 'warning');
+      return;
+    }
+    try {
+      const payload = {
+        supplier_id: supplierDetails.supplierId,
+        payment_date: supplierDetails.paymentDate,
+        remarks: supplierDetails.remarks,
+        paid_amount: supplierDetails.paidAmountToSupplier,
+        payment_no: supplierDetails.voucherno,
+        paymode_id: supplierDetails.paymode,
+        gl_name: supplierDetails.accounts,
+        created_by: loggedInuser.first_name,
+        creation_date: creationdatetime,
+      };
+
+      const res = await api.post('/payments/insertPayment', payload);
+      if (res.data.msg === 'Success') {
+        const paymentId = res.data.data.insertId;
+
+        // Insert selected invoices into a linking table
+        const invoiceItemPromises = selectedInvoices.map((invoiceId) =>
+          api.post('/payments/insertPaymentInvoiceItem', {
+            // Assumed endpoint
+            payments_id: paymentId,
+            purchase_invoice_id: invoiceId,
+            created_by: loggedInuser.first_name,
+            creation_date: creationdatetime,
+          }),
+        );
+
+        await Promise.all(invoiceItemPromises);
+
+        message('Payment and linked invoices saved successfully!', 'success');
+        navigate('/PaymentsCL');
+      } else {
+        message(res.data.msg || 'Failed to save payment', 'error');
+      }
+    } catch (err) {
+      console.error('Error saving payment:', err);
+      message('Error saving payment', 'error');
+    }
+  };
 
 
   const totalPaidAmount = invoices.reduce((sum, inv) => sum + (inv.paid || 0), 0);
@@ -409,7 +445,11 @@ const handleDeleteInvoice = (id) => {
                   <td>{Number(invoice.payable_amount).toFixed(2)}</td>
                   <td>{Number(invoice.debit_amount).toFixed(2)}</td>
                   <td>
-                    <Input type="checkbox" />
+                    <Input
+                      type="checkbox"
+                      onChange={(e) => handleInvoiceSelection(e, invoice.purchase_invoice_id)}
+                      checked={selectedInvoices.includes(invoice.purchase_invoice_id)}
+                    />
                   </td>
                   <td>{invoice.carry_days || ''}</td>
                   <td>{Number(invoice.credit_amount).toFixed(2)}</td>
