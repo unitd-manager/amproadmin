@@ -1,30 +1,24 @@
-import React, { useState, useEffect,useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Row, Col, Form, FormGroup, Label, Input, Button } from 'reactstrap';
 import { ToastContainer } from 'react-toastify';
 import { useNavigate, useParams } from 'react-router-dom';
+import Select from 'react-select';   // ✅ Added for autocomplete
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import ComponentCard from '../../components/ComponentCard';
 import api from '../../constants/api';
 import message from '../../components/Message';
-//import TenderCompanyDetails from '../../components/TenderTable/TenderCompanyDetails';
 import creationdatetime from '../../constants/creationdatetime';
 import AppContext from '../../context/AppContext';
+
 
 const SalesOrderDetails = () => {
   const [company, setCompany] = useState();
   const [currency, setCurrency] = useState();
-
- // const [allCountries, setallCountries] = useState();
-  //const [contact, setContact] = useState();
   const [formSubmitted, setFormSubmitted] = useState(false);
- // const [addFormSubmitted, setAddFormSubmitted] = useState(false);
- // const [modal, setModal] = useState(false);
+
   const { id } = useParams();
   const { loggedInuser } = useContext(AppContext);
   const navigate = useNavigate();
-  // const toggle = () => {
-  //   setModal(!modal);
-  // };
 
   //Api call for getting company dropdown
   const getCompany = () => {
@@ -32,7 +26,6 @@ const SalesOrderDetails = () => {
       setCompany(res.data.data);
     });
   };
-
 
   const getCurrency = () => {
     api.get('/currency/getCurrency').then((res) => {
@@ -42,41 +35,27 @@ const SalesOrderDetails = () => {
 
   const [salesOrderForms, setSalesOrderForms] = useState({
     company_id: '',
-   currency_id: '',
+    currency_id: '',
   });
 
   const handleInputsSalesOrderForms = (e) => {
-
-    console.log("handleInputsSalesOrderForms",{ ...salesOrderForms, [e.target.name]: e.target.value })
-
     setSalesOrderForms({ ...salesOrderForms, [e.target.name]: e.target.value });
   };
-
 
   const getSalesOrderById = () => {
     api
       .post('/salesorder/getSalesorderById', { sales_order_id: id })
       .then((res) => {
         setSalesOrderForms(res.data.data[0]);
-        // getContact(res.data.data.company_id);
       })
-      .catch(() => { });
+      .catch(() => {});
   };
 
-  // Get contact 
-  // const getContact = (companyId) => {
-  //   // setSelectedCompany(companyId);
-  //   api.post('/company/getContactByCompanyId', { company_id: companyId }).then((res) => {
-  //     setContact(res.data.data[0]?.company_id);
-  //   });
-  // };
-
   const insertSalesOrder = (code) => {
-    if (salesOrderForms.company_id !== '' ) {
-
+    if (salesOrderForms.company_id !== '') {
       salesOrderForms.tran_no = code;
       salesOrderForms.tran_date = new Date().toISOString().slice(0, 10);
-      salesOrderForms.creation_date = creationdatetime
+      salesOrderForms.creation_date = creationdatetime;
       salesOrderForms.created_by = loggedInuser.first_name;
       salesOrderForms.status = 'Open';
       api
@@ -84,7 +63,6 @@ const SalesOrderDetails = () => {
         .then((res) => {
           const insertedDataId = res.data.data.insertId;
           getSalesOrderById();
-
           message('Order inserted successfully.', 'success');
           setTimeout(() => {
             navigate(`/salesorderEdit/${insertedDataId}?tab=1`);
@@ -109,13 +87,11 @@ const SalesOrderDetails = () => {
       .catch(() => {
         insertSalesOrder('');
       });
-  }; 
+  };
 
   useEffect(() => {
     getCompany();
     getCurrency();
-    
-    // If id is provided, fetch existing sales order data
     if (id) {
       getSalesOrderById();
     }
@@ -129,76 +105,58 @@ const SalesOrderDetails = () => {
         <Col md="6" xs="12">
           <ComponentCard title="New Sales Order">
             <Form>
-             
+              {/* ✅ Company Name Autocomplete */}
               <FormGroup>
                 <Row>
                   <Col md="9">
                     <Label>
-                      Company Name <span className="required"> *</span>{' '}
+                      Company Name <span className="required"> *</span>
                     </Label>
-                    <Input
-                      type="select"
+                    <Select
                       name="company_id"
-                      className={`form-control ${formSubmitted && salesOrderForms && (salesOrderForms.company_id === undefined || salesOrderForms.company_id.trim() === '')
-                          ? 'highlight'
-                          : ''
-                        }`}
-                      value={salesOrderForms && salesOrderForms.company_id}
-                      onChange={(e) => {
-                        handleInputsSalesOrderForms(e)
+                      value={
+                        company &&
+                        company.find((c) => c.company_id === salesOrderForms.company_id)
+                      }
+                      onChange={(selectedOption) => {
+                        setSalesOrderForms({
+                          ...salesOrderForms,
+                          company_id: selectedOption ? selectedOption.company_id : '',
+                        });
                       }}
-
-                    >
-                      <option value=''>Please Select</option>
-                      {company &&
-                        company.map((ele) => {
-                          return (
-                            <option key={ele.company_id} value={ele.company_id}>
-                              {ele.company_name}
-                            </option>
-                          );
-                        })}
-                    </Input>
-                    {formSubmitted && salesOrderForms && (salesOrderForms.company_id === undefined || salesOrderForms.company_id.trim() === '') && (
-                      <div className="error-message">Please select the company name</div>
-                    )}
+                      options={company}
+                      getOptionLabel={(option) => option.company_name}
+                      getOptionValue={(option) => option.company_id}
+                      placeholder="Please Select"
+                      isClearable
+                    />
+                    {formSubmitted &&
+                      (!salesOrderForms.company_id ||
+                        salesOrderForms.company_id.trim() === '') && (
+                        <div className="error-message">
+                          Please select the company name
+                        </div>
+                      )}
                   </Col>
-                  {/* <Col md="3" className="addNew">
-                    <Label>Add New Name</Label>
-                    <Button color="primary" className="shadow-none" onClick={toggle.bind(null)}>
-                      Add New
-                    </Button>
-                  </Col> */}
                 </Row>
               </FormGroup>
-              {/* <TenderCompanyDetails
-                allCountries={allCountries}
-                insertCompany={insertCompany}
-                handleInputs={handleInputs}
-                toggle={toggle}
-                modal={modal}
-                setModal={setModal}
-                companyInsertData={companyInsertData}
-                addFormSubmitted={addFormSubmitted}
-              ></TenderCompanyDetails> */}
 
-
-<FormGroup>
+              {/* Currency Dropdown (unchanged) */}
+              <FormGroup>
                 <Row>
                   <Col md="9">
                     <Label>
-                      Currency Name <span className="required"> *</span>{' '}
+                      Currency Name <span className="required"> *</span>
                     </Label>
                     <Input
                       type="select"
                       name="currency_id"
                       value={salesOrderForms && salesOrderForms.currency_id}
                       onChange={(e) => {
-                        handleInputsSalesOrderForms(e)
+                        handleInputsSalesOrderForms(e);
                       }}
-
                     >
-                      <option value=''>Please Select</option>
+                      <option value="">Please Select</option>
                       {currency &&
                         currency.map((ele) => {
                           return (
@@ -208,13 +166,10 @@ const SalesOrderDetails = () => {
                           );
                         })}
                     </Input>
-                    {/* {formSubmitted && tenderForms && (tenderForms.currency_id === undefined || tenderForms.currency_id.trim() === '') && (
-                      <div className="error-message">Please select the currency name</div>
-                    )} */}
                   </Col>
                 </Row>
               </FormGroup>
-             
+
               <Row>
                 <div className="pt-3 mt-3 d-flex align-items-center gap-2">
                   <Button

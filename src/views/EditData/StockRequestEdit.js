@@ -38,20 +38,21 @@ const StockRequestEdit = () => {
 
   const [addLineItemModal, setAddLineItemModal] = useState(false);
   const [lineItem, setLineItem] = useState();
-  const [viewLineModal, setViewLineModal] = useState(false);
+  // const [viewLineModal, setViewLineModal] = useState(false);
 
   const [editLineModelItem, setEditLineModelItem] = useState(null);
   const [editLineModal, setEditLineModal] = useState(false);
 
-  const viewLineToggle = () => {
-    setViewLineModal(!viewLineModal);
-  };
-  console.log(viewLineToggle);
-
+  // Get line items
   const getLineItem = () => {
-      api.post('/stockRequest/getStockRequestProducts', { stock_request_id: id }).then((res) => {
+    api.post('/stockRequest/getStockRequestProducts', { stock_request_id: id })
+      .then((res) => {
+        console.log('Fetched line items:', res.data.data);
         setLineItem(res.data.data);
-        //setAddLineItemModal(true);
+      })
+      .catch((error) => {
+        console.error('Error fetching line items:', error);
+        message('Error fetching line items', 'error');
       });
   };
 
@@ -86,17 +87,7 @@ const StockRequestEdit = () => {
       });
   };
 
-  // Fetch products
-  // const getStockRequestProducts = () => {
-  //   api
-  //     .post('/stockRequest/getStockRequestProducts', { stock_request_id: id })
-  //     .then((res) => {
-  //       setProducts(res.data.data);
-  //     })
-  //     .catch(() => {
-  //       message('Products not found', 'info');
-  //     });
-  // };
+  
 
   // Update stock request
   const editStockRequest = () => {
@@ -143,6 +134,7 @@ const StockRequestEdit = () => {
 
   useEffect(() => {
     getStockRequestById();
+    getLineItem(); // Add this line to fetch line items when component mounts
   }, [id]);
 
   return (
@@ -315,7 +307,7 @@ const StockRequestEdit = () => {
         getLineItem={getLineItem}
         deleteRecord={deleteRecord}
         id={id}
-        setViewLineModal={setViewLineModal}
+        // setViewLineModal={setViewLineModal}
       />
                 </TabPane>
               </TabContent>

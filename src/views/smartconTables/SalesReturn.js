@@ -14,10 +14,6 @@ import message from '../../components/Message';
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
-import SalesInvoicePickingListPdf from '../../components/PDF/SalesInvoicePickingListPdf';
-import PrintLetterPdf from '../../components/PDF/PrintLetterPdf';
-import PrintPackingPdf from '../../components/PDF/PrintPackingPdf';
-import SalesInfoModal from '../../components/SalesInfoModal'; // adjust path as needed
 
 
 const Test = () => {
@@ -73,142 +69,70 @@ const Test = () => {
 
   ];
 
-  const generateCodes = () => {
-    return api
-      .post('/commonApi/getCodeValues', { type: 'receipt' })
-      .then((res) => res.data.data)
-      .catch((error) => {
-        message('Failed to generate code', 'error');
-        throw error;
-      });
+    const generateCodes = async () => {
+    try {
+      const res = await api
+        .post('/commonApi/getCodeValues', { type: 'creditNote' });
+      return res.data.data;
+    } catch (error) {
+      message('Failed to generate code', 'error');
+      throw error;
+    }
   };
 
-  const generateReceipt = async () => {
+
+ const generateCreditNote = async () => {
     if (!selectedOrder) {
-      message('Please select a receipt first', 'error');
+      message('Please select a sales order first', 'error');
       return;
     }
     try {
-      const receiptCode = await generateCodes();
+      const invoiceCode = await generateCodes();
       const payload = {
         sales_return_id: selectedOrder.sales_return_id,
         company_id: selectedOrder.company_id,
-        amount: selectedOrder.sales_return_amount,
-       receipt_code: receiptCode,
+        sub_total: selectedOrder.sub_total,
+        tax: selectedOrder.tax,
+        net_total: selectedOrder.net_total,
+        credit_note_code: invoiceCode,
+        tran_date: selectedOrder.sales_return_date,
+        credit_note_type: 'Sales Return Credit Note',
       };
-      const response = await api.post('/salesreturn/generateReceiptFromSalesOrder', payload);
+      const response = await api.post('/salesOrder/generateSalesReturnFromCreditNote', payload);
       message(response.data.message, 'success');
-       setTimeout(() => {
+        setTimeout(() => {
             window.location.reload();
           }, 400);
     } catch (error) {
-      message(error.response?.data?.message || 'Failed to generate receipt', 'error');
+      message(error.response?.data?.message || 'Failed to generate invoice', 'error');
     }
   };
-    const id = selectedOrder?.sales_return_id || '';
 
-    const [settingdetails, setSettingDetails] = useState();
-
-const getSettingById = () => {
-  api
-    .post('/salesreturn/getSalesorderById', { sales_return_id: id })
-    .then((res) => {
-      setSettingDetails(res.data.data[0]);
-    })
-    .catch(() => {
-      message('setting Data Not Found', 'info');
-    });
-};
- // Get Line Item
-   const [lineItem, setLineItem] = useState();
-  const getLineItem = () => {
-    api.post('/salesreturn/getQuoteLineItemsById', { sales_return_id: id }).then((res) => {
-      setLineItem(res.data.data);
-      //setAddLineItemModal(true);
-    });
-  };
-
-useEffect(() => {
-  getSettingById();
-      getLineItem();
-}, [id]);
-
-
-const handleRepeatInvoice = async () => {
-  if (!selectedOrder) {
-    message('Please select a invoice first', 'error');
-    return;
-  }
-  try {
-    // Get new delivery code from your API
-    const codeRes = await api.post('/commonApi/getCodeValues', { type: 'invoice' });
-    const deliveryCode = codeRes.data.data;
-
-    // Call repeatSalesOrder API with delivery_code
-    const response = await api.post('/salesreturn/repeatInvoice', {
-      sales_return_id: selectedOrder.sales_return_id,
-      sales_return_code: deliveryCode,
-    });
-    message(response.data.msg, 'success');
-    setTimeout(() => {
-      window.location.reload();
-    }, 400);
-  } catch (error) {
-    message(error.response?.data?.msg || 'Failed to repeat sales order', 'error');
-  }
-};
-
-const handleConvertToSalesReturn = async () => {
-  if (!selectedOrder) {
-    message('Please select an invoice first', 'error');
-    return;
-  }
-  try {
-    const codeRes = await api.post('/commonApi/getCodeValues', { type: 'salesreturn' });
-    const deliveryCode = codeRes.data.data;
-
-    const response = await api.post('/salesreturn/convertToSalesReturn', {
-      sales_return_id: selectedOrder.sales_return_id,
-      sales_return_code: deliveryCode,
-
-    });
-    message(response.data.msg || 'Converted to Sales Return successfully', 'success');
-    // setTimeout(() => {
-    //   window.location.reload();
-    // }, 400);
-  } catch (error) {
-    message(error.response?.data?.msg || 'Failed to convert to Sales Return', 'error');
-  }
-};
-
-
-const handleConvertToDelivryVerification = async () => {
-  if (!selectedOrder) {
-    message('Please select an invoice first', 'error');
-    return;
-  }
-  try {
-    const response = await api.post('/salesreturn/convertToDelivryVerification', {
-      sales_return_id: selectedOrder.sales_return_id,
-    });
-    message(response.data.msg || 'Converted to Sales Return successfully', 'success');
-    // setTimeout(() => {
-    //   window.location.reload();
-    // }, 400);
-  } catch (error) {
-    message(error.response?.data?.msg || 'Failed to convert to Sales Return', 'error');
-  }
-};
-
-  const [salesInfoOpen, setSalesInfoOpen] = useState(false);
-
-  const handleSalesInfo = () => {
-    if (!selectedOrder || !selectedOrder.sales_order_id) {
-      message('Please select an invoice with a sales order', 'error');
+  const repeatSalesReturn = async () => {
+    if (!selectedOrder) {
+      message('Please select a sales return first', 'error');
       return;
     }
-    setSalesInfoOpen(true);
+    try {
+      // Get new delivery code from your API
+      const codeRes = await api.post('/commonApi/getCodeValues', { type: 'salesreturn' });
+      const deliveryCode = codeRes.data.data;
+
+      // Call repeatSalesOrder API with delivery_code
+      const response = await api.post('/salesOrder/repeatSalesOrder', {
+        sales_return_id: selectedOrder.sales_return_id,
+        delivery_code: deliveryCode,
+      });
+      message(response.data.msg, 'success');
+      setTimeout(() => {
+        window.location.reload();
+      }, 400);
+    } catch (error) {
+      message(error.response?.data?.msg || 'Failed to repeat sales order', 'error');
+    }
   };
+
+
 
   return (
     <div className="MainDiv">
@@ -240,29 +164,10 @@ const handleConvertToDelivryVerification = async () => {
                 </Button>
               </DropdownToggle>
               <DropdownMenu>
-                <DropdownItem onClick={generateReceipt}>Receive Payment</DropdownItem>
-                <DropdownItem>
-    <PrintLetterPdf id={id} settingdetails={settingdetails} lineItem={lineItem} />
+            
+  <DropdownItem onClick={generateCreditNote}>Convert to Sales Credit</DropdownItem>
+  <DropdownItem onClick={repeatSalesReturn}>Repeat Sales Return</DropdownItem>
 
-  </DropdownItem>
-  <DropdownItem>
-    <SalesInvoicePickingListPdf id={id} settingdetails={settingdetails} lineItem={lineItem} />
-  
-  </DropdownItem>
-  <DropdownItem>   <PrintPackingPdf
-          id={id}
-          settingdetails={settingdetails}
-          lineItem={lineItem}
-          
-        /></DropdownItem>
-  <DropdownItem>Print Delivery Order</DropdownItem>
-  <DropdownItem onClick={handleRepeatInvoice}>Repeat Invoice</DropdownItem>
-  <DropdownItem>Recap</DropdownItem>
-  <DropdownItem>Tracking Images</DropdownItem>
-  <DropdownItem onClick={handleConvertToSalesReturn}>Convert to Sales Return</DropdownItem>
-  <DropdownItem onClick={handleConvertToDelivryVerification}>Delivery Verification</DropdownItem>
-  <DropdownItem onClick={handleSalesInfo}>Sales Info</DropdownItem>
-  <DropdownItem>Send E-Invoice</DropdownItem>
               </DropdownMenu>
             </Dropdown>
           }
@@ -309,11 +214,7 @@ const handleConvertToDelivryVerification = async () => {
           </tbody>
         </CommonTable>
       </div>
-      <SalesInfoModal
-        isOpen={salesInfoOpen}
-        toggle={() => setSalesInfoOpen(false)}
-        salesOrderId={selectedOrder?.sales_order_id}
-      />
+     
     </div>
   );
 };

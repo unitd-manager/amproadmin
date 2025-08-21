@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, {  useState } from 'react';
 import * as Icon from 'react-feather';
-import { Button, Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
+import { Button } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'datatables.net-dt/js/dataTables.dataTables';
 import 'datatables.net-dt/css/jquery.dataTables.min.css';
-//import $ from 'jquery';
 import 'datatables.net-buttons/js/buttons.colVis';
 import 'datatables.net-buttons/js/buttons.flash';
 import 'datatables.net-buttons/js/buttons.html5';
@@ -14,50 +13,40 @@ import message from '../../components/Message';
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
-import PrintPerfoma from '../../components/PDF/PrintPerfoma';
-
-import SalesOrderPrintWithCost from '../../components/PDF/SalesOrderPrintWithCost';
-// import PdfPickingList from '../../components/PDF/PdfPick';
-// import PdfPackingList from '../../components/PDF/PdfPack';
-// import PdfSalesQuote from '../../components/PDF/PdfSalesOrderQuote';
-
 
 const Test = () => {
-  const [supplier, setSupplier] = useState(null);
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [supplier, setSupplier] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [selectedOrders, setSelectedOrders] = useState([]);
 
   const [tranNoFilter, setTranNoFilter] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [customerFilter, setCustomerFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('Open');
+  const [statusFilter, setStatusFilter] = useState('Not Delivered');
 
-  const toggleDropdown = () => setDropdownOpen((prevState) => !prevState);
+  // ✅ Checkbox handler
+  const handleCheckboxChange = (orderId) => {
+    setSelectedOrders((prevSelected) =>
+      prevSelected.includes(orderId)
+        ? prevSelected.filter((id) => id !== orderId)
+        : [...prevSelected, orderId]
+    );
+  };
 
+  // ✅ Fetch Delivery Verification records
   const getDeliveryVerifi = () => {
     setLoading(true);
     api
-      .get('/salesreturn/getDeliveryVerification')
+      .post('/salesreturn/getDeliveryVerification', {
+        delivery_verification_code: tranNoFilter,
+        from_date: fromDate,
+        to_date: toDate,
+        company_name: customerFilter,
+        delivery_status: statusFilter,
+      })
       .then((res) => {
         setSupplier(res.data.data);
-        setTimeout(() => {
-          // $('#example').DataTable({
-          //   destroy: true,
-          //   pagingType: 'full_numbers',
-          //   pageLength: 20,
-          //   processing: true,
-          //   dom: 'Bfrtip',
-          //   // buttons: [
-          //   //   {
-          //   //     extend: 'print',
-          //   //     text: 'Print',
-          //   //     className: 'shadow-none btn btn-primary',
-          //   //   },
-          //   // ],
-          // });
-        }, 500);
         setLoading(false);
       })
       .catch(() => {
@@ -65,140 +54,141 @@ const Test = () => {
       });
   };
 
-  useEffect(() => {
-    getDeliveryVerifi();
-  }, []);
+  // ✅ Generate new delivery codes
+  const generateDeliveryCodes = async () => {
+    try {
+      const res = await api.post('/commonApi/getCodeValues', { type: 'delivery' });
+      return res.data.data;
+    } catch (error) {
+      message('Failed to generate code', 'error');
+      throw error;
+    }
+  };
 
+  // ✅ Confirm Delivery for selected orders
+const generateDeliveryOrder = async () => {
+  if (selectedOrders.length === 0) {
+    message('Please select at least one order', 'warning');
+    return;
+  }
+
+  try {
+    // filter selected orders
+    const selectedData = supplier.filter((item) =>
+      selectedOrders.includes(item.delivery_verification_id)
+    );
+
+    // process all in parallel
+    await Promise.all(
+      selectedData.map(async (order) => {
+        const deliveryCode = await generateDeliveryCodes();
+
+        const payload = {
+          delivery_verification_id: order.delivery_verification_id,
+          company_id: order.company_id,
+          sub_total: order.sub_total,
+          tax: order.tax,
+          net_total: order.net_total,
+          delivery_code: deliveryCode,
+          tran_date: order.delivery_verification_date,
+          delivery_type: 'Delivery Verification Delivery',
+        };
+
+        const response = await api.post(
+          '/salesOrder/generateDeliveryVerificationFromDeliveryOrder',
+          payload
+        );
+        message(response.data.message, 'success');
+      })
+    );
+
+    // ✅ Refresh after all done
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+  } catch (error) {
+    message(
+      error.response?.data?.message || 'Failed to generate delivery order',
+      'error'
+    );
+  }
+};
+
+
+  // ✅ Table column definitions
   const columns = [
-    { name: '', selector: 'checkbox', cell: () => <input type="checkbox" />, grow: 0, width: '3%' },
-    { name: '#', selector: 'sales_order_id', grow: 0, wrap: true, width: '4%' },
-    { name: 'Edit', selector: 'edit', cell: () => <Icon.Edit2 />, grow: 0, width: 'auto', button: true, sortable: false },
-    { name: 'Tran NO', selector: 'tran_no', sortable: true, grow: 0, wrap: true },
-    { name: 'Tran Date', selector: 'tran_date', sortable: true, grow: 0, wrap: true },
+    { name: '', selector: 'checkbox', grow: 0, width: '3%' },
+    { name: '#', selector: 'delivery_verification_id', grow: 0, wrap: true, width: '4%' },
+    { name: 'Edit', selector: 'edit', grow: 0, width: 'auto', button: true, sortable: false },
+    { name: 'Tran NO', selector: 'delivery_verification_code', sortable: true, grow: 0, wrap: true },
+    { name: 'Tran Date', selector: 'delivery_verification_date', sortable: true, grow: 0, wrap: true },
     { name: 'Customer', selector: 'company_name', sortable: true, grow: 0, wrap: true },
-    // { name: 'Status', selector: 'status', sortable: true, grow: 0, wrap: true },
-    // { name: 'Printed', selector: 'printed', sortable: true, grow: 0, wrap: true },
+    { name: 'Delivery Status', selector: 'status', sortable: true, grow: 0, wrap: true },
     { name: 'Sub Total', selector: 'sub_total', sortable: true, grow: 0, wrap: true },
     { name: 'Tax', selector: 'tax', sortable: true, grow: 0, wrap: true },
     { name: 'Net Total', selector: 'net_total', sortable: true, grow: 0, wrap: true },
-    { name: 'Created By', selector: 'created_by', sortable: true, grow: 0, wrap: true },
+    { name: 'Paid Amount', selector: 'paid_amount', sortable: true, grow: 0, wrap: true },
+    { name: 'Balance Amount', selector: 'balance_amount', sortable: true, grow: 0, wrap: true },
   ];
-
-  const generateCodes = () => {
-    return api
-      .post('/commonApi/getCodeValues', { type: 'invoice' })
-      .then((res) => res.data.data)
-      .catch((error) => {
-        message('Failed to generate code', 'error');
-        throw error;
-      });
-  };
-
-  const generateInvoice = async () => {
-    if (!selectedOrder) {
-      message('Please select a sales order first', 'error');
-      return;
-    }
-    try {
-      const invoiceCode = await generateCodes();
-      const payload = {
-        sales_order_id: selectedOrder.sales_order_id,
-        company_id: selectedOrder.company_id,
-        sub_total: selectedOrder.sub_total,
-        tax: selectedOrder.tax,
-        net_total: selectedOrder.net_total,
-        invoice_code: invoiceCode,
-        tran_date: selectedOrder.tran_date,
-        invoice_type: 'Sales Order Invoice',
-      };
-      const response = await api.post('/salesOrder/generateInvoiceFromSalesOrder', payload);
-      message(response.data.message, 'success');
-        setTimeout(() => {
-            window.location.reload();
-          }, 400);
-    } catch (error) {
-      message(error.response?.data?.message || 'Failed to generate invoice', 'error');
-    }
-  };
-const id = selectedOrder?.sales_order_id || '';
-  const [settingdetails, setSettingDetails] = useState();
-
-const getSettingById = () => {
-  api
-    .post('/salesorder/getSalesorderById', { sales_order_id: id })
-    .then((res) => {
-      setSettingDetails(res.data.data[0]);
-    })
-    .catch(() => {
-      message('setting Data Not Found', 'info');
-    });
-};
-   const [lineItem, setLineItem] = useState();
- 
-  const getLineItem = () => {
-    api.post('/salesOrder/getQuoteLineItemsById', { sales_order_id: id }).then((res) => {
-      setLineItem(res.data.data);
-      //setAddLineItemModal(true);
-    });
-  };
-
-useEffect(() => {
-  getSettingById();
-      getLineItem();
-}, [id]);
 
   return (
     <div className="MainDiv">
       <div className="pt-xs-25">
         <BreadCrumbs />
-        {/* Search Filters */}
+
+        {/* 🔍 Search Filters */}
         <div className="d-flex flex-wrap gap-2 mb-3">
-          <input className="" placeholder="Tran No" value={tranNoFilter} onChange={(e) => setTranNoFilter(e.target.value)} />
-          <input type="date" className="" placeholder="From Date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
-          <input type="date" className="" placeholder="To Date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
-          <input className="" placeholder="Customer" value={customerFilter} onChange={(e) => setCustomerFilter(e.target.value)} />
-          <select className="form-select"   style={{ width: '15%' }}
-           value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <input
+            placeholder="Tran No"
+            value={tranNoFilter}
+            onChange={(e) => setTranNoFilter(e.target.value)}
+          />
+          <input
+            type="date"
+            placeholder="From Date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+          />
+          <input
+            type="date"
+            placeholder="To Date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+          />
+          <input
+            placeholder="Customer"
+            value={customerFilter}
+            onChange={(e) => setCustomerFilter(e.target.value)}
+          />
+          <select
+            className="form-select"
+            style={{ width: '15%' }}
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
             <option value="">All</option>
-            <option value="Open">Open</option>
-            <option value="Closed">Closed</option>
+            <option value="Delivered">Delivered</option>
+            <option value="Not Delivered">Not Delivered</option>
           </select>
-          <Button color="primary" onClick={getDeliveryVerifi}>Search</Button>
+          <Button color="primary" onClick={getDeliveryVerifi}>
+            Search
+          </Button>
         </div>
 
+        {/* 📋 Table */}
         <CommonTable
           loading={loading}
           title="Delivery Verification List"
           Button={
-            <Dropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
-              <DropdownToggle color="primary" caret className="shadow-none">
-                <Button color="primary" tag={Link} to="/DeliveryVerificationDetail" className="shadow-none">
-                  New Transaction
-                </Button>
-              </DropdownToggle>
-              <DropdownMenu>
-                <DropdownItem onClick={generateInvoice}>Convert To Sales Invoice</DropdownItem>
-                {/* <DropdownItem>  <PdfPickingList
-            id={id}
-            ></PdfPickingList></DropdownItem> */}
-                {/* <DropdownItem>  <PdfPackingList
-            id={id}
-            ></PdfPackingList></DropdownItem> */}
-                {/* <DropdownItem> <PdfSalesQuote
-            id={id}
-            ></PdfSalesQuote></DropdownItem> */}
-                <DropdownItem>  <SalesOrderPrintWithCost
-          id={id}
-                   settingdetails={settingdetails}
-                   lineItem={lineItem}
-                ></SalesOrderPrintWithCost></DropdownItem>
-                <DropdownItem>    <PrintPerfoma
-                   id={id}
-                   settingdetails={settingdetails}
-                   lineItem={lineItem}
-                ></PrintPerfoma></DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
+            <div className="d-flex">
+              <Button
+                color="primary"
+                className="shadow-none mr-2"
+                onClick={generateDeliveryOrder}
+              >
+                Confirm Delivery
+              </Button>
+            </div>
           }
         >
           <thead>
@@ -210,35 +200,32 @@ useEffect(() => {
           </thead>
           <tbody>
             {supplier &&
-              supplier.map((element, index) => (
-                <tr key={element.sales_order_id}>
+              supplier.map((element) => (
+                <tr key={element.delivery_verification_id}>
                   <td>
                     <input
                       type="checkbox"
-                      checked={selectedOrder?.sales_order_id === element.sales_order_id}
-                      onChange={() => setSelectedOrder(element)}
+                      checked={selectedOrders.includes(element.delivery_verification_id)}
+                      onChange={() =>
+                        handleCheckboxChange(element.delivery_verification_id)
+                      }
                     />
                   </td>
-                  <td>{index + 1}</td>
-                 <td>
-  {element.status !== 'Closed' ? (
-    <Link to={`/DeliveryVerificationEdit/${element.sales_order_id}`}>
-      <Icon.Edit2 />
-    </Link>
-  ) : (
-    ''
-  )}
-</td>
-
-                  <td>{element.tran_no}</td>
-                  <td>{element.tran_date}</td>
+                  <td>{element.delivery_verification_id}</td>
+                  <td>
+                    <Link to={`/salesorderedit/${element.delivery_verification_id}`}>
+                      <Icon.Edit2 />
+                    </Link>
+                  </td>
+                  <td>{element.delivery_verification_code}</td>
+                  <td>{element.delivery_verification_date}</td>
                   <td>{element.company_name}</td>
-                  {/* <td>{element.status}</td>
-                  <td>{element.printed || 'No'}</td> */}
-                  <td>{element.sub_total || ''}</td>
-                  <td>{element.tax || ''}</td>
-                  <td>{element.net_total || ''}</td>
-                  <td>{element.created_by || ''}</td>
+                  <td>{element.status}</td>
+                  <td>{element.sub_total}</td>
+                  <td>{element.tax}</td>
+                  <td>{element.net_total}</td>
+                  <td>{element.paid_amount}</td>
+                  <td>{element.balance_amount}</td>
                 </tr>
               ))}
           </tbody>

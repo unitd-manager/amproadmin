@@ -166,7 +166,7 @@ const OpportunityDetails = () => {
   //QUTO GENERATED CODE
   const generateCode = () => {
     api
-      .post('/commonApi/getCodeValues', { type: 'invoice' })
+      .post('/commonApi/getCodeValues', { type: 'salesreturn' })
       .then((res) => {
         insertTender(res.data.data);
       })

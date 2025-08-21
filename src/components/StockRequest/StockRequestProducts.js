@@ -133,6 +133,7 @@ const StockRequestProducts = ({
           addLineItemModal={addLineItemModal}
           setAddLineItemModal={setAddLineItemModal}
           stockRequestId={id}
+          getLineItem={getLineItem}
         />
       )}
     </ComponentCard>
