@@ -199,6 +199,7 @@ const Support = Loadable(lazy(() => import('../views/smartconTables/Support')));
 const StaffDetails = Loadable(lazy(() => import('../views/detailTable/StaffDetails')));
 const SalesOrderDetails = Loadable(lazy(() => import('../views/detailTable/SalesOrderDetails')));
 const DeliveryOrderDetails = Loadable(lazy(() => import('../views/detailTable/DeliveryOrderDetails')));
+const Dashboard = Loadable(lazy(() => import('../views/smartconTables/Dashboard')));
 
 const InvoiceDetails = Loadable(lazy(() => import('../views/detailTable/InvoiceDetails')));
 const ClientDetailsTable = Loadable(lazy(() => import('../views/detailTable/ClientDetails')));
@@ -724,6 +725,7 @@ const Routernew = () => {
           <Route path="/Support" name="supportdata" element={<Support />}></Route>
           <Route path="/SupportNew" name="supportnewdata" element={<SupportNewTable />}></Route>
           <Route path="/SupportDetails" name="supportdetailsdata" element={<SupportDetails />}></Route>
+          <Route path="/Dashboard" name="supportdata" element={<Dashboard />}></Route>
         
           <Route path="/Employeetrainingreports" name="employeetrainingreportdata" element={<EmployeetrainingreportsTable />}></Route>
           <Route path="/StatementofAccountsReport" name="statementofAccountsreportdata" element={<StatementofAccountsReport />}></Route>
