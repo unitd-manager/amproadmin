@@ -79,20 +79,21 @@ export default function SupplierDetails({ handleInputs, settingdetails, setSetti
                 <Input type="text" name="customer_code" onChange={handleInputs} value={settingdetails?.customer_code || ''} />
               </FormGroup>
             </Col>
-            <Col md="4">
-              <FormGroup>
-                <Label>Contact Person</Label>
-                <Input type="text" name="contact_person" onChange={handleInputs} value={settingdetails?.contact_person || ''} />
-              </FormGroup>
-            </Col>
-          </Row>
-          <Row>
-            <Col md="4">
+              <Col md="4">
               <FormGroup>
                 <Label>Contact Address 1</Label>
                 <Input type="text" name="address_street" onChange={handleInputs} value={settingdetails?.address_street || ''} />
               </FormGroup>
             </Col>
+          
+          </Row>
+          {/* <Row>
+            <Col md="4">
+              <FormGroup>
+                <Label>Contact Person</Label>
+                <Input type="text" name="contact_person" onChange={handleInputs} value={settingdetails?.contact_person || ''} />
+              </FormGroup>
+            </Col> 
             <Col md="4">
               <FormGroup>
                 <Label>Contact Address 2</Label>
@@ -105,7 +106,7 @@ export default function SupplierDetails({ handleInputs, settingdetails, setSetti
                 <Input type="text" name="address_state" onChange={handleInputs} value={settingdetails?.address_state || ''} />
               </FormGroup>
             </Col>
-          </Row>
+          </Row> */}
           <Row>
             <Col md="4">
               <FormGroup>

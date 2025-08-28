@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState, useRef } from 'react';
-import { Row, Col, Button, Table, Input } from 'reactstrap';
+import { Row, Col, Button, Table, Input, Alert } from 'reactstrap';
 import PropTypes from 'prop-types';
 import * as Icon from 'react-feather';
 import Select from 'react-select';
@@ -10,6 +10,7 @@ import QuoteLineItem from './QuoteLineItem';
 import AppContext from '../../context/AppContext';
 
 
+
 const SalesOrderProducts = ({
   lineItem: initialLineItem,
   getLineItem,
@@ -18,6 +19,7 @@ const SalesOrderProducts = ({
 }) => {
   const { loggedInuser } = useContext(AppContext);
   const [lineItems, setLineItems] = useState(Array.isArray(initialLineItem) ? initialLineItem.map(item => ({...item, product_id: item.product_id || '', pcs_per_carton: item.pcs_per_carton || ''})) : []);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [editLineModal, setEditLineModal] = useState(false);
   const [addLineItemModal, setAddLineItemModal] = useState(false);
@@ -152,6 +154,8 @@ const SalesOrderProducts = ({
       return api.post('/salesOrder/insertQuoteItems', obj);
     }));
     if (getLineItem) getLineItem(id);
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000); // Hide after 3 seconds
   };
 
   const summary = {
@@ -306,6 +310,7 @@ React.useEffect(() => {
           </Button>
         </Col>
       </Row>
+      {showSuccess && <Alert color="success">Items saved successfully!</Alert>}
       <br />
   <Table id="example" className="display border border-secondary rounded" style={{ borderSpacing: '0 12px', borderCollapse: 'separate' }} ref={tableRef}>
         <thead>
