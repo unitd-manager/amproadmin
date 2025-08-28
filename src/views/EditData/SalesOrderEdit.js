@@ -144,7 +144,7 @@ useEffect(() => {
  return (
     <div>   
       <Form>     
-        <ComponentCardV2>
+<ComponentCardV2>
                         <Row>
                           <Col>
                             <Button

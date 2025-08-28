@@ -8,9 +8,9 @@ import api from '../../constants/api';
 import message from '../Message';
 import PdfFooter from './PdfFooter'; // Assuming you have a footer component
 
-const PdfPickingList = ({ id }) => {
+const PdfPickingList = ({ salesOrderIds }) => {
   PdfPickingList.propTypes = {
-    id: PropTypes.any,
+    salesOrderIds: PropTypes.array,
   };
 
   const [salesOrder, setSalesOrder] = useState({});
@@ -28,31 +28,35 @@ const PdfPickingList = ({ id }) => {
     return filteredResult?.value || '';
   };
 
-  const fetchSalesOrderData = () => {
-    api
-      .post('/salesorder/getSalesorderById', { sales_order_id: id })
-      .then((res) => {
-        setSalesOrder(res.data.data[0] || {});
-      })
-      .catch(() => {
-        message('Sales Order Data Not Found', 'info');
-      });
+    const fetchSalesOrderData = async () => {
+    let allSalesOrders = [];
+     let allLineItems = [];
 
-    api
-      .post('/salesorder/getQuoteLineItemsById', { sales_order_id: id })
-      .then((res) => {
-        setLineItems(res.data.data || []);
-      })
-      .catch(() => {
-        message('Sales Order Line Items Not Found', 'info');
-      });
+     try {
+       const salesOrderPromises = salesOrderIds.map(id => api.post('/salesorder/getSalesorderById', { sales_order_id: id }));
+      const lineItemPromises = salesOrderIds.map(id => api.post('/salesorder/getQuoteLineItemsById', { sales_order_id: id }));
+
+      const salesOrderResponses = await Promise.all(salesOrderPromises);
+      const lineItemResponses = await Promise.all(lineItemPromises);
+
+      allSalesOrders = salesOrderResponses.map(res => res.data.data[0] || {});
+       allLineItems = lineItemResponses.flatMap(res => res.data.data || []);
+
+      setSalesOrder(allSalesOrders);
+      setLineItems(allLineItems);
+    } catch (error) {
+      message('Error fetching sales order data or line items', 'error');
+    }
+
+    setSalesOrder(allSalesOrders);
+    setLineItems(allLineItems);
   };
 
   useEffect(() => {
-    if (id) {
+    if (salesOrderIds && salesOrderIds.length > 0) {
       fetchSalesOrderData();
     }
-  }, [id]);
+  }, [salesOrderIds]);
 
   const GetPdf = () => {
     const productItems = [
@@ -64,12 +68,28 @@ const PdfPickingList = ({ id }) => {
       ],
     ];
   
-    lineItems.forEach((item, index) => {
+    const aggregatedItems = {};
+
+    lineItems.forEach((item) => {
+      if (aggregatedItems[item.product_id]) {
+        aggregatedItems[item.product_id].quantity += parseFloat(item.quantity || 0);
+        aggregatedItems[item.product_id].carton_qty += parseFloat(item.carton_qty || 0);
+      } else {
+        aggregatedItems[item.product_id] = {
+          product_name: item.product_name,
+          quantity: parseFloat(item.quantity || 0),
+          carton_qty: parseFloat(item.carton_qty || 0),
+          unit: item.unit, // Assuming unit is consistent for the same product
+        };
+      }
+    });
+
+    Object.values(aggregatedItems).forEach((item, index) => {
       const cQty = parseFloat(item.carton_qty || 0);
       productItems.push([
         { text: `${index + 1}`, style: 'tableBody' },
         { text: `${item.product_name || ''}`, style: 'tableBody' },
-        { text: `${item.quantity || ''}`, style: 'tableBody' },
+        { text: `${item.unit || ''}`, style: 'tableBody' }, // Display unit
         { text: cQty.toFixed(2), style: 'tableBody' },
       ]);
     });
@@ -91,7 +111,7 @@ const PdfPickingList = ({ id }) => {
           margin: [0, 0, 0, 10],
         },
         {
-          text: `Selected Sales Order: ${salesOrder.tran_no || ''}`,
+          text: `Selected Sales Orders: ${salesOrder.map(so => so.tran_no).join(', ') || ''}`,
           style: 'textSize',
           margin: [0, 0, 0, 5],
         },
@@ -160,7 +180,7 @@ const PdfPickingList = ({ id }) => {
   return (
     <>
       <a  onClick={GetPdf}>
-        Print Picking List
+        Print Pick List
       </a>
     </>
   );

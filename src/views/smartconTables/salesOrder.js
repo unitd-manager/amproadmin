@@ -26,7 +26,7 @@ import PdfSalesQuote from '../../components/PDF/PdfSalesOrderQuote';
 const Test = () => {
   const [supplier, setSupplier] = useState(null);
   // const [selectedOrder, setSelectedOrder] = useState(null);
-  const [selectedOrders, setSelectedOrders] = useState([]);
+  const [selectedSalesOrderIds, setSelectedSalesOrderIds] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null); // Keep for single-select logic elsewhere
   const [loading, setLoading] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -169,32 +169,7 @@ const Test = () => {
       message(error.response?.data?.message || 'Failed to generate delivery order', 'error');
     }
   };
-const id = selectedOrder?.sales_order_id || '';
-  const [settingdetails, setSettingDetails] = useState();
 
-const getSettingById = () => {
-  api
-    .post('/salesorder/getSalesorderById', { sales_order_id: id })
-    .then((res) => {
-      setSettingDetails(res.data.data[0]);
-    })
-    .catch(() => {
-      message('setting Data Not Found', 'info');
-    });
-};
-   const [lineItem, setLineItem] = useState();
- 
-  const getLineItem = () => {
-    api.post('/salesOrder/getQuoteLineItemsById', { sales_order_id: id }).then((res) => {
-      setLineItem(res.data.data);
-      //setAddLineItemModal(true);
-    });
-  };
-
-useEffect(() => {
-  getSettingById();
-      getLineItem();
-}, [id]);
 
   const repeatSalesOrder = async () => {
     if (!selectedOrder) {
@@ -222,15 +197,15 @@ useEffect(() => {
 
   // Add delete handler
   const handleDeleteOrders = async () => {
-    if (selectedOrders.length === 0) {
+    if (selectedSalesOrderIds.length === 0) {
       message('Please select at least one sales order to delete', 'error');
       return;
     }
     if (!window.confirm('Are you sure you want to delete the selected sales orders?')) return;
     try {
-      await api.post('/salesOrder/deleteSalesOrder', { sales_order_id: selectedOrders });
+      await api.post('/salesOrder/deleteSalesOrder', { sales_order_id: selectedSalesOrderIds.join(',') });
       message('Selected sales orders deleted successfully', 'success');
-      setSelectedOrders([]);
+      setSelectedSalesOrderIds([]);
       setSelectedOrder(null);
       getSupplier();
     } catch (error) {
@@ -258,7 +233,7 @@ useEffect(() => {
           <Button
             color="danger"
             className="ms-2"
-            disabled={selectedOrders.length === 0}
+            disabled={selectedSalesOrderIds.length === 0}
             onClick={handleDeleteOrders}
             data-testid="delete-button"
           >
@@ -282,43 +257,41 @@ useEffect(() => {
                 <DropdownItem onClick={repeatSalesOrder}>Repeat Sales Order</DropdownItem>
                 <DropdownItem>
                   <PdfPickingList
-                    id={id}
-                    settingdetails={settingdetails}
-                    lineItem={lineItem}
+                    salesOrderIds={selectedSalesOrderIds}
                   />
                  
                 </DropdownItem>
                 <DropdownItem>
                   <PdfPackingList
-                    id={id}
-                    settingdetails={settingdetails}
-                    lineItem={lineItem}
+                    selectedOrderIds={selectedSalesOrderIds}
+                    settingdetails={null}
+                    lineItem={null}
                   />
                 
                 </DropdownItem>
                 <DropdownItem>
                   <PdfSalesQuote
-                    id={id}
-                    settingdetails={settingdetails}
-                    lineItem={lineItem}
+                    id={selectedOrder?.sales_order_id || ''}
+                    settingdetails={null}
+                    lineItem={null}
                   />
                
                 </DropdownItem>
                 <DropdownItem onClick={() => { /* TODO: Add tracking images logic */ }}>Tracking Images</DropdownItem>
                 <DropdownItem>
                   <SalesOrderPrintWithCost
-                    id={id}
-                    settingdetails={settingdetails}
-                    lineItem={lineItem}
+                    id={selectedOrder?.sales_order_id || ''}
+                    settingdetails={null}
+                    lineItem={null}
                   />
                  
                 </DropdownItem>
                 <DropdownItem onClick={() => { /* TODO: Add updated weight info logic */ }}>Updated Weight Info</DropdownItem>
                 <DropdownItem>
                   <PrintPerfoma
-                    id={id}
-                    settingdetails={settingdetails}
-                    lineItem={lineItem}
+                    id={selectedOrder?.sales_order_id || ''}
+                    settingdetails={null}
+                    lineItem={null}
                   />
                 
                 </DropdownItem>
@@ -340,9 +313,9 @@ useEffect(() => {
                   <td>
                     <input
                       type="checkbox"
-                      checked={selectedOrders.includes(element.sales_order_id)}
+                      checked={selectedSalesOrderIds.includes(element.sales_order_id)}
                       onChange={() => {
-                        setSelectedOrders((prev) =>
+                        setSelectedSalesOrderIds((prev) =>
                           prev.includes(element.sales_order_id)
                             ? prev.filter((ids) => ids !== element.sales_order_id)
                             : [...prev, element.sales_order_id]
