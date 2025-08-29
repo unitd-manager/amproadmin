@@ -1,0 +1,168 @@
+/* Goods Return Edit Styles */
+.goods-return-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+}
+
+.goods-return-label {
+  font-size: 0.8rem;
+  margin-bottom: 2px;
+}
+
+/* Table Section Styles */
+.goods-return-table-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.goods-return-table {
+  font-size: 0.75rem;
+}
+
+.goods-return-table-header {
+  font-size: 0.7rem;
+  padding: 4px;
+}
+
+.goods-return-table-cell {
+  padding: 4px;
+}
+
+.goods-return-table-body-container {
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-top: none;
+  min-height: 0;
+}
+
+.goods-return-table-body {
+  font-size: 0.75rem;
+  margin-bottom: 0;
+}
+
+.goods-return-table-row {
+  font-size: 0.75rem;
+}
+
+.goods-return-table-footer {
+  font-size: 0.75rem;
+  margin-bottom: 0;
+  border-top: none;
+}
+
+.goods-return-table-footer-row {
+  font-size: 0.7rem;
+  font-weight: bold;
+  background-color: #f8f9fa;
+}
+
+/* Input and Select Styles */
+.goods-return-select {
+  font-size: 0.7rem;
+  min-height: 28px;
+}
+
+.goods-return-input {
+  font-size: 0.7rem;
+  width: 80px;
+}
+
+/* Icon Styles */
+.goods-return-icon {
+  font-size: 0.8rem;
+  cursor: pointer;
+  margin-right: 5px;
+}
+
+.goods-return-delete-icon {
+  color: red;
+}
+
+.goods-return-add-icon {
+  color: green;
+}
+
+/* Summary Section Styles */
+.goods-return-summary-section {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: white;
+  padding: 10px;
+  border-top: 1px solid #dee2e6;
+}
+
+.goods-return-summary-row {
+  font-size: 0.75rem;
+  margin-bottom: 4px;
+  padding: 4px;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  margin: 0;
+}
+
+.goods-return-totals-row {
+  font-size: 0.75rem;
+  margin-top: 8px;
+  padding: 4px;
+  border: 1px solid #dee2e6;
+  margin: 0;
+}
+
+.goods-return-summary-col {
+  padding: 2px;
+}
+
+.goods-return-summary-label {
+  font-size: 0.7rem;
+}
+
+.goods-return-summary-value {
+  font-size: 0.7rem;
+}
+
+/* Action Button Styles */
+.goods-return-actions-row {
+  margin-top: 8px;
+  text-align: right;
+}
+
+.goods-return-button {
+  font-size: 0.8rem;
+  padding: 4px 12px;
+}
+
+.goods-return-save-button {
+  margin-right: 8px;
+}
+
+.goods-return-cancel-button {
+  margin-left: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .goods-return-container {
+    padding: 5px;
+  }
+  
+  .goods-return-table {
+    font-size: 0.65rem;
+  }
+  
+  .goods-return-input {
+    width: 60px;
+    font-size: 0.65rem;
+  }
+  
+  .goods-return-summary-row,
+  .goods-return-totals-row {
+    font-size: 0.65rem;
+  }
+}

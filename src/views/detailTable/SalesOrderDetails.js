@@ -97,6 +97,18 @@ const SalesOrderDetails = () => {
     }
   }, [id]);
 
+  useEffect(() => {
+    if (currency && currency.length > 0) {
+      const singaporeDollar = currency.find(c => c.currency_name === 'Singapore Dollar');
+      if (singaporeDollar) {
+        setSalesOrderForms(prevForms => ({
+          ...prevForms,
+          currency_id: singaporeDollar.currency_id
+        }));
+      }
+    }
+  }, [currency]);
+
   return (
     <div>
       <BreadCrumbs />

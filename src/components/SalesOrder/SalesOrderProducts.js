@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState, useRef } from 'react';
-import { Row, Col, Button, Table, Input } from 'reactstrap';
+import { Row, Col, Button, Table, Input, Alert } from 'reactstrap';
 import PropTypes from 'prop-types';
 import * as Icon from 'react-feather';
 import Select from 'react-select';
@@ -10,6 +10,7 @@ import QuoteLineItem from './QuoteLineItem';
 import AppContext from '../../context/AppContext';
 
 
+
 const SalesOrderProducts = ({
   lineItem: initialLineItem,
   getLineItem,
@@ -18,6 +19,7 @@ const SalesOrderProducts = ({
 }) => {
   const { loggedInuser } = useContext(AppContext);
   const [lineItems, setLineItems] = useState(Array.isArray(initialLineItem) ? initialLineItem.map(item => ({...item, product_id: item.product_id || '', pcs_per_carton: item.pcs_per_carton || ''})) : []);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [editLineModal, setEditLineModal] = useState(false);
   const [addLineItemModal, setAddLineItemModal] = useState(false);
@@ -152,6 +154,8 @@ const SalesOrderProducts = ({
       return api.post('/salesOrder/insertQuoteItems', obj);
     }));
     if (getLineItem) getLineItem(id);
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000); // Hide after 3 seconds
   };
 
   const summary = {
@@ -217,11 +221,11 @@ const SalesOrderProducts = ({
  // const [isInitialLoad, setIsInitialLoad] = React.useState(true);
   
  // 1. Only fetch the value on load
- const [taxType, setTaxType] = React.useState('');
- const [taxRate, setTaxRate] = React.useState(0);
+ const [taxType] = React.useState('');
+ const [taxRate] = React.useState(0.09); // Set default tax rate to 9%
  
  React.useEffect(() => {
-  const fetchBillDiscountAndTax = async () => {
+  const fetchBillDiscount = async () => {
     try {
       const response = await api.post('/salesOrder/getSalesorderById', {
         sales_order_id: id,
@@ -231,22 +235,23 @@ const SalesOrderProducts = ({
       const discount = parseFloat(data?.bill_discount) || 0;
       setBillDiscount(discount);
 
-      const type = data?.tax_type || '';
-      setTaxType(type);
+      // No longer fetching tax type or rate from backend
+      // const type = data?.tax_type || '';
+      // setTaxType(type);
 
-      const taxResponse = await api.post('/valuelist/getValueListByKeyText', {
-        value: type, // use this instead of taxType
-      });
+      // const taxResponse = await api.post('/valuelist/getValueListByKeyText', {
+      //   value: type, // use this instead of taxType
+      // });
 
-      const taxCode = parseFloat(taxResponse.data.data[0]?.code) || 0;
-      setTaxRate(taxCode / 100);
+      // const taxCode = parseFloat(taxResponse.data.data[0]?.code) || 0;
+      // setTaxRate(taxCode / 100);
     } catch (error) {
-      console.error('Failed to fetch bill discount or tax info:', error);
+      console.error('Failed to fetch bill discount:', error);
     }
   };
 
   if (id) {
-    fetchBillDiscountAndTax();
+    fetchBillDiscount();
   }
 }, [id]);
 
@@ -305,6 +310,7 @@ React.useEffect(() => {
           </Button>
         </Col>
       </Row>
+      {showSuccess && <Alert color="success">Items saved successfully!</Alert>}
       <br />
   <Table id="example" className="display border border-secondary rounded" style={{ borderSpacing: '0 12px', borderCollapse: 'separate' }} ref={tableRef}>
         <thead>

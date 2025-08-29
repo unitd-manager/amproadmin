@@ -9,13 +9,13 @@ import message from '../Message';
 import PdfFooter from './PdfFooter'; // Assuming you have a footer component
 import PdfHeader from './PdfHeader'; // Assuming you have a header component
 
-const PdfPackingList = ({ id }) => {
+const PdfPackingList = ({ selectedOrderIds }) => {
   PdfPackingList.propTypes = {
-    id: PropTypes.any,
+    selectedOrderIds: PropTypes.array,
   };
 
-  const [salesOrder, setSalesOrder] = useState({});
-  const [lineItems, setLineItems] = useState([]);
+  const [allSalesOrders, setAllSalesOrders] = useState([]);
+  const [allLineItems, setAllLineItems] = useState([]);
   const [hfdata, setHeaderFooterData] = useState();
 
   useEffect(() => {
@@ -29,88 +29,92 @@ const PdfPackingList = ({ id }) => {
     return filteredResult?.value || '';
   };
 
-  const fetchSalesOrderData = () => {
-    api
-      .post('/salesorder/getSalesOrderById', { sales_order_id: id })
-      .then((res) => {
-        setSalesOrder(res.data.data[0] || {});
-      })
-      .catch(() => {
-        message('Sales Order Data Not Found', 'info');
-      });
+  const fetchAllSalesOrderData = async () => {
+    const salesOrdersPromises = selectedOrderIds.map(async (orderId) => {
+      try {
+        const salesOrderRes = await api.post('/salesorder/getSalesOrderById', { sales_order_id: orderId });
+        const lineItemsRes = await api.post('/salesorder/getQuoteLineItemsById', { sales_order_id: orderId });
+        return {
+          salesOrder: salesOrderRes.data.data[0] || {},
+          lineItems: { orderId, items: lineItemsRes.data.data || [] },
+        };
+      } catch (error) {
+        message(`Data Not Found for Sales Order ID: ${orderId}`, 'info');
+        return null; // Return null for failed fetches
+      }
+    });
 
-    api
-      .post('/salesorder/getQuoteLineItemsById', { sales_order_id: id })
-      .then((res) => {
-        setLineItems(res.data.data || []);
-      })
-      .catch(() => {
-        message('Sales Order Line Items Not Found', 'info');
-      });
+    const results = await Promise.all(salesOrdersPromises);
+    const validResults = results.filter(result => result !== null);
+
+    setAllSalesOrders(validResults.map(result => result.salesOrder));
+    setAllLineItems(validResults.map(result => result.lineItems));
   };
 
   useEffect(() => {
-    if (id) {
-      fetchSalesOrderData();
+    if (selectedOrderIds && selectedOrderIds.length > 0) {
+      fetchAllSalesOrderData();
     }
-  }, [id]);
+  }, [selectedOrderIds]);
 
   const GetPdf = () => {
-    const productItems = [
-      [
-        { text: 'S.No', style: 'tableHead' },
-        { text: 'Product Name', style: 'tableHead' },
-        { text: 'Uom', style: 'tableHead' },
-        { text: 'LQty', style: 'tableHead' },
-        { text: 'FocQty', style: 'tableHead' },
-        { text: 'CQty', style: 'tableHead' },
-      ],
-    ];
+    const allContent = [];
+    let grandTotalQuantity = 0;
 
-    let totalLooseQty = 0;
-    let totalFocQty = 0;
-    let totalCQty = 0;
-    let totalQuantity = 0; // To store the sum of all quantities
+    allSalesOrders.forEach((salesOrder, salesOrderIndex) => {
+      const lineItemsForOrder = allLineItems.find(item => item.orderId === salesOrder.sales_order_id)?.items || [];
 
-    lineItems.forEach((item, index) => {
-      const lQty = parseFloat(item.loose_qty || 0);
-      const fQty = parseFloat(item.foc_qty || 0);
-      const cQty = parseFloat(item.carton_qty || 0);
-      const quantity = parseFloat(item.quantity || 0); // Assuming 'quantity' represents the base quantity
+      const productItems = [
+        [
+          { text: 'S.No', style: 'tableHead' },
+          { text: 'Product Name', style: 'tableHead' },
+          { text: 'Uom', style: 'tableHead' },
+          { text: 'LQty', style: 'tableHead' },
+          { text: 'FocQty', style: 'tableHead' },
+          { text: 'CQty', style: 'tableHead' },
+        ],
+      ];
+
+      let totalLooseQty = 0;
+      let totalFocQty = 0;
+      let totalCQty = 0;
+      let totalQuantity = 0; // To store the sum of all quantities for current order
+console.log(totalQuantity, 'totalQuantity')
+      lineItemsForOrder.forEach((item, index) => {
+        const lQty = parseFloat(item.loose_qty || 0);
+        const fQty = parseFloat(item.foc_qty || 0);
+        const cQty = parseFloat(item.carton_qty || 0);
+        const quantity = parseFloat(item.quantity || 0); // Assuming 'quantity' represents the base quantity
+
+        productItems.push([
+          { text: `${index + 1}`, style: 'tableBody' },
+          { text: `${item.product_name || ''}`, style: 'tableBody' },
+          { text: `${item.unit || ''}`, style: 'tableBody' },
+          { text: lQty.toFixed(2), style: 'tableBody' },
+          { text: fQty.toFixed(2), style: 'tableBody' },
+          { text: cQty.toFixed(2), style: 'tableBody' },
+        ]);
+        totalLooseQty += lQty;
+        totalFocQty += fQty;
+        totalCQty += cQty;
+        totalQuantity += quantity; // Accumulate the base quantity
+      });
 
       productItems.push([
-        { text: `${index + 1}`, style: 'tableBody' },
-        { text: `${item.product_name || ''}`, style: 'tableBody' },
-        { text: `${item.quantity || ''}`, style: 'tableBody' },
-        { text: lQty.toFixed(2), style: 'tableBody' },
-        { text: fQty.toFixed(2), style: 'tableBody' },
-        { text: cQty.toFixed(2), style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: 'Total', style: 'boldText', alignment: 'right' },
+        { text: '', style: 'tableBody' },
+        { text: totalLooseQty.toFixed(2), style: 'boldText' },
+        { text: totalFocQty.toFixed(2), style: 'boldText' },
+        { text: totalCQty.toFixed(2), style: 'boldText' },
       ]);
-      totalLooseQty += lQty;
-      totalFocQty += fQty;
-      totalCQty += cQty;
-      totalQuantity += quantity; // Accumulate the base quantity
-    });
 
-    productItems.push([
-      { text: '', style: 'tableBody' },
-      { text: 'Total', style: 'boldText', alignment: 'right' },
-      { text: '', style: 'tableBody' },
-      { text: totalLooseQty.toFixed(2), style: 'boldText' },
-      { text: totalFocQty.toFixed(2), style: 'boldText' },
-      { text: totalCQty.toFixed(2), style: 'boldText' },
-    ]);
-
-    const dd = {
-      pageSize: 'A4',
-      pageMargins: [40, 150, 40, 80], // Adjust margins as needed
-      header: PdfHeader({ findCompany }), // Assuming your header needs company info
-      footer: PdfFooter, // Assuming you have a standard footer
-      content: [
+      allContent.push(
         {
-          text: findCompany('company_name') || 'Ampro PTE LTD', // Fallback if not found
+          text: findCompany('company_name') || '',
           style: 'header',
           alignment: 'center',
+          margin: [0, salesOrderIndex === 0 ? 0 : 20, 0, 0], // Add margin between orders
         },
         {
           columns: [
@@ -133,7 +137,7 @@ const PdfPackingList = ({ id }) => {
               style: 'textSize',
             },
             {
-              text: `Customer Name: ${salesOrder.contact_person || ''}`,
+              text: `Customer Name: ${salesOrder.company_name || ''}`,
               style: 'textSize',
               alignment: 'right',
             },
@@ -144,27 +148,45 @@ const PdfPackingList = ({ id }) => {
           layout: 'lightHorizontalLines',
           table: {
             headerRows: 1,
-            widths: ['auto', '*', 'auto', 'auto', 'auto', 'auto'], // Adjust column widths
+            widths: ['auto', '*', 'auto', 'auto', 'auto', 'auto'],
             body: productItems,
           },
         },
         {
           columns: [
             {
-              text: `Total for Invoice No: ${salesOrder.invoice_code || salesOrder.tran_no || ''}`, // Assuming invoice_code or using sales_order_code as fallback
+              text: `Total for Invoice No: ${salesOrder.invoice_code || salesOrder.tran_no || ''}`,
               style: 'boldText',
               alignment: 'right',
               margin: [0, 10, 10, 0],
             },
             {
-              text: `Total Quantity: ${totalQuantity.toFixed(2)}`, // Display the total quantity
+              text: `Total Carton Qty: ${totalCQty.toFixed(2)}`,
               style: 'boldText',
               alignment: 'right',
               margin: [10, 10, 0, 0],
             },
           ],
         },
-      ],
+      );
+      grandTotalQuantity += totalCQty;
+    });
+
+    allContent.push(
+      { text: '', margin: [0, 20] }, // Spacer
+      {
+        text: `Grand Total: ${grandTotalQuantity.toFixed(2)}`,
+        style: 'boldText',
+        alignment: 'right',
+      },
+    );
+
+    const dd = {
+      pageSize: 'A4',
+      pageMargins: [40, 150, 40, 80],
+      header: PdfHeader({ findCompany }),
+      footer: PdfFooter,
+      content: allContent,
       styles: {
         header: {
           fontSize: 18,
@@ -195,7 +217,7 @@ const PdfPackingList = ({ id }) => {
   return (
     <>
       <a onClick={GetPdf}>
-        Print Pack
+        Print Packing
       </a>
     </>
   );
