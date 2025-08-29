@@ -32,9 +32,10 @@ const PurchaseInvoice = () => {
 
   const fetchData = async () => {
     try {
-      const res = await api.get('/purchaseorder/getFilteredPurchaseOrder', {
+      const res = await api.get('/purchaseorder/getFilteredPurchaseInvoice', {
         params: {
           tran_no: filters.tran_no || '',
+          invoice_no: filters.invoice_no || '',
           from_date: filters.from_date || '',
           to_date: filters.to_date || '',
           status: filters.status || '',
@@ -66,7 +67,7 @@ const PurchaseInvoice = () => {
   const handleNext = () => setCurrentPage(prev => prev + 1);
 
   const handleNewTransactionClick = () => {
-    navigate('/PurchaseOrderDetails'); // Example
+    navigate('/PurchaseInvoiceDetails'); // Example
   };
 
   const handlePrintwithoutPrice = async () => {

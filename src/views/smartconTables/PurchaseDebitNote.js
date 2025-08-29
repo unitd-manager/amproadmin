@@ -32,7 +32,7 @@ const PurchaseDebitNote = () => {
 
   const fetchData = async () => {
     try {
-      const res = await api.get('/purchaseorder/getFilteredPurchaseOrder', {
+      const res = await api.get('/purchaseorder/getFilteredPurchaseDebitNote', {
         params: {
           tran_no: filters.tran_no || '',
           from_date: filters.from_date || '',
@@ -66,7 +66,7 @@ const PurchaseDebitNote = () => {
   const handleNext = () => setCurrentPage(prev => prev + 1);
 
   const handleNewTransactionClick = () => {
-    navigate('/PurchaseOrderDetails'); // Example
+    navigate('/PurchaseDebitNoteDetails'); // Example
   };
 
   const handlePrintwithoutPrice = async () => {

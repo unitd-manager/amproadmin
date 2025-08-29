@@ -45,7 +45,7 @@
     "html2pdf.js": "^0.10.3",
     "jquery": "^3.6.1",
     "jspdf": "^1.5.3",
-    "jspdf-autotable": "^3.5.25",
+    "jspdf-autotable": "^3.8.4",
     "jszip": "^3.10.1",
     "lottie-web": "^5.10.2",
     "moment": "^2.29.4",

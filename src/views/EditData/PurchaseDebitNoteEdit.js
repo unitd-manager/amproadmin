@@ -89,7 +89,7 @@ const navigate=useNavigate();
     });
     
     // Fetch table data
-    api.post("/purchaseorder/TabPurchaseOrderLineItemById",{purchase_order_id:id}).then((response) => { 
+    api.post("/purchaseorder/getPdProductByPurchaseDebitNoteId",{purchase_debit_note_id:id}).then((response) => { 
       setRows(response.data.data);
       setTableData(response.data.data);
     });
@@ -99,7 +99,7 @@ const navigate=useNavigate();
       setFormData(response.data.data[0]);
     });
   
-    api.post("/currency/getCuerrencyByPurchaseorderId",{purchase_order_id:id}).then((response) => {
+    api.post("/currency/getCuerrencyByPurchaseDebitNoteId",{purchase_debit_note_id:id}).then((response) => {
       setCurrency(response.data.data[0]);
     });
 
@@ -162,7 +162,7 @@ useEffect(() => {
       Number((rows.reduce((sum, row) => sum + row.total_price, 0) * 0.09).toFixed(2))
     ).toFixed(2);
     api
-    .post('/purchaseorder/editTabPurchaseOrder', formData)
+    .post('/purchaseorder/editPurchaseDebitNote', formData)
     .then(() => {
       api
       .post('/currency/editCurrency', currency) 
@@ -171,7 +171,7 @@ useEffect(() => {
       rows?.forEach((el)=>{
        
         api
-      .post('/purchaseorder/editPoProduct', el) 
+      .post('/purchaseorder/editPdProduct', el) 
       .then(() => {
         message('Record edited successfully.', 'success'); })})
      
@@ -229,7 +229,7 @@ useEffect(() => {
   console.log('formdata',formData);
   const deleteRow = (index,id) => {
     if(id){
-      api.post('/purchaseorder/deletePoProduct',{po_product_id:id}).then(() => {
+      api.post('/purchaseorder/deletePdProduct',{po_product_id:id}).then(() => {
         message('Record deleted successfully.', 'success');
       }).catch(() => {
         message('Network connection error.', 'error');

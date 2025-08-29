@@ -89,17 +89,17 @@ const navigate=useNavigate();
     });
     
     // Fetch table data
-    api.post("/purchaseorder/TabPurchaseOrderLineItemById",{purchase_order_id:id}).then((response) => { 
+    api.post("/purchaseorder/getPiProductByPurchaseInvoiceId",{purchase_invoice_id:id}).then((response) => { 
       setRows(response.data.data);
       setTableData(response.data.data);
     });
 
     // Fetch supplier options for dropdown
-    api.post("/purchaseorder/getPurchaseOrderById",{purchase_order_id:id}).then((response) => {
+    api.post("/purchaseorder/getPurchaseInvoiceById",{purchase_invoice_id:id}).then((response) => {
       setFormData(response.data.data[0]);
     });
   
-    api.post("/currency/getCuerrencyByPurchaseorderId",{purchase_order_id:id}).then((response) => {
+    api.post("/currency/getCuerrencyByPurchaseInvoiceId",{purchase_invoice_id:id}).then((response) => {
       setCurrency(response.data.data[0]);
     });
 
@@ -162,7 +162,7 @@ useEffect(() => {
       Number((rows.reduce((sum, row) => sum + row.total_price, 0) * 0.09).toFixed(2))
     ).toFixed(2);
     api
-    .post('/purchaseorder/editTabPurchaseOrder', formData)
+    .post('/purchaseorder/editPurchaseInvoice', formData)
     .then(() => {
       api
       .post('/currency/editCurrency', currency) 
@@ -171,7 +171,7 @@ useEffect(() => {
       rows?.forEach((el)=>{
        
         api
-      .post('/purchaseorder/editPoProduct', el) 
+      .post('/purchaseorder/editPiProduct', el) 
       .then(() => {
         message('Record edited successfully.', 'success'); })})
      
@@ -229,7 +229,7 @@ useEffect(() => {
   console.log('formdata',formData);
   const deleteRow = (index,id) => {
     if(id){
-      api.post('/purchaseorder/deletePoProduct',{po_product_id:id}).then(() => {
+      api.post('/purchaseorder/deletePiProduct',{pi_product_id:id}).then(() => {
         message('Record deleted successfully.', 'success');
       }).catch(() => {
         message('Network connection error.', 'error');
@@ -258,7 +258,7 @@ useEffect(() => {
   };
   return (
     <Container className="mt-4">
-      <h2>Add/Edit Purchase Order</h2>
+      <h2>Add/Edit Purchase Invoice</h2>
       <Row>
       <Col md="6">
           <FormGroup>
