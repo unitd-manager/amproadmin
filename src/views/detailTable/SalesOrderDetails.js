@@ -184,16 +184,18 @@ const SalesOrderDetails = () => {
 
               <Row>
                 <div className="pt-3 mt-3 d-flex align-items-center gap-2">
-                  <Button
-                    type="submit"
-                    color="primary"
-                    className="btn mr-2 shadow-none"
-                    onClick={() => {
-                      generateCode();
-                    }}
-                  >
-                    Submit
-                  </Button>
+               <Button
+  type="button"   // <-- change to button, not submit
+  color="primary"
+  className="btn mr-2 shadow-none"
+  onClick={(e) => {
+    e.preventDefault();   // stop form refresh
+    generateCode();
+  }}
+>
+  Submit
+</Button>
+
                   <Button
                     className="shadow-none"
                     color="dark"
