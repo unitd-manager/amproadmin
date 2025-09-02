@@ -80,7 +80,7 @@ function ProjectReportSection() {
 
         <Table className='border'>
           <thead className='text-center'>
-            <th className='border' md-2>#</th>
+            <th className='border'>#</th>
             <th>Sub Model</th>
           </thead>
           <tbody className='text-light bg-dark' style={{textAlign : 'right'}} >

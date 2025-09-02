@@ -19,6 +19,7 @@ import {
 import classnames from "classnames";
 import { useNavigate, useParams } from "react-router-dom";
 import Select from "react-select";
+import { ToastContainer } from 'react-toastify';
 import message from '../../components/Message';
 import { FaTrashAlt, FaPlusCircle } from "react-icons/fa";
 import api from "../../constants/api";
@@ -53,6 +54,7 @@ const PurchaseInvoiceEdit = () => {
     currency_name: "",
   });
   const [supplierOptions, setSupplierOptions] = useState([]);
+  const [billDiscount, setBillDiscount] = useState(0);
   const [rows, setRows] = useState([
     {
       product_code: "",
@@ -257,37 +259,58 @@ useEffect(() => {
     ]);
   };
   return (
-    <Container className="mt-4">
-      <h2>Add/Edit Purchase Invoice</h2>
-      <Row>
-      <Col md="6">
-          <FormGroup>
-            <label>Tran No</label>
-            <Input
-              type="text"
-              placeholder="Enter Tran No"
-              name="tran_no"
-              value={formData.tran_no}
-              onChange={handleChange}
-              
-            />
-          </FormGroup>
-        </Col>
-        <Col md="6">
-          <FormGroup>
-            <label>Tran Date</label>
-            <Input
-              type="date"
-              
-              name="tran_date"
-              value={formData.tran_date}
-              onChange={handleChange}
-              
-            />
-            
-          </FormGroup>
-        </Col>
+    <div style={{ 
+      height: '100vh', 
+      display: 'flex', 
+      flexDirection: 'column',
+      backgroundColor: '#f8f9fa'
+    }}>
+      <ToastContainer />
+      
+      {/* Fixed Header Section */}
+      <div style={{ 
+        flexShrink: 0, 
+        backgroundColor: '#ffffff', 
+        borderBottom: '1px solid #dee2e6', 
+        padding: '8px 15px',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+      }}>
+        <h5 style={{ margin: '0 0 8px 0', color: '#2c3e50', fontSize: '16px' }}>Add/Edit Purchase Invoice</h5>
+        <Row>
+          <Col md="6">
+            <FormGroup style={{ marginBottom: '5px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '5px', display: 'block' }}>Tran No</label>
+              <Input
+                type="text"
+                placeholder="Enter Tran No"
+                name="tran_no"
+                value={formData?.tran_no}
+                onChange={handleChange}
+                style={{ height: '32px', fontSize: '13px' }}
+              />
+            </FormGroup>
+          </Col>
+          <Col md="6">
+            <FormGroup style={{ marginBottom: '10px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '5px', display: 'block' }}>Tran Date</label>
+              <Input
+                type="date"
+                name="tran_date"
+                value={formData?.tran_date}
+                onChange={handleChange}
+                style={{ height: '32px', fontSize: '13px' }}
+              />
+            </FormGroup>
+          </Col>
         </Row>
+      </div>
+      
+      {/* Scrollable Middle Section */}
+      <div style={{ 
+        flex: 1, 
+        overflow: 'auto', 
+        padding: '8px 15px'
+      }}>
       <Nav tabs>
         <NavItem>
           <NavLink
@@ -309,29 +332,31 @@ useEffect(() => {
 
       <TabContent activeTab={activeTab}>
         <TabPane tabId="1">
-        <Form className="mt-3">
-      <Row>
-        <Col md="6">
-          <FormGroup>
-            <label>Supplier Code</label>
+        <Form className="mt-1">
+      <Row className="g-1">
+        <Col md="4">
+          <FormGroup style={{ marginBottom: '8px' }}>
+            <label style={{ fontSize: '11px', marginBottom: '2px' }}>Supplier Code</label>
             <Input
               type="text"
               placeholder="Enter supplier code"
               name="supplier_code"
-              value={formData.supplier_code}
+              value={formData?.supplier_code}
               //onChange={handleChange}
                disabled
+               style={{ fontSize: '10px', padding: '4px', height: '28px' }}
             />
           </FormGroup>
         </Col>
-        <Col md="6">
-          <FormGroup>
-            <label>Supplier Name</label>
+        <Col md="4">
+          <FormGroup style={{ marginBottom: '8px' }}>
+            <label style={{ fontSize: '11px', marginBottom: '2px' }}>Supplier Name</label>
             <Input
               type="select"
               name="supplier_id"
-              value={formData.supplier_id}
+              value={formData?.supplier_id}
               onChange={handleChange}
+              style={{ fontSize: '10px', padding: '4px', height: '28px' }}
             >
               <option value="">Select Supplier</option>
               {supplierOptions.map((supplier, index) => (
@@ -342,103 +367,105 @@ useEffect(() => {
             </Input>
           </FormGroup>
         </Col>
-        <Col md="6">
-          <FormGroup>
-            <label>Contact Person</label>
+        <Col md="4">
+          <FormGroup style={{ marginBottom: '8px' }}>
+            <label style={{ fontSize: '11px', marginBottom: '2px' }}>Contact Person</label>
             <Input
               type="text"
               placeholder="Enter contact person"
               name="contact_person"
-              value={formData.contact_person}
+              value={formData?.contact_person}
               onChange={handleChange}
-              
+              style={{ fontSize: '10px', padding: '4px', height: '28px' }}
             />
           </FormGroup>
         </Col>
-        <Col md="6">
-          <FormGroup>
-            <label>Contact Address1</label>
+        <Col md="4">
+          <FormGroup style={{ marginBottom: '8px' }}>
+            <label style={{ fontSize: '11px', marginBottom: '2px' }}>Contact Address1</label>
             <Input
               type="text"
               placeholder="Enter contact address"
               name="contact_address1"
-              value={formData.contact_address1}
+              value={formData?.contact_address1}
               onChange={handleChange}
-              
+              style={{ fontSize: '10px', padding: '4px', height: '28px' }}
             />
           </FormGroup>
         </Col>
-        <Col md="6">
-          <FormGroup>
-            <label>Contact Address2</label>
+        <Col md="4">
+          <FormGroup style={{ marginBottom: '8px' }}>
+            <label style={{ fontSize: '11px', marginBottom: '2px' }}>Contact Address2</label>
             <Input
               type="text"
               placeholder="Enter contact address"
               name="contact_address2"
-              value={formData.contact_address2}
+              value={formData?.contact_address2}
               onChange={handleChange}
-              
+              style={{ fontSize: '10px', padding: '4px', height: '28px' }}
             />
           </FormGroup>
         </Col>
-        <Col md="6">
-          <FormGroup>
-            <label>Contact Address3</label>
+        <Col md="4">
+          <FormGroup style={{ marginBottom: '8px' }}>
+            <label style={{ fontSize: '11px', marginBottom: '2px' }}>Contact Address3</label>
             <Input
               type="text"
               placeholder="Enter contact address"
               name="contact_address3"
-              value={formData.contact_address3}
+              value={formData?.contact_address3}
               onChange={handleChange}
-              
+              style={{ fontSize: '10px', padding: '4px', height: '28px' }}
             />
           </FormGroup>
         </Col>
-        <Col md="6">
-          <FormGroup>
-            <label>Country/Postal Code</label>
+        <Col md="4">
+          <FormGroup style={{ marginBottom: '8px' }}>
+            <label style={{ fontSize: '11px', marginBottom: '2px' }}>Country/Postal Code</label>
             <Row>
-            <Col md="5">
+            <Col md="6">
             <Input
               type="text"
               placeholder="Country"
               name="country"
-              value={formData.country}
+              value={formData?.country}
               onChange={handleChange}
-            
+              style={{ fontSize: '10px', padding: '4px', height: '28px' }}
             /></Col>
-              <Col md="5">
+              <Col md="6">
             <Input
               type="text"
               placeholder="Postal code"
               name="postal_code"
-              value={formData.postal_code}
+              value={formData?.postal_code}
               onChange={handleChange}
-            
+              style={{ fontSize: '10px', padding: '4px', height: '28px' }}
             /></Col>
             </Row>
           </FormGroup>
         </Col>
-        <Col md="6">
-          <FormGroup>
-            <label>Remarks</label>
+        <Col md="4">
+          <FormGroup style={{ marginBottom: '8px' }}>
+            <label style={{ fontSize: '11px', marginBottom: '2px' }}>Remarks</label>
             <Input
               type="textarea"
               name="remarks"
               placeholder="Remarks"
-              value={formData.remarks}
+              value={formData?.remarks}
               onChange={handleChange}
+              style={{ fontSize: '10px', padding: '4px', height: '60px' }}
             />
           </FormGroup>
         </Col>
-        <Col md="6">
-          <FormGroup>
-            <label>Request Delivery Date</label>
+        <Col md="4">
+          <FormGroup style={{ marginBottom: '8px' }}>
+            <label style={{ fontSize: '11px', marginBottom: '2px' }}>Request Delivery Date</label>
             <Input
               type="date"
               name="req_delivery_date"
-              value={formData.req_delivery_date}
+              value={formData?.req_delivery_date}
               onChange={handleChange}
+              style={{ fontSize: '10px', padding: '4px', height: '28px' }}
             />
           </FormGroup>
         </Col>
@@ -449,27 +476,27 @@ useEffect(() => {
 
         <TabPane tabId="2">
       
-            <Form className="mt-3">
-                      <Row>
-                        <Col md="6">
-                          <FormGroup>
-                            <label>Currency Code</label>
-                            <Input type="text" placeholder="Enter Currency code" name="currency_code" value={currency?.currency_code || ""}  onChange={handleCurrencyChange}/>
+            <Form className="mt-1">
+                      <Row className="g-1">
+                        <Col md="4">
+                          <FormGroup style={{ marginBottom: '8px' }}>
+                            <label style={{ fontSize: '11px', marginBottom: '2px' }}>Currency Code</label>
+                            <Input type="text" placeholder="Enter Currency code" name="currency_code" value={currency?.currency_code || ""}  onChange={handleCurrencyChange} style={{ fontSize: '10px', padding: '4px', height: '28px' }}/>
                           </FormGroup>
                         </Col>
-                        <Col md="6">
-                          <FormGroup>
-                            <label>Currency Name</label>
-                            <Input type="text" name="currency_name" value={currency?.currency_name || ""} onChange={handleCurrencyChange}>
+                        <Col md="4">
+                          <FormGroup style={{ marginBottom: '8px' }}>
+                            <label style={{ fontSize: '11px', marginBottom: '2px' }}>Currency Name</label>
+                            <Input type="text" name="currency_name" value={currency?.currency_name || ""} onChange={handleCurrencyChange} style={{ fontSize: '10px', padding: '4px', height: '28px' }}>
                             
                             </Input>
                           </FormGroup>
                         </Col>
-                        <Col md="6">
-                          <FormGroup>
-                            <label>Currency Rate</label>
+                        <Col md="4">
+                          <FormGroup style={{ marginBottom: '8px' }}>
+                            <label style={{ fontSize: '11px', marginBottom: '2px' }}>Currency Rate</label>
                             <Input type="text" placeholder="Enter Currency Rate " name="currency_rate" value={currency?.currency_rate || ""} 
-                            onChange={handleCurrencyChange}/>
+                            onChange={handleCurrencyChange} style={{ fontSize: '10px', padding: '4px', height: '28px' }}/>
                           </FormGroup>
                         </Col>
                        
@@ -479,29 +506,35 @@ useEffect(() => {
         </TabPane>
       </TabContent>
 
-      <h4 className="mt-4">Products</h4>
-      <Table bordered>
+        <h5 style={{ margin: '0 0 8px 0', color: '#2c3e50', fontSize: '16px' }}>Products</h5>
+        <div style={{ 
+          maxHeight: '400px', 
+          overflowY: 'auto', 
+          border: '1px solid #dee2e6',
+          borderRadius: '4px'
+        }}>
+          <Table bordered style={{ marginBottom: '0' }}>
         <thead>
-          <tr>
-            <th>S No</th>
-            <th>Product Code</th>
-            <th>Product Name</th>
-            <th>Carton Qty</th>
-            <th>Loose Qty</th>
-            <th>Qty</th>
-            <th>Carton Price</th>
-            <th>Price</th>
-            <th>Total</th>
-            <th>Discount</th>
-            <th>Gross Total </th>
-            <th>Actions</th>
+          <tr style={{ backgroundColor: '#f8f9fa' }}>
+            <th style={{ padding: '4px', fontSize: '10px', fontWeight: 'bold' }}>S No</th>
+            <th style={{ padding: '4px', fontSize: '10px', fontWeight: 'bold' }}>Product Code</th>
+            <th style={{ padding: '4px', fontSize: '10px', fontWeight: 'bold' }}>Product Name</th>
+            <th style={{ padding: '4px', fontSize: '10px', fontWeight: 'bold' }}>Carton Qty</th>
+            <th style={{ padding: '4px', fontSize: '10px', fontWeight: 'bold' }}>Loose Qty</th>
+            <th style={{ padding: '4px', fontSize: '10px', fontWeight: 'bold' }}>Qty</th>
+            <th style={{ padding: '4px', fontSize: '10px', fontWeight: 'bold' }}>Carton Price</th>
+            <th style={{ padding: '4px', fontSize: '10px', fontWeight: 'bold' }}>Price</th>
+            <th style={{ padding: '4px', fontSize: '10px', fontWeight: 'bold' }}>Total</th>
+            <th style={{ padding: '4px', fontSize: '10px', fontWeight: 'bold' }}>Discount</th>
+            <th style={{ padding: '4px', fontSize: '10px', fontWeight: 'bold' }}>Gross Total</th>
+            <th style={{ padding: '4px', fontSize: '10px', fontWeight: 'bold' }}>Actions</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row, index) => (
             <tr key={index}>
-              <td>{index + 1}</td>
-              <td>
+              <td style={{ padding: '3px', fontSize: '10px' }}>{index + 1}</td>
+              <td style={{ padding: '3px' }}>
               <Select
                 options={products.map((p) => ({
                   value: p.product_id,
@@ -511,56 +544,70 @@ useEffect(() => {
                 value={products.find((p) => p.product_id === row.product_id) || null} 
                 onChange={(selectedOption) => handleProductSelect(index, selectedOption)}
                 placeholder="Select Product"
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    minHeight: '24px',
+                    fontSize: '9px'
+                  })
+                }}
               />
               </td>
-              <td>
+              <td style={{ padding: '3px' }}>
                 <Input
                   type="text"
                   value={row.product_name}
                   onChange={(e) => handleRowChange(index, "product_name", e.target.value)}
+                  style={{ fontSize: '9px', padding: '2px', height: '24px' }}
                 />
               </td>
-              <td>
+              <td style={{ padding: '3px' }}>
                 <Input
                   type="number"
                   value={row.carton_qty}
                   onChange={(e) => handleRowChange(index, "carton_qty", parseInt(e.target.value) || 0)}
+                  style={{ fontSize: '9px', padding: '2px', height: '24px' }}
                 />
               </td>
-              <td>
+              <td style={{ padding: '3px' }}>
                 <Input
                   type="number"
                   value={row.loose_qty}
                   onChange={(e) => handleRowChange(index, "loose_qty", parseInt(e.target.value) || 0)}
+                  style={{ fontSize: '9px', padding: '2px', height: '24px' }}
                 />
               </td>
-              <td>
+              <td style={{ padding: '3px' }}>
               <Input
                   type="number"
                   value={row.qty}
                   onChange={(e) => handleRowChange(index, "qty", parseInt(e.target.value) || 0)}
+                  style={{ fontSize: '9px', padding: '2px', height: '24px' }}
                 />
               </td>
-              <td>
+              <td style={{ padding: '3px' }}>
                 <Input
                   type="number"
                   value={row.carton_price}
                   onChange={(e) => handleRowChange(index, "carton_price", parseFloat(e.target.value) || 0)}
+                  style={{ fontSize: '9px', padding: '2px', height: '24px' }}
                 />
               </td>
-              <td>
+              <td style={{ padding: '3px' }}>
               <Input
                   type="number"
                   value={row.price}
                   onChange={(e) => handleRowChange(index, "price", parseFloat(e.target.value) || 0)}
+                  style={{ fontSize: '9px', padding: '2px', height: '24px' }}
                 />
               </td>
-              <td>{Number(row.total)?.toFixed(2)}</td>
-              <td>
+              <td style={{ padding: '3px', fontSize: '10px' }}>{Number(row.total)?.toFixed(2)}</td>
+              <td style={{ padding: '3px' }}>
                 <Input
                   type="number"
                   value={row.discount}
                   onChange={(e) => handleRowChange(index, "discount", parseFloat(e.target.value) || 0)}
+                  style={{ fontSize: '9px', padding: '1px', width: '50px', height: '20px' }}
                 />
                  {/* <Input
     type="number"
@@ -576,14 +623,14 @@ useEffect(() => {
     placeholder="Discount Amount"
   /> */}
               </td>
-              <td>{row.total_price?.toFixed(2)}</td>
-              <td>
+              <td style={{ padding: '3px', fontSize: '10px' }}>{row.total_price?.toFixed(2)}</td>
+              <td style={{ padding: '3px' }}>
                 <FaTrashAlt
-                  style={{ color: "red", cursor: "pointer", marginRight: "10px" }}
+                  style={{ color: "red", cursor: "pointer", marginRight: "5px", fontSize: '12px' }}
                   onClick={() => deleteRow(index,row.po_product_id)}
                 />
                 <FaPlusCircle
-                  style={{ color: "green", cursor: "pointer" }}
+                  style={{ color: "green", cursor: "pointer", fontSize: '12px' }}
                   onClick={addRow}
                 />
               </td>
@@ -603,52 +650,97 @@ useEffect(() => {
     <td></td> {/* Empty cell for actions */}
   </tr>
 </tfoot>
-
-      </Table>
-      <Row className="p-2 border bg-light">
-        <Col><strong>UOM:</strong> {rows.length > 0 ? rows[0].uom || "-" : "-"}</Col>
-        <Col><strong>Pieces/Carton:</strong> {rows.length > 0 ? rows[0]?.pieces_per_carton || 0 : "0.00"}</Col>
-        <Col><strong>Purchase Unit Cost:</strong> {rows.length > 0 ? rows[0]?.purchase_unit_cost?.toFixed(2) || "0.00" : "0.00"}</Col>
-        <Col><strong>Wholesale Price:</strong> {rows.length > 0 ? rows[0]?.wholesale_price?.toFixed(2) || "0.00" : "0.00"}</Col>
-        {/* <Col><strong>Carton Price:</strong> {rows.length > 0 ? rows[0]?.carton_price?.toFixed(2) || "0.00" : "0.00"}</Col> */}
-        <Col><strong>CQty:</strong> {rows.length > 0 ? rows[0]?.carton_qty || "0" : "0.00"}</Col>
-        <Col><strong>Qty On Hand:</strong> {rows.length > 0 ? rows[0]?.qty_on_hand || 0 : "0.00"}</Col>
-      </Row>
-
-      <Row className="p-2 mt-3 border">
-        <Col>
-          <strong>Bill Discount:</strong>
-          <Input
-            type="number"
-            className="ms-2"
-            value={rows.billDiscount}
-            onChange={(e) => setBillDiscount(parseFloat(e.target.value) || 0)}
-            style={{ width: "100px", display: "inline-block" }}
-          />
-        </Col>
-        <Col><strong>Total Products:</strong> {rows.length}</Col>
-        <Col><strong>Sub Total (USD):</strong> ${rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2)}</Col>
-        <Col><strong>Tax (USD):</strong> ${ (rows.reduce((sum, row) => sum + row.total_price, 0) * 0.09).toFixed(2) }</Col>
-        <Col><strong>Net Total (USD):</strong> $
-  {(
-    Number(rows.reduce((sum, row) => sum + row.total_price, 0)) +
-    Number((rows.reduce((sum, row) => sum + row.total_price, 0) * 0.09).toFixed(2))
-  ).toFixed(2)}</Col>
-      </Row>
-
-      <div className="mt-4">
-        {/* <h5>Summary:</h5>
-        <p>Total Products: {rows.length}</p>
-        <p>Total Amount: ${rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2)}</p> */}
-        <Button color="success" onClick={handleSubmit} >Save</Button>
-        {/* <Button color="secondary" className="ms-2">
-          Print
-        </Button> */}
-        <Button color="danger" className="ms-2" onClick={() => navigate('/PurchaseOrder')}>
-          Cancel
-        </Button>
+          </Table>
+        </div>
+        
+        <Row className="p-1 mt-1 border bg-light" style={{ margin: '4px 0' }}>
+          <Col style={{ fontSize: '10px' }}><strong>UOM:</strong> {rows.length > 0 ? rows[0].uom || "-" : "-"}</Col>
+           <Col style={{ fontSize: '10px' }}><strong>Pieces/Carton:</strong> {rows.length > 0 ? rows[0]?.pieces_per_carton || 0 : "0.00"}</Col>
+           <Col style={{ fontSize: '10px' }}><strong>Purchase Unit Cost:</strong> {rows.length > 0 ? rows[0]?.purchase_unit_cost || 0 : "0.00"}</Col>
+           <Col style={{ fontSize: '10px' }}><strong>Wholesale Price:</strong> {rows.length > 0 ? rows[0]?.wholesale_price || 0 : "0.00"}</Col>
+           <Col style={{ fontSize: '10px' }}><strong>CQty:</strong> {rows.length > 0 ? rows[0]?.cqty || 0 : "0.00"}</Col>
+           <Col style={{ fontSize: '10px' }}><strong>Qty On Hand:</strong> {rows.length > 0 ? rows[0]?.qty_on_hand || 0 : "0.00"}</Col>
+        </Row>
       </div>
-    </Container>
+      
+      {/* Fixed Footer Section */}
+      <div style={{ 
+        flexShrink: 0, 
+        backgroundColor: '#2c3e50', 
+        borderTop: '1px solid #dee2e6', 
+        padding: '5px 10px',
+        color: '#ffffff'
+      }}>
+
+        <Row className="align-items-center">
+           <Col md="2">
+              <div style={{ fontSize: '10px', marginBottom: '1px' }}>Bill Discount: $</div>
+              <Input 
+                type="number" 
+                value={billDiscount}
+                onChange={(e) => setBillDiscount(parseFloat(e.target.value) || 0)}
+                style={{ 
+                  height: '20px', 
+                  fontSize: '9px', 
+                  padding: '1px 4px',
+                  width: '70px'
+                }} 
+              />
+           </Col>
+           <Col md="2">
+             <div style={{ fontSize: '10px', color: '#ffffff' }}>Total Products:</div>
+             <div style={{ fontSize: '12px', fontWeight: 'bold' }}>{rows.length}</div>
+           </Col>
+           <Col md="2">
+             <div style={{ fontSize: '10px', color: '#ffffff' }}>Sub Total:</div>
+             <div style={{ fontSize: '12px', fontWeight: 'bold' }}>${rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2)}</div>
+           </Col>
+           <Col md="2">
+             <div style={{ fontSize: '10px', color: '#ffffff' }}>Tax:</div>
+             <div style={{ fontSize: '12px', fontWeight: 'bold' }}>${(rows.reduce((sum, row) => sum + row.total_price, 0) * 0.09).toFixed(2)}</div>
+           </Col>
+           <Col md="2">
+             <div style={{ fontSize: '10px', color: '#ffffff' }}>Net Total:</div>
+             <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#28a745' }}>${(
+               Number(rows.reduce((sum, row) => sum + row.total_price, 0)) +
+               Number((rows.reduce((sum, row) => sum + row.total_price, 0) * 0.09).toFixed(2))
+             ).toFixed(2)}</div>
+           </Col>
+           <Col md="2" className="text-right">
+             <Button
+               color="secondary"
+               size="sm"
+               onClick={() => {
+                 navigate('/PurchaseOrder');
+               }}
+               style={{ marginRight: '3px', fontSize: '9px', padding: '2px 6px' }}
+             >
+               Cancel
+             </Button>
+             <Button
+               color="info"
+               size="sm"
+               onClick={() => {
+                 console.log('Print functionality');
+               }}
+               style={{ marginRight: '3px', fontSize: '9px', padding: '2px 6px' }}
+             >
+               Print
+             </Button>
+             <Button
+               color="primary"
+               size="sm"
+               onClick={() => {
+                 handleSubmit();
+               }}
+               style={{ fontSize: '9px', padding: '2px 6px' }}
+             >
+               Save
+             </Button>
+           </Col>
+         </Row>
+      </div>
+    </div>
   );
 };
 

@@ -1,3 +1,4 @@
+/*eslint-disable*/
 import { Route, Routes } from 'react-router-dom';
 import React, { lazy } from 'react';
 import Loadable from '../layouts/loader/Loadable';
@@ -130,6 +131,8 @@ const EmployeetrainingreportsTable = Loadable(lazy(() => import('../views/smartc
 const StatementofAccountsReport = Loadable(lazy(() => import('../views/Reports/StatementofAccountsReport')));
 const AgingReportsTable = Loadable(lazy(() => import('../views/smartconTables/AgingReports')));
 const InvoiceTable = Loadable(lazy(() => import('../views/smartconTables/Invoice')));
+const SalesReturnTable = Loadable(lazy(() => import('../views/smartconTables/SalesReturn')));
+
 const DeliveryTable = Loadable(lazy(() => import('../views/smartconTables/DeliveryCL')));
 const BulkDeliveryOrderTable = Loadable(lazy(() => import('../components/SalesOrder/BulkDeliveryOrder')));
 
@@ -154,6 +157,7 @@ const FinanceTable = Loadable(lazy(() => import('../views/smartconTables/Orders'
 
 // Admin
 
+const StockRequest = Loadable(lazy(() => import('../views/smartconTables/StockRequest')));
 
 const GoodsReturn = Loadable(lazy(() => import('../views/smartconTables/GoodsReturn')));
 const GoodsReceipt = Loadable(lazy(() => import('../views/smartconTables/GoodsReceipt')));
@@ -167,10 +171,13 @@ const SubCategoryTable = Loadable(lazy(() => import('../views/smartconTables/Sub
 const BlogDetailsTable = Loadable(lazy(() => import('../views/detailTable/BlogDetails')));
 const SupplierDetailsTable = Loadable(lazy(() => import('../views/detailTable/SupplierDetails')));
 const SupplierCLDetailsTable = Loadable(lazy(() => import('../views/detailTable/SupplierCLDetails')));
+const SalesReturnDetails = Loadable(lazy(() => import('../views/detailTable/SalesReturnDetails')));
+const SalesReturnEdit = Loadable(lazy(() => import('../views/EditData/SalesReturnEdit')));
 
 const CustomerSupplierPriceDetailTable = Loadable(lazy(() => import('../views/detailTable/CustomerSupplierPriceDetails')));
 const GoodsReceiptDetailTable = Loadable(lazy(() => import('../views/detailTable/GoodsReceiptDetails')));
 const GoodsReturnDetailTable = Loadable(lazy(() => import('../views/detailTable/GoodsReturnDetails')));
+const StockRequestDetailTable = Loadable(lazy(() => import('../views/detailTable/StockRequestDetails')));
 
 const SubCategoryDetailsTable = Loadable(
   lazy(() => import('../views/detailTable/SubCategoryDetails')),
@@ -193,6 +200,7 @@ const Support = Loadable(lazy(() => import('../views/smartconTables/Support')));
 const StaffDetails = Loadable(lazy(() => import('../views/detailTable/StaffDetails')));
 const SalesOrderDetails = Loadable(lazy(() => import('../views/detailTable/SalesOrderDetails')));
 const DeliveryOrderDetails = Loadable(lazy(() => import('../views/detailTable/DeliveryOrderDetails')));
+const Dashboard = Loadable(lazy(() => import('../views/smartconTables/Dashboard')));
 
 const InvoiceDetails = Loadable(lazy(() => import('../views/detailTable/InvoiceDetails')));
 const ClientDetailsTable = Loadable(lazy(() => import('../views/detailTable/ClientDetails')));
@@ -200,6 +208,7 @@ const MemberTypeDetails = Loadable(lazy(() => import('../views/detailTable/membe
 const PriceGroupAdd = Loadable(lazy(() => import('../views/detailTable/pricegroupDetails')));
 const CatalogueDetailsCL = Loadable(lazy(() => import('../views/detailTable/CatalogueDetailsCL')));
 const PaymodeDetailsCL = Loadable(lazy(() => import('../views/detailTable/PaymodeDetailsCL')));
+const PaymentDetailsCL = Loadable(lazy(() => import('../views/detailTable/PaymentDetailsCL')));
 const CatalogueCLEdit = Loadable(lazy(() => import('../views/EditData/CatalogueCLEdit')));
 const CatalogueAddProduct = Loadable(lazy(() => import('../views/EditData/CatalogueAddProduct')));
 const PaymodeEditCL = Loadable(lazy(() => import('../views/EditData/PaymodeEditCL')));
@@ -209,6 +218,7 @@ const PurchaseOrderEdit = Loadable(lazy(() => import('../views/EditData/Purchase
 const CustomerSupplierPriceEdit = Loadable(lazy(() => import('../views/EditData/CustomerSupplierPriceEdit')));
 const GoodsReceiptEdit = Loadable(lazy(() => import('../views/EditData/GoodsReceiptEdit')));
 const GoodsReturnEdit = Loadable(lazy(() => import('../views/EditData/GoodsReturnEdit')));
+const StockRequestEdit = Loadable(lazy(() => import('../views/EditData/StockRequestEdit')));
 
 const SupportDetails = Loadable(lazy(() => import('../views/detailTable/SupportDetails')));
 
@@ -257,6 +267,21 @@ const InvoiceByYearTable = Loadable(lazy(() => import('../views/Reports/InvoiceB
 const PurchaseOrderTable = Loadable(lazy(() => import('../views/smartconTables/PurchaseOrder')));
 const SupportNewTable = Loadable(lazy(() => import('../views/smartconTables/SupportNew')));
 //product group
+
+const TransferOutTable = Loadable(lazy(() => import('../views/smartconTables/TransferOut')));
+const TransferOutDetails = Loadable(lazy(() => import('../views/detailTable/TransferOutDetails')));
+const TransferOutEdit = Loadable(lazy(() => import('../views/EditData/TransferOutEdit')));
+
+const SalesCreditTable = Loadable(lazy(() => import('../views/smartconTables/SalesCredit')));
+const DeliveryVerificationTable = Loadable(lazy(() => import('../views/smartconTables/DeliveryVerification')));
+
+const DeliveryVerificationDetail = Loadable(lazy(() => import('../views/detailTable/DeliveryVerificationDetail')));
+const SalesCreditDetails = Loadable(lazy(() => import('../views/detailTable/SalesCreditDetails')));
+
+const DeliveryVerificationEdit = Loadable(lazy(() => import('../views/EditData/DeliveryVerificationEdit')));
+const SalesCreditEdit = Loadable(lazy(() => import('../views/EditData/SalesCreditEdit')));
+
+
 
 const DepartmentCli = Loadable(lazy(() => import('../views/smartconTables/DepartmentCli')));
 const CategoryCli = Loadable(lazy(() => import('../views/smartconTables/CategoryCli')));
@@ -377,6 +402,7 @@ const Routernew = () => {
 <Route path="/CustomerSupplierPriceDetails" name="blogDetaildata" element={<CustomerSupplierPriceDetailTable />}></Route>
           <Route path="/GoodsReceiptDetails" name="supplierDetaildata" element={<GoodsReceiptDetailTable />}></Route>
           <Route path="/GoodsReturnDetails" name="supplierDetaildata" element={<GoodsReturnDetailTable />}></Route>
+          <Route path="/StockRequestDetails" name="stockRequestdata" element={<StockRequestDetailTable />}></Route>
         {/* product group */}
 
          {/* <Route path="/qapage" name="qapage" element={<QAComponent />}></Route> */}
@@ -483,6 +509,7 @@ const Routernew = () => {
           <Route path="/CustomerSupplierPriceEdit/:id" name="productdata" element={<CustomerSupplierPriceEdit />}></Route>
           <Route path="/GoodsReceiptEdit/:id" name="orderdata" element={<GoodsReceiptEdit />}></Route>
           <Route path="/GoodsReturnEdit/:id" name="orderdata" element={<GoodsReturnEdit />}></Route>
+          <Route path="/StockRequestEdit/:id" name="productdata" element={<StockRequestEdit />}></Route>
           <Route path="/clientEdit/:id" name="clienttdata" element={<ClientEdit />}></Route>
           <Route path="/MembertypeEdit/:id" name="memberedit" element={<MemberTypeEdit />}></Route>
           <Route path="/pricegroupedit/:id" name="priceedit" element={<PriceGroupEdit />}></Route>
@@ -502,6 +529,8 @@ const Routernew = () => {
           <Route path="/InvoiceEdit/:id" name="invoicedata" element={<InvoiceEdit />}></Route>
           <Route path="/DeliveryOrderEdit/:id" name="DeliveryOrderdata" element={<DeliveryOrderEdit />}></Route>
 
+                    <Route path="/SalesReturn" name="clienttdata" element={<SalesReturnTable />}></Route>
+          <Route path="/SalesReturnDetails" name="salesReturnDetaildata" element={<SalesReturnDetails />}></Route>
 
           <Route path="/SupportEdit/:id" name="supportdata" element={<SupportEdit />}></Route>
           <Route path="/SettingEdit/:id" name="settingdata" element={<SettingEdit />}></Route>
@@ -639,6 +668,7 @@ const Routernew = () => {
           <Route path="/pricegroupDetails" name="clienttdata" element={<PriceGroupAdd />}></Route>
           <Route path="/CatalogueDetailsCL" name="clienttdata" element={<CatalogueDetailsCL />}></Route>
           <Route path="/PaymodeDetailsCL" name="clienttdata" element={<PaymodeDetailsCL />}></Route>
+          <Route path="/PaymentDetailsCL" name="clienttdata" element={<PaymentDetailsCL />}></Route>
 
           <Route path="/Product" name="productdata" element={<ProductTable />}></Route>
           <Route path="/ProductCL" name="productdata" element={<ProductCLTable />}></Route>
@@ -699,6 +729,7 @@ const Routernew = () => {
           <Route path="/CustomerSupplierPrice" name="contentdata" element={<CustomerSupplierPrice />}></Route>
           <Route path="/GoodsReceipt" name="customerdata" element={<GoodsReceipt />}></Route>
           <Route path="/GoodsReturn" name="customerdata" element={<GoodsReturn />}></Route>
+          <Route path="/StockRequest" name="stockdata" element={<StockRequest />}></Route>
 
           <Route path="/Content" name="contentdata" element={<Content />}></Route>
           <Route path="/Customer" name="customerdata" element={<Customer />}></Route>
@@ -719,6 +750,7 @@ const Routernew = () => {
           <Route path="/Support" name="supportdata" element={<Support />}></Route>
           <Route path="/SupportNew" name="supportnewdata" element={<SupportNewTable />}></Route>
           <Route path="/SupportDetails" name="supportdetailsdata" element={<SupportDetails />}></Route>
+          <Route path="/Dashboard" name="supportdata" element={<Dashboard />}></Route>
         
           <Route path="/Employeetrainingreports" name="employeetrainingreportdata" element={<EmployeetrainingreportsTable />}></Route>
           <Route path="/StatementofAccountsReport" name="statementofAccountsreportdata" element={<StatementofAccountsReport />}></Route>

@@ -148,6 +148,51 @@ const PurchaseDebitNote = () => {
     }
   };
 
+  const handleRepeatPurchaseorder = async () => {
+    if (selectedTranNos.length !== 1) {
+      alert('Please select one Purchase Debit Note to repeat as Purchase Credit');
+      return;
+    }
+    try {
+      const res = await api.post('/purchaseorder/repeatPurchaseCredit', {
+        tran_no: selectedTranNos[0]
+      });
+      if (res.data.success) {
+        alert('Purchase Credit created successfully!');
+        navigate(`/PurchaseCreditEdit/${res.data.new_id}`);
+      } else {
+        alert('Failed to create Purchase Credit');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error creating Purchase Credit');
+    }
+  };
+
+  const handleRecap = async () => {
+    if (selectedTranNos.length === 0) {
+      alert('Please select at least one Purchase Debit Note for recap');
+      return;
+    }
+    try {
+      const res = await api.post('/purchaseorder/recapPurchaseDebitNote', {
+        tran_nos: selectedTranNos
+      });
+      if (res.data.success) {
+        alert(`Recap completed successfully for ${selectedTranNos.length} transaction(s)`);
+        // Refresh the data to show updated status
+        fetchData();
+        // Clear selections
+        setSelectedTranNos([]);
+      } else {
+        alert('Recap operation failed');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error during recap operation');
+    }
+  };
+
   return (
     <div className="p-4 bg-light">
       <h4 className="mb-4">Purchase DebitNote Management</h4>
@@ -177,12 +222,11 @@ const PurchaseDebitNote = () => {
           <ButtonDropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
             <Button color="primary" onClick={handleNewTransactionClick}>New Transaction</Button>
             <DropdownToggle caret color="primary" />
-            {/* <DropdownMenu end>
-              <DropdownItem onClick={handlePrintwithoutPrice}>Print Without Price</DropdownItem>
-              <DropdownItem onClick={handleConverttoGra}>Convert To GRA</DropdownItem>
-              <DropdownItem onClick={handleChangeStatus}>Change Status</DropdownItem>
-              <DropdownItem onClick={handleRepeatPurchaseOrder}>Repeat Purchase Order</DropdownItem>
-            </DropdownMenu> */}
+            <DropdownMenu end>
+            
+              <DropdownItem onClick={handleRepeatPurchaseorder}>Repeat Purchase Credit</DropdownItem>
+              <DropdownItem onClick={handleRecap}>Recap</DropdownItem>
+            </DropdownMenu>
           </ButtonDropdown>
         </Col>
       </Row>

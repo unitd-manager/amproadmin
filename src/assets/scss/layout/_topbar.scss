@@ -35,11 +35,17 @@
 
 @include media-breakpoint-up(lg) {
   .fixedTopbar {
-    .topbar {
-      width: calc(100% - #{$sidebarWidth});
-      left: auto;
-    }
+  .topbar {
+    width: calc(100% - #{$sidebarWidth});
+    left: auto;
   }
+}
+.hide-sidebar-space {
+  .topbar {
+    left: 0 !important;
+    width: 100% !important;
+  }
+}
   .isMiniSidebar .fixedTopbar .topbar {
     width: calc(100% - #{$miniSidebarWidth});
     left: auto;

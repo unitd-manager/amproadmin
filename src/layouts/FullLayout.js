@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet,useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Container } from 'reactstrap';
 import Header from './header/Header';
@@ -14,13 +14,16 @@ const FullLayout = () => {
   const topbarFixed = useSelector((state) => state.customizer.isTopbarFixed);
   const LayoutHorizontal = useSelector((state) => state.customizer.isLayoutHorizontal);
   const isFixedSidebar = useSelector((state) => state.customizer.isSidebarFixed);
+  const location = useLocation();
+  const isEditOrDetailPage = location.pathname.includes('Edit') || location.pathname.includes('Details');
+
   return (
     <main>
       <div
-        className={`pageWrapper d-md-block d-lg-flex ${toggleMiniSidebar ? 'isMiniSidebar' : ''}`}
+        className={`pageWrapper d-md-block d-lg-flex ${toggleMiniSidebar ? 'isMiniSidebar' : ''} ${isEditOrDetailPage ? 'hide-sidebar-space' : ''}`} 
       >
-        {/******** Sidebar **********/}
-        {LayoutHorizontal ? (
+        {/******** Sidebar *********/
+        LayoutHorizontal || isEditOrDetailPage ? (
           ''
         ) : (
           <aside className={`sidebarArea ${showMobileSidebar ? 'showSidebar' : ''}`}>

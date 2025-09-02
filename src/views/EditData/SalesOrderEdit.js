@@ -13,8 +13,8 @@ import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../form-editor/editor.scss';
 // import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
-import ComponentCard from '../../components/ComponentCard';
- import ComponentCardV2 from '../../components/ComponentCardV2';
+//import ComponentCard from '../../components/ComponentCard';
+//  import ComponentCardV2 from '../../components/ComponentCardV2';
 import message from '../../components/Message';
 import api from '../../constants/api';
 import Tab from '../../components/ProjectTabs/Tab';
@@ -50,14 +50,7 @@ const SalesOrderEdit = () => {
       { id: '2', name: 'Currency' },
       { id: '3', name: 'Shipping' },
       { id: '4', name: 'Sales Man' },
-      //  { id: '5', name: 'Pdf Pick' },
-      //  { id: '6', name: 'Pdf Pack' },
-      //  { id: '10', name: 'Pdf quote' },
-
-
-     
-      //  { id: '6', name: 'Pdf Pick' },
-      //  { id: '7', name: 'Pdf Pick' },
+   
     ];
     const toggle = (tab) => {
       setActiveTab(tab);
@@ -142,112 +135,76 @@ useEffect(() => {
       getLineItem();
 }, [id]);
  return (
-    <div>   
-      <Form>     
-        <ComponentCardV2>
-                        <Row>
-                          <Col>
-                            <Button
-                              color="primary"
-                              onClick={() => {
-                                editSettingData();
-                                setTimeout(() => {
-                                  navigate('/salesOrder');
-                                  window.location.reload();
-                                }, 1100);
-                              }}
-                            >
-                              Save
-                            </Button>
-                          </Col>
-                          <Col>
-                            <Button
-                              color="primary"
-                              onClick={() => {
-                                editSettingData();
-                              }}
-                            >
-                              Apply
-                            </Button>
-                          </Col>
-                          <Col>
-                            <Button
-                              color="dark"
-                              onClick={() => {
-                                navigate('/salesOrder');
-                                console.log('back to list');
-                              }}
-                            >
-                              Back to List
-                            </Button>
-                          </Col>
-                        </Row>
-                      </ComponentCardV2>
-      </Form>
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>   
+      {/* Fixed Header Section */}
+      <div style={{ flexShrink: 0, backgroundColor: '#ffffff', borderBottom: '1px solid #dee2e6', padding: '4px 8px' }}>
+        <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '4px', color: '#495057' }}>Add/Edit Sales Order</div>
+        <Form>
+          <Row>
+            <Col md="2">
+              <FormGroup style={{ marginBottom: '4px' }}>
+                <Label style={{ fontSize: '10px', marginBottom: '1px' }}>Tran No</Label>
+                <Input
+                  type="text"
+                  onChange={handleInputs}
+                  value={settingdetails && settingdetails.tran_no}
+                  name="tran_no"
+                  style={{ backgroundColor: '#e9ecef', fontSize: '10px', padding: '2px 4px', height: '24px' }}
+                  readOnly
+                />
+              </FormGroup>
+            </Col>
+            <Col md="2">
+              <FormGroup style={{ marginBottom: '4px' }}>
+                <Label style={{ fontSize: '10px', marginBottom: '1px' }}>Tran Date</Label>
+                <Input
+                  type="date"
+                  onChange={handleInputs}
+                  value={settingdetails && settingdetails.tran_date}
+                  name="tran_date"
+                  style={{ fontSize: '10px', padding: '2px 4px', height: '24px' }}
+                />
+              </FormGroup>
+            </Col>
+          </Row>
+        </Form>
+      </div>
       <ToastContainer></ToastContainer>
-      <Form>
-        <FormGroup>
-          <ComponentCard title="Setting Details" creationModificationDate={settingdetails}>
-            {' '}
-            <Row>
-              <Col md="4">
-                <FormGroup>
-                  <Label>Tran No</Label>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={settingdetails && settingdetails.tran_no}
-                    name="tran_no"
-                  ></Input>
-                </FormGroup>
-              </Col>
-              <Col md="4">
-                <FormGroup>
-                  <Label>Tran Date</Label>
-                  <Input
-                    type="date"
-                    onChange={handleInputs}
-                    value={settingdetails && settingdetails.tran_date}
-                    name="tran_date"
-                  />
-                </FormGroup>
-              </Col>
-             
-            </Row>
-          </ComponentCard>
-        </FormGroup>
-      </Form>
-      <ComponentCard title="More Details">
-        {/* Replace toggle and tabs with your implementation */}
-        <Tab toggle={toggle} tabs={tabs} />
-            <TabContent className="p-4" activeTab={activeTab}>
+      
+      {/* Scrollable Middle Section */}
+      <div style={{ flex: 1, overflow: 'auto', padding: '4px 8px' }}>
+        <Form>
+          <div style={{ backgroundColor: '#ffffff', border: '1px solid #dee2e6', borderRadius: '2px' }}>
+            {/* Compact tabs */}
+            <Tab toggle={toggle} tabs={tabs} />
+            <TabContent style={{ padding: '4px 6px' }} activeTab={activeTab}>
               <TabPane tabId="1">
                 <Customer
                  settingdetails={settingdetails}
                  handleInputs={handleInputs}
                  setSettingDetails={setSettingDetails}
                 ></Customer>
-       </TabPane>
-          <TabPane tabId="2">
-            <Currency
-             setSettingDetails={setSettingDetails}
-            settingdetails={settingdetails}
-            handleInputs={handleInputs}
-            ></Currency>
-     </TabPane>
-          <TabPane tabId="3">
-            <Shipping
-            settingdetails={settingdetails}
-            handleInputs={handleInputs}
-            setSettingDetails={setSettingDetails}
-            ></Shipping>
-          </TabPane>
-          <TabPane tabId="4">
-            <SalesMan
-             settingdetails={settingdetails}
-             handleInputs={handleInputs}
-             ></SalesMan>
-          </TabPane>
+              </TabPane>
+              <TabPane tabId="2">
+                <Currency
+                 setSettingDetails={setSettingDetails}
+                settingdetails={settingdetails}
+                handleInputs={handleInputs}
+                ></Currency>
+              </TabPane>
+              <TabPane tabId="3">
+                <Shipping
+                settingdetails={settingdetails}
+                handleInputs={handleInputs}
+                setSettingDetails={setSettingDetails}
+                ></Shipping>
+              </TabPane>
+              <TabPane tabId="4">
+                <SalesMan
+                 settingdetails={settingdetails}
+                 handleInputs={handleInputs}
+                 ></SalesMan>
+              </TabPane>
           {/* <TabPane tabId="5">
             <PdfPickingList
             id={id}
@@ -263,41 +220,126 @@ useEffect(() => {
             id={id}
             ></PdfSalesQuote>
             </TabPane> */}
-          {/* <TabPane tabId="7">
-          <SalesOrderPrintWithCost
-          id={id}
-                   settingdetails={settingdetails}
-                   lineItem={lineItem}
-                ></SalesOrderPrintWithCost>
-                <PrintPerfoma
-                   id={id}
-                   settingdetails={settingdetails}
-                   lineItem={lineItem}
-                ></PrintPerfoma>
-          </TabPane> */}
-         
-        </TabContent>
-      </ComponentCard>
-      <>
-      <ComponentCard title="Products">
-      <SalesOrderProducts
-  addLineItemModal={addLineItemModal}
-  setAddLineItemModal={setAddLineItemModal}
-  lineItem={lineItem}
-  setEditLineModelItem={setEditLineModelItem}
-  setEditLineModal={setEditLineModal}
-  editLineModal={editLineModal}
-  editLineModelItem={editLineModelItem}
-  getLineItem={getLineItem}
-  deleteRecord={deleteRecord}
-  id={id}
-  setViewLineModal={setViewLineModal}
-/>
-
-      </ComponentCard>
-      </>
+              {/* <TabPane tabId="7">
+              <SalesOrderPrintWithCost
+              id={id}
+                       settingdetails={settingdetails}
+                       lineItem={lineItem}
+                    ></SalesOrderPrintWithCost>
+                    <PrintPerfoma
+                       id={id}
+                       settingdetails={settingdetails}
+                       lineItem={lineItem}
+                    ></PrintPerfoma>
+              </TabPane> */}
+             
+            </TabContent>
+          </div>
+          
+          <div style={{ backgroundColor: '#ffffff', border: '1px solid #dee2e6', borderRadius: '2px', marginTop: '4px' }}>
+            <div style={{ padding: '4px 6px', borderBottom: '1px solid #dee2e6', backgroundColor: '#f8f9fa', fontSize: '11px', fontWeight: 'bold' }}>Products</div>
+            <div style={{ padding: '4px 6px' }}>
+              <SalesOrderProducts
+                addLineItemModal={addLineItemModal}
+                setAddLineItemModal={setAddLineItemModal}
+                lineItem={lineItem}
+                setEditLineModelItem={setEditLineModelItem}
+                setEditLineModal={setEditLineModal}
+                editLineModal={editLineModal}
+                editLineModelItem={editLineModelItem}
+                getLineItem={getLineItem}
+                deleteRecord={deleteRecord}
+                id={id}
+                setViewLineModal={setViewLineModal}
+              />
+            </div>
+          </div>
+        </Form>
+      </div>
+      
+      {/* Fixed Footer Section */}
+      <div style={{ 
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#2c3e50',
+        borderTop: '1px solid #dee2e6',
+        padding: '4px 8px',
+        color: '#ffffff',
+        zIndex: 1000
+      }}>
+        <Row className="align-items-center">
+          <Col md="2">
+            <div style={{ fontSize: '10px', marginBottom: '1px' }}>Bill Discount: $</div>
+            <Input 
+              type="number" 
+              defaultValue="0" 
+              style={{ 
+                height: '20px', 
+                fontSize: '9px', 
+                padding: '1px 4px',
+                width: '60px'
+              }} 
+            />
+          </Col>
+          <Col md="2">
+            <div style={{ fontSize: '10px', color: '#ffffff' }}>Total Product:</div>
+            <div style={{ fontSize: '11px', fontWeight: 'bold' }}>7</div>
+          </Col>
+          <Col md="2">
+            <div style={{ fontSize: '10px', color: '#ffffff' }}>Sub Total:</div>
+            <div style={{ fontSize: '11px', fontWeight: 'bold' }}>$ 130.25</div>
+          </Col>
+          <Col md="2">
+            <div style={{ fontSize: '10px', color: '#ffffff' }}>Tax:</div>
+            <div style={{ fontSize: '11px', fontWeight: 'bold' }}>$ 11.72</div>
+          </Col>
+          <Col md="2">
+            <div style={{ fontSize: '10px', color: '#ffffff' }}>Net Total:</div>
+            <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#28a745' }}>$ 141.97</div>
+          </Col>
+          <Col md="2" className="text-right">
+            <Button
+              color="secondary"
+              size="sm"
+              onClick={() => {
+                navigate('/salesOrder');
+              }}
+              style={{ marginRight: '3px', fontSize: '9px', padding: '2px 6px' }}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="info"
+              size="sm"
+              onClick={() => {
+                editSettingData();
+              }}
+              style={{ marginRight: '3px', fontSize: '9px', padding: '2px 6px' }}
+            >
+              Print
+            </Button>
+            <Button
+              color="primary"
+              size="sm"
+              onClick={() => {
+                editSettingData();
+                setTimeout(() => {
+                  navigate('/salesOrder');
+                  window.location.reload();
+                }, 1100);
+              }}
+              style={{ fontSize: '9px', padding: '2px 6px' }}
+            >
+              Save
+            </Button>
+          </Col>
+        </Row>
+      </div>
     </div>
   );
 };
 
 export default SalesOrderEdit;
+

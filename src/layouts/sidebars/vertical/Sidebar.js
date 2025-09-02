@@ -1,105 +1,132 @@
 /* eslint-disable */
-import React, { useEffect } from 'react';
-import { Button, Nav } from 'reactstrap';
-import 'react-simple-tree-menu/dist/main.css';
-import { useLocation } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useEffect, useState } from 'react';
+import { NavLink } from 'react-router-dom';
 import SimpleBar from 'simplebar-react';
 import Logo from '../../logo/Logo';
+import { useDispatch, useSelector } from 'react-redux';
 import { ToggleMobileSidebar } from '../../../store/customizer/CustomizerSlice';
-import NavItemContainer from './NavItemContainer';
-import NavSubMenu from './NavSubMenu';
+import { ChevronDown, ChevronRight } from 'lucide-react'; // icons
 import api from '../../../constants/api';
 
 const Sidebar = () => {
-  const [menu, setMenu] = React.useState();
-  const location = useLocation();
-  const currentURL = location.pathname.split('/').slice(0, -1).join('/');
-  const storagePermit = localStorage.getItem('__permifyUser') || JSON.stringify([]);
-  const { permissions } = JSON.parse(storagePermit);
-
-  const activeBg = useSelector((state) => state.customizer.sidebarBg);
-  const isFixed = useSelector((state) => state.customizer.isSidebarFixed);
+  const [menuData, setMenuData] = useState({});
+  const [openSection, setOpenSection] = useState(null); // only one section open
+  const [openCategory, setOpenCategory] = useState(null); // only one category open
+  const isMobileSidebarOpen = useSelector(
+    (state) => state.customizer.isMobileSidebarOpen
+  );
   const dispatch = useDispatch();
 
   useEffect(() => {
-    api.get('/section/getSectionForSidemenu').then((res) => {
-      const arrayOfObj = Object.entries(res.data.data)?.map((e) => ({ id: e[0], data: e[1] }));
-      setMenu(arrayOfObj);
-    });
+    api
+      .get('/section/getSectionForSidemenu')
+      .then((res) => {
+        if (res.data && res.data.data) {
+          setMenuData(res.data.data);
+        }
+      })
+      .catch((err) => console.error('Error fetching menu data:', err));
   }, []);
 
+  const toggleSection = (section) => {
+    setOpenSection((prev) => (prev === section ? null : section));
+    setOpenCategory(null); // close categories when switching section
+  };
+
+  const toggleCategory = (key) => {
+    setOpenCategory((prev) => (prev === key ? null : key));
+  };
+
   return (
-    <div className={`sidebarBox shadow bg-${activeBg} ${isFixed ? 'fixedSidebar' : ''}`}>
-      <SimpleBar style={{ height: '100%' }}>
-        {/********Logo*******/}
-        <div className="d-flex p-3 align-items-center" style={{display:'flex'}}>
-        <div style={{display:'flex',flex:0.1}}>
-        </div>
-        <div style={{display:'flex',flex:0.6}}>
-          <Logo /></div>
-          <div style={{flex:0.2}}></div>
-          <div style={{flex:0.1}}>
-          <Button
-            close
-            size="sm"
-            className="ms-auto d-sm-block d-lg-none"
-            onClick={() => dispatch(ToggleMobileSidebar())}
-          />
-          </div>
-        </div>
-        {/********Sidebar Content*******/}
-        <div className="p-3 pt-1 mt-2">
-          <Nav vertical className={activeBg === 'white' ? '' : 'lightText'}>
-            {menu &&
-              menu.map((navi) => {
-                if (navi.data) {
-                  let hasPermit = false;
-                  let count = 0;
-                  for (let x= 0; x < navi.data.length; x++) {
-                    if (permissions?.includes(`${navi.data[x].section_title}-list`)) {
-                      count = count + 1;
-                      hasPermit = true;
-                    }
-                  }
-                  console.log('hasPermit', hasPermit)
-                  if (hasPermit) {
-                  return (
-                   
-                      <NavSubMenu
-                        key={navi.id}
-                        //icon={navi.icon}
-                        title={navi.id}
-                        items={navi.data}
-                        suffix={count}
-                        suffixColor="bg-info"
-                        // toggle={() => toggle(navi.id)}
-                        // collapsed={collapsed === navi.id}
-                        isUrl={currentURL === navi.data[0].internal_link}
-                      />
-                 
-                  );
-                }else {
-                  return null
-                }
-                }
-                return (
-                  <NavItemContainer
-                    key={navi.id}
-                    //toggle={() => toggle(navi.id)}
-                    className={location.pathname === navi.data[0].internal_link ? 'activeLink' : ''}
-                    to={navi.data[0].internal_link}
-                    title={navi.id}
-                    suffix={navi.data.length}
-                    suffixColor="bg-info"
-                    //icon={navi.icon}
-                  />
-                );
-              })}
-          </Nav>
-        </div>
+    <aside
+      className={`sidebar bg-white border-end ${
+        isMobileSidebarOpen ? 'sidebar-open' : ''
+      }`}
+    >
+      <div className="d-flex align-items-center p-3">
+        <Logo />
+        <button
+          className="ms-auto btn btn-sm btn-light d-lg-none"
+          onClick={() => dispatch(ToggleMobileSidebar())}
+        >
+          ✕
+        </button>
+      </div>
+
+      <SimpleBar className="h-100">
+        <nav className="p-2">
+              <div className="mb-3">
+                <NavLink
+                  to="/dashboard"
+                  className="d-flex align-items-center w-100 btn btn-sm btn-outline-secondary text-start"
+                  activeClassName="active"
+                >
+                  Dashboard
+                </NavLink>
+              </div>
+          {Object.keys(menuData).map((sectionTitle) => (
+            <div key={sectionTitle} className="mb-3">
+              {/* Section Header */}
+              
+              <button
+                className="d-flex align-items-center w-100 btn btn-sm btn-outline-secondary text-start"
+                onClick={() => toggleSection(sectionTitle)}
+              >
+                {openSection === sectionTitle ? (
+                  <ChevronDown size={16} className="me-2" />
+                ) : (
+                  <ChevronRight size={16} className="me-2" />
+                )}
+                {sectionTitle}
+              </button>
+
+              {/* Expandable Categories */}
+              {openSection === sectionTitle && (
+                <div className="ms-3 mt-2">
+                  {Object.keys(menuData[sectionTitle]).map((categoryTitle) => (
+                    <div key={categoryTitle} className="mb-2">
+                      <button
+                        className="d-flex align-items-center w-100 btn btn-sm btn-light text-start"
+                        onClick={() =>
+                          toggleCategory(`${sectionTitle}-${categoryTitle}`)
+                        }
+                      >
+                        {openCategory ===
+                        `${sectionTitle}-${categoryTitle}` ? (
+                          <ChevronDown size={14} className="me-2" />
+                        ) : (
+                          <ChevronRight size={14} className="me-2" />
+                        )}
+                        {categoryTitle}
+                      </button>
+
+                      {/* Expandable Sub-Categories */}
+                      {openCategory ===
+                        `${sectionTitle}-${categoryTitle}` && (
+                        <ul className="list-unstyled ms-4 mt-1">
+                          {menuData[sectionTitle][categoryTitle].map((item) =>
+                            item.sub_category_title ? (
+                              <li key={item.id} className="mb-1">
+                                <NavLink
+                                  to={item.internal_link || '#'}
+                                  className="text-decoration-none"
+                                >
+                                  {item.sub_category_title}
+                                </NavLink>
+                              </li>
+                            ) : null
+                          )}
+                        </ul>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </nav>
       </SimpleBar>
-    </div>
+    </aside>
   );
 };
 

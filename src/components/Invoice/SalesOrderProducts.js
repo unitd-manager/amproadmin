@@ -1,42 +1,157 @@
-import React from 'react';
-import { Row, Col, Button, Table } from 'reactstrap';
+import React, { useContext, useEffect, useState, useRef } from 'react';
+import { Row, Col, Button, Table, Input } from 'reactstrap';
 import PropTypes from 'prop-types';
 import * as Icon from 'react-feather';
+import Select from 'react-select';
 import api from '../../constants/api';
 import ComponentCard from '../ComponentCard';
 import EditLineItemModal from './EditLineItemModal';
 import QuoteLineItem from './QuoteLineItem';
+import AppContext from '../../context/AppContext';
+
 
 const SalesOrderProducts = ({
-  addLineItemModal,
-  setAddLineItemModal,
-  lineItem,
-  setEditLineModelItem,
-  setEditLineModal,
-  editLineModal,
-  editLineModelItem,
+  lineItem: initialLineItem,
   getLineItem,
   deleteRecord,
   id,
-  setViewLineModal
 }) => {
-  const columns1 = [
-    { name: '#' },
-    { name: 'Product Name' },
-    { name: 'Product Code' },
-    { name: 'Carton Qty' },
-    { name: 'Loose Qty' },
-    { name: 'Qty' },
-    { name: 'Carton Price' },
-    { name: 'Price' },
-    { name: 'Total' },
-    { name: 'Discount' },
-    { name: 'Gross Total' },
-    { name: 'Action' },
-  ];
+  const { loggedInuser } = useContext(AppContext);
+  const [lineItems, setLineItems] = useState(Array.isArray(initialLineItem) ? initialLineItem.map(item => ({...item, product_id: item.product_id || '', pcs_per_carton: item.pcs_per_carton || ''})) : []);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [editLineModal, setEditLineModal] = useState(false);
+  const [addLineItemModal, setAddLineItemModal] = useState(false);
+  const [ setViewLineModal] = useState(false);
+  const [productValue, setProductValue] = useState([]);
 
-  const addQuoteItemsToggle = () => {
-    setAddLineItemModal(!addLineItemModal);
+    // Track which row is active (clicked for editing)
+    const [activeRow, setActiveRow] = useState(null);
+  const tableRef = useRef(null);
+  // Arrays of refs for each input type, indexed by row
+  const cartonQtyRefs = useRef([]);
+  const looseQtyRefs = useRef([]);
+  const quantityRefs = useRef([]);
+  const cartonPriceRefs = useRef([]);
+  const wholesalePriceRefs = useRef([]);
+  const totalRefs = useRef([]);
+  const discountRefs = useRef([]);
+  const grossTotalRefs = useRef([]);
+
+  const getProduct = () => {
+    api.get('/product/getProducts').then((res) => {
+      const items = res.data.data;
+      const finaldat = items.map((item) => ({
+        value: item.product_id,
+        label: item.product_name,
+        product_code: item.product_code,
+        carton_price: item.carton_price,
+        wholesale_price: item.wholesale_price,
+        pcs_per_carton: item.pcs_per_carton,
+        unit: item.unit,
+        purchase_unit_cost: item.purchase_unit_cost,
+        whole_price: item.wholesale_price,
+        Cprice: item.carton_price,
+        Cqty: item.carton_quantity,
+        quantity: item.quantity,
+      }));
+      setProductValue(finaldat);
+    });
+  };
+
+  useEffect(() => {
+    setLineItems(Array.isArray(initialLineItem) ? initialLineItem.map(item => ({...item, product_id: item.product_id || '', pcs_per_carton: item.pcs_per_carton || ''})) : []);
+    getProduct();
+  }, [initialLineItem]);
+
+  // Add new empty row
+  const handleAddRow = () => {
+    setLineItems([
+      ...lineItems,
+      {
+        id: new Date().getTime().toString(),
+        product_id: '',
+        product_name: '',
+        product_code: '',
+        carton_qty: '',
+        loose_qty: '',
+        quantity: '',
+        carton_price: '',
+        wholesale_price: '',
+        pcs_per_carton: '',
+        total: '',
+        discount_value: '',
+        gross_total: '',
+      },
+    ]);
+    setActiveRow(lineItems.length); // Make new row active
+  };
+  // Deactivate row when clicking outside the table
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (tableRef.current && !tableRef.current.contains(event.target)) {
+        setActiveRow(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Handle field change
+  const handleFieldChange = (idx, field, value) => {
+    setLineItems(prev => prev.map((item, i) => {
+      if (i !== idx) return item;
+      let updated = { ...item, [field]: value };
+      if (field === 'carton_qty' || field === 'loose_qty' || field === 'carton_price' || field === 'wholesale_price' || field === 'discount_value' || field === 'pcs_per_carton') {
+        const cartonQty = parseFloat(updated.carton_qty) || 0;
+        const looseQty = parseFloat(updated.loose_qty) || 0;
+        const pcsPerCarton = parseFloat(updated.pcs_per_carton) || 0;
+        const cartonPrice = parseFloat(updated.carton_price) || 0;
+        const wholesalePrice = parseFloat(updated.wholesale_price) || 0;
+        const discount = parseFloat(updated.discount_value) || 0;
+        const quantity = cartonQty * pcsPerCarton + looseQty;
+        const cartonTotal = cartonQty * cartonPrice;
+        const looseTotal = looseQty * wholesalePrice;
+        const total = cartonTotal + looseTotal;
+        const grossTotal = total - discount;
+        updated = {
+          ...updated,
+          quantity,
+          total: total.toFixed(2),
+          gross_total: grossTotal.toFixed(2),
+        };
+      }
+      return updated;
+    }));
+  };
+
+  // Delete row
+  const handleDeleteRow = (idx, item) => {
+    if (item.invoice_item_id) {
+      deleteRecord(item.invoice_item_id);
+    }
+    setLineItems(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  // Save all items (example API call, adjust as needed)
+  const handleSave = async () => {
+    const validItems = lineItems.filter(item => item.product_name && item.product_code);
+    await Promise.all(validItems.map(item => {
+      const obj = {
+        ...item,
+        creation_date: new Date().toISOString(),
+        created_by: loggedInuser?.first_name || '',
+        invoice_id: id,
+      };
+      if (item.invoice_item_id) {
+        // If invoice_item_id exists, it's an existing record, so update it
+        return api.post('/invoice/edit-TabQuoteLine', obj);
+      }
+      // Otherwise, it's a new record, so insert it
+      return api.post('/invoice/insertQuoteItems', obj);
+    }));
+    if (getLineItem) getLineItem(id);
   };
 
   const summary = {
@@ -50,8 +165,8 @@ const SalesOrderProducts = ({
     gross_total: 0,
   };
   
-  if (Array.isArray(lineItem)) {
-    lineItem.forEach((item) => {
+  if (Array.isArray(lineItems)) {
+    lineItems.forEach((item) => {
       summary.carton_qty += parseFloat(item.carton_qty || 0);
       summary.loose_qty += parseFloat(item.loose_qty || 0);
       summary.quantity += parseFloat(item.quantity || 0);
@@ -62,17 +177,51 @@ const SalesOrderProducts = ({
       summary.gross_total += parseFloat(item.gross_total || 0);
     });
   }
-  const [selectedProduct, setSelectedProduct] = React.useState(null);
+  const [ setBackOrderQtyMap] = React.useState({});
+  
+  const fetchBackOrderQty = async (productId) => {
+    try {
+      const response = await api.post('/invoice/getBackOrderQtyByProductId', {
+        product_id: productId,
+      });
 
+      return response.data.data.back_order_qty || 0;
+    } catch (error) {
+      console.error('Error fetching back order quantity:', error);
+      return 0;
+    }
+  };
+
+  React.useEffect(() => {
+    const getAllBackOrderQty = async () => {
+      const productIds = [...new Set(lineItems.map(item => item.product_id))];
+      const results = await Promise.all(
+        productIds.map(async ids => {
+          const qty = await fetchBackOrderQty(ids);
+          return { ids, qty };
+        })
+      );
+      const qtyMap = results.reduce((acc, { ids, qty }) => {
+        acc[ids] = qty;
+        return acc;
+      }, {});
+      setBackOrderQtyMap(qtyMap);
+    };
+  
+    if (Array.isArray(lineItems) && lineItems.length > 0) {
+      getAllBackOrderQty();
+    }
+  }, [lineItems]);
+  
   const [billDiscount, setBillDiscount] = React.useState(0);
  // const [isInitialLoad, setIsInitialLoad] = React.useState(true);
   
  // 1. Only fetch the value on load
- const [taxType, setTaxType] = React.useState('');
- const [taxRate, setTaxRate] = React.useState(0);
+ const [taxType] = React.useState('');
+ const [taxRate] = React.useState(0.09); // Set default tax rate to 9%
  
  React.useEffect(() => {
-  const fetchBillDiscountAndTax = async () => {
+  const fetchBillDiscount = async () => {
     try {
       const response = await api.post('/invoice/getSalesorderById', {
         invoice_id: id,
@@ -82,22 +231,23 @@ const SalesOrderProducts = ({
       const discount = parseFloat(data?.bill_discount) || 0;
       setBillDiscount(discount);
 
-      const type = data?.tax_type || '';
-      setTaxType(type);
+      // No longer fetching tax type or rate from backend
+      // const type = data?.tax_type || '';
+      // setTaxType(type);
 
-      const taxResponse = await api.post('/valuelist/getValueListByKeyText', {
-        value: type, // use this instead of taxType
-      });
+      // const taxResponse = await api.post('/valuelist/getValueListByKeyText', {
+      //   value: type, // use this instead of taxType
+      // });
 
-      const taxCode = parseFloat(taxResponse.data.data[0]?.code) || 0;
-      setTaxRate(taxCode / 100);
+      // const taxCode = parseFloat(taxResponse.data.data[0]?.code) || 0;
+      // setTaxRate(taxCode / 100);
     } catch (error) {
-      console.error('Failed to fetch bill discount or tax info:', error);
+      console.error('Failed to fetch bill discount:', error);
     }
   };
 
   if (id) {
-    fetchBillDiscountAndTax();
+    fetchBillDiscount();
   }
 }, [id]);
 
@@ -147,80 +297,260 @@ React.useEffect(() => {
     <ComponentCard title="Products">
       <Row>
         <Col md="6">
-          <Button color="primary" onClick={addQuoteItemsToggle}>
+          <Button color="primary" onClick={handleAddRow}>
             Add Invoice Items
+          </Button>
+        </Col>
+        <Col md="6" className="text-end">
+          <Button color="success" onClick={handleSave}>
+            Save
           </Button>
         </Col>
       </Row>
       <br />
-      <Table id="example" className="display border border-secondary rounded">
-  <thead>
-    <tr>
-      {columns1.map((cell) => (
-        <td key={cell.name}>{cell.name}</td>
-      ))}
-    </tr>
-  </thead>
-  <tbody>
-    {lineItem &&
-      lineItem.map((e, index) => (
-        <tr key={e.project_quote_id}>
-      <td>
-  <span
-    role="button"
-    tabIndex={0}
-    style={{ cursor: 'pointer', color: 'blue', textDecoration: 'underline' }}
-    onClick={() => setSelectedProduct(e)}
-    onKeyDown={(event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        setSelectedProduct(e);
-      }
-    }}
-  >
-    {index + 1}
-  </span>
-</td>
-
-
-          <td>{e.product_name}</td>
-          <td>{e.product_code}</td>
-          <td>{e.carton_qty}</td>
-          <td>{e.loose_qty}</td>
-          <td>{e.quantity}</td>
-          <td>{e.carton_price}</td>
-          <td>{e.wholesale_price}</td>
-          <td>{e.total}</td>
-          <td>{e.discount_value}</td>
-          <td>{e.gross_total}</td>
-          <td>
-            <span className="addline" onClick={() => {
-              setEditLineModelItem(e);
-              setEditLineModal(true);
-            }}>
-              <Icon.Edit2 />
-            </span>
-            <span className="addline" onClick={() => deleteRecord(e.invoice_item_id)}>
-              <Icon.Trash2 />
-            </span>
-          </td>
-        </tr>
-      ))}
-  </tbody>
-  <tfoot>
-    <tr style={{ fontWeight: 'bold', background: '#f1f1f1' }}>
-      <td colSpan="3" className="text-end">Summary:</td>
-      <td>{summary.carton_qty.toFixed(2)}</td>
-      <td>{summary.loose_qty.toFixed(2)}</td>
-      <td>{summary.quantity.toFixed(2)}</td>
-      <td>{summary.carton_price.toFixed(2)}</td>
-      <td>{summary.wholesale_price.toFixed(2)}</td>
-      <td>{summary.total.toFixed(2)}</td>
-      <td>{summary.discount_value.toFixed(2)}</td>
-      <td>{summary.gross_total.toFixed(2)}</td>
-      <td></td>
-    </tr>
-  </tfoot>
-</Table>
+  <Table id="example" className="display border border-secondary rounded" style={{ borderSpacing: '0 12px', borderCollapse: 'separate' }} ref={tableRef}>
+        <thead>
+          <tr>
+            <td style={{ width: '30px' }}>#</td>
+            <td style={{ width: '350px' }}>Product Name</td>
+            <td style={{ width: '120px' }}>Product Code</td>
+            <td style={{ width: '80px' }}>Carton Qty</td>
+            <td style={{ width: '80px' }}>Loose Qty</td>
+            <td style={{ width: '90px' }}>Qty</td>
+            <td style={{ width: '120px' }}>Carton Price</td>
+            <td style={{ width: '120px' }}>Price</td>
+            <td style={{ width: '120px' }}>Total</td>
+            <td style={{ width: '120px' }}>Discount</td>
+            <td style={{ width: '130px' }}>Gross Total</td>
+            <td style={{ width: '50px' }}>Action</td>
+          </tr>
+        </thead>
+        <tbody>
+          {lineItems.map((item, idx) => {
+            const isActive = activeRow === idx;
+            return (
+              <tr
+                key={item.id || idx}
+                style={{ height: '56px', background: isActive ? '#eaf6ff' : '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', borderRadius: '8px' }}
+              >
+                <td style={{ width: '30px', padding: '16px' }}>{idx + 1}</td>
+                <td
+                  style={{
+                    width: '250px',
+                    padding: '16px',
+                    background: isActive ? '#eaf6ff' : undefined,
+                    transition: 'background 0.2s',
+                  }}
+                >
+                  {isActive ? (
+                    <Select
+                      name="product_id"
+                      options={productValue}
+                      value={productValue.find(option => option.value === item.product_id) || null}
+                      onChange={(selectedOption) => {
+                        // Set all calculation-relevant fields on product select
+                        handleFieldChange(idx, 'product_id', selectedOption ? selectedOption.value : '');
+                        handleFieldChange(idx, 'product_name', selectedOption ? selectedOption.label : '');
+                        handleFieldChange(idx, 'product_code', selectedOption ? selectedOption.product_code : '');
+                        handleFieldChange(idx, 'carton_price', selectedOption ? selectedOption.carton_price : '');
+                        handleFieldChange(idx, 'wholesale_price', selectedOption ? selectedOption.wholesale_price : '');
+                        handleFieldChange(idx, 'pcs_per_carton', selectedOption ? selectedOption.pcs_per_carton : '');
+                        handleFieldChange(idx, 'unit', selectedOption ? selectedOption.unit : '');
+                        handleFieldChange(idx, 'purchase_unit_cost', selectedOption ? selectedOption.purchase_unit_cost : '');
+                        handleFieldChange(idx, 'whole_price', selectedOption ? selectedOption.whole_price : '');
+                        handleFieldChange(idx, 'Cprice', selectedOption ? selectedOption.Cprice : '');
+                        handleFieldChange(idx, 'Cqty', selectedOption ? selectedOption.Cqty : '');
+                        handleFieldChange(idx, 'quantity', ''); // Reset quantity so calculation is triggered
+                        setSelectedProduct(selectedOption);
+                        setTimeout(() => {
+                          if (cartonQtyRefs.current[idx]) cartonQtyRefs.current[idx].focus();
+                        }, 100);
+                      }}
+                      styles={{ control: (base) => ({ ...base, width: '110%' }) }}
+                    />
+                  ) : (
+                    <span
+                      style={{ cursor: 'pointer', display: 'inline-block', width: '130px', padding: '10px' }}
+                      onClick={() => {
+                        setActiveRow(idx);
+                        // Set selectedProduct to the full product object for this row
+                        const prod = productValue.find(option => option.value === item.product_id);
+                        if (prod) {
+                          setSelectedProduct({
+                            ...prod,
+                            ...item // Merge item fields for accurate display
+                          });
+                        } else {
+                          setSelectedProduct(item);
+                        }
+                      }}
+                      onKeyDown={e => { if (e.key === 'Enter') setActiveRow(idx); }}
+                      tabIndex={0}
+                      role="button"
+                    >
+                      {item.product_name}
+                    
+                    </span>
+                  )}
+                </td>
+                <td style={{ width: '100px', padding: '16px' }}>
+                  {isActive ? (
+                    <Input
+                      value={item.product_code || ''}
+                      type="text"
+                      onChange={e => handleFieldChange(idx, 'product_code', e.target.value)}
+                      style={{ minWidth: 120, fontSize: 16, padding: '8px 12px' }}
+                    />
+                  ) : (
+                    <span>{item.product_code}</span>
+                  )}
+                </td>
+                <td style={{ width: '90px', padding: '16px' }}>
+                  {isActive ? (
+                    <Input
+                      value={item.carton_qty || ''}
+                      type="number"
+                      onChange={e => handleFieldChange(idx, 'carton_qty', e.target.value)}
+                      style={{ minWidth: 80, fontSize: 16, padding: '8px 12px' }}
+                      innerRef={el => { cartonQtyRefs.current[idx] = el; }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && looseQtyRefs.current[idx]) looseQtyRefs.current[idx].focus();
+                      }}
+                    />
+                  ) : (
+                    <span>{item.carton_qty}</span>
+                  )}
+                </td>
+                <td style={{ width: '80px', padding: '16px' }}>
+                  {isActive ? (
+                    <Input
+                      value={item.loose_qty || ''}
+                      type="number"
+                      onChange={e => handleFieldChange(idx, 'loose_qty', e.target.value)}
+                      style={{ minWidth: 80, fontSize: 16, padding: '8px 12px' }}
+                      innerRef={el => { looseQtyRefs.current[idx] = el; }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && cartonPriceRefs.current[idx]) cartonPriceRefs.current[idx].focus();
+                      }}
+                    />
+                  ) : (
+                    <span>{item.loose_qty}</span>
+                  )}
+                </td>
+                <td style={{ width: '80px', padding: '16px' }}>
+                  {isActive ? (
+                    <Input
+                      value={item.quantity || ''}
+                      type="number"
+                      readOnly
+                      style={{ minWidth: 80, fontSize: 16, padding: '8px 12px', background: '#f5f5f5' }}
+                      innerRef={el => { quantityRefs.current[idx] = el; }}
+                    />
+                  ) : (
+                    <span>{item.quantity}</span>
+                  )}
+                </td>
+                <td style={{ width: '100px', padding: '16px' }}>
+                  {isActive ? (
+                    <Input
+                      value={item.carton_price || ''}
+                      type="number"
+                      onChange={e => handleFieldChange(idx, 'carton_price', e.target.value)}
+                      style={{ minWidth: 100, fontSize: 16, padding: '8px 12px' }}
+                      innerRef={el => { cartonPriceRefs.current[idx] = el; }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && wholesalePriceRefs.current[idx]) wholesalePriceRefs.current[idx].focus();
+                      }}
+                    />
+                  ) : (
+                    <span>{item.carton_price}</span>
+                  )}
+                </td>
+                <td style={{ width: '80px', padding: '16px' }}>
+                  {isActive ? (
+                    <Input
+                      value={item.wholesale_price || ''}
+                      type="number"
+                      onChange={e => handleFieldChange(idx, 'wholesale_price', e.target.value)}
+                      style={{ minWidth: 100, fontSize: 16, padding: '8px 12px' }}
+                      innerRef={el => { wholesalePriceRefs.current[idx] = el; }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && totalRefs.current[idx]) totalRefs.current[idx].focus();
+                      }}
+                    />
+                  ) : (
+                    <span>{item.wholesale_price}</span>
+                  )}
+                </td>
+                <td style={{ width: '80px', padding: '16px' }}>
+                  {isActive ? (
+                    <Input
+                      value={item.total || ''}
+                      type="number"
+                      readOnly
+                      style={{ minWidth: 100, fontSize: 16, padding: '8px 12px', background: '#f5f5f5' }}
+                      innerRef={el => { totalRefs.current[idx] = el; }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && discountRefs.current[idx]) discountRefs.current[idx].focus();
+                      }}
+                    />
+                  ) : (
+                    <span>{item.total}</span>
+                  )}
+                </td>
+                <td style={{ width: '80px', padding: '16px' }}>
+                  {isActive ? (
+                    <Input
+                      value={item.discount_value || ''}
+                      type="number"
+                      onChange={e => handleFieldChange(idx, 'discount_value', e.target.value)}
+                      style={{ minWidth: 100, fontSize: 16, padding: '8px 12px' }}
+                      innerRef={el => { discountRefs.current[idx] = el; }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && grossTotalRefs.current[idx]) grossTotalRefs.current[idx].focus();
+                      }}
+                    />
+                  ) : (
+                    <span>{item.discount_value}</span>
+                  )}
+                </td>
+                <td style={{ width: '100px', padding: '16px' }}>
+                  {isActive ? (
+                    <Input
+                      value={item.gross_total || ''}
+                      type="number"
+                      readOnly
+                      style={{ minWidth: 100, fontSize: 16, padding: '8px 12px', background: '#f5f5f5' }}
+                      innerRef={el => { grossTotalRefs.current[idx] = el; }}
+                    />
+                  ) : (
+                    <span>{item.gross_total}</span>
+                  )}
+                </td>
+                <td style={{ width: '50px', padding: '16px' }}>
+                  <span className="addline" onClick={() => handleDeleteRow(idx, item)}>
+                    <Icon.Trash2 />
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+        <tfoot>
+          <tr style={{ fontWeight: 'bold', background: '#f1f1f1' }}>
+            <td colSpan="3" className="text-end">Summary:</td>
+            <td>{summary.carton_qty.toFixed(2)}</td>
+            <td>{summary.loose_qty.toFixed(2)}</td>
+            <td>{summary.quantity.toFixed(2)}</td>
+            <td>{summary.carton_price.toFixed(2)}</td>
+            <td>{summary.wholesale_price.toFixed(2)}</td>
+            <td>{summary.total.toFixed(2)}</td>
+            <td>{summary.discount_value.toFixed(2)}</td>
+            <td>{summary.gross_total.toFixed(2)}</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </Table>
 <div className="mt-3 p-3 border border-secondary rounded" style={{ background: '#f9f9f9' }}>
 <Row className="mb-2">
 <Col md="12">
@@ -247,7 +577,10 @@ React.useEffect(() => {
       <p>
   <strong>CQty:</strong> {selectedProduct.Cqty || '0.00'}&nbsp;&nbsp;
   <strong>Qty On Hand:</strong> {selectedProduct.quantity || '0.00'}&nbsp;&nbsp;
- 
+  {/* <strong>Back Order Qty:</strong> {backOrderQtyMap[selectedProduct?.product_id] || '0.00'}&nbsp;&nbsp;
+  <strong>Actual Qty:</strong> {(
+    (parseFloat(selectedProduct.quantity || 0) - parseFloat(backOrderQtyMap[selectedProduct.product_id] || 0)).toFixed(2)
+  )} */}
 </p>
 
     </>
@@ -277,7 +610,7 @@ React.useEffect(() => {
 </p>
 
 
-      <p><strong>Total Product:</strong> {Array.isArray(lineItem) ? lineItem.length : 0}</p>
+      <p><strong>Total Product:</strong> {Array.isArray(lineItems) ? lineItems.length : 0}</p>
       <p><strong>Sub Total:</strong> $ {(summary.gross_total - billDiscount).toFixed(2)}</p>
 <p><strong>Tax ({(taxRate * 100).toFixed(2)}%):</strong> $ {((summary.gross_total - billDiscount) * taxRate).toFixed(2)}</p>
 <p><strong>Net Total:</strong> $ {((summary.gross_total - billDiscount) * (1 + taxRate)).toFixed(2)}</p>
@@ -290,7 +623,7 @@ React.useEffect(() => {
       <EditLineItemModal
         editLineModal={editLineModal}
         setEditLineModal={setEditLineModal}
-        FetchLineItemData={editLineModelItem}
+       
         getLineItem={getLineItem}
         setViewLineModal={setViewLineModal}
       />
@@ -306,17 +639,10 @@ React.useEffect(() => {
   );
 };
 SalesOrderProducts.propTypes = {
-    addLineItemModal: PropTypes.bool.isRequired,
-    setAddLineItemModal: PropTypes.func.isRequired,
     lineItem: PropTypes.array.isRequired,
-    setEditLineModelItem: PropTypes.func.isRequired,
-    setEditLineModal: PropTypes.func.isRequired,
-    editLineModal: PropTypes.bool.isRequired,
-    editLineModelItem: PropTypes.object,
     getLineItem: PropTypes.func.isRequired,
     deleteRecord: PropTypes.func.isRequired,
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-    setViewLineModal: PropTypes.func.isRequired,
   };
   
 export default SalesOrderProducts;

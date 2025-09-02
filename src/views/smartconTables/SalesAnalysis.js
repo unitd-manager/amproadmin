@@ -91,10 +91,11 @@ const SalesAnalysis = () => {
 
   const fetchSales = async () => {
     try {
-      const { data } = await api.post('/salesOrder/getsalesorder', {
+      const { data } = await api.get('/salesOrder/getFilteredSalesAnalysis', {
         params: { ...filters, page, limit: 10 },
       });
-      setSalesData(data.results);
+
+      setSalesData(data.data);
       setTotalPages(data.totalPages);
     } catch (error) {
       console.error("Error fetching sales data", error);
@@ -348,7 +349,7 @@ const SalesAnalysis = () => {
                           <td style={{ color: "#2b7bbf", cursor: "pointer", padding: '10px 8px', fontWeight: '500' }}>
                             {row.product_name}
                           </td>
-                          <td style={{ padding: '10px 8px', textAlign: 'right' }}>{Number(row.sale_qty || 0).toFixed(2)}</td>
+                          <td style={{ padding: '10px 8px', textAlign: 'right' }}>{Number(row.quantity || 0).toFixed(2)}</td>
                           <td style={{ padding: '10px 8px', textAlign: 'right' }}>{Number(row.sale_subtotal || 0).toFixed(2)}</td>
                           <td style={{ padding: '10px 8px', textAlign: 'right' }}>{Number(row.sale_totalcost || 0).toFixed(2)}</td>
                           <td style={{ padding: '10px 8px', textAlign: 'right' }}>{Number(row.balance_qty || 0).toFixed(2)}</td>
