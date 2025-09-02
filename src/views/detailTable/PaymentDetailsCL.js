@@ -146,55 +146,68 @@ const PaymentManagement = () => {
     }
   };
 
- const handleSave = async () => {
-    if (!supplierDetails.supplierId || !supplierDetails.paymentDate || !supplierDetails.paidAmountToSupplier) {
-      message('Please fill all required fields', 'warning');
+const handleSave = async () => {
+  try {
+    // 1. Insert into payments (header)
+    const paymentRes = await api.post("/payments/insertPayment", {
+      supplier_id: supplierDetails.supplierId,
+      payment_date: supplierDetails.paymentDate,
+      paid_amount: supplierDetails.paidAmountToSupplier,
+      created_by: loggedInuser.first_name,
+      creation_date: creationdatetime,
+      paymode_id: supplierDetails.paymode,
+      remarks: supplierDetails.remarks,
+      critical_remarks: supplierDetails.criticalRemarks,
+      payment_no: supplierDetails.voucherno,
+    });
+
+    const paymentsId = paymentRes.data.data.insertId;
+    if (!paymentsId) {
+      message("Payment ID not returned from server", "error");
       return;
     }
-    if (selectedInvoices.length === 0) {
-      message('Please select at least one invoice to pay', 'warning');
-      return;
-    }
-    try {
-      const payload = {
-        supplier_id: supplierDetails.supplierId,
-        payment_date: supplierDetails.paymentDate,
-        remarks: supplierDetails.remarks,
-        paid_amount: supplierDetails.paidAmountToSupplier,
-        payment_no: supplierDetails.voucherno,
-        paymode_id: supplierDetails.paymode,
-        gl_name: supplierDetails.accounts,
-        created_by: loggedInuser.first_name,
-        creation_date: creationdatetime,
-      };
 
-      const res = await api.post('/payments/insertPayment', payload);
-      if (res.data.msg === 'Success') {
-        const paymentId = res.data.data.insertId;
+    // 2. Insert payment history for each invoice
+    await Promise.all(
+      selectedInvoices.map(async (invoiceId) => {
+        const invoice = invoices.find((inv) => inv.purchase_invoice_id === invoiceId);
+        if (!invoice) return;
 
-        // Insert selected invoices into a linking table
-        const invoiceItemPromises = selectedInvoices.map((invoiceId) =>
-          api.post('/payments/insertPaymentInvoiceItem', {
-            // Assumed endpoint
-            payments_id: paymentId,
-            purchase_invoice_id: invoiceId,
-            created_by: loggedInuser.first_name,
-            creation_date: creationdatetime,
-          }),
-        );
+        const paidAmt = invoice.payable_amount || 0;
 
-        await Promise.all(invoiceItemPromises);
+        // Insert into paymenthistory
+        await api.post("/payments/insertPaymentHistory", {
+          payments_id: paymentsId,
+          purchase_invoice_id: invoiceId,
+          paid_amount: paidAmt,
+          created_by: loggedInuser.first_name,
+          creation_date: creationdatetime,
+        });
+      })
+    );
 
-        message('Payment and linked invoices saved successfully!', 'success');
-        navigate('/PaymentsCL');
-      } else {
-        message(res.data.msg || 'Failed to save payment', 'error');
-      }
-    } catch (err) {
-      console.error('Error saving payment:', err);
-      message('Error saving payment', 'error');
-    }
-  };
+    // 3. Once paymenthistory is inserted → update all invoice statuses in bulk
+    await api.post("/payments/updateMultipleInvoiceStatus", {
+      invoices: selectedInvoices.map((invoiceId) => {
+        const invoice = invoices.find((inv) => inv.purchase_invoice_id === invoiceId);
+        return {
+          purchase_invoice_id: invoiceId,
+          paid_amount: invoice?.payable_amount || 0,
+        };
+      }),
+      creation_date: creationdatetime,
+      modified_by: loggedInuser.first_name,
+    });
+
+    message("Payment saved successfully!", "success");
+    navigate("/paymentsCL");
+  } catch (err) {
+    console.error("Error saving payment:", err);
+    message("Error saving payment", "error");
+  }
+};
+
+
 
 
   const totalPaidAmount = invoices.reduce((sum, inv) => sum + (inv.paid || 0), 0);

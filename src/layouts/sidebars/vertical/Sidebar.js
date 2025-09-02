@@ -57,7 +57,7 @@ const Sidebar = () => {
         <nav className="p-2">
               <div className="mb-3">
                 <NavLink
-                  to="/dashboard"
+                  to="/#"
                   className="d-flex align-items-center w-100 btn btn-sm btn-outline-secondary text-start"
                   activeClassName="active"
                 >
