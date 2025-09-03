@@ -1,3 +1,4 @@
+/*eslint-disable*/
 import React, { useContext, useEffect, useState, useRef } from 'react';
 import { Row, Col, Button, Table, Input, Alert } from 'reactstrap';
 import PropTypes from 'prop-types';
@@ -555,75 +556,56 @@ React.useEffect(() => {
           </tr>
         </tfoot>
       </Table>
-<div className="mt-3 p-3 border border-secondary rounded" style={{ background: '#f9f9f9' }}>
-<Row className="mb-2">
-<Col md="12">
-  {selectedProduct ? (
-    <>
-      <p>
-        <strong>Uom: </strong> {selectedProduct.unit || '0.00'}&nbsp;&nbsp;
-        <strong>Pieces/Carton:</strong> {selectedProduct.pcs_per_carton || '0.00'}&nbsp;&nbsp;
-        <strong>Purchase UnitCost:</strong> {selectedProduct.purchase_unit_cost || '0.00'}&nbsp;&nbsp;
-        <strong>Profit%:</strong>{' '}
-{selectedProduct?.purchase_unit_cost > 0
-  ? (
-      ((parseFloat(selectedProduct.whole_price || 0) -
-        parseFloat(selectedProduct.purchase_unit_cost || 0)) /
-        parseFloat(selectedProduct.purchase_unit_cost || 1)) *
-      100
-    ).toFixed(2)
-  : '0.00'}
-%
-        &nbsp;&nbsp;
-        <strong>Wholesale Price:</strong> {selectedProduct.whole_price || '0.00'}&nbsp;&nbsp;
-        <strong>Carton Price:</strong> {selectedProduct.Cprice || '0.00'}
-      </p>
-      <p>
-  <strong>CQty:</strong> {selectedProduct.Cqty || '0.00'}&nbsp;&nbsp;
-  <strong>Qty On Hand:</strong> {selectedProduct.quantity || '0.00'}&nbsp;&nbsp;
-  <strong>Back Order Qty:</strong> {backOrderQtyMap[selectedProduct?.product_id] || '0.00'}&nbsp;&nbsp;
-  <strong>Actual Qty:</strong> {(
-    (parseFloat(selectedProduct.quantity || 0) - parseFloat(backOrderQtyMap[selectedProduct.product_id] || 0)).toFixed(2)
-  )}
-</p>
-
-    </>
-  ) : (
-    <>
-    <p><strong>Uom: </strong> 0.00&nbsp;&nbsp; <strong>Pieces/Carton:</strong> 0.00&nbsp;&nbsp; <strong>Purchase UnitCost:</strong> 0.00 &nbsp;&nbsp; <strong>Profit%:</strong> 0.00 &nbsp;&nbsp; <strong>Wholesale Price:</strong> 0.00 &nbsp;&nbsp; <strong>Carton Price:</strong> 0.00</p>
-      <p><strong>CQty:</strong> 0.00 &nbsp;&nbsp; <strong>Qty On Hand:</strong> 0.00 &nbsp;&nbsp; <strong>Back Order Qty:</strong> 0.00 &nbsp;&nbsp; <strong>Actual Qty:</strong> 0.00</p>
-    </>
-  )}
-</Col>
-
-    </Row>
-  <Row className="mb-2">
-  <Col md="6">
-    </Col>
-    <Col md="6" className="text-end">
-    <p>
-  <strong>Bill Discount :</strong>
-  <input
-    type="number"
-    name="bill_discount"
-    value={billDiscount}
-    onChange={(e) => setBillDiscount(parseFloat(e.target.value) || 0)}
-    onBlur={(e) => saveBillDiscount(parseFloat(e.target.value) || 0)} // Save only on blur
-    style={{ width: '100px', marginLeft: '10px' }}
-  />
-</p>
-
-
-      <p><strong>Total Product:</strong> {Array.isArray(lineItems) ? lineItems.length : 0}</p>
-      <p><strong>Sub Total:</strong> $ {(summary.gross_total - billDiscount).toFixed(2)}</p>
-<p><strong>Tax ({(taxRate * 100).toFixed(2)}%):</strong> $ {((summary.gross_total - billDiscount) * taxRate).toFixed(2)}</p>
-<p><strong>Net Total:</strong> $ {((summary.gross_total - billDiscount) * (1 + taxRate)).toFixed(2)}</p>
-
-
+<div className="footer-info border-top" style={{ 
+  position: 'fixed',
+  bottom: 0,
+  left: 0,
+  right: 0,
+  background: '#f9f9f9',
+  padding: '8px',
+  fontSize: '12px',
+  zIndex: 1000
+}}>
+  <Row className="g-2">
+    <Col md="12">
+      {selectedProduct ? (
+        <div className="d-flex flex-wrap gap-2 align-items-center">
+          <span><strong>Uom:</strong> {selectedProduct.unit || '0.00'}</span>
+          <span><strong>Pieces/Carton:</strong> {selectedProduct.pcs_per_carton || '0.00'}</span>
+          <span><strong>Purchase UnitCost:</strong> {selectedProduct.purchase_unit_cost || '0.00'}</span>
+          <span>
+            <strong>Profit%:</strong>{' '}
+            {selectedProduct?.purchase_unit_cost > 0
+              ? (((parseFloat(selectedProduct.whole_price || 0) - parseFloat(selectedProduct.purchase_unit_cost || 0)) / parseFloat(selectedProduct.purchase_unit_cost || 1)) * 100).toFixed(2)
+              : '0.00'}%
+          </span>
+          <span><strong>Wholesale Price:</strong> {selectedProduct.whole_price || '0.00'}</span>
+          <span><strong>Carton Price:</strong> {selectedProduct.Cprice || '0.00'}</span>
+          <span><strong>CQty:</strong> {selectedProduct.Cqty || '0.00'}</span>
+          <span><strong>Qty On Hand:</strong> {selectedProduct.quantity || '0.00'}</span>
+          <span><strong>Back Order Qty:</strong> {backOrderQtyMap[selectedProduct?.product_id] || '0.00'}</span>
+          <span>
+            <strong>Actual Qty:</strong>{' '}
+            {((parseFloat(selectedProduct.quantity || 0) - parseFloat(backOrderQtyMap[selectedProduct.product_id] || 0))).toFixed(2)}
+          </span>
+        </div>
+      ) : (
+        <div className="d-flex flex-wrap gap-2 align-items-center">
+          <span><strong>Uom:</strong> 0.00</span>
+          <span><strong>Pieces/Carton:</strong> 0.00</span>
+          <span><strong>Purchase UnitCost:</strong> 0.00</span>
+          <span><strong>Profit%:</strong> 0.00</span>
+          <span><strong>Wholesale Price:</strong> 0.00</span>
+          <span><strong>Carton Price:</strong> 0.00</span>
+          <span><strong>CQty:</strong> 0.00</span>
+          <span><strong>Qty On Hand:</strong> 0.00</span>
+          <span><strong>Back Order Qty:</strong> 0.00</span>
+          <span><strong>Actual Qty:</strong> 0.00</span>
+        </div>
+      )}
     </Col>
   </Row>
 </div>
-
       <EditLineItemModal
         editLineModal={editLineModal}
         setEditLineModal={setEditLineModal}

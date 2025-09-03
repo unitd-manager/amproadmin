@@ -1,3 +1,4 @@
+
 /*eslint-disable*/
 import React, { useState, useEffect } from "react";
 import {
@@ -22,7 +23,7 @@ import message from '../../components/Message';
 import { FaTrashAlt, FaPlusCircle } from "react-icons/fa";
 import api from "../../constants/api";
 
-const PurchaseOrderPage = () => {
+const PurchaseDebitNoteEdit = () => {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("1");
   const [supplierData, setSupplierData] = useState({});
@@ -44,11 +45,7 @@ const PurchaseOrderPage = () => {
     sub_total:"",
     net_total:"",
      tax_percent:"",
-      tax_amount:"",
-      invoice_date:"",
-      invoice_no:"",
-      delivery_date:"",
-      do_no:""
+      tax_amount:""
   });
  const [currency, setCurrency] = useState({
     currency_code: "",
@@ -70,7 +67,6 @@ const PurchaseOrderPage = () => {
       total_price: 0,
     },
   ]);
-  const [billDiscount, setBillDiscount] = useState(0);
 const navigate=useNavigate();
   useEffect(() => {
     // Fetch supplier form data
@@ -93,17 +89,17 @@ const navigate=useNavigate();
     });
     
     // Fetch table data
-    api.post("/purchaseorder/getGrProductByGrId",{goods_receipt_id:id}).then((response) => { 
+    api.post("/purchaseorder/getPdProductByPurchaseDebitNoteId",{purchase_debit_note_id:id}).then((response) => { 
       setRows(response.data.data);
       setTableData(response.data.data);
     });
 
     // Fetch supplier options for dropdown
-    api.post("/purchaseorder/getGoodsReceiptById",{goods_receipt_id:id}).then((response) => {
-      setFormData(response.data.data);
+    api.post("/purchaseorder/getPurchaseOrderById",{purchase_order_id:id}).then((response) => {
+      setFormData(response.data.data[0]);
     });
   
-    api.post("/currency/getCuerrencyByGoodsReceiptId",{goods_receipt_id:id}).then((response) => {
+    api.post("/currency/getCuerrencyByPurchaseDebitNoteId",{purchase_debit_note_id:id}).then((response) => {
       setCurrency(response.data.data[0]);
     });
 
@@ -166,16 +162,16 @@ useEffect(() => {
       Number((rows.reduce((sum, row) => sum + row.total_price, 0) * 0.09).toFixed(2))
     ).toFixed(2);
     api
-    .post('/purchaseorder/editGoodsReceipt', formData)
+    .post('/purchaseorder/editPurchaseDebitNote', formData)
     .then(() => {
       api
-      .post('/currency/editGoodsCurrency', currency) 
+      .post('/currency/editCurrency', currency) 
       .then(() => {})
       
       rows?.forEach((el)=>{
        
         api
-      .post('/purchaseorder/editGrProduct', el) 
+      .post('/purchaseorder/editPdProduct', el) 
       .then(() => {
         message('Record edited successfully.', 'success'); })})
      
@@ -231,16 +227,12 @@ useEffect(() => {
   
   console.log('rows',rows);
   console.log('formdata',formData);
-
-  const deleteRow = (index, id) => {
+  const deleteRow = (index,id) => {
     if(id){
-    api
-      .post('/purchaseorder/deleteGrProduct', { gr_product_id:id })
-      .then(() => {
+      api.post('/purchaseorder/deletePdProduct',{po_product_id:id}).then(() => {
         message('Record deleted successfully.', 'success');
-      })
-      .catch(() => {
-        message('Unable to delete record.', 'error');
+      }).catch(() => {
+        message('Network connection error.', 'error');
       });
     }
     if (rows.length > 1) {
@@ -265,41 +257,42 @@ useEffect(() => {
     ]);
   };
   return (
-    <Container fluid className="p-2" style={{fontSize: '0.85rem'}}>
-      <h4 className="mb-2">Add/Edit Goods Receipt</h4>
-      <Row className="mb-2">
+    <Container className="mt-4">
+      <h2>Add/Edit Purchase Order</h2>
+      <Row>
       <Col md="6">
-          <FormGroup className="mb-2">
-            <label className="mb-1" style={{fontSize: '0.8rem'}}>Tran No</label>
+          <FormGroup>
+            <label>Tran No</label>
             <Input
               type="text"
               placeholder="Enter Tran No"
               name="tran_no"
               value={formData.tran_no}
               onChange={handleChange}
-              size="sm"
+              
             />
           </FormGroup>
         </Col>
         <Col md="6">
-          <FormGroup className="mb-2">
-            <label className="mb-1" style={{fontSize: '0.8rem'}}>Tran Date</label>
+          <FormGroup>
+            <label>Tran Date</label>
             <Input
               type="date"
+              
               name="tran_date"
               value={formData.tran_date}
               onChange={handleChange}
-              size="sm"
+              
             />
+            
           </FormGroup>
         </Col>
         </Row>
-      <Nav tabs className="mb-2">
+      <Nav tabs>
         <NavItem>
           <NavLink
             className={classnames({ active: activeTab === "1" })}
             onClick={() => toggleTab("1")}
-            style={{fontSize: '0.85rem', padding: '0.5rem 1rem'}}
           >
             Supplier
           </NavLink>
@@ -308,7 +301,6 @@ useEffect(() => {
           <NavLink
             className={classnames({ active: activeTab === "2" })}
             onClick={() => toggleTab("2")}
-            style={{fontSize: '0.85rem', padding: '0.5rem 1rem'}}
           >
             Currency
           </NavLink>
@@ -317,30 +309,29 @@ useEffect(() => {
 
       <TabContent activeTab={activeTab}>
         <TabPane tabId="1">
-        <Form className="mt-2">
+        <Form className="mt-3">
       <Row>
-        <Col md="4">
-          <FormGroup className="mb-2">
-            <label className="mb-1" style={{fontSize: '0.8rem'}}>Supplier Code</label>
+        <Col md="6">
+          <FormGroup>
+            <label>Supplier Code</label>
             <Input
               type="text"
               placeholder="Enter supplier code"
               name="supplier_code"
               value={formData.supplier_code}
-              disabled
-              size="sm"
+              //onChange={handleChange}
+               disabled
             />
           </FormGroup>
         </Col>
-        <Col md="4">
-          <FormGroup className="mb-2">
-            <label className="mb-1" style={{fontSize: '0.8rem'}}>Supplier Name</label>
+        <Col md="6">
+          <FormGroup>
+            <label>Supplier Name</label>
             <Input
               type="select"
               name="supplier_id"
               value={formData.supplier_id}
               onChange={handleChange}
-              size="sm"
             >
               <option value="">Select Supplier</option>
               {supplierOptions.map((supplier, index) => (
@@ -351,147 +342,103 @@ useEffect(() => {
             </Input>
           </FormGroup>
         </Col>
-        <Col md="4">
-          <FormGroup className="mb-2">
-            <label className="mb-1" style={{fontSize: '0.8rem'}}>Contact Person</label>
+        <Col md="6">
+          <FormGroup>
+            <label>Contact Person</label>
             <Input
               type="text"
               placeholder="Enter contact person"
               name="contact_person"
               value={formData.contact_person}
               onChange={handleChange}
-              size="sm"
+              
             />
           </FormGroup>
         </Col>
-        </Row>
-        <Row>
-        <Col md="3">
-          <FormGroup className="mb-2">
-            <label className="mb-1" style={{fontSize: '0.8rem'}}>Address 1</label>
+        <Col md="6">
+          <FormGroup>
+            <label>Contact Address1</label>
             <Input
               type="text"
-              placeholder="Address 1"
+              placeholder="Enter contact address"
               name="contact_address1"
               value={formData.contact_address1}
               onChange={handleChange}
-              size="sm"
+              
             />
           </FormGroup>
         </Col>
-        <Col md="3">
-          <FormGroup className="mb-2">
-            <label className="mb-1" style={{fontSize: '0.8rem'}}>Address 2</label>
+        <Col md="6">
+          <FormGroup>
+            <label>Contact Address2</label>
             <Input
               type="text"
-              placeholder="Address 2"
+              placeholder="Enter contact address"
               name="contact_address2"
               value={formData.contact_address2}
               onChange={handleChange}
-              size="sm"
+              
             />
           </FormGroup>
         </Col>
-        <Col md="3">
-          <FormGroup className="mb-2">
-            <label className="mb-1" style={{fontSize: '0.8rem'}}>Address 3</label>
+        <Col md="6">
+          <FormGroup>
+            <label>Contact Address3</label>
             <Input
               type="text"
-              placeholder="Address 3"
+              placeholder="Enter contact address"
               name="contact_address3"
               value={formData.contact_address3}
               onChange={handleChange}
-              size="sm"
+              
             />
           </FormGroup>
         </Col>
-        <Col md="3">
-          <FormGroup className="mb-2">
-            <label className="mb-1" style={{fontSize: '0.8rem'}}>Remarks</label>
-            <Input
-              type="text"
-              name="remarks"
-              placeholder="Remarks"
-              value={formData.remarks}
-              onChange={handleChange}
-              size="sm"
-            />
-          </FormGroup>
-        </Col>
-        </Row>
-        <Row>
-        <Col md="2">
-          <FormGroup className="mb-2">
-            <label className="mb-1" style={{fontSize: '0.8rem'}}>Country</label>
+        <Col md="6">
+          <FormGroup>
+            <label>Country/Postal Code</label>
+            <Row>
+            <Col md="5">
             <Input
               type="text"
               placeholder="Country"
               name="country"
               value={formData.country}
               onChange={handleChange}
-              size="sm"
-            />
-          </FormGroup>
-        </Col>
-        <Col md="2">
-          <FormGroup className="mb-2">
-            <label className="mb-1" style={{fontSize: '0.8rem'}}>Postal Code</label>
+            
+            /></Col>
+              <Col md="5">
             <Input
               type="text"
               placeholder="Postal code"
               name="postal_code"
               value={formData.postal_code}
               onChange={handleChange}
-              size="sm"
+            
+            /></Col>
+            </Row>
+          </FormGroup>
+        </Col>
+        <Col md="6">
+          <FormGroup>
+            <label>Remarks</label>
+            <Input
+              type="textarea"
+              name="remarks"
+              placeholder="Remarks"
+              value={formData.remarks}
+              onChange={handleChange}
             />
           </FormGroup>
         </Col>
-        <Col md="2">
-          <FormGroup className="mb-2">
-            <label className="mb-1" style={{fontSize: '0.8rem'}}>Invoice Date</label>
+        <Col md="6">
+          <FormGroup>
+            <label>Request Delivery Date</label>
             <Input
               type="date"
-              name="invoice_date"
-              value={formData.invoice_date}
+              name="req_delivery_date"
+              value={formData.req_delivery_date}
               onChange={handleChange}
-              size="sm"
-            />
-          </FormGroup>
-        </Col>
-        <Col md="2">
-          <FormGroup className="mb-2">
-            <label className="mb-1" style={{fontSize: '0.8rem'}}>Invoice No</label>
-            <Input
-              type="text"
-              placeholder="Invoice No"
-              name="invoice_no"
-              value={formData.invoice_no}
-              onChange={handleChange}
-              size="sm"
-            />
-          </FormGroup>
-        </Col>
-        <Col md="2">
-          <FormGroup className="mb-2">
-            <label className="mb-1" style={{fontSize: '0.8rem'}}>Delivery Date</label>
-            <Input
-              type="date"
-              name="delivery_date"
-              value={formData.delivery_date}
-              onChange={handleChange}
-              size="sm"
-            />
-          </FormGroup>
-        </Col>
-        <Col md="2">
-          <FormGroup className="mb-2">
-            <label className="mb-1" style={{fontSize: '0.8rem'}}>Delivery No</label>
-            <Input
-              type="text"
-              name="do_no"
-              value={formData.do_no}
-              onChange={handleChange}
-              size="sm"
             />
           </FormGroup>
         </Col>
@@ -501,145 +448,142 @@ useEffect(() => {
         </TabPane>
 
         <TabPane tabId="2">
-            <Form className="mt-2">
+      
+            <Form className="mt-3">
                       <Row>
-                        <Col md="4">
-                          <FormGroup className="mb-2">
-                            <label className="mb-1" style={{fontSize: '0.8rem'}}>Currency Code</label>
-                            <Input type="text" placeholder="Enter Currency code" name="currency_code" value={currency?.currency_code || ""}  onChange={handleCurrencyChange} size="sm"/>
+                        <Col md="6">
+                          <FormGroup>
+                            <label>Currency Code</label>
+                            <Input type="text" placeholder="Enter Currency code" name="currency_code" value={currency?.currency_code || ""}  onChange={handleCurrencyChange}/>
                           </FormGroup>
                         </Col>
-                        <Col md="4">
-                          <FormGroup className="mb-2">
-                            <label className="mb-1" style={{fontSize: '0.8rem'}}>Currency Name</label>
-                            <Input type="text" name="currency_name" value={currency?.currency_name || ""} onChange={handleCurrencyChange} size="sm">
+                        <Col md="6">
+                          <FormGroup>
+                            <label>Currency Name</label>
+                            <Input type="text" name="currency_name" value={currency?.currency_name || ""} onChange={handleCurrencyChange}>
+                            
                             </Input>
                           </FormGroup>
                         </Col>
-                        <Col md="4">
-                          <FormGroup className="mb-2">
-                            <label className="mb-1" style={{fontSize: '0.8rem'}}>Currency Rate</label>
+                        <Col md="6">
+                          <FormGroup>
+                            <label>Currency Rate</label>
                             <Input type="text" placeholder="Enter Currency Rate " name="currency_rate" value={currency?.currency_rate || ""} 
-                            onChange={handleCurrencyChange} size="sm"/>
+                            onChange={handleCurrencyChange}/>
                           </FormGroup>
-                        </Col> 
+                        </Col>
+                       
                       </Row>
                     </Form>
         
         </TabPane>
       </TabContent>
 
-      <h5 className="mt-2 mb-2">Products</h5>
-      <div style={{maxHeight: '300px', overflowY: 'auto'}}>
-      <Table bordered size="sm" style={{fontSize: '0.75rem'}}>
+      <h4 className="mt-4">Products</h4>
+      <Table bordered>
         <thead>
-          <tr style={{fontSize: '0.7rem'}}>
-            <th style={{padding: '0.25rem'}}>S No</th>
-            <th style={{padding: '0.25rem'}}>Product</th>
-            <th style={{padding: '0.25rem'}}>Name</th>
-            <th style={{padding: '0.25rem'}}>C.Qty</th>
-            <th style={{padding: '0.25rem'}}>L.Qty</th>
-            <th style={{padding: '0.25rem'}}>Qty</th>
-            <th style={{padding: '0.25rem'}}>C.Price</th>
-            <th style={{padding: '0.25rem'}}>Price</th>
-            <th style={{padding: '0.25rem'}}>Total</th>
-            <th style={{padding: '0.25rem'}}>Disc</th>
-            <th style={{padding: '0.25rem'}}>G.Total</th>
-            <th style={{padding: '0.25rem'}}>Actions</th>
+          <tr>
+            <th>S No</th>
+            <th>Product Code</th>
+            <th>Product Name</th>
+            <th>Carton Qty</th>
+            <th>Loose Qty</th>
+            <th>Qty</th>
+            <th>Carton Price</th>
+            <th>Price</th>
+            <th>Total</th>
+            <th>Discount</th>
+            <th>Gross Total </th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {rows?.map((row, index) => (
-            <tr key={index} style={{fontSize: '0.7rem'}}>
-              <td style={{padding: '0.25rem'}}>{index + 1}</td>
-              <td style={{padding: '0.25rem', minWidth: '150px'}}>
+          {rows.map((row, index) => (
+            <tr key={index}>
+              <td>{index + 1}</td>
+              <td>
               <Select
                 options={products.map((p) => ({
                   value: p.product_id,
-                  label: `${p.product_code}`,
+                  label: `${p.product_code} - ${p.product_name}`,
                   ...p,
                 }))}
                 value={products.find((p) => p.product_id === row.product_id) || null} 
                 onChange={(selectedOption) => handleProductSelect(index, selectedOption)}
-                placeholder="Select"
-                styles={{
-                  control: (base) => ({ ...base, minHeight: '25px', fontSize: '0.7rem' }),
-                  option: (base) => ({ ...base, fontSize: '0.7rem' })
-                }}
+                placeholder="Select Product"
               />
               </td>
-              <td style={{padding: '0.25rem', maxWidth: '100px'}}>
+              <td>
                 <Input
                   type="text"
                   value={row.product_name}
                   onChange={(e) => handleRowChange(index, "product_name", e.target.value)}
-                  size="sm"
-                  style={{fontSize: '0.7rem'}}
                 />
               </td>
-              <td style={{padding: '0.25rem'}}>
+              <td>
                 <Input
                   type="number"
                   value={row.carton_qty}
                   onChange={(e) => handleRowChange(index, "carton_qty", parseInt(e.target.value) || 0)}
-                  size="sm"
-                  style={{fontSize: '0.7rem', width: '60px'}}
                 />
               </td>
-              <td style={{padding: '0.25rem'}}>
+              <td>
                 <Input
                   type="number"
                   value={row.loose_qty}
                   onChange={(e) => handleRowChange(index, "loose_qty", parseInt(e.target.value) || 0)}
-                  size="sm"
-                  style={{fontSize: '0.7rem', width: '60px'}}
                 />
               </td>
-              <td style={{padding: '0.25rem'}}>
+              <td>
               <Input
                   type="number"
                   value={row.qty}
                   onChange={(e) => handleRowChange(index, "qty", parseInt(e.target.value) || 0)}
-                  size="sm"
-                  style={{fontSize: '0.7rem', width: '60px'}}
                 />
               </td>
-              <td style={{padding: '0.25rem'}}>
+              <td>
                 <Input
                   type="number"
                   value={row.carton_price}
                   onChange={(e) => handleRowChange(index, "carton_price", parseFloat(e.target.value) || 0)}
-                  size="sm"
-                  style={{fontSize: '0.7rem', width: '70px'}}
                 />
               </td>
-              <td style={{padding: '0.25rem'}}>
+              <td>
               <Input
                   type="number"
                   value={row.price}
                   onChange={(e) => handleRowChange(index, "price", parseFloat(e.target.value) || 0)}
-                  size="sm"
-                  style={{fontSize: '0.7rem', width: '70px'}}
                 />
               </td>
-              <td style={{padding: '0.25rem', fontSize: '0.7rem'}}>{Number(row.total)?.toFixed(2)}</td>
-              <td style={{padding: '0.25rem'}}>
+              <td>{Number(row.total)?.toFixed(2)}</td>
+              <td>
                 <Input
                   type="number"
                   value={row.discount}
                   onChange={(e) => handleRowChange(index, "discount", parseFloat(e.target.value) || 0)}
-                  size="sm"
-                  style={{fontSize: '0.7rem', width: '60px'}}
                 />
+                 {/* <Input
+    type="number"
+    value={row.discount_percentage || ""}
+    onChange={(e) => handleRowChange(index, "discount_percentage", parseFloat(e.target.value) || 0)}
+    placeholder="%"
+  />
+
+  <Input
+    type="number"
+    value={((row.total_price * (row.discount_amount || 0)) / 100).toFixed(2)}
+    readOnly
+    placeholder="Discount Amount"
+  /> */}
               </td>
-              <td style={{padding: '0.25rem', fontSize: '0.7rem'}}>{row.total_price?.toFixed(2)}</td>
-              <td style={{padding: '0.25rem'}}>
+              <td>{row.total_price?.toFixed(2)}</td>
+              <td>
                 <FaTrashAlt
-                  style={{ color: "red", cursor: "pointer", marginRight: "5px", fontSize: '0.8rem' }}
-                  onClick={() => deleteRow(index,row.gr_product_id)}
+                  style={{ color: "red", cursor: "pointer", marginRight: "10px" }}
+                  onClick={() => deleteRow(index,row.po_product_id)}
                 />
                 <FaPlusCircle
-                  style={{ color: "green", cursor: "pointer", fontSize: '0.8rem' }}
+                  style={{ color: "green", cursor: "pointer" }}
                   onClick={addRow}
                 />
               </td>
@@ -647,55 +591,60 @@ useEffect(() => {
           ))}
         </tbody>
         <tfoot>
-  <tr style={{fontSize: '0.7rem', fontWeight: 'bold'}}>
-    <td colSpan={3} style={{ fontWeight: "bold", padding: '0.25rem' }}>Summary:</td>
-    <td style={{padding: '0.25rem'}}>{getColumnSum("carton_qty")}</td>
-    <td style={{padding: '0.25rem'}}>{getColumnSum("loose_qty")}</td>
-    <td style={{padding: '0.25rem'}}>{getColumnSum("qty")}</td>
-    <td style={{padding: '0.25rem'}}>{getColumnSum("carton_price").toFixed(2)}</td>
-    <td style={{padding: '0.25rem'}}>{getColumnSum("price").toFixed(2)}</td>
-    <td style={{padding: '0.25rem'}}>{getColumnSum("total").toFixed(2)}</td>
-    <td style={{padding: '0.25rem'}}>{getColumnSum("discount").toFixed(2)}</td>
-    <td style={{padding: '0.25rem'}}>{getColumnSum("total_price").toFixed(2)}</td>
-    <td style={{padding: '0.25rem'}}></td>
+  <tr>
+    <td colSpan={3} style={{ fontWeight: "bold" }}>Summary:</td>
+    <td>{getColumnSum("carton_qty")}</td>
+    <td>{getColumnSum("loose_qty")}</td>
+    <td>{getColumnSum("qty")}</td>
+    <td>{getColumnSum("carton_price").toFixed(2)}</td>
+    <td>{getColumnSum("price").toFixed(2)}</td>
+    <td>{getColumnSum("discount").toFixed(2)}</td>
+    <td>{getColumnSum("total_price").toFixed(2)}</td>
+    <td></td> {/* Empty cell for actions */}
   </tr>
 </tfoot>
 
       </Table>
-      </div>
-      <Row className="p-1 border bg-light" style={{fontSize: '0.75rem'}}>
-        <Col sm="2"><strong>UOM:</strong> {rows.length > 0 ? rows[0].uom || "-" : "-"}</Col>
-        <Col sm="2"><strong>Pieces/Carton:</strong> {rows.length > 0 ? rows[0]?.pieces_per_carton || 0 : "0"}</Col>
-        <Col sm="2"><strong>Unit Cost:</strong> {rows.length > 0 ? rows[0]?.purchase_unit_cost?.toFixed(2) || "0.00" : "0.00"}</Col>
-        <Col sm="2"><strong>Wholesale:</strong> {rows.length > 0 ? rows[0]?.wholesale_price?.toFixed(2) || "0.00" : "0.00"}</Col>
-        <Col sm="2"><strong>CQty:</strong> {rows.length > 0 ? rows[0]?.carton_qty || "0" : "0"}</Col>
-        <Col sm="2"><strong>On Hand:</strong> {rows.length > 0 ? rows[0]?.qty_on_hand || 0 : "0"}</Col>
+      <Row className="p-2 border bg-light">
+        <Col><strong>UOM:</strong> {rows.length > 0 ? rows[0].uom || "-" : "-"}</Col>
+        <Col><strong>Pieces/Carton:</strong> {rows.length > 0 ? rows[0]?.pieces_per_carton || 0 : "0.00"}</Col>
+        <Col><strong>Purchase Unit Cost:</strong> {rows.length > 0 ? rows[0]?.purchase_unit_cost?.toFixed(2) || "0.00" : "0.00"}</Col>
+        <Col><strong>Wholesale Price:</strong> {rows.length > 0 ? rows[0]?.wholesale_price?.toFixed(2) || "0.00" : "0.00"}</Col>
+        {/* <Col><strong>Carton Price:</strong> {rows.length > 0 ? rows[0]?.carton_price?.toFixed(2) || "0.00" : "0.00"}</Col> */}
+        <Col><strong>CQty:</strong> {rows.length > 0 ? rows[0]?.carton_qty || "0" : "0.00"}</Col>
+        <Col><strong>Qty On Hand:</strong> {rows.length > 0 ? rows[0]?.qty_on_hand || 0 : "0.00"}</Col>
       </Row>
 
-      <Row className="p-1 mt-1 border" style={{fontSize: '0.75rem'}}>
-        <Col sm="2"><strong>Products:</strong> {rows.length}</Col>
-        <Col sm="3"><strong>Sub Total:</strong> ${rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2)}</Col>
-        <Col sm="2"><strong>Tax:</strong> ${ (rows.reduce((sum, row) => sum + row.total_price, 0) * 0.09).toFixed(2) }</Col>
-        <Col sm="3"><strong>Net Total:</strong> $
+      <Row className="p-2 mt-3 border">
+        <Col>
+          <strong>Bill Discount:</strong>
+          <Input
+            type="number"
+            className="ms-2"
+            value={rows.billDiscount}
+            onChange={(e) => setBillDiscount(parseFloat(e.target.value) || 0)}
+            style={{ width: "100px", display: "inline-block" }}
+          />
+        </Col>
+        <Col><strong>Total Products:</strong> {rows.length}</Col>
+        <Col><strong>Sub Total (USD):</strong> ${rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2)}</Col>
+        <Col><strong>Tax (USD):</strong> ${ (rows.reduce((sum, row) => sum + row.total_price, 0) * 0.09).toFixed(2) }</Col>
+        <Col><strong>Net Total (USD):</strong> $
   {(
     Number(rows.reduce((sum, row) => sum + row.total_price, 0)) +
     Number((rows.reduce((sum, row) => sum + row.total_price, 0) * 0.09).toFixed(2))
   ).toFixed(2)}</Col>
-        <Col sm="2">
-           <strong>Discount:</strong>
-           <Input
-             type="number"
-             value={billDiscount}
-             onChange={(e) => setBillDiscount(parseFloat(e.target.value) || 0)}
-             size="sm"
-             style={{ width: "60px", display: "inline-block", marginLeft: "5px" }}
-           />
-         </Col>
       </Row>
 
-      <div className="mt-2">
-        <Button color="success" size="sm" onClick={handleSubmit} >Save</Button>
-        <Button color="danger" size="sm" className="ms-2" onClick={() => navigate('/GoodsReceipt')}>
+      <div className="mt-4">
+        {/* <h5>Summary:</h5>
+        <p>Total Products: {rows.length}</p>
+        <p>Total Amount: ${rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2)}</p> */}
+        <Button color="success" onClick={handleSubmit} >Save</Button>
+        {/* <Button color="secondary" className="ms-2">
+          Print
+        </Button> */}
+        <Button color="danger" className="ms-2" onClick={() => navigate('/PurchaseOrder')}>
           Cancel
         </Button>
       </div>
@@ -703,4 +652,4 @@ useEffect(() => {
   );
 };
 
-export default PurchaseOrderPage;
+export default PurchaseDebitNoteEdit;
