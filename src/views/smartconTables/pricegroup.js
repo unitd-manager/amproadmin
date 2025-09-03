@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Input } from 'reactstrap';
+import { Trash2 } from 'react-feather';
 import { useNavigate ,Link} from 'react-router-dom';
 import api from '../../constants/api';
 import message from '../../components/Message';
@@ -22,15 +23,15 @@ const PriceGroupList = () => {
       });
   };
 
-  // const deletePriceGroup = (id) => {
-  //   api
-  //     .post('/pricegroup/delete', { id })
-  //     .then(() => {
-  //       message('Deleted successfully', 'success');
-  //       getPriceGroups();
-  //     })
-  //     .catch(() => message('Delete failed', 'error'));
-  // };
+  const deletePriceGroup = (id) => {
+    api
+      .post('/pricegroup/delete', { price_group_id:id })
+      .then(() => {
+        message('Deleted successfully', 'success');
+        getPriceGroups();
+      })
+      .catch(() => message('Delete failed', 'error'));
+  };
 
   useEffect(() => {
     getPriceGroups();
@@ -62,14 +63,14 @@ const PriceGroupList = () => {
             .map((pg) => (
               <tr key={pg.id}>
                 <td>
-                <Link to={`/PriceGroupEdit/${pg.price_group_id}`}>
+                {/* <Link to={`/PriceGroupEdit/${pg.price_group_id}`}>
                                       <Button color="primary" className="shadow-none btn-sm">
                                        Edit
                                       </Button>
-                                    </Link>
-                  {/* <Button size="sm" color="danger" onClick={() => deletePriceGroup(pg.price_group_id)}>Delete</Button> */}
+                                    </Link> */}
+                  <Button size="sm" color="danger" onClick={() => deletePriceGroup(pg.price_group_id)}><Trash2/></Button>
                 </td>
-                <td>{pg.price_group_name}</td>
+                <td> <Link to={`/PriceGroupEdit/${pg.price_group_id}`}>{pg.price_group_name}</Link></td>
                 
                   <td>
                   <span style={{ color: pg.status === 1 ? 'green' : 'red', fontWeight: 'bold' }}>

@@ -88,8 +88,8 @@ const PriceGroupEdit = () => {
         <Label check>
           <Input
             type="checkbox"
-            name="is_active"
-            checked={!!groupData?.is_active}
+            name="status"
+            checked={!!groupData?.status}
             onChange={handleChange}
           />{' '}
           Is Active
