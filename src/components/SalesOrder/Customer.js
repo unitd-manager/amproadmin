@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Row, Col, Form, FormGroup, Label, Input } from 'reactstrap';
 import PropTypes from 'prop-types';
-import ComponentCard from '../ComponentCard';
+
 import api from '../../constants/api';
 
 export default function SupplierDetails({ handleInputs, settingdetails, setSettingDetails }) {
@@ -51,18 +51,20 @@ export default function SupplierDetails({ handleInputs, settingdetails, setSetti
   return (
     <Form>
       <FormGroup>
-        <ComponentCard title="Customer Details">
+        <div style={{ padding: '8px', backgroundColor: '#f8f9fa', borderRadius: '4px', marginBottom: '8px' }}>
+          <h6 style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#495057' }}>Customer Details</h6>
           <Row>
-            <Col md="4">
-              <FormGroup>
-                <Label>
+            <Col md="3">
+              <FormGroup style={{ marginBottom: '8px' }}>
+                <Label style={{ fontSize: '11px', marginBottom: '2px' }}>
                   Customer name <span className="required"> *</span>
                 </Label>
                 <Input
                   type="select"
                   name="company_id"
-                  onChange={handleCompanyChange} // Updated function
+                  onChange={handleCompanyChange}
                   value={settingdetails?.company_id ? String(settingdetails.company_id) : ''}
+                  style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }}
                 >
                   <option value="">Please Select</option>
                   {company.map((ele) => (
@@ -73,16 +75,16 @@ export default function SupplierDetails({ handleInputs, settingdetails, setSetti
                 </Input>
               </FormGroup>
             </Col>
-            <Col md="4">
-              <FormGroup>
-                <Label>Customer Code</Label>
-                <Input type="text" name="customer_code" onChange={handleInputs} value={settingdetails?.customer_code || ''} />
+            <Col md="3">
+              <FormGroup style={{ marginBottom: '8px' }}>
+                <Label style={{ fontSize: '11px', marginBottom: '2px' }}>Customer Code</Label>
+                <Input type="text" name="customer_code" onChange={handleInputs} value={settingdetails?.customer_code || ''} style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }} />
               </FormGroup>
             </Col>
-              <Col md="4">
-              <FormGroup>
-                <Label>Contact Address 1</Label>
-                <Input type="text" name="address_street" onChange={handleInputs} value={settingdetails?.address_street || ''} />
+              <Col md="3">
+              <FormGroup style={{ marginBottom: '8px' }}>
+                <Label style={{ fontSize: '11px', marginBottom: '2px' }}>Contact Address 1</Label>
+                <Input type="text" name="address_street" onChange={handleInputs} value={settingdetails?.address_street || ''} style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }} />
               </FormGroup>
             </Col>
           
@@ -108,26 +110,26 @@ export default function SupplierDetails({ handleInputs, settingdetails, setSetti
             </Col>
           </Row> */}
           <Row>
-            <Col md="4">
-              <FormGroup>
-                <Label>Country</Label>
-                <Input type="text" name="address_country" onChange={handleInputs} value={settingdetails?.address_country || ''} />
+            <Col md="3">
+              <FormGroup style={{ marginBottom: '8px' }}>
+                <Label style={{ fontSize: '11px', marginBottom: '2px' }}>Country</Label>
+                <Input type="text" name="address_country" onChange={handleInputs} value={settingdetails?.address_country || ''} style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }} />
               </FormGroup>
             </Col>
-            <Col md="4">
-              <FormGroup>
-                <Label>Country Po Code</Label>
-                <Input type="text" name="address_po_code" onChange={handleInputs} value={settingdetails?.address_po_code || ''} />
+            <Col md="3">
+              <FormGroup style={{ marginBottom: '8px' }}>
+                <Label style={{ fontSize: '11px', marginBottom: '2px' }}>Country Po Code</Label>
+                <Input type="text" name="address_po_code" onChange={handleInputs} value={settingdetails?.address_po_code || ''} style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }} />
               </FormGroup>
             </Col>
-            <Col md="4">
-              <FormGroup>
-                <Label>Remarks</Label>
-                <Input type="text" name="notes" onChange={handleInputs} value={settingdetails?.notes || ''} />
+            <Col md="3">
+              <FormGroup style={{ marginBottom: '8px' }}>
+                <Label style={{ fontSize: '11px', marginBottom: '2px' }}>Remarks</Label>
+                <Input type="text" name="notes" onChange={handleInputs} value={settingdetails?.notes || ''} style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }} />
               </FormGroup>
             </Col>
           </Row>
-        </ComponentCard>
+        </div>
       </FormGroup>
     </Form>
   );

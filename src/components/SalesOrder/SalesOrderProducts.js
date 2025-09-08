@@ -1,7 +1,10 @@
+/*eslint-disable*/
 import React, { useContext, useEffect, useState, useRef } from 'react';
 import { Row, Col, Button, Table, Input, Alert } from 'reactstrap';
 import PropTypes from 'prop-types';
 import * as Icon from 'react-feather';
+import { useNavigate } from 'react-router-dom';
+
 import Select from 'react-select';
 import api from '../../constants/api';
 import ComponentCard from '../ComponentCard';
@@ -25,6 +28,8 @@ const SalesOrderProducts = ({
   const [addLineItemModal, setAddLineItemModal] = useState(false);
   const [ setViewLineModal] = useState(false);
   const [productValue, setProductValue] = useState([]);
+  const navigate = useNavigate();
+
 
     // Track which row is active (clicked for editing)
     const [activeRow, setActiveRow] = useState(null);
@@ -312,7 +317,7 @@ React.useEffect(() => {
       </Row>
       {showSuccess && <Alert color="success">Items saved successfully!</Alert>}
       <br />
-  <Table id="example" className="display border border-secondary rounded" style={{ borderSpacing: '0 12px', borderCollapse: 'separate' }} ref={tableRef}>
+  <Table id="example" className="display border border-secondary rounded" style={{ borderSpacing: '0 5px', borderCollapse: 'separate' }} ref={tableRef}>
         <thead>
           <tr>
             <td style={{ width: '30px' }}>#</td>
@@ -335,7 +340,7 @@ React.useEffect(() => {
             return (
               <tr
                 key={item.id || idx}
-                style={{ height: '56px', background: isActive ? '#eaf6ff' : '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', borderRadius: '8px' }}
+                style={{fontSize: '12px', height: '46px', background: isActive ? '#eaf6ff' : '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', borderRadius: '8px' }}
               >
                 <td style={{ width: '30px', padding: '16px' }}>{idx + 1}</td>
                 <td
@@ -370,7 +375,7 @@ React.useEffect(() => {
                           if (cartonQtyRefs.current[idx]) cartonQtyRefs.current[idx].focus();
                         }, 100);
                       }}
-                      styles={{ control: (base) => ({ ...base, width: '110%' }) }}
+                      styles={{ control: (base) => ({ ...base, width: '110%',fontSize: '12px', }) }}
                     />
                   ) : (
                     <span
@@ -555,75 +560,131 @@ React.useEffect(() => {
           </tr>
         </tfoot>
       </Table>
-<div className="mt-3 p-3 border border-secondary rounded" style={{ background: '#f9f9f9' }}>
-<Row className="mb-2">
-<Col md="12">
-  {selectedProduct ? (
-    <>
-      <p>
-        <strong>Uom: </strong> {selectedProduct.unit || '0.00'}&nbsp;&nbsp;
-        <strong>Pieces/Carton:</strong> {selectedProduct.pcs_per_carton || '0.00'}&nbsp;&nbsp;
-        <strong>Purchase UnitCost:</strong> {selectedProduct.purchase_unit_cost || '0.00'}&nbsp;&nbsp;
-        <strong>Profit%:</strong>{' '}
-{selectedProduct?.purchase_unit_cost > 0
-  ? (
-      ((parseFloat(selectedProduct.whole_price || 0) -
-        parseFloat(selectedProduct.purchase_unit_cost || 0)) /
-        parseFloat(selectedProduct.purchase_unit_cost || 1)) *
-      100
-    ).toFixed(2)
-  : '0.00'}
-%
-        &nbsp;&nbsp;
-        <strong>Wholesale Price:</strong> {selectedProduct.whole_price || '0.00'}&nbsp;&nbsp;
-        <strong>Carton Price:</strong> {selectedProduct.Cprice || '0.00'}
-      </p>
-      <p>
-  <strong>CQty:</strong> {selectedProduct.Cqty || '0.00'}&nbsp;&nbsp;
-  <strong>Qty On Hand:</strong> {selectedProduct.quantity || '0.00'}&nbsp;&nbsp;
-  <strong>Back Order Qty:</strong> {backOrderQtyMap[selectedProduct?.product_id] || '0.00'}&nbsp;&nbsp;
-  <strong>Actual Qty:</strong> {(
-    (parseFloat(selectedProduct.quantity || 0) - parseFloat(backOrderQtyMap[selectedProduct.product_id] || 0)).toFixed(2)
-  )}
-</p>
+<div className="footer-info border-top" style={{ 
+ 
+  bottom: 0,
+  left: 0,
+  right: 0,
+  background: '#f9f9f9',
+  padding: '8px',
+  fontSize: '12px',
+  zIndex: 1000
+}}>
+  <Row className="g-2">
+    <Col md="12">
+      {selectedProduct ? (
+        <div className="d-flex flex-wrap gap-2 align-items-center">
+          <span><strong>Uom:</strong> {selectedProduct.unit || '0.00'}</span>
+          <span><strong>Pieces/Carton:</strong> {selectedProduct.pcs_per_carton || '0.00'}</span>
+          <span><strong>Purchase UnitCost:</strong> {selectedProduct.purchase_unit_cost || '0.00'}</span>
+          <span>
+            <strong>Profit%:</strong>{' '}
+            {selectedProduct?.purchase_unit_cost > 0
+              ? (((parseFloat(selectedProduct.whole_price || 0) - parseFloat(selectedProduct.purchase_unit_cost || 0)) / parseFloat(selectedProduct.purchase_unit_cost || 1)) * 100).toFixed(2)
+              : '0.00'}%
+          </span>
+          <span><strong>Wholesale Price:</strong> {selectedProduct.whole_price || '0.00'}</span>
+          <span><strong>Carton Price:</strong> {selectedProduct.Cprice || '0.00'}</span>
+          <span><strong>CQty:</strong> {selectedProduct.Cqty || '0.00'}</span>
+          <span><strong>Qty On Hand:</strong> {selectedProduct.quantity || '0.00'}</span>
+          <span><strong>Back Order Qty:</strong> {backOrderQtyMap[selectedProduct?.product_id] || '0.00'}</span>
+          <span>
+            <strong>Actual Qty:</strong>{' '}
+            {((parseFloat(selectedProduct.quantity || 0) - parseFloat(backOrderQtyMap[selectedProduct.product_id] || 0))).toFixed(2)}
+          </span>
+        </div>
+      ) : (
+        <div className="d-flex flex-wrap gap-2 align-items-center">
+          <span><strong>Uom:</strong> 0.00</span>
+          <span><strong>Pieces/Carton:</strong> 0.00</span>
+          <span><strong>Purchase UnitCost:</strong> 0.00</span>
+          <span><strong>Profit%:</strong> 0.00</span>
+          <span><strong>Wholesale Price:</strong> 0.00</span>
+          <span><strong>Carton Price:</strong> 0.00</span>
+          <span><strong>CQty:</strong> 0.00</span>
+          <span><strong>Qty On Hand:</strong> 0.00</span>
+          <span><strong>Back Order Qty:</strong> 0.00</span>
+          <span><strong>Actual Qty:</strong> 0.00</span>
+        </div>
+      )}
+      </Col>
+      </Row>
+      </div>
+          {/* Fixed Footer Section */}
+            <div style={{ 
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#2c3e50',
+        borderTop: '1px solid #dee2e6',
+        padding: '4px 8px',
+        color: '#ffffff',
+        zIndex: 1000
+      }}>
+        <Row className="align-items-center">
+       
 
-    </>
-  ) : (
-    <>
-    <p><strong>Uom: </strong> 0.00&nbsp;&nbsp; <strong>Pieces/Carton:</strong> 0.00&nbsp;&nbsp; <strong>Purchase UnitCost:</strong> 0.00 &nbsp;&nbsp; <strong>Profit%:</strong> 0.00 &nbsp;&nbsp; <strong>Wholesale Price:</strong> 0.00 &nbsp;&nbsp; <strong>Carton Price:</strong> 0.00</p>
-      <p><strong>CQty:</strong> 0.00 &nbsp;&nbsp; <strong>Qty On Hand:</strong> 0.00 &nbsp;&nbsp; <strong>Back Order Qty:</strong> 0.00 &nbsp;&nbsp; <strong>Actual Qty:</strong> 0.00</p>
-    </>
-  )}
+
+<Col md="2" className="text-end">
+<p>
+<strong>Bill Discount :</strong>
+<input
+type="number"
+name="bill_discount"
+value={billDiscount}
+onChange={(e) => setBillDiscount(parseFloat(e.target.value) || 0)}
+onBlur={(e) => saveBillDiscount(parseFloat(e.target.value) || 0)} // Save only on blur
+style={{ width: '100px', marginLeft: '10px' }}
+/>
+</p>
 </Col>
+<Col md="2"><p><strong>Total Product:</strong> {Array.isArray(lineItems) ? lineItems.length : 0}</p>
+</Col>
+  <Col md="2"><p><strong>Sub Total:</strong> $ {(summary.gross_total - billDiscount).toFixed(2)}</p></Col>
+  <Col md="2"><p><strong>Tax ({(taxRate * 100).toFixed(2)}%):</strong> $ {((summary.gross_total - billDiscount) * taxRate).toFixed(2)}</p></Col>
+  <Col md="2"><p><strong>Net Total:</strong> $ {((summary.gross_total - billDiscount) * (1 + taxRate)).toFixed(2)}</p></Col>
 
-    </Row>
-  <Row className="mb-2">
-  <Col md="6">
-    </Col>
-    <Col md="6" className="text-end">
-    <p>
-  <strong>Bill Discount :</strong>
-  <input
-    type="number"
-    name="bill_discount"
-    value={billDiscount}
-    onChange={(e) => setBillDiscount(parseFloat(e.target.value) || 0)}
-    onBlur={(e) => saveBillDiscount(parseFloat(e.target.value) || 0)} // Save only on blur
-    style={{ width: '100px', marginLeft: '10px' }}
-  />
-</p>
-
-
-      <p><strong>Total Product:</strong> {Array.isArray(lineItems) ? lineItems.length : 0}</p>
-      <p><strong>Sub Total:</strong> $ {(summary.gross_total - billDiscount).toFixed(2)}</p>
-<p><strong>Tax ({(taxRate * 100).toFixed(2)}%):</strong> $ {((summary.gross_total - billDiscount) * taxRate).toFixed(2)}</p>
-<p><strong>Net Total:</strong> $ {((summary.gross_total - billDiscount) * (1 + taxRate)).toFixed(2)}</p>
-
-
-    </Col>
-  </Row>
+          <Col md="2" className="text-right">
+            <Button
+              color="secondary"
+              size="sm"
+              onClick={() => {
+                navigate('/salesOrder');
+              }}
+              style={{ marginRight: '3px', fontSize: '9px', padding: '2px 6px' }}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="info"
+              size="sm"
+              onClick={() => {
+                editSettingData();
+              }}
+              style={{ marginRight: '3px', fontSize: '9px', padding: '2px 6px' }}
+            >
+              Print
+            </Button>
+            <Button
+              color="primary"
+              size="sm"
+              onClick={() => {
+                editSettingData();
+                setTimeout(() => {
+                  navigate('/salesOrder');
+                  window.location.reload();
+                }, 1100);
+              }}
+              style={{ fontSize: '9px', padding: '2px 6px' }}
+            >
+              Save
+            </Button>
+          </Col>
+        </Row>
+    
+   
 </div>
-
       <EditLineItemModal
         editLineModal={editLineModal}
         setEditLineModal={setEditLineModal}
@@ -644,6 +705,7 @@ React.useEffect(() => {
 };
 SalesOrderProducts.propTypes = {
     lineItem: PropTypes.array.isRequired,
+    editSettingData: PropTypes.bool.isRequired,
     getLineItem: PropTypes.func.isRequired,
     deleteRecord: PropTypes.func.isRequired,
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
