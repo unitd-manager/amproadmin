@@ -664,7 +664,7 @@ style={{ width: '100px', marginLeft: '10px' }}
               }}
               style={{ marginRight: '3px', fontSize: '9px', padding: '2px 6px' }}
             >
-              Print
+            Apply
             </Button>
             <Button
               color="primary"
