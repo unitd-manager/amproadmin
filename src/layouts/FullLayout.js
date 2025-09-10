@@ -32,9 +32,9 @@ const FullLayout = () => {
         )}
         {/********Content Area**********/}
 
-        <div className={`contentArea ${topbarFixed ? 'fixedTopbar' : ''}`}>
+        <div className={`contentArea ${topbarFixed ? 'fixedTopbar' : ''} ${isEditOrDetailPage ? 'hide-topbar-space' : ''}`}>
           {/********header**********/}
-          {LayoutHorizontal ? <HorizontalHeader /> : <Header />}
+          {isEditOrDetailPage ? '' : (LayoutHorizontal ? <HorizontalHeader /> : <Header />)}
           {LayoutHorizontal ? <HorizontalSidebar /> : ''}
           {/********Middle Content**********/}
           <Container fluid className="p-4 boxContainer">

@@ -40,7 +40,7 @@ import AppContext from '../../context/AppContext';
 const SalesOrderEdit = () => {
    const { id } = useParams();
  
-  const [activeTab, setActiveTab] = useState('1');
+  const [activeTab, setActiveTab] = useState("1");
   const { loggedInuser } = useContext(AppContext);
 
 
@@ -136,7 +136,7 @@ useEffect(() => {
       getLineItem();
 }, [id]);
  return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>   
+  <div >
       {/* Fixed Header Section */}
       <div style={{ flexShrink: 0, backgroundColor: '#ffffff', borderBottom: '1px solid #dee2e6', padding: '4px 8px' }}>
         <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '4px', color: '#495057' }}>Add/Edit Sales Order</div>
@@ -172,14 +172,11 @@ useEffect(() => {
       </div>
       <ToastContainer></ToastContainer>
       
-      {/* Scrollable Middle Section */}
-      <div style={{ flex: 1, overflow: 'auto', padding: '4px 8px' }}>
-        <Form>
-          <div style={{ backgroundColor: '#ffffff', border: '1px solid #dee2e6', borderRadius: '2px' }}>
+   
             {/* Compact tabs */}
             <Tab toggle={toggle} tabs={tabs} />
             <TabContent style={{ padding: '4px 6px' }} activeTab={activeTab}>
-              <TabPane tabId="1">
+              <TabPane tabId="1" >
                 <Customer
                  settingdetails={settingdetails}
                  handleInputs={handleInputs}
@@ -206,40 +203,9 @@ useEffect(() => {
                  handleInputs={handleInputs}
                  ></SalesMan>
               </TabPane>
-          {/* <TabPane tabId="5">
-            <PdfPickingList
-            id={id}
-            ></PdfPickingList>
-          </TabPane> */}
-          {/* <TabPane tabId="6">
-            <PdfPackingList
-            id={id}
-            ></PdfPackingList>
-          </TabPane>
-          <TabPane tabId="10">
-            <PdfSalesQuote
-            id={id}
-            ></PdfSalesQuote>
-            </TabPane> */}
-              {/* <TabPane tabId="7">
-              <SalesOrderPrintWithCost
-              id={id}
-                       settingdetails={settingdetails}
-                       lineItem={lineItem}
-                    ></SalesOrderPrintWithCost>
-                    <PrintPerfoma
-                       id={id}
-                       settingdetails={settingdetails}
-                       lineItem={lineItem}
-                    ></PrintPerfoma>
-              </TabPane> */}
-             
+         
             </TabContent>
-          </div>
-          
-          <div style={{ backgroundColor: '#ffffff', border: '1px solid #dee2e6', borderRadius: '2px', marginTop: '4px' }}>
-            <div style={{ padding: '4px 6px', borderBottom: '1px solid #dee2e6', backgroundColor: '#f8f9fa', fontSize: '11px', fontWeight: 'bold' }}>Products</div>
-            <div style={{ padding: '4px 6px' }}>
+     
               <SalesOrderProducts
                 addLineItemModal={addLineItemModal}
                 setAddLineItemModal={setAddLineItemModal}
@@ -254,13 +220,9 @@ useEffect(() => {
                 id={id}
                 setViewLineModal={setViewLineModal}
               />
-            </div>
-          </div>
-        </Form>
-      </div>
-      
-
+        
     </div>
+ 
   );
 };
 

@@ -328,7 +328,7 @@ const Test = () => {
                   <td>{index + 1}</td>
                  <td>
   {element.status !== 'Closed' ? (
-    <Link to={`/salesorderEdit/${element.sales_order_id}`}>
+    <Link to={`/salesorderEdit/${element.sales_order_id}?tab=1`}>
       <Icon.Edit2 />
     </Link>
   ) : (

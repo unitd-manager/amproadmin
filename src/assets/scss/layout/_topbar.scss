@@ -51,6 +51,9 @@
     left: auto;
   }
 }
+.hide-topbar-space {
+  padding-top: 0 !important;
+}
 @include media-breakpoint-down(lg) {
   .ddWidth {
     width: 100vw;
