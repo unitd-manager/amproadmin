@@ -37,7 +37,7 @@ const FullLayout = () => {
           {isEditOrDetailPage ? '' : (LayoutHorizontal ? <HorizontalHeader /> : <Header />)}
           {LayoutHorizontal ? <HorizontalSidebar /> : ''}
           {/********Middle Content**********/}
-          <Container fluid className="p-4 boxContainer">
+          <Container fluid className="boxContainer">
             <div className={isFixedSidebar && LayoutHorizontal ? 'HsidebarFixed' : ''}>
               <Outlet />
             </div>
