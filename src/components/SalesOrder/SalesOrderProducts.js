@@ -16,7 +16,7 @@ const SalesOrderProducts = ({
   lineItem: initialLineItem,
   getLineItem,
   deleteRecord,
-  editSettingData,
+  saveSalesOrder,
   id,
 }) => {
   const { loggedInuser } = useContext(AppContext);
@@ -28,13 +28,13 @@ const SalesOrderProducts = ({
         {
           id: new Date().getTime().toString(),
           product_id: '', product_name: '', product_code: '', carton_qty: '', loose_qty: '',
-          quantity: '', carton_price: '', wholesale_price: '', pcs_per_carton: '',
+          quantity: '',foc:'', carton_price: '', wholesale_price: '', pcs_per_carton: '',
           total: '', discount_value: '', gross_total: '',
         },
         {
           id: new Date().getTime().toString() + '1',
           product_id: '', product_name: '', product_code: '', carton_qty: '', loose_qty: '',
-          quantity: '', carton_price: '', wholesale_price: '', pcs_per_carton: '',
+          quantity: '',foc:'', carton_price: '', wholesale_price: '', pcs_per_carton: '',
           total: '', discount_value: '', gross_total: '',
         },
       ];
@@ -61,7 +61,7 @@ const SalesOrderProducts = ({
   const cartonQtyRefs = useRef([]);
   const looseQtyRefs = useRef([]);
   const quantityRefs = useRef([]);
-  const priceRefs = useRef([]);
+  const FOCRefs = useRef([]);
   const totalInputRefs = useRef([]);
   const discountInputRefs = useRef([]);
   const grossTotalInputRefs = useRef([]);
@@ -184,8 +184,9 @@ const SalesOrderProducts = ({
       return api.post('/salesOrder/insertQuoteItems', obj);
     }));
     if (getLineItem) getLineItem(id);
+    saveSalesOrder();
     setShowSuccess(true);
-    setTimeout(() => setShowSucc3(false), 100000); // Hide after 3 seconds
+    setTimeout(() => setShowSuccess(false), 3000); // Hide after 3 seconds
   };
 
   const summary = {
@@ -338,15 +339,16 @@ React.useEffect(() => {
       <thead>
         <tr>
           <td style={{ width: '30px' }}>#</td>
-          <td style={{ width: '250px' }}>Product Code</td>
-          <td style={{ width: '120px' }}>Product Nmae</td>
+          <td style={{ width: '115px' }}>Product Code</td>
+          <td style={{ width: '270px' }}>Product Name</td>
           <td style={{ width: '80px' }}>Carton Qty</td>
           <td style={{ width: '80px' }}>Loose Qty</td>
           <td style={{ width: '90px' }}>Qty</td>
+           <td style={{ width: '65px' }}>FOC</td>
           <td style={{ width: '120px' }}>Carton Price</td>
           <td style={{ width: '120px' }}>Price</td>
           <td style={{ width: '120px' }}>Total</td>
-          <td style={{ width: '120px' }}>Discount</td>
+          <td style={{ width: '110px' }}>Discount</td>
           <td style={{ width: '130px' }}>Gross Total</td>
           <td style={{ width: '50px' }}>Action</td>
         </tr>
@@ -416,10 +418,13 @@ React.useEffect(() => {
       ...base,
       fontSize: "12px",
       minHeight: "30px"
+     
     }),
     menuPortal: (base) => ({
       ...base,
-      zIndex: 9999   // keep it above modal, table, etc.
+      zIndex: 9999,
+      fontSize: "12px", 
+      width: '300px'  // keep it above modal, table, etc.
     }),
     menu: (base) => ({
       ...base,
@@ -538,8 +543,8 @@ React.useEffect(() => {
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
-                        if (cartonPriceRefs.current[idx]) {
-                          cartonPriceRefs.current[idx].focus();
+                        if (FOCRefs.current[idx]) {
+                          FOCRefs.current[idx].focus();
                         }
                       }
                     }}
@@ -554,6 +559,35 @@ React.useEffect(() => {
                     role="button"
                   >
                     {item.quantity}
+                  </span>
+                )}
+              </td>
+              <td>
+                {isActive ? (
+                  <Input
+                    type="text"
+                    name="foc"
+                    value={item.foc}
+                    onChange={(e) => handleFieldChange(idx, 'foc', e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (cartonPriceRefs.current[idx]) {
+                          cartonPriceRefs.current[idx].focus();
+                        }
+                      }
+                    }}
+                    innerRef={(el) => (FOCRefs.current[idx] = el)}
+                    style={{ width: '100%', fontSize: '12px' }}
+                  />
+                ) : (
+                  <span
+                    style={{ cursor: 'pointer', display: 'inline-block' }}
+                    onClick={() => setActiveRow(idx)}
+                    tabIndex={0}
+                    role="button"
+                  >
+                    {item.foc}
                   </span>
                 )}
               </td>
@@ -730,12 +764,13 @@ React.useEffect(() => {
       <tfoot>
         <tr style={{ fontWeight: 'bold', background: '#f1f1f1' }}>
            <td colSpan="2"> <Button color="primary" onClick={handleAddRow}>
-          Add Sale Items
+          Add
         </Button></td>
           <td  className="text-end">Summary:</td>
           <td>{summary.carton_qty.toFixed(2)}</td>
           <td>{summary.loose_qty.toFixed(2)}</td>
           <td>{summary.quantity.toFixed(2)}</td>
+          <td></td>
           <td>{summary.carton_price.toFixed(2)}</td>
           <td>{summary.wholesale_price.toFixed(2)}</td>
           <td>{summary.total.toFixed(2)}</td>
@@ -805,8 +840,8 @@ React.useEffect(() => {
 
       <Col md="12" className="text-end" style={{ marginTop: '4px' }}>
         <Button color="secondary" size="sm" onClick={() => navigate('/salesOrder')} style={{ marginRight: '3px', float:'left', padding: '4px 8px' }}>Cancel</Button>
-        {/* <Button color="info" size="sm" onClick={() => editSettingData()} style={{ marginRight: '3px' }}>Apply</Button> */}
-        <Button color="primary" size="sm" onClick={() => { editSettingData(); handleSave(); setTimeout(() => { navigate('/salesOrder'); window.location.reload(); }, 1100); }} style={{ padding: '4px 8px' }}>Save</Button>
+        {/* <Button color="info" size="sm" onClick={() => saveSalesOrdera()} style={{ marginRight: '3px' }}>Apply</Button> */}
+        <Button color="primary" size="sm" onClick={async () => { await saveBillDiscount(billDiscount); await saveSalesOrder(); handleSave();  setTimeout(() => { navigate('/salesOrder'); window.location.reload(); }, 1100); }}  style={{ padding: '4px 8px' }}>Save</Button>
       </Col>
     </Row>
   </div>
@@ -816,7 +851,7 @@ React.useEffect(() => {
 };
 SalesOrderProducts.propTypes = {
     lineItem: PropTypes.array.isRequired,
-    editSettingData: PropTypes.bool.isRequired,
+    saveSalesOrdera: PropTypes.bool.isRequired,
     getLineItem: PropTypes.func.isRequired,
     deleteRecord: PropTypes.func.isRequired,
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,

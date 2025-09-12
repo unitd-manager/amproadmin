@@ -247,7 +247,7 @@ const Test = () => {
           Button={
             <Dropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
               <DropdownToggle color="primary" caret className="shadow-none">
-                <Button color="primary" tag={Link} to="/SalesOrderDetails" className="shadow-none">
+                <Button color="primary" tag={Link} to="/SalesOrderDetails?tab=1" className="shadow-none">
                   New Transaction
                 </Button>
               </DropdownToggle>

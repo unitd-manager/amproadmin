@@ -10,7 +10,7 @@ import 'datatables.net-buttons/js/buttons.colVis';
 import 'datatables.net-buttons/js/buttons.flash';
 import 'datatables.net-buttons/js/buttons.html5';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import '../form-editor/editor.scss';
 // import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 //import ComponentCard from '../../components/ComponentCard';
@@ -39,7 +39,8 @@ import AppContext from '../../context/AppContext';
 
 const SalesOrderEdit = () => {
    const { id } = useParams();
- 
+  const navigate = useNavigate();
+
   const [activeTab, setActiveTab] = useState("1");
   const { loggedInuser } = useContext(AppContext);
 
@@ -120,7 +121,7 @@ const getSettingById = () => {
 const editSettingData = () => {
    settingdetails.modification_date = creationdatetime;
       settingdetails.modified_by= loggedInuser.first_name;
-    api
+    return api
       .post('/salesorder/editSalesOrder', settingdetails)
       .then(() => {
         message('Record editted successfully', 'success');
@@ -129,6 +130,30 @@ const editSettingData = () => {
         message('Unable to edit record.', 'error');
       });
 };
+
+const insertSettingData = () => {
+  settingdetails.creation_date = creationdatetime;
+  settingdetails.created_by = loggedInuser.first_name;
+  return api
+    .post('/salesOrder/insertSalesOrder', settingdetails)
+    .then((res) => {
+      message('Record inserted successfully', 'success');
+      const insertedDataId = res.data.data.insertId;
+      navigate(`/SalesOrderEdit/${insertedDataId}`);
+    })
+    .catch(() => {
+      message('Unable to insert record.', 'error');
+    });
+};
+
+const saveSalesOrder = () => {
+  if (id) {
+    editSettingData();
+  } else {
+    insertSettingData();
+  }
+};
+
 console.log(editSettingData);
 useEffect(() => {
  
@@ -151,7 +176,7 @@ useEffect(() => {
                   value={settingdetails && settingdetails.tran_no}
                   name="tran_no"
                   style={{ backgroundColor: '#e9ecef', fontSize: '10px', padding: '2px 4px', height: '24px' }}
-                  readOnly
+                  
                 />
               </FormGroup>
             </Col>
@@ -214,7 +239,7 @@ useEffect(() => {
                 setEditLineModal={setEditLineModal}
                 editLineModal={editLineModal}
                 editLineModelItem={editLineModelItem}
-                editSettingData={editSettingData}
+                saveSalesOrder={saveSalesOrder}
                 getLineItem={getLineItem}
                 deleteRecord={deleteRecord}
                 id={id}
