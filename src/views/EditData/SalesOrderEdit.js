@@ -27,7 +27,7 @@ import Shipping from '../../components/SalesOrder/Shipping';
 import SalesMan from '../../components/SalesOrder/SalesMan';
 // import QuoteLineItem from '../../components/SalesOrder/QuoteLineItem';
 // import EditLineItemModal from '../../components/SalesOrder/EditLineItemModal';
-import SalesOrderProducts from '../../components/SalesOrder/SalesOrderProducts';
+import SalesOrderProducts from '../../components/SalesOrder/SalesOrderProductsEdit';
 
 // import SalesOrderPrintWithCost from '../../components/PDF/SalesOrderPrintWithCost';
 // import PdfPickingList from '../../components/PDF/PdfPick';
