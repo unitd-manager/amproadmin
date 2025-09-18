@@ -10,6 +10,7 @@ import 'datatables.net-buttons/js/buttons.colVis';
 import 'datatables.net-buttons/js/buttons.flash';
 import 'datatables.net-buttons/js/buttons.html5';
 import 'datatables.net-buttons/js/buttons.print';
+ import moment from 'moment';
 import { Link } from 'react-router-dom';
 import message from '../../components/Message';
 import api from '../../constants/api';
@@ -397,7 +398,8 @@ const Test = () => {
 </td>
 
                   <td>{element.tran_no}</td>
-                  <td>{element.tran_date}</td>
+                 
+                  <td>{element.tran_date? moment(element.tran_date).format('DD-MM-YYYY'):''}</td>
                   <td>{element.company_name}</td>
                   <td>{element.status}</td>
                   <td>{element.printed || 'No'}</td>

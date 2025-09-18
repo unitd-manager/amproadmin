@@ -800,10 +800,10 @@ React.useEffect(() => {
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#2c3e50',
+    backgroundColor: '#e9e9e9',
     borderTop: '1px solid #dee2e6',
     padding: '5px 8px',
-    color: '#ffffff',
+    color: '#000',
     zIndex: 1000,
   }}>
     <Row className="g-1">

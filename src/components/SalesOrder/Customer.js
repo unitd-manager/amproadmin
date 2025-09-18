@@ -61,12 +61,12 @@ export default function SupplierDetails({ handleInputs, settingdetails, setSetti
                           company_name: selectedCompany.company_name || '',
                           contact_person: selectedCompany.contact_person || '',
                           customer_code: selectedCompany.customer_code || '',
-                          address_town: selectedCompany.address_town || '',
-                          address_street: selectedCompany.address_street || '',
-                          address_state: selectedCompany.address_state || '',
+                          address: selectedCompany.address || '',
+                          address_street1: selectedCompany.address_street1 || '',
+                          address2: selectedCompany.address2 || '',
                           address_country: selectedCompany.address_country || '',
                           address_po_code: selectedCompany.address_po_code || '',
-                          notes: selectedCompany.notes || '',
+                          remarks: selectedCompany.remarks || '',
                         }));
                       }
                     }}
@@ -130,9 +130,46 @@ export default function SupplierDetails({ handleInputs, settingdetails, setSetti
                 <Col sm={8}>
                   <Input
                     type="text"
-                    name="address_street"
+                    name="address"
                     onChange={handleInputs}
-                    value={settingdetails?.address_street || ''}
+                    value={settingdetails?.address || ''}
+                    style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }}
+                  />
+                </Col>
+              </FormGroup>
+            </Col>
+
+             <Col md="6">
+              <FormGroup row style={{ marginBottom: '8px' }}>
+                <Label sm={4} style={{ fontSize: '11px', marginBottom: '0' }}>
+                  Contact Address 2
+                </Label>
+                <Col sm={8}>
+                  <Input
+                    type="text"
+                    name="address2"
+                    onChange={handleInputs}
+                    value={settingdetails?.address2 || ''}
+                    style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }}
+                  />
+                </Col>
+              </FormGroup>
+            </Col>
+          </Row>
+
+
+           <Row form>
+            <Col md="6">
+              <FormGroup row style={{ marginBottom: '8px' }}>
+                <Label sm={4} style={{ fontSize: '11px', marginBottom: '0' }}>
+                  Contact Address 3
+                </Label>
+                <Col sm={8}>
+                  <Input
+                    type="text"
+                    name="address_street1"
+                    onChange={handleInputs}
+                    value={settingdetails?.address_street1 || ''}
                     style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }}
                   />
                 </Col>

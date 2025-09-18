@@ -41,7 +41,7 @@ const SupplierDetails = ({ handleInputs, settingdetails, setSettingDetails }) =>
   return (
     <Form>
       <FormGroup>
-        <div style={{ padding: '8px', backgroundColor: '#f8f9fa', borderRadius: '4px', marginBottom: '8px' }}>
+        <div style={{ padding: '8px', backgroundColor: '#e9e9e9', borderRadius: '4px', marginBottom: '8px' }}>
           <h6 style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '600' }}>Shipping Details</h6>
           <Row form>
             <Col md="6">
