@@ -21,7 +21,7 @@ import SalesOrderPrintWithCost from '../../components/PDF/SalesOrderPrintWithCos
  import PdfPickingList from '../../components/PDF/PdfPick';
 import PdfPackingList from '../../components/PDF/PdfPack';
 import PdfSalesQuote from '../../components/PDF/PdfSalesOrderQuote';
-
+import './salesOrderTable.css';
 
 const Test = () => {
   const [supplier, setSupplier] = useState(null);
@@ -299,10 +299,11 @@ const Test = () => {
   </Button>
 
         </div>
-
+<div className="sales-order-table">
         <CommonTable
           loading={loading}
           title="Sales Order List"
+      
           Button={
             <Dropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
               <DropdownToggle color="primary" caret className="shadow-none">
@@ -358,6 +359,7 @@ const Test = () => {
             </Dropdown>
           }
         >
+
           <thead>
             <tr>
               {columns.map((col) => (
@@ -407,6 +409,7 @@ const Test = () => {
               ))}
           </tbody>
         </CommonTable>
+        </div>
       </div>
     </div>
   );
