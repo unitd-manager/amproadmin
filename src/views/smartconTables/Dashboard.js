@@ -17,6 +17,8 @@ import {
 } from "reactstrap";
 import { FaChartBar, FaMoneyBillWave } from 'react-icons/fa';
 import api from "../../constants/api";
+import RecentSalesOrders from "../../components/dashboard/generalDashboard/RecentSalesOrder";
+import RecentSalesInvoices from "../../components/dashboard/generalDashboard/RecentSalesInvoices";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("1");
@@ -284,7 +286,9 @@ const Dashboard = () => {
 
         {/* Other Tabs */}
         <TabPane tabId="2">
-          <Row className="mt-3">
+        <RecentSalesOrders />
+          <RecentSalesInvoices />
+          {/* <Row className="mt-3">
             <Col md="6">
               <Card className="shadow-sm mb-4">
                 <CardBody className="d-flex align-items-center">
@@ -371,7 +375,7 @@ const Dashboard = () => {
                 </CardBody>
               </Card>
             </Col>
-          </Row>
+          </Row> */}
         </TabPane>
         <TabPane tabId="3">
           <h5>Purchase Tab Content</h5>
