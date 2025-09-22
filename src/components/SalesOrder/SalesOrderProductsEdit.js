@@ -46,14 +46,6 @@ const SalesOrderProducts = ({
   const [productValue, setProductValue] = useState([]);
   const navigate = useNavigate();
 
-  const deleteSalesOrder = async () => {
-    try {
-      await api.post('/salesOrder/deleteSalesOrder', { sales_order_id: String(id) });
-      console.log('Sales Order deleted successfully');
-    } catch (error) {
-      console.error('Failed to delete sales order:', error);
-    }
-  };
 
     // Track which row is active (clicked for editing)
     const [activeRow, setActiveRow] = useState(initialLineItem && initialLineItem.length > 0 ? null : 0);
@@ -847,7 +839,7 @@ React.useEffect(() => {
       </Col>
 
       <Col md="12" className="text-end" style={{ marginTop: '4px' }}>
-        <Button color="secondary" size="sm" onClick={async () => { await deleteSalesOrder(); navigate('/salesOrder'); }} style={{ marginRight: '3px', float:'left', padding: '4px 8px' }}>Cancel</Button>
+        <Button color="secondary" size="sm" onClick={() => navigate('/salesOrder')} style={{ marginRight: '3px', float:'left', padding: '4px 8px' }}>Cancel</Button>
         {/* <Button color="info" size="sm" onClick={() => saveSalesOrdera()} style={{ marginRight: '3px' }}>Apply</Button> */}
         <Button color="primary" size="sm" onClick={async () => { await saveBillDiscount(billDiscount); await saveSalesOrder(); handleSave();  setTimeout(() => { navigate('/salesOrder'); window.location.reload(); }, 1100); }}  style={{ padding: '4px 8px' }}>Save</Button>
       </Col>

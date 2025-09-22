@@ -46,7 +46,7 @@ export default function SupplierDetails({ handleInputs, settingdetails, setSetti
   return (
     <Form>
       <FormGroup>
-        <div style={{ padding: '8px', backgroundColor: '#f8f9fa', borderRadius: '4px', marginBottom: '8px' }}>
+        <div style={{ padding: '8px', backgroundColor: '#e9e9e9', borderRadius: '4px', marginBottom: '8px' }}>
           <h6 style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#495057' }}>Currency Details</h6>
           <Row>
             <Col md="3">

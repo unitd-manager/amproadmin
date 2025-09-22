@@ -10,7 +10,7 @@ import 'datatables.net-buttons/js/buttons.colVis';
 import 'datatables.net-buttons/js/buttons.flash';
 import 'datatables.net-buttons/js/buttons.html5';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import '../form-editor/editor.scss';
 // import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 //import ComponentCard from '../../components/ComponentCard';
@@ -27,7 +27,7 @@ import Shipping from '../../components/SalesOrder/Shipping';
 import SalesMan from '../../components/SalesOrder/SalesMan';
 // import QuoteLineItem from '../../components/SalesOrder/QuoteLineItem';
 // import EditLineItemModal from '../../components/SalesOrder/EditLineItemModal';
-import SalesOrderProducts from '../../components/SalesOrder/SalesOrderProducts';
+import SalesOrderProducts from '../../components/SalesOrder/SalesOrderProductsEdit';
 
 // import SalesOrderPrintWithCost from '../../components/PDF/SalesOrderPrintWithCost';
 // import PdfPickingList from '../../components/PDF/PdfPick';
@@ -39,8 +39,9 @@ import AppContext from '../../context/AppContext';
 
 const SalesOrderEdit = () => {
    const { id } = useParams();
- 
-  const [activeTab, setActiveTab] = useState('1');
+  const navigate = useNavigate();
+
+  const [activeTab, setActiveTab] = useState("1");
   const { loggedInuser } = useContext(AppContext);
 
 
@@ -120,7 +121,7 @@ const getSettingById = () => {
 const editSettingData = () => {
    settingdetails.modification_date = creationdatetime;
       settingdetails.modified_by= loggedInuser.first_name;
-    api
+    return api
       .post('/salesorder/editSalesOrder', settingdetails)
       .then(() => {
         message('Record editted successfully', 'success');
@@ -129,6 +130,30 @@ const editSettingData = () => {
         message('Unable to edit record.', 'error');
       });
 };
+
+const insertSettingData = () => {
+  settingdetails.creation_date = creationdatetime;
+  settingdetails.created_by = loggedInuser.first_name;
+  return api
+    .post('/salesOrder/insertSalesOrder', settingdetails)
+    .then((res) => {
+      message('Record inserted successfully', 'success');
+      const insertedDataId = res.data.data.insertId;
+      navigate(`/SalesOrderEdit/${insertedDataId}`);
+    })
+    .catch(() => {
+      message('Unable to insert record.', 'error');
+    });
+};
+
+const saveSalesOrder = () => {
+  if (id) {
+    editSettingData();
+  } else {
+    insertSettingData();
+  }
+};
+
 console.log(editSettingData);
 useEffect(() => {
  
@@ -136,7 +161,7 @@ useEffect(() => {
       getLineItem();
 }, [id]);
  return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>   
+  <div >
       {/* Fixed Header Section */}
       <div style={{ flexShrink: 0, backgroundColor: '#ffffff', borderBottom: '1px solid #dee2e6', padding: '4px 8px' }}>
         <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '4px', color: '#495057' }}>Add/Edit Sales Order</div>
@@ -151,7 +176,7 @@ useEffect(() => {
                   value={settingdetails && settingdetails.tran_no}
                   name="tran_no"
                   style={{ backgroundColor: '#e9ecef', fontSize: '10px', padding: '2px 4px', height: '24px' }}
-                  readOnly
+                  
                 />
               </FormGroup>
             </Col>
@@ -172,14 +197,11 @@ useEffect(() => {
       </div>
       <ToastContainer></ToastContainer>
       
-      {/* Scrollable Middle Section */}
-      <div style={{ flex: 1, overflow: 'auto', padding: '4px 8px' }}>
-        <Form>
-          <div style={{ backgroundColor: '#ffffff', border: '1px solid #dee2e6', borderRadius: '2px' }}>
+   
             {/* Compact tabs */}
             <Tab toggle={toggle} tabs={tabs} />
             <TabContent style={{ padding: '4px 6px' }} activeTab={activeTab}>
-              <TabPane tabId="1">
+              <TabPane tabId="1" >
                 <Customer
                  settingdetails={settingdetails}
                  handleInputs={handleInputs}
@@ -206,40 +228,9 @@ useEffect(() => {
                  handleInputs={handleInputs}
                  ></SalesMan>
               </TabPane>
-          {/* <TabPane tabId="5">
-            <PdfPickingList
-            id={id}
-            ></PdfPickingList>
-          </TabPane> */}
-          {/* <TabPane tabId="6">
-            <PdfPackingList
-            id={id}
-            ></PdfPackingList>
-          </TabPane>
-          <TabPane tabId="10">
-            <PdfSalesQuote
-            id={id}
-            ></PdfSalesQuote>
-            </TabPane> */}
-              {/* <TabPane tabId="7">
-              <SalesOrderPrintWithCost
-              id={id}
-                       settingdetails={settingdetails}
-                       lineItem={lineItem}
-                    ></SalesOrderPrintWithCost>
-                    <PrintPerfoma
-                       id={id}
-                       settingdetails={settingdetails}
-                       lineItem={lineItem}
-                    ></PrintPerfoma>
-              </TabPane> */}
-             
+         
             </TabContent>
-          </div>
-          
-          <div style={{ backgroundColor: '#ffffff', border: '1px solid #dee2e6', borderRadius: '2px', marginTop: '4px' }}>
-            <div style={{ padding: '4px 6px', borderBottom: '1px solid #dee2e6', backgroundColor: '#f8f9fa', fontSize: '11px', fontWeight: 'bold' }}>Products</div>
-            <div style={{ padding: '4px 6px' }}>
+     
               <SalesOrderProducts
                 addLineItemModal={addLineItemModal}
                 setAddLineItemModal={setAddLineItemModal}
@@ -248,19 +239,15 @@ useEffect(() => {
                 setEditLineModal={setEditLineModal}
                 editLineModal={editLineModal}
                 editLineModelItem={editLineModelItem}
-                editSettingData={editSettingData}
+                saveSalesOrder={saveSalesOrder}
                 getLineItem={getLineItem}
                 deleteRecord={deleteRecord}
                 id={id}
                 setViewLineModal={setViewLineModal}
               />
-            </div>
-          </div>
-        </Form>
-      </div>
-      
-
+        
     </div>
+ 
   );
 };
 
