@@ -14,7 +14,7 @@ import message from '../../components/Message';
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
-
+import './salesOrderTable.css';
 
 const Test = () => {
   const [supplier, setSupplier] = useState(null);
@@ -152,6 +152,7 @@ const Test = () => {
           </select>
           <Button color="primary" onClick={getSupplier}>Search</Button>
         </div>
+<div className="sales-order-table">
 
         <CommonTable
           loading={loading}
@@ -159,7 +160,7 @@ const Test = () => {
           Button={
             <Dropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
               <DropdownToggle color="primary" caret className="shadow-none">
-                <Button color="primary" tag={Link} to="/SalesReturnDetails" className="shadow-none">
+                <Button color="primary" tag={Link} to="/SalesReturnDetails?tab=1" className="shadow-none">
                   New Transaction
                 </Button>
               </DropdownToggle>
@@ -195,7 +196,7 @@ const Test = () => {
   {element.status === 'Paid' ? (
     <Icon.Edit2 style={{ color: '#ccc', cursor: 'not-allowed' }} />
   ) : (
-    <Link to={`/SalesReturnEdit/${element.sales_return_id}`}>
+    <Link to={`/SalesReturnEdit/${element.sales_return_id}?tab=1`}>
       <Icon.Edit2 />
     </Link>
   )}
@@ -213,6 +214,7 @@ const Test = () => {
               ))}
           </tbody>
         </CommonTable>
+        </div>
       </div>
      
     </div>

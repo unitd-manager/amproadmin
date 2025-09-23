@@ -1,316 +1,286 @@
 import React, { useState, useEffect,useContext } from 'react';
-import { Row, Col, Form, FormGroup, Label, Input, Button } from 'reactstrap';
+import {  Form,  TabContent,TabPane,  Row, Col, FormGroup, Label, Input} from 'reactstrap';
 import { ToastContainer } from 'react-toastify';
-import { useNavigate, useParams } from 'react-router-dom';
-import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
-import ComponentCard from '../../components/ComponentCard';
-import api from '../../constants/api';
+// import * as Icon from 'react-feather';
+import Swal from 'sweetalert2';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'datatables.net-dt/js/dataTables.dataTables';
+import 'datatables.net-dt/css/jquery.dataTables.min.css';
+import 'datatables.net-buttons/js/buttons.colVis';
+import 'datatables.net-buttons/js/buttons.flash';
+import 'datatables.net-buttons/js/buttons.html5';
+import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
+import { useParams, useNavigate } from 'react-router-dom';
+import '../form-editor/editor.scss';
+// import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
+//import ComponentCard from '../../components/ComponentCard';
+//  import ComponentCardV2 from '../../components/ComponentCardV2';
 import message from '../../components/Message';
-//import TenderCompanyDetails from '../../components/TenderTable/TenderCompanyDetails';
+import api from '../../constants/api';
+import Tab from '../../components/ProjectTabs/Tab';
 import creationdatetime from '../../constants/creationdatetime';
+
+//import ApiButton from '../../components/ApiButton';
+import Customer from '../../components/Delivery/Customer';
+import Currency from '../../components/Delivery/Currency';
+import Shipping from '../../components/Delivery/Shipping';
+import SalesMan from '../../components/Delivery/SalesMan';
+// import QuoteLineItem from '../../components/Delivery/QuoteLineItem';
+// import EditLineItemModal from '../../components/Delivery/EditLineItemModal';
+import SalesOrderProducts from '../../components/Delivery/SalesOrderProducts';
+
+// import SalesOrderPrintWithCost from '../../components/PDF/SalesOrderPrintWithCost';
+// import PdfPickingList from '../../components/PDF/PdfPick';
+// import PdfPackingList from '../../components/PDF/PdfPack';
+// import PdfSalesQuote from '../../components/PDF/PdfSalesOrderQuote';
+// import PrintPerfoma from '../../components/PDF/PrintPerfoma';
 import AppContext from '../../context/AppContext';
 
-const OpportunityDetails = () => {
-  const [company, setCompany] = useState();
-  const [currency, setCurrency] = useState();
 
- // const [allCountries, setallCountries] = useState();
-  //const [contact, setContact] = useState();
-  const [formSubmitted, setFormSubmitted] = useState(false);
- // const [addFormSubmitted, setAddFormSubmitted] = useState(false);
- // const [modal, setModal] = useState(false);
-  const { id } = useParams();
-  const { loggedInuser } = useContext(AppContext);
+const SalesOrderEdit = () => {
+   const { id: paramId } = useParams();
   const navigate = useNavigate();
-  // const toggle = () => {
-  //   setModal(!modal);
+
+  const [id, setId] = useState(paramId);
+
+console.log(navigate);
+  const [activeTab, setActiveTab] = useState("1");
+  const { loggedInuser } = useContext(AppContext);
+
+
+    const tabs = [
+      { id: '1', name: 'Customer' },
+      { id: '2', name: 'Currency' },
+      { id: '3', name: 'Shipping' },
+      { id: '4', name: 'Sales Man' },
+   
+    ];
+    const toggle = (tab) => {
+      setActiveTab(tab);
+    };
+  const [addLineItemModal, setAddLineItemModal] = useState(false);
+  const [lineItem, setLineItem] = useState();
+  const [viewLineModal, setViewLineModal] = useState(false);
+
+  const [editLineModelItem, setEditLineModelItem] = useState(null);
+  const [editLineModal, setEditLineModal] = useState(false);
+  
+
+
+  //   const addQuoteItemsToggle = () => {
+  //   setAddLineItemModal(!addLineItemModal);
   // };
 
-  //Api call for getting company dropdown
-  const getCompany = () => {
-    api.get('/company/getCompany').then((res) => {
-      setCompany(res.data.data);
+   const viewLineToggle = () => {
+    setViewLineModal(!viewLineModal);
+  };
+  console.log(viewLineToggle);
+
+
+    // Get Line Item
+   const getLineItem = () => {
+    api.post('/invoice/getDeliveryLineItemsById', { delivery_order_id: id }).then((res) => {
+      setLineItem(res.data.data);
+      //setAddLineItemModal(true);
     });
   };
 
 
-  const getCurrency = () => {
-    api.get('/currency/getCurrency').then((res) => {
-      setCurrency(res.data.data);
+  const deleteRecord = (deleteID) => {
+    Swal.fire({
+      title: `Are you sure? ${deleteID}`,
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        api.post('/invoice/deleteDeliveryItem', { delivery_order_item_id: deleteID }).then(() => {
+          Swal.fire('Deleted!', 'Your Line Items has been deleted.', 'success');
+          window.location.reload();
+        });
+      }
     });
   };
+  const [settingdetails, setSettingDetails] = useState({ company_id: '' });
+ //setting data in settingDetails
+ const handleInputs = (e) => {
+  setSettingDetails({ ...settingdetails, [e.target.name]: e.target.value });
+};
 
-  //Logic for adding company in db
-  // const [companyInsertData, setCompanyInsertData] = useState({
-  //   company_name: '',
-  //   address_street: '',
-  //   address_town: '',
-  //   address_country: 'Singapore',
-  //   address_po_code: '',
-  //   phone: '',
-  //   fax: '',
-  //   website: '',
-  //   supplier_type: '',
-  //   industry: '',
-  //   company_size: '',
-  //   source: '',
-  // });
-
-  // const handleInputs = (e) => {
-  //   console.log("companyInsertData",{ ...companyInsertData, [e.target.name]: e.target.value })
-  //   setCompanyInsertData({ ...companyInsertData, [e.target.name]: e.target.value });
-  // };
-
-  // const insertCompany = () => {
-  //   if (
-  //     companyInsertData.company_name !== '' &&
-  //     companyInsertData.address_street !== '' &&
-  //     companyInsertData.address_po_code !== '' &&
-  //     companyInsertData.address_country !== ''
-  //   ) {
-  //     api
-  //       .post('/company/insertCompany', companyInsertData)
-  //       .then(() => {
-  //         message('Company inserted successfully.', 'success');
-  //         getCompany();
-  //         setTimeout(() => {
-  //           toggle()
-  //         }, 1000)
-
-  //       })
-  //       .catch(() => {
-  //         message('Network connection error.', 'error');
-  //       });
-  //   } else {
-  //     setAddFormSubmitted(true)
-  //     message('Please fill all required fields.', 'warning');
-  //   }
-  // };
-
-  //Logic for adding tender in db
-  const [tenderForms, setTenderForms] = useState({
-    company_name: '',
-   currency_id: '',
-  });
-
-  const handleInputsTenderForms = (e) => {
-
-    console.log("handleInputsTenderForms",{ ...tenderForms, [e.target.name]: e.target.value })
-
-    setTenderForms({ ...tenderForms, [e.target.name]: e.target.value });
-  };
-
-  //Api for getting all countries
-  // const getAllCountries = () => {
-  //   api
-  //     .get('/clients/getCountry')
-  //     .then((res) => {
-  //       setallCountries(res.data.data);
-  //     })
-  //     .catch(() => {
-  //       message('Country Data Not Found', 'info');
-  //     });
-  // };
-  //const[tenderDetails,setTenderDetails]=useState();
-  const getTendersById = () => {
+const getSettingById = () => {
+  api
+    .post('/invoice/getDeliveryorderById', { delivery_order_id: id })
+    .then((res) => {
+      setSettingDetails(res.data.data[0]);
+    })
+    .catch(() => {
+      message('setting Data Not Found', 'info');
+    });
+};
+//Update Setting
+const editSettingData = () => {
+    settingdetails.modification_date = creationdatetime;
+      settingdetails.modified_by= loggedInuser.first_name;
     api
-      .post('/salesorder/getDeliveryorderById', { delivery_order_id: id })
-      .then((res) => {
-        setTenderForms(res.data.data);
-        // getContact(res.data.data.company_id);
+    
+      .post('/invoice/editDeliveryOrder', settingdetails)
+      .then(() => {
+        message('Record editted successfully', 'success');
       })
-      .catch(() => { });
-  };
+      .catch(() => {
+        message('Unable to edit record.', 'error');
+      });
+};
 
-  // Get contact 
-  // const getContact = (companyId) => {
-  //   // setSelectedCompany(companyId);
-  //   api.post('/company/getContactByCompanyId', { company_id: companyId }).then((res) => {
-  //     setContact(res.data.data[0]?.company_id);
-  //   });
-  // };
-
-  const insertTender = (code) => {
-    if (tenderForms.company_id !== '' ) {
-
-      tenderForms.delivery_code = code;
-      tenderForms.date = new Date().toISOString().slice(0, 10);
-      tenderForms.creation_date = creationdatetime
-      tenderForms.created_by = loggedInuser.first_name;
-      tenderForms.delivery_status = 'Open';
-      api
-        .post('/salesOrder/insertDeliveryOrder', tenderForms)
+const insertSettingData = (code) => {
+  
+ if (settingdetails.company_id !== '') {
+      settingdetails.delivery_code = code;
+      settingdetails.date = new Date().toISOString().slice(0, 10);
+      settingdetails.creation_date = creationdatetime;
+      settingdetails.created_by = loggedInuser.first_name;
+      settingdetails.delivery_status = 'Open';
+      return api
+        .post('/salesOrder/insertDeliveryOrder', settingdetails)
         .then((res) => {
           const insertedDataId = res.data.data.insertId;
-          getTendersById();
-
-          message('Order inserted successfully.', 'success');
-          setTimeout(() => {
-            navigate(`/DeliveryOrderEdit/${insertedDataId}?tab=1`);
-          }, 300);
+         
+          return insertedDataId; // Return the newly inserted ID
         })
         .catch(() => {
           message('Network connection error.', 'error');
+          throw new Error('Network connection error.'); // Propagate error
         });
-    } else {
-      setFormSubmitted(true);
-      message('Please fill all required fields', 'warning');
     }
+      message('Please fill all required fields', 'warning');
+      return Promise.reject(new Error('Please fill all required fields')); // Return a rejected Promise
   };
 
-  //QUTO GENERATED CODE
-  const generateCode = () => {
-    api
+    const generateCode = () => {
+    return api
       .post('/commonApi/getCodeValues', { type: 'delivery' })
       .then((res) => {
-        insertTender(res.data.data);
+        return insertSettingData(res.data.data);
       })
       .catch(() => {
-        insertTender('');
+        return insertSettingData('');
       });
-  }; 
+  };
 
-  useEffect(() => {
-    getCompany();
-    getCurrency();
-    // getAllCountries();
-  }, [id]);
+const saveSalesOrder = () => {
+  if (id) {
+    return editSettingData();
+  }
+    return generateCode();
+  
+};
 
+console.log(editSettingData);
+useEffect(() => {
+    const fetchData = async () => {
+      if (id) {
+        getSettingById();
+        getLineItem();
+      } else if (settingdetails.company_id !== '') {
+        const newId = await saveSalesOrder();
+        setId(newId);
+      }
+    };
+    fetchData();
+  }, [id, settingdetails.company_id]);
   return (
-    <div>
-      <BreadCrumbs />
-      <Row>
-        <ToastContainer></ToastContainer>
-        <Col md="6" xs="12">
-          <ComponentCard title="New Sales Order">
-            <Form>
-             
-              <FormGroup>
-                <Row>
-                  <Col md="9">
-                    <Label>
-                      Company Name <span className="required"> *</span>{' '}
-                    </Label>
-                    <Input
-                      type="select"
-                      name="companyId"
-                      className={`form-control ${formSubmitted && tenderForms && (tenderForms.company_id === undefined || tenderForms.company_id.trim() === '')
-                          ? 'highlight'
-                          : ''
-                        }`}
-                      //value={tenderForms && tenderForms.company_id}
-                      // onChange={handleInputsTenderForms}
-                      onChange={(e) => {
-                        handleInputsTenderForms(e)
-                      }}
-
-                    >
-                      <option value=''>Please Select</option>
-                      {company &&
-                        company.map((ele) => {
-                          return (
-                            <option key={ele.company_id} value={ele.company_id}>
-                              {ele.company_name}
-                            </option>
-                          );
-                        })}
-                    </Input>
-                    {formSubmitted && tenderForms && (tenderForms.company_id === undefined || tenderForms.company_id.trim() === '') && (
-                      <div className="error-message">Please select the company name</div>
-                    )}
-                  </Col>
-                  {/* <Col md="3" className="addNew">
-                    <Label>Add New Name</Label>
-                    <Button color="primary" className="shadow-none" onClick={toggle.bind(null)}>
-                      Add New
-                    </Button>
-                  </Col> */}
-                </Row>
+  <div >
+      {/* Fixed Header Section */}
+      <div style={{ flexShrink: 0, backgroundColor: '#ffffff', borderBottom: '1px solid #dee2e6', padding: '4px 8px' }}>
+        <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '4px', color: '#495057' }}>Add/Edit Sales Order</div>
+        <Form>
+          <Row>
+            <Col md="2">
+              <FormGroup style={{ marginBottom: '4px' }}>
+                <Label style={{ fontSize: '10px', marginBottom: '1px' }}>Tran No</Label>
+                <Input
+                  type="text"
+                  onChange={handleInputs}
+                  value={settingdetails && settingdetails.delivery_code}
+                  name="delivery_code"
+                  style={{ backgroundColor: '#e9ecef', fontSize: '10px', padding: '2px 4px', height: '24px' }}
+                  readOnly
+                />
               </FormGroup>
-              {/* <TenderCompanyDetails
-                allCountries={allCountries}
-                insertCompany={insertCompany}
+            </Col>
+            <Col md="2">
+              <FormGroup style={{ marginBottom: '4px' }}>
+                <Label style={{ fontSize: '10px', marginBottom: '1px' }}>Tran Date</Label>
+                <Input
+                  type="date"
+                  onChange={handleInputs}
+                  value={settingdetails && settingdetails.date}
+                  name="date"
+                  style={{ fontSize: '10px', padding: '2px 4px', height: '24px' }}
+                />
+              </FormGroup>
+            </Col>
+          </Row>
+        </Form>
+      </div>
+      <ToastContainer></ToastContainer>
+      
+   
+            {/* Compact tabs */}
+            <Tab toggle={toggle} tabs={tabs} />
+            <TabContent style={{ padding: '4px 6px' }} activeTab={activeTab}>
+              <TabPane tabId="1">
+                <Customer
+                 settingdetails={settingdetails}
+                 handleInputs={handleInputs}
+                 setSettingDetails={setSettingDetails}
+                ></Customer>
+              </TabPane>
+              <TabPane tabId="2">
+                <Currency
+                 setSettingDetails={setSettingDetails}
+                settingdetails={settingdetails}
                 handleInputs={handleInputs}
-                toggle={toggle}
-                modal={modal}
-                setModal={setModal}
-                companyInsertData={companyInsertData}
-                addFormSubmitted={addFormSubmitted}
-              ></TenderCompanyDetails> */}
-
-
-<FormGroup>
-                <Row>
-                  <Col md="9">
-                    <Label>
-                      Currency Name <span className="required"> *</span>{' '}
-                    </Label>
-                    <Input
-                      type="select"
-                      name="currency_id"
-                      // className={`form-control ${formSubmitted && tenderForms && (tenderForms.currency_id === undefined || tenderForms.currency_id.trim() === '')
-                      //     ? 'highlight'
-                      //     : ''
-                      //   }`}
-                      //value={tenderForms && tenderForms.currency_id}
-                      // onChange={handleInputsTenderForms}
-                      onChange={(e) => {
-                        handleInputsTenderForms(e)
-                      }}
-
-                    >
-                      <option value=''>Please Select</option>
-                      {currency &&
-                        currency.map((ele) => {
-                          return (
-                            <option key={ele.currency_id} value={ele.currency_id}>
-                              {ele.currency_name}
-                            </option>
-                          );
-                        })}
-                    </Input>
-                    {/* {formSubmitted && tenderForms && (tenderForms.currency_id === undefined || tenderForms.currency_id.trim() === '') && (
-                      <div className="error-message">Please select the currency name</div>
-                    )} */}
-                  </Col>
-                </Row>
-              </FormGroup>
-             
-              <Row>
-                <div className="pt-3 mt-3 d-flex align-items-center gap-2">
-                  <Button
-                    type="button"
-                    color="primary"
-                    className="btn mr-2 shadow-none"
-                    onClick={() => {
-                      generateCode();
-                    }}
-                  >
-                    Save & Continue
-                  </Button>
-                  <Button
-                    className="shadow-none"
-                    color="dark"
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          'Are you sure you want to cancel  \n  \n You will lose any changes made',
-                        )
-                      ) {
-                        navigate(-1);
-                      }
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </Row>
-            </Form>
-          </ComponentCard>
-        </Col>
-      </Row>
+                ></Currency>
+              </TabPane>
+              <TabPane tabId="3">
+                <Shipping
+                settingdetails={settingdetails}
+                handleInputs={handleInputs}
+                setSettingDetails={setSettingDetails}
+                ></Shipping>
+              </TabPane>
+              <TabPane tabId="4">
+                <SalesMan
+                 settingdetails={settingdetails}
+                 handleInputs={handleInputs}
+                 ></SalesMan>
+              </TabPane>
+         
+            </TabContent>
+     
+              <SalesOrderProducts
+                addLineItemModal={addLineItemModal}
+                setAddLineItemModal={setAddLineItemModal}
+                lineItem={lineItem}
+                setEditLineModelItem={setEditLineModelItem}
+                setEditLineModal={setEditLineModal}
+                editLineModal={editLineModal}
+                editLineModelItem={editLineModelItem}
+                saveSalesOrder={saveSalesOrder}
+                getLineItem={getLineItem}
+                deleteRecord={deleteRecord}
+                id={id}
+                setViewLineModal={setViewLineModal}
+              />
+        
     </div>
+ 
   );
 };
 
-export default OpportunityDetails;
+export default SalesOrderEdit;
+

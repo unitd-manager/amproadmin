@@ -46,14 +46,6 @@ const SalesOrderProducts = ({
   const [productValue, setProductValue] = useState([]);
   const navigate = useNavigate();
 
-  const deleteSalesOrder = async () => {
-    try {
-      await api.post('/salesreturn/deleteInvoice', { sales_return_id: String(id) });
-      console.log('Sales Order deleted successfully');
-    } catch (error) {
-      console.error('Failed to delete sales order:', error);
-    }
-  };
 
     // Track which row is active (clicked for editing)
     const [activeRow, setActiveRow] = useState(initialLineItem && initialLineItem.length > 0 ? null : 0);
@@ -168,8 +160,8 @@ const SalesOrderProducts = ({
 
   // Delete row
   const handleDeleteRow = (idx, item) => {
-    if (item.sales_return_item_id) {
-      deleteRecord(item.sales_return_item_id);
+    if (item.invoice_item_id) {
+      deleteRecord(item.invoice_item_id);
     }
     setLineItems(prev => prev.filter((_, i) => i !== idx));
   };
@@ -182,14 +174,14 @@ const SalesOrderProducts = ({
         ...item,
         creation_date: new Date().toISOString(),
         created_by: loggedInuser?.first_name || '',
-        sales_return_id: id,
+        invoice_id: id,
       };
-      if (item.sales_return_item_id) {
-        // If sales_return_item_id exists, it's an existing record, so update it
-        return api.post('/salesreturn/edit-TabQuoteLine', obj);
+      if (item.invoice_item_id) {
+        // If invoice_item_id exists, it's an existing record, so update it
+        return api.post('/invoice/edit-TabQuoteLine', obj);
       }
       // Otherwise, it's a new record, so insert it
-      return api.post('/salesreturn/insertQuoteItems', obj);
+      return api.post('/invoice/insertQuoteItems', obj);
     }));
     if (getLineItem) getLineItem(id);
     saveSalesOrder();
@@ -224,7 +216,7 @@ const SalesOrderProducts = ({
   
   const fetchBackOrderQty = async (productId) => {
     try {
-      const response = await api.post('/salesreturn/getBackOrderQtyByProductId', {
+      const response = await api.post('/invoice/getBackOrderQtyByProductId', {
         product_id: productId,
       });
 
@@ -266,8 +258,8 @@ const SalesOrderProducts = ({
  React.useEffect(() => {
   const fetchBillDiscount = async () => {
     try {
-      const response = await api.post('/salesreturn/getSalesorderById', {
-        sales_return_id: id,
+      const response = await api.post('/invoice/getSalesorderById', {
+        invoice_id: id,
       });
 
       const data = response.data.data[0];
@@ -300,8 +292,8 @@ console.log("Bill discount loaded:", billDiscount,taxRate, taxType);
 // 2. Save function - not triggered automatically
 const saveBillDiscount = async (value) => {
   try {
-    await api.post('/salesreturn/updateBillDiscount', {
-      sales_return_id: id,
+    await api.post('/invoice/updateBillDiscount', {
+      invoice_id: id,
       bill_discount: value,
     });
   } catch (error) {
@@ -312,12 +304,11 @@ const saveBillDiscount = async (value) => {
   
 const saveSalesOrderSummary = async (subTotal, Tax, netTotal) => {
   try {
-    await api.post('/salesreturn/updateSalesOrderSummary', {
-      sales_return_id: id,
+    await api.post('/invoice/updateSalesOrderSummary', {
+      invoice_id: id,
       sub_total: subTotal,
       tax: Tax,
       net_total: netTotal,
-      balance_amount: netTotal,
     });
   } catch (error) {
     console.error('Failed to update sales order summary:', error);
@@ -848,9 +839,9 @@ React.useEffect(() => {
       </Col>
 
       <Col md="12" className="text-end" style={{ marginTop: '4px' }}>
-        <Button color="secondary" size="sm" onClick={async () => { await deleteSalesOrder(); navigate('/SalesReturn'); }} style={{ marginRight: '3px', float:'left', padding: '4px 8px' }}>Cancel</Button>
-        {/* <Button color="info" size="sm" onClick={(Invoicea()} style={{ marginRight: '3px' }}>Apply</Button> */}
-        <Button color="primary" size="sm" onClick={async () => { await saveBillDiscount(billDiscount); await saveSalesOrder(); handleSave();  setTimeout(() => { navigate('/SalesReturn'); window.location.reload(); }, 1100); }}  style={{ padding: '4px 8px' }}>Save</Button>
+        <Button color="secondary" size="sm" onClick={() => navigate('/Invoice')} style={{ marginRight: '3px', float:'left', padding: '4px 8px' }}>Cancel</Button>
+        {/* <Button color="info" size="sm" onClick={() => saveSalesOrdera()} style={{ marginRight: '3px' }}>Apply</Button> */}
+        <Button color="primary" size="sm" onClick={async () => { await saveBillDiscount(billDiscount); await saveSalesOrder(); handleSave();  setTimeout(() => { navigate('/Invoice'); window.location.reload(); }, 1100); }}  style={{ padding: '4px 8px' }}>Save</Button>
       </Col>
     </Row>
   </div>

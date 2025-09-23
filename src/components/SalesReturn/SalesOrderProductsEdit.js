@@ -46,14 +46,6 @@ const SalesOrderProducts = ({
   const [productValue, setProductValue] = useState([]);
   const navigate = useNavigate();
 
-  const deleteSalesOrder = async () => {
-    try {
-      await api.post('/salesreturn/deleteInvoice', { sales_return_id: String(id) });
-      console.log('Sales Order deleted successfully');
-    } catch (error) {
-      console.error('Failed to delete sales order:', error);
-    }
-  };
 
     // Track which row is active (clicked for editing)
     const [activeRow, setActiveRow] = useState(initialLineItem && initialLineItem.length > 0 ? null : 0);
@@ -317,7 +309,6 @@ const saveSalesOrderSummary = async (subTotal, Tax, netTotal) => {
       sub_total: subTotal,
       tax: Tax,
       net_total: netTotal,
-      balance_amount: netTotal,
     });
   } catch (error) {
     console.error('Failed to update sales order summary:', error);
@@ -848,8 +839,8 @@ React.useEffect(() => {
       </Col>
 
       <Col md="12" className="text-end" style={{ marginTop: '4px' }}>
-        <Button color="secondary" size="sm" onClick={async () => { await deleteSalesOrder(); navigate('/SalesReturn'); }} style={{ marginRight: '3px', float:'left', padding: '4px 8px' }}>Cancel</Button>
-        {/* <Button color="info" size="sm" onClick={(Invoicea()} style={{ marginRight: '3px' }}>Apply</Button> */}
+        <Button color="secondary" size="sm" onClick={() => navigate('/SalesReturn')} style={{ marginRight: '3px', float:'left', padding: '4px 8px' }}>Cancel</Button>
+        {/* <Button color="info" size="sm" onClick={() => saveSalesOrdera()} style={{ marginRight: '3px' }}>Apply</Button> */}
         <Button color="primary" size="sm" onClick={async () => { await saveBillDiscount(billDiscount); await saveSalesOrder(); handleSave();  setTimeout(() => { navigate('/SalesReturn'); window.location.reload(); }, 1100); }}  style={{ padding: '4px 8px' }}>Save</Button>
       </Col>
     </Row>

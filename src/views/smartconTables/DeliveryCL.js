@@ -10,7 +10,7 @@ import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
 //import PrintPerfoma from '../../components/PDF/PrintDelivery';
-
+import './salesOrderTable.css';
 
 const DeliveryOrderList = () => {
   const navigate = useNavigate();
@@ -307,14 +307,14 @@ const [newDeliveryDate, setNewDeliveryDate] = useState(() => new Date().toISOStr
             <Icon.Search size={16} /> Search
           </Button>
         </div>
-
+<div className="sales-order-table">
         <CommonTable
           loading={loading}
           title="Delivery Order Management"
           Button={
             <Dropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
               <DropdownToggle color="primary" caret>
-               <Button color="primary" tag={Link} to="/DeliveryOrderDetails" className="shadow-none">
+               <Button color="primary" tag={Link} to="/DeliveryOrderDetails?tab=1" className="shadow-none">
                                 New Transaction
                               </Button>
               </DropdownToggle>
@@ -391,7 +391,7 @@ const [newDeliveryDate, setNewDeliveryDate] = useState(() => new Date().toISOStr
                   </td>
                    <td>
                     {element.status !== 'Completed' ? (
-                      <Link to={`/DeliveryOrderEdit/${element.delivery_order_id}`}>
+                      <Link to={`/DeliveryOrderEdit/${element.delivery_order_id}?tab=1`}>
                         <Icon.Edit2 />
                       </Link>
                     ) : (
@@ -410,7 +410,7 @@ const [newDeliveryDate, setNewDeliveryDate] = useState(() => new Date().toISOStr
               ))}
           </tbody>
         </CommonTable>
-     
+     </div>
       </div>
       {isChangeDateModalOpen && (
   <div className="modal show d-block" tabIndex="-1" role="dialog">
