@@ -82,6 +82,7 @@ const PaymodeInsert = () => {
   .filter(Boolean)
   .join(','),
     };
+    
 
     delete dataToInsert.location_ids; // 👈 Optional: clean unused field
 

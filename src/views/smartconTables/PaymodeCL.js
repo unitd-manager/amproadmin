@@ -43,6 +43,7 @@ const Paymode = () => {
     }
 
     setFilteredPaymodes(filtered);
+    
     setCurrentPage(1);
   }, [searchTerm, statusFilter, paymodes]);
 const handleDelete = (id) => {
