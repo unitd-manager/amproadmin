@@ -273,13 +273,18 @@ const TransferOutDetails = Loadable(lazy(() => import('../views/detailTable/Tran
 const TransferOutEdit = Loadable(lazy(() => import('../views/EditData/TransferOutEdit')));
 
 const SalesCreditTable = Loadable(lazy(() => import('../views/smartconTables/SalesCredit')));
+ 
 const DeliveryVerificationTable = Loadable(lazy(() => import('../views/smartconTables/DeliveryVerification')));
-
+  
 const DeliveryVerificationDetail = Loadable(lazy(() => import('../views/detailTable/DeliveryVerificationDetail')));
-const SalesCreditDetails = Loadable(lazy(() => import('../views/detailTable/SalesCreditDetails')));
 
+const SalesCreditDetails = Loadable(lazy(() => import('../views/detailTable/SalesCreditDetails')));
+ 
 const DeliveryVerificationEdit = Loadable(lazy(() => import('../views/EditData/DeliveryVerificationEdit')));
+
+
 const SalesCreditEdit = Loadable(lazy(() => import('../views/EditData/SalesCreditEdit')));
+
 
 
 
@@ -404,7 +409,7 @@ const Routernew = () => {
           <Route path="/GoodsReturnDetails" name="supplierDetaildata" element={<GoodsReturnDetailTable />}></Route>
           <Route path="/StockRequestDetails" name="stockRequestdata" element={<StockRequestDetailTable />}></Route>
         {/* product group */}
-
+ <Route path="/SalesCredit" name="salesCreditdata" element={<SalesCreditTable />}></Route>
          {/* <Route path="/qapage" name="qapage" element={<QAComponent />}></Route> */}
         <Route path="/Brand" name="Brand" element={<BrandCli />}></Route>
          <Route path="/Bin" name="Bin" element={<BinCli />}></Route>
@@ -414,6 +419,7 @@ const Routernew = () => {
              <Route path="/Reorder" name="Reorder" element={<ReorderCli />}></Route>
          <Route path="/SalesAnalysis" name="SalesAnalysis" element={<SalesAnalysis />}></Route>
           <Route path="/PurchaseInvoice" name="PurchaseInvoice" element={<PurchaseInvoiceTable />}></Route>
+          <Route path="/DeliveryVerification" name="deliveryVerificationdata" element={<DeliveryVerificationTable />}></Route>
              <Route path="/PurchaseDebitNote" name="PurchaseDebit" element={<PurchaseDebitNoteTable />}></Route>
          <Route path="/StockAdjustment" name="Stock" element={<StockAdjustmentTable />}></Route>
           <Route
@@ -496,6 +502,8 @@ const Routernew = () => {
       {/* Table Edit's */}
        
           <Route path="/ProductEdit/:id" name="productdata" element={<ProductEdit />}></Route>
+            <Route path="/SalesCreditEdit/:id" name="salesCreditEditdata" element={<SalesCreditEdit />}></Route>
+              <Route path="/DeliveryVerificationEdit/:id" name="deliveryVerificationEditdata" element={<DeliveryVerificationEdit />}></Route>
           <Route path="/ProductCLEdit/:id" name="productdata" element={<ProductCLEdit />}></Route>
           <Route path="/OrdersEdit/:id" name="orderdata" element={<OrdersEdit />}></Route>
           <Route path="/ContentEdit/:id" name="contentdata" element={<ContentEdit />}></Route>
@@ -726,7 +734,9 @@ const Routernew = () => {
           <Route path="/CategoryDetails" name="categorydetailsdata" element={<CategoryDetails />}></Route>
           <Route path="/UserGroup" name="usergroupdata" element={<UserGroupTable />}></Route>
           <Route path="/UserGroupDetails" name="usergroupdetailsdata" element={<UserGroupDetails />}></Route>
-        
+           <Route path="/SalesCreditDetails" name="salesCreditDetaildata" element={<SalesCreditDetails />}></Route>
+
+          <Route path="/DeliveryVerificationDetail" name="deliveryVerificationDetaildata" element={<DeliveryVerificationDetail />}></Route>
           <Route path="/CustomerSupplierPrice" name="contentdata" element={<CustomerSupplierPrice />}></Route>
           <Route path="/GoodsReceipt" name="customerdata" element={<GoodsReceipt />}></Route>
           <Route path="/GoodsReturn" name="customerdata" element={<GoodsReturn />}></Route>

@@ -48,7 +48,7 @@ const SalesOrderProducts = ({
 
   const deleteSalesOrder = async () => {
     try {
-      await api.post('/invoice/deleteCreditNote', { credit_note_id: String(id) });
+      await api.post('/salesOrder/deleteSalesOrder', { delivery_verification_id: String(id) });
       console.log('Sales Order deleted successfully');
     } catch (error) {
       console.error('Failed to delete sales order:', error);
@@ -168,8 +168,8 @@ const SalesOrderProducts = ({
 
   // Delete row
   const handleDeleteRow = (idx, item) => {
-    if (item.credit_note_item_id) {
-      deleteRecord(item.credit_note_item_id);
+    if (item.delivery_verification_item_id) {
+      deleteRecord(item.delivery_verification_item_id);
     }
     setLineItems(prev => prev.filter((_, i) => i !== idx));
   };
@@ -182,14 +182,14 @@ const SalesOrderProducts = ({
         ...item,
         creation_date: new Date().toISOString(),
         created_by: loggedInuser?.first_name || '',
-        credit_note_id: id,
+        delivery_verification_id: id,
       };
-      if (item.credit_note_item_id) {
-        // If credit_note_item_id exists, it's an existing record, so update it
-        return api.post('/invoice/edit-TabCreditLine', obj);
+      if (item.delivery_verification_item_id) {
+        // If delivery_verification_item_id exists, it's an existing record, so update it
+        return api.post('/salesOrder/edit-TabVerificationLine', obj);
       }
       // Otherwise, it's a new record, so insert it
-      return api.post('/invoice/insertCreditItems', obj);
+      return api.post('/salesOrder/insertVerificationItems', obj);
     }));
     if (getLineItem) getLineItem(id);
     saveSalesOrder();
@@ -224,7 +224,7 @@ const SalesOrderProducts = ({
   
   const fetchBackOrderQty = async (productId) => {
     try {
-      const response = await api.post('/invoice/getBackOrderQtyByProductId', {
+      const response = await api.post('/salesOrder/getBackOrderQtyByProductId', {
         product_id: productId,
       });
 
@@ -266,8 +266,8 @@ const SalesOrderProducts = ({
  React.useEffect(() => {
   const fetchBillDiscount = async () => {
     try {
-      const response = await api.post('/salesreturn/getCreditNoteById', {
-        credit_note_id: id,
+      const response = await api.post('/salesOrder/getDeliveryVerificationById', {
+        delivery_verification_id: id,
       });
 
       const data = response.data.data[0];
@@ -300,8 +300,8 @@ console.log("Bill discount loaded:", billDiscount,taxRate, taxType);
 // 2. Save function - not triggered automatically
 const saveBillDiscount = async (value) => {
   try {
-    await api.post('/invoice/updateBillDiscountCN', {
-      credit_note_id: id,
+    await api.post('/salesOrder/updateBillDiscount', {
+      delivery_verification_id: id,
       bill_discount: value,
     });
   } catch (error) {
@@ -312,12 +312,11 @@ const saveBillDiscount = async (value) => {
   
 const saveSalesOrderSummary = async (subTotal, Tax, netTotal) => {
   try {
-    await api.post('/invoice/updateSalesOrderSummaryCN', {
-      credit_note_id: id,
+    await api.post('/salesOrder/updateSalesOrderSummary', {
+      delivery_verification_id: id,
       sub_total: subTotal,
       tax: Tax,
       net_total: netTotal,
-      balance_amount: netTotal,
     });
   } catch (error) {
     console.error('Failed to update sales order summary:', error);
@@ -821,8 +820,8 @@ React.useEffect(() => {
               <span style={{ marginRight: '8px' }}><strong>Carton Price:</strong> {selectedLineItem?.carton_price || '0.00'}</span>
               <span style={{ marginRight: '8px' }}><strong>CQty:</strong> {selectedLineItem?.Cqty || '0.00'}</span>
               <span style={{ marginRight: '8px' }}><strong>Qty On Hand:</strong> {selectedLineItem?.quantity || '0.00'}</span>
-              {/* <span style={{ marginRight: '8px' }}><strong>Back Order Qty:</strong> {backOrderQtyMap[selectedLineItem?.product_id] || '0.00'}</span>
-              <span><strong>Actual Qty:</strong> {(parseFloat(selectedLineItem?.quantity || 0) - parseFloat(backOrderQtyMap[selectedLineItem?.product_id] || 0)).toFixed(2)}</span> */}
+              <span style={{ marginRight: '8px' }}><strong>Back Order Qty:</strong> {backOrderQtyMap[selectedLineItem?.product_id] || '0.00'}</span>
+              <span><strong>Actual Qty:</strong> {(parseFloat(selectedLineItem?.quantity || 0) - parseFloat(backOrderQtyMap[selectedLineItem?.product_id] || 0)).toFixed(2)}</span>
             </div>
           </Col>
 
@@ -848,9 +847,9 @@ React.useEffect(() => {
       </Col>
 
       <Col md="12" className="text-end" style={{ marginTop: '4px' }}>
-        <Button color="secondary" size="sm" onClick={async () => { await deleteSalesOrder(); navigate('/SalesCredit'); }} style={{ marginRight: '3px', float:'left', padding: '4px 8px' }}>Cancel</Button>
-        {/* <Button color="info" size="sm" onClick={(Invoicea()} style={{ marginRight: '3px' }}>Apply</Button> */}
-        <Button color="primary" size="sm" onClick={async () => { await saveBillDiscount(billDiscount); await saveSalesOrder(); handleSave();  setTimeout(() => { navigate('/SalesCredit'); window.location.reload(); }, 1100); }}  style={{ padding: '4px 8px' }}>Save</Button>
+        <Button color="secondary" size="sm" onClick={async () => { await deleteSalesOrder(); navigate('/salesOrder'); }} style={{ marginRight: '3px', float:'left', padding: '4px 8px' }}>Cancel</Button>
+        {/* <Button color="info" size="sm" onClick={() => saveSalesOrdera()} style={{ marginRight: '3px' }}>Apply</Button> */}
+        <Button color="primary" size="sm" onClick={async () => { await saveBillDiscount(billDiscount); await saveSalesOrder(); handleSave();  setTimeout(() => { navigate('/salesOrder'); window.location.reload(); }, 1100); }}  style={{ padding: '4px 8px' }}>Save</Button>
       </Col>
     </Row>
   </div>

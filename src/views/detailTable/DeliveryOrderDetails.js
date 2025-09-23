@@ -121,17 +121,20 @@ const getSettingById = () => {
     });
 };
 //Update Setting
+
+
 const editSettingData = () => {
-    settingdetails.modification_date = creationdatetime;
+   settingdetails.modification_date = creationdatetime;
       settingdetails.modified_by= loggedInuser.first_name;
-    api
-    
+    return api
       .post('/invoice/editDeliveryOrder', settingdetails)
       .then(() => {
-        message('Record editted successfully', 'success');
+      
+        return id; // Return the existing ID for consistency
       })
       .catch(() => {
         message('Unable to edit record.', 'error');
+        throw new Error('Unable to edit record.'); // Propagate error
       });
 };
 
