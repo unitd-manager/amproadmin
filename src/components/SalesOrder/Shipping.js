@@ -41,14 +41,15 @@ const SupplierDetails = ({ handleInputs, settingdetails, setSettingDetails }) =>
   return (
     <Form>
       <FormGroup>
-        <div style={{ padding: '12px', backgroundColor: '#f8f9fa', borderRadius: '4px', marginBottom: '8px' }}>
+        <div style={{ padding: '8px', backgroundColor: '#e9e9e9', borderRadius: '4px', marginBottom: '8px' }}>
           <h6 style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '600' }}>Shipping Details</h6>
-          <Row>
-            <Col md="3">
-              <FormGroup>
-                <Label style={{ fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>
+          <Row form>
+            <Col md="6">
+              <FormGroup row style={{ marginBottom: '8px' }}>
+                                <Label sm={4} style={{ fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>
                   Delivery name <span className="required"> *</span>
                 </Label>
+                 <Col sm={8}>
                 <Input
                   type="select"
                   name="delivery_id"
@@ -63,39 +64,40 @@ const SupplierDetails = ({ handleInputs, settingdetails, setSettingDetails }) =>
                     </option>
                   ))}
                 </Input>
+                </Col>
               </FormGroup>
             </Col>
             
-            <Col md="3">
-              <FormGroup>
-                <Label style={{ fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Delivery Address 1</Label>
-                <Input type="text" name="address_street" onChange={handleInputs} value={settingdetails?.billing_address_street || ''} style={{ fontSize: '12px', padding: '4px 6px', height: '28px' }} />
+            <Col md="6">
+              <FormGroup row style={{ marginBottom: '8px' }}>
+                                <Label sm={4} style={{ fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Delivery Address 1</Label>
+                  <Col sm={8}><Input type="text" name="address_street" onChange={handleInputs} value={settingdetails?.billing_address_street || ''} style={{ fontSize: '12px', padding: '4px 6px', height: '28px' }} /></Col>
               </FormGroup>
             </Col>
             {/* <Col md="4">
               <FormGroup>
-                <Label>Delivery Address 2</Label>
+                                <Label sm={4}>Delivery Address 2</Label>
                 <Input type="text" name="address_town" onChange={handleInputs} value={settingdetails?.billing_address_town || ''} />
               </FormGroup>
             </Col>
             <Col md="4">
               <FormGroup>
-                <Label>Delivery Address 3</Label>
+                                <Label sm={4}>Delivery Address 3</Label>
                 <Input type="text" name="address_state" onChange={handleInputs} value={settingdetails?.billing_address_state || ''} />
               </FormGroup>
             </Col> */}
           </Row>
-          <Row>
-            <Col md="3">
-              <FormGroup>
-                <Label style={{ fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Delivery Country</Label>
-                <Input type="text" name="address_country" onChange={handleInputs} value={settingdetails?.billing_address_country || ''} style={{ fontSize: '12px', padding: '4px 6px', height: '28px' }} />
+          <Row form>
+            <Col md="6">
+              <FormGroup row style={{ marginBottom: '8px' }}>
+                                <Label sm={4} style={{ fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Delivery Country</Label>
+                  <Col sm={8}><Input type="text" name="address_country" onChange={handleInputs} value={settingdetails?.billing_address_country || ''} style={{ fontSize: '12px', padding: '4px 6px', height: '28px' }} /></Col>
               </FormGroup>
             </Col>
-            <Col md="3">
-              <FormGroup>
-                <Label style={{ fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Delivery Po Code</Label>
-                <Input type="text" name="address_po_code" onChange={handleInputs} value={settingdetails?.billing_address_po_code || ''} style={{ fontSize: '12px', padding: '4px 6px', height: '28px' }} />
+            <Col md="6">
+              <FormGroup row style={{ marginBottom: '8px' }}>
+                                <Label sm={4} style={{ fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>Delivery Po Code</Label>
+                  <Col sm={8}><Input type="text" name="address_po_code" onChange={handleInputs} value={settingdetails?.billing_address_po_code || ''} style={{ fontSize: '12px', padding: '4px 6px', height: '28px' }} /></Col>
               </FormGroup>
             </Col>
           </Row>

@@ -4,7 +4,7 @@ import { Button, Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 're
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'datatables.net-dt/js/dataTables.dataTables';
 import 'datatables.net-dt/css/jquery.dataTables.min.css';
-//import $ from 'jquery';
+//import $ from 'jquery'; 
 import 'datatables.net-buttons/js/buttons.colVis';
 import 'datatables.net-buttons/js/buttons.flash';
 import 'datatables.net-buttons/js/buttons.html5';
@@ -18,7 +18,7 @@ import SalesInvoicePickingListPdf from '../../components/PDF/SalesInvoicePicking
 import PrintLetterPdf from '../../components/PDF/PrintLetterPdf';
 import PrintPackingPdf from '../../components/PDF/PrintPackingPdf';
 import SalesInfoModal from '../../components/SalesInfoModal'; // adjust path as needed
-
+import './salesOrderTable.css';
 
 const Test = () => {
   const [supplier, setSupplier] = useState(null);
@@ -205,10 +205,10 @@ const handleConvertToDelivryVerification = async () => {
   const [salesInfoOpen, setSalesInfoOpen] = useState(false);
 
   const handleSalesInfo = () => {
-    if (!selectedOrder || !selectedOrder.sales_order_id) {
-      message('Please select an invoice with a sales order', 'error');
-      return;
-    }
+    // if (!selectedOrder || !selectedOrder.sales_order_id) {
+    //   message('Please select an invoice with a sales order', 'error');
+    //   return;
+    // }
     setSalesInfoOpen(true);
   };
 
@@ -230,6 +230,7 @@ const handleConvertToDelivryVerification = async () => {
           </select>
           <Button color="primary" onClick={getSupplier}>Search</Button>
         </div>
+<div className="sales-order-table">
 
         <CommonTable
           loading={loading}
@@ -237,7 +238,7 @@ const handleConvertToDelivryVerification = async () => {
           Button={
             <Dropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
               <DropdownToggle color="primary" caret className="shadow-none">
-                <Button color="primary" tag={Link} to="/InvoiceDetails" className="shadow-none">
+                <Button color="primary" tag={Link} to="/InvoiceDetails?tab=1" className="shadow-none">
                   New Transaction
                 </Button>
               </DropdownToggle>
@@ -292,7 +293,7 @@ const handleConvertToDelivryVerification = async () => {
   {element.status === 'Paid' ? (
     <Icon.Edit2 style={{ color: '#ccc', cursor: 'not-allowed' }} />
   ) : (
-    <Link to={`/InvoiceEdit/${element.invoice_id}`}>
+    <Link to={`/InvoiceEdit/${element.invoice_id}?tab=1`}>
       <Icon.Edit2 />
     </Link>
   )}
@@ -311,6 +312,7 @@ const handleConvertToDelivryVerification = async () => {
               ))}
           </tbody>
         </CommonTable>
+        </div>
       </div>
       <SalesInfoModal
         isOpen={salesInfoOpen}

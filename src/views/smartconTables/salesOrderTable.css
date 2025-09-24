@@ -1,0 +1,11 @@
+.sales-order-table {
+  font-size: 12px;   /* Reduce font size */
+}
+
+
+.sales-order-table input,
+.sales-order-table select,
+.sales-order-table button {
+  font-size: 12px;
+  padding: 3px 6px;
+}

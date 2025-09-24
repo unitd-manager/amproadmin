@@ -80,7 +80,7 @@ const SalesInfoModal = ({ isOpen, toggle, salesOrderId }) => {
                 </tbody>
               </Table>
             ) : (
-              <div>No data found.</div>
+              <div>No data found.<br/>Please select an invoice with a sales order</div>
             )}
           </TabPane>
           <TabPane tabId="log">

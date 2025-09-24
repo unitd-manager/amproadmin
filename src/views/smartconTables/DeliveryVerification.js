@@ -1,4 +1,4 @@
-import React, {  useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as Icon from 'react-feather';
 import { Button } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -25,6 +25,8 @@ const Test = () => {
   const [customerFilter, setCustomerFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('Not Delivered');
 
+
+
   // ✅ Checkbox handler
   const handleCheckboxChange = (orderId) => {
     setSelectedOrders((prevSelected) =>
@@ -43,7 +45,7 @@ const Test = () => {
         from_date: fromDate,
         to_date: toDate,
         company_name: customerFilter,
-        delivery_status: statusFilter,
+        status: statusFilter,
       })
       .then((res) => {
         setSupplier(res.data.data);
@@ -53,6 +55,10 @@ const Test = () => {
         setLoading(false);
       });
   };
+
+    useEffect(() => {
+    getDeliveryVerifi();
+  }, []);
 
   // ✅ Generate new delivery codes
   const generateDeliveryCodes = async () => {
@@ -213,7 +219,7 @@ const generateDeliveryOrder = async () => {
                   </td>
                   <td>{element.delivery_verification_id}</td>
                   <td>
-                    <Link to={`/salesorderedit/${element.delivery_verification_id}`}>
+                    <Link to={`/DeliveryVerificationEdit/${element.delivery_verification_id}?tab=1`}>
                       <Icon.Edit2 />
                     </Link>
                   </td>

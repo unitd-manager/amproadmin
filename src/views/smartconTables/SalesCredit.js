@@ -15,7 +15,7 @@ import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
 
-
+import './salesOrderTable.css';
 
 
 const Test = () => {
@@ -45,20 +45,7 @@ const Test = () => {
       .then((res) => {
         setSupplier(res.data.data);
         setTimeout(() => {
-          // $('#example').DataTable({
-          //   destroy: true,
-          //   pagingType: 'full_numbers',
-          //   pageLength: 20,
-          //   processing: true,
-          //   dom: 'Bfrtip',
-          //   // buttons: [
-          //   //   {
-          //   //     extend: 'print',
-          //   //     text: 'Print',
-          //   //     className: 'shadow-none btn btn-primary',
-          //   //   },
-          //   // ],
-          // });
+        
         }, 500);
         setLoading(false);
       })
@@ -83,23 +70,8 @@ const Test = () => {
     { name: 'Sub Total', selector: 'sub_total', sortable: true, grow: 0, wrap: true },
     { name: 'Tax', selector: 'tax', sortable: true, grow: 0, wrap: true },
     { name: 'Net Total', selector: 'net_total', sortable: true, grow: 0, wrap: true },
-    { name: 'Created By', selector: 'created_by', sortable: true, grow: 0, wrap: true },
+    { name: 'Balance Amount', selector: 'balance_amount', sortable: true, grow: 0, wrap: true },
   ];
-
-  // const generateCodes = () => {
-  //   return api
-  //     .post('/commonApi/getCodeValues', { type: 'invoice' })
-  //     .then((res) => res.data.data)
-  //     .catch((error) => {
-  //       message('Failed to generate code', 'error');
-  //       throw error;
-  //     });
-  // };
-
-
-
-
-
 
 
   return (
@@ -120,14 +92,14 @@ const Test = () => {
           </select>
           <Button color="primary" onClick={getSupplier}>Search</Button>
         </div>
-
+<div className="sales-order-table">
         <CommonTable
           loading={loading}
           title="Credit Note List"
           Button={
             <Dropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
               <DropdownToggle color="primary" caret className="shadow-none">
-                <Button color="primary" tag={Link} to="/SalesCreditDetails" className="shadow-none">
+                <Button color="primary" tag={Link} to="/SalesCreditDetails?tab=1" className="shadow-none">
                   New Transaction
                 </Button>
               </DropdownToggle>
@@ -157,7 +129,7 @@ const Test = () => {
                   <td>{index + 1}</td>
                  <td>
   {element.status !== 'Closed' ? (
-    <Link to={`/SalesCreditEdit/${element.credit_note_id}`}>
+    <Link to={`/SalesCreditEdit/${element.credit_note_id}?tab=1`}>
       <Icon.Edit2 />
     </Link>
   ) : (
@@ -170,12 +142,13 @@ const Test = () => {
                   <td>{element.company_name}</td>
                   <td>{element.sub_total || ''}</td>
                   <td>{element.tax || ''}</td>
-                  <td>{element.net_total || ''}</td>
-                  <td>{element.created_by || ''}</td>
+                  <td>{element.credit_note_amount || ''}</td>
+                  <td>{element.balance_amount || ''}</td>
                 </tr>
               ))}
           </tbody>
         </CommonTable>
+        </div>
       </div>
     </div>
   );
