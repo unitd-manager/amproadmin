@@ -7,72 +7,82 @@ export default function CustomerLogin({ contentDetails, handleInputs }) {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <Row>
-      <Col md="6">
-        {/* User Name */}
-        <FormGroup>
-          <Label>User Name</Label>
+    <div className="container">
+      <Row className="mb-3">
+        <Col sm="3" className="d-flex align-items-center">
+          <Label className="mb-0">User Name</Label>
+        </Col>
+        <Col sm="9">
           <Input
             type="text"
             onChange={handleInputs}
-            value={contentDetails.email || ''} // Assuming 'email' is the field in contentDetails
+            value={contentDetails.email || ''}
             name="email"
+            className="form-control"
           />
-        </FormGroup>
-      </Col>
+        </Col>
+      </Row>
 
-      <Col md="6">
-        {/* Password */}
-        <FormGroup>
-          <Label>Password</Label>
+      <Row className="mb-3">
+        <Col sm="3" className="d-flex align-items-center">
+          <Label className="mb-0">Password</Label>
+        </Col>
+        <Col sm="9">
           <Input
-            type={showPassword ? 'text' : 'password'} // Toggle type based on showPassword state
+            type={showPassword ? 'text' : 'password'}
             onChange={handleInputs}
-            value={contentDetails.pass_word || ''} // Assuming 'password' is the field in contentDetails
+            value={contentDetails.pass_word || ''}
             name="pass_word"
+            className="form-control"
           />
-        </FormGroup>
-      </Col>
+        </Col>
+      </Row>
 
-      <Col md="6">
-        {/* Show Password Checkbox */}
-        <FormGroup check className="p-3"> {/* Added some padding for better alignment */}
-          <Label check>
+      <Row className="mb-3">
+        <Col sm="3"></Col>
+        <Col sm="9">
+          <FormGroup check>
             <Input
               type="checkbox"
-              onChange={() => setShowPassword(!showPassword)} // Toggle showPassword state
+              id="showPassword"
+              onChange={() => setShowPassword(!showPassword)}
               checked={showPassword}
-            />{' '}
-            Show Password
-          </Label>
-        </FormGroup>
-      </Col>
+              className="form-check-input me-2"
+            />
+            <Label check for="showPassword" className="form-check-label">
+              Show Password
+            </Label>
+          </FormGroup>
+        </Col>
+      </Row>
 
-      <Col md="6">
-        {/* IsActive Switch/Toggle */}
-        <FormGroup switch className="p-3"> {/* Added some padding for better alignment */}
-          <Label check for="is_active_toggle">
-            IsActive
-          </Label>
-          <Input
-            type="switch"
-            id="is_active_toggle"
-            onChange={handleInputs}
-            checked={contentDetails.is_active === 1} // Assuming 1 for active, 0 for inactive
-            name="is_active"
-            role="switch"
-          />
-        </FormGroup>
-      </Col>
+      <Row className="mb-3">
+        <Col sm="3" className="d-flex align-items-center">
+          <Label className="mb-0">Is Active</Label>
+        </Col>
+        <Col sm="9" className="d-flex align-items-center">
+          <FormGroup switch>
+            <Input
+              type="switch"
+              id="is_active_toggle"
+              onChange={handleInputs}
+              checked={contentDetails.is_active === 1}
+              name="is_active"
+              role="switch"
+            />
+          </FormGroup>
+        </Col>
+      </Row>
 
-          {/* --- Send Mail Button --- */}
-          <Col md="12" className="mt-3"> {/* Use md="12" to make the button span the full width */}
+      <Row>
+        <Col sm="3"></Col>
+        <Col sm="9">
           <Button color="primary" onClick={handleInputs}>
             Send Mail
           </Button>
         </Col>
       </Row>
-  
+    </div>
   );
 }
 

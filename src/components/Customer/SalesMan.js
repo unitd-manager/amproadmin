@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Row,
   Col,
-  FormGroup,
   Label,
   Input,
   Button,
@@ -10,7 +9,7 @@ import {
 } from 'reactstrap';
 // import PropTypes from 'prop-types';
 
-export default function CustomerSalesmen() {
+export default function SalesMan() {
   // State for the selected salesman from the dropdown
   const [selectedSalesman, setSelectedSalesman] = useState('');
 
@@ -24,16 +23,6 @@ export default function CustomerSalesmen() {
   
   // State to hold the list of salesmen associated with this customer
   const [customerSalesmenList, setCustomerSalesmenList] = useState([]);
-
-  // Synchronize internal state with prop data when contentDetails.salesmen changes
-  // Assuming contentDetails will have a 'salesmen' array when loaded from API
-//   useEffect(() => {
-//     if (contentDetails?.salesmen && Array.isArray(contentDetails.salesmen)) {
-//       setCustomerSalesmenList(contentDetails.salesmen);
-//     } else {
-//       setCustomerSalesmenList([]);
-//     }
-//   }, [contentDetails.salesmen]);
 
   const handleSelectSalesman = (e) => {
     setSelectedSalesman(e.target.value);
@@ -70,68 +59,85 @@ export default function CustomerSalesmen() {
   };
 
   return (
-    <div>
-      <Row className="mb-4 align-items-end"> {/* align-items-end for better alignment */}
-        <Col md="6">
-          <FormGroup>
-            <Label for="salesmanSelect">Salesman Name</Label>
-            <Input
-              type="select"
-              name="salesmanSelect"
-              id="salesmanSelect"
-              value={selectedSalesman}
-              onChange={handleSelectSalesman}
-            >
-              <option value="">Please Select</option>
-              {availableSalesmen.map((salesman) => (
-                <option key={salesman.id} value={salesman.id}>
-                  {salesman.name}
-                </option>
-              ))}
-            </Input>
-          </FormGroup>
-        </Col>
-        <Col md="6" className="d-flex align-items-center">
-          {/* Plus icon/button */}
-          <Button color="success" onClick={addSalesman} className="me-2">
-            <i className="fa fa-plus"></i> Add Salesman {/* Using Font Awesome icon */}
-          </Button>
-        </Col>
-      </Row>
+    <div className="container-fluid">
+      <div className="card">
+        <div className="card-header bg-primary text-white">
+          <h5 className="mb-0">Salesman</h5>
+        </div>
+        <div className="card-body">
+          <Row className="mb-4">
+            <Col sm={6}>
+              <Row>
+                <Col sm={4} className="d-flex align-items-center">
+                  <Label className="mb-0 fw-bold">Salesman Name</Label>
+                </Col>
+                <Col sm={8}>
+                  <Input
+                    type="select"
+                    className="form-control-sm"
+                    value={selectedSalesman}
+                    onChange={handleSelectSalesman}
+                  >
+                    <option value="">Please Select</option>
+                    {availableSalesmen.map((salesman) => (
+                      <option key={salesman.id} value={salesman.id}>
+                        {salesman.name}
+                      </option>
+                    ))}
+                  </Input>
+                </Col>
+              </Row>
+            </Col>
+            <Col sm={6} className="d-flex align-items-center">
+              <Button color="primary" size="sm" onClick={addSalesman}>
+                Add Salesman
+              </Button>
+            </Col>
+          </Row>
+        </div>
+      </div>
 
-      <hr />
-
-      <h4>Associated Salesmen</h4>
-      {customerSalesmenList.length > 0 ? (
-        <Table responsive bordered>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Salesman Name</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {customerSalesmenList.map((salesman, index) => (
-              <tr key={salesman.id}>
-                <td>{index + 1}</td>
-                <td>{salesman.name}</td>
-                <td>
-                  <Button color="danger" size="sm" onClick={() => deleteSalesman(salesman.id)}>
-                    Delete
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      ) : (
-        <p>No salesmen associated yet.</p>
-      )}
+      <div className="card mt-4">
+        <div className="card-header bg-primary text-white">
+          <h5 className="mb-0">Associated Salesmen</h5>
+        </div>
+        <div className="card-body">
+          {customerSalesmenList.length > 0 ? (
+            <Table responsive bordered>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Salesman Name</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {customerSalesmenList.map((salesman, index) => (
+                  <tr key={salesman.id}>
+                    <td>{index + 1}</td>
+                    <td>{salesman.name}</td>
+                    <td>
+                      <Button 
+                        color="danger" 
+                        size="sm" 
+                        onClick={() => deleteSalesman(salesman.id)}
+                      >
+                        Delete
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          ) : (
+            <div className="text-center p-3">No salesmen associated yet.</div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
 
-// CustomerSalesmen.propTypes = {
+// SalesMan.propTypes = {
 //   contentDetails: PropTypes.object,
 // };

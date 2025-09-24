@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import * as Icon from 'react-feather';
-import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
+import { Button, Modal, ModalHeader, ModalBody, ModalFooter, Input } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'datatables.net-dt/js/dataTables.dataTables';
 import 'datatables.net-dt/css/jquery.dataTables.min.css';
@@ -15,7 +15,6 @@ const MemberType = () => {
   const [memberTypes, setMemberTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [memberTypeFilter, setMemberTypeFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
   const [selectedId, setSelectedId] = useState(null);
   const [modal, setModal] = useState(false);
   const dataTableRef = useRef(null);
@@ -26,7 +25,6 @@ console.log(setSelectedId);
       const res = await api.get('/membertype/getAll', {
         params: {
           member_type_name: memberTypeFilter,
-          is_active: statusFilter === 'Active' ? 1 : statusFilter === 'Inactive' ? 0 : '',
         },
       });
 
@@ -78,7 +76,7 @@ console.log(setSelectedId);
 
   useEffect(() => {
     getMemberTypes();
-  }, [memberTypeFilter, statusFilter]);
+  }, [memberTypeFilter]);
 
   useEffect(() => {
     if (dataTableRef.current && $.fn.DataTable.isDataTable(dataTableRef.current)) {
@@ -107,52 +105,76 @@ console.log(setSelectedId);
   }, [memberTypes]);
 
   const Contentcolumns = [
-    { name: 'Action', selector: 'action', width: 'auto' },
+    { name: 'Action', selector: 'action', width: '100px' },
     { name: 'Member Type Name', selector: 'member_type_name', sortable: true, grow: 2 },
-    { name: 'Status', selector: 'status', sortable: true, grow: 1 },
-    { name: 'Modified By', selector: 'modified_by', sortable: true, grow: 1.5 },
-    { name: 'Modified On', selector: 'modified_on', sortable: true, grow: 1.5 },
+    { name: 'Status', selector: 'status', sortable: true, width: '150px' },
+    { name: 'Modified By', selector: 'modified_by', sortable: true, width: '150px' },
+    { name: 'Modified On', selector: 'modified_on', sortable: true, width: '150px' },
   ];
 
   return (
     <div className="MainDiv pt-xs-25">
       <BreadCrumbs />
-      <div className="d-flex flex-wrap gap-2 mb-3">
-        <input
-          className="form-control"
-          placeholder="Search Member Type"
-          value={memberTypeFilter}
-          onChange={(e) => setMemberTypeFilter(e.target.value)}
-          style={{ width: '20%' }}
-        />
-        <select
-          className="form-select"
-          style={{ width: '15%' }}
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="">All Status</option>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-        </select>
-        <Button color="primary" className="shadow-none" onClick={getMemberTypes}>
-          Search
-        </Button>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2>Member Type Management</h2>
+        <div className="d-flex align-items-center">
+          <div className="me-2" style={{ position: 'relative' }}>
+            <Input
+              placeholder="Search Member Type..."
+              value={memberTypeFilter}
+              onChange={(e) => setMemberTypeFilter(e.target.value)}
+              style={{ width: '250px', paddingRight: '30px' }}
+            />
+            <Button 
+              color="light" 
+              style={{ 
+                position: 'absolute', 
+                right: '0', 
+                top: '0', 
+                background: 'transparent',
+                border: 'none',
+                boxShadow: 'none'
+              }} 
+              onClick={getMemberTypes}
+            >
+              <Icon.Search size={16} />
+            </Button>
+          </div>
+          <Button 
+            color="light" 
+            outline 
+            style={{ border: 'none', background: 'transparent' }}
+          >
+            <Icon.Filter size={16} />
+          </Button>
+        </div>
+      </div>
+
+      <div className="mb-3">
+        <Link to="/memberDetails">
+          <Button 
+            color="primary" 
+            className="shadow-none" 
+            style={{ 
+              borderRadius: '20px', 
+              backgroundColor: '#1e4976',
+              padding: '5px 15px'
+            }}
+          >
+            Add New(+)
+          </Button>
+        </Link>
       </div>
 
       <CommonTable
         loading={loading}
-        title="Member Type List"
-        Button={
-          <Link to="/memberDetails">
-            <Button color="primary" className="shadow-none">Add New</Button>
-          </Link>
-        }
+        title=""
+        Button={null}
       >
         <thead>
-          <tr>
+          <tr style={{ backgroundColor: '#f8f9fa' }}>
             {Contentcolumns.map((col) => (
-              <th key={col.name}>{col.name}</th>
+              <th key={col.name} style={{ padding: '10px', borderBottom: '1px solid #dee2e6' }}>{col.name}</th>
             ))}
           </tr>
         </thead>
@@ -160,49 +182,29 @@ console.log(setSelectedId);
           {memberTypes && memberTypes.length > 0 ? (
             memberTypes.map((item) => (
               <tr key={item.member_type_id}>
-                <td>
-                  <div className="d-flex gap-1">
+                <td style={{ padding: '10px', textAlign: 'center' }}>
+                  <div className="d-flex justify-content-center">
                     <Link to={`/MembertypeEdit/${item.member_type_id}`}>
-                      <Button color="primary" className="shadow-none btn-sm">
+                      <Button color="primary" className="shadow-none btn-sm" style={{ backgroundColor: '#1e4976' }}>
                         <Icon.Edit size={16} />
                       </Button>
                     </Link>
-                    {/* {item.is_active !== 1 ? (
-                      <Button
-                        color="success"
-                        className="shadow-none btn-sm"
-                        onClick={() => {
-                          setSelectedId(item.member_type_id);
-                          setModal(true);
-                        }}
-                      >
-                        <Icon.Check size={16} />
-                      </Button>
-                    ) : (
-                      <Button
-                        color="danger"
-                        className="shadow-none btn-sm"
-                        onClick={() => handleDelete(item.member_type_id)}
-                      >
-                        <Icon.Trash2 size={16} />
-                      </Button>
-                    )} */}
                   </div>
                 </td>
-                <td>{item.member_type_name || 'N/A'}</td>
-                <td>
+                <td style={{ padding: '10px' }}>{item.member_type_name || 'N/A'}</td>
+                <td style={{ padding: '10px' }}>
                   <span style={{ color: item.status === 'Active' ? 'green' : 'red', fontWeight: 'bold' }}>
                     {item.status}
                   </span>
                 </td>
-                <td>{item.modified_by || 'N/A'}</td>
-                <td>{item.modified_on || 'N/A'}</td>
+                <td style={{ padding: '10px' }}>{item.modified_by || 'N/A'}</td>
+                <td style={{ padding: '10px' }}>{item.modified_on || 'N/A'}</td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan={Contentcolumns.length} className="text-center">
-                No records found
+              <td colSpan={Contentcolumns.length} className="text-center" style={{ padding: '20px' }}>
+                No data available in table
               </td>
             </tr>
           )}
@@ -218,6 +220,16 @@ console.log(setSelectedId);
           <Button color="secondary" onClick={toggleModal}>Cancel</Button>
         </ModalFooter>
       </Modal>
+      
+      <div className="d-flex justify-content-between mt-3">
+        <div>
+          <Button color="light" outline className="me-2" style={{ border: '1px solid #dee2e6', borderRadius: '4px' }}>PREVIOUS</Button>
+          <Button color="light" outline style={{ border: '1px solid #dee2e6', borderRadius: '4px' }}>NEXT</Button>
+        </div>
+        <div>
+          <span>Total Records: {memberTypes.length}</span>
+        </div>
+      </div>
     </div>
   );
 };
