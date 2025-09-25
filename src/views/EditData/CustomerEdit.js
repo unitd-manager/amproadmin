@@ -19,7 +19,7 @@ import '../form-editor/editor.scss';
 import { ToastContainer } from 'react-toastify';
 import message from '../../components/Message';
 import api from '../../constants/api';
-import ComponentCard from '../../components/ComponentCard';
+// import ComponentCard from '../../components/ComponentCard';
 import creationdatetime from '../../constants/creationdatetime';
 import AppContext from '../../context/AppContext';
 import CustomerLogin from '../../components/Customer/CustomerLogin';
@@ -111,13 +111,40 @@ const ContentUpdate = () => {
     overflowY: 'auto',
   };
 
+  const handleCancel = () => {
+    // Navigate back to customer list without saving
+    navigate('/Customer');
+  };
+
   return (
     <div style={formStyle}>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h4 className="m-0">New/Edit Customer</h4>
       </div>
 
-      {/* Fixed Save Button */}
+      {/* Fixed Action Buttons */}
+      <div style={{
+        position: 'fixed',
+        bottom: '20px',
+        left: '20px',
+        zIndex: 1000
+      }}>
+        <Button
+          color="secondary"
+          onClick={handleCancel}
+          className="shadow"
+          style={{
+            padding: '10px 30px',
+            fontSize: '16px',
+            borderRadius: '4px',
+            backgroundColor: '#6c757d',
+            borderColor: '#6c757d',
+            marginRight: '10px'
+          }}
+        >
+          Cancel
+        </Button>
+      </div>
       <div style={{
         position: 'fixed',
         bottom: '20px',
@@ -144,7 +171,6 @@ const ContentUpdate = () => {
       </div>
 
       {/* First Panel - Basic Info */}
-      <ComponentCard title="Customer Details" style={{ marginBottom: '5px' }}>
         <Row>
           <Col md="6">
             <FormGroup row>
@@ -175,10 +201,10 @@ const ContentUpdate = () => {
             </FormGroup>
           </Col>
         </Row>
-      </ComponentCard>
+      {/* </ComponentCard>
 
       {/* Second Panel - Tabs */}
-      <ComponentCard style={{ marginBottom: '5px' }}>
+      {/* <ComponentCard style={{ marginBottom: '5px' }}>  */}
         <ToastContainer />
         <Nav tabs>
           <NavItem><NavLink className={classnames({ active: activeTab === '1' })} onClick={() => toggle('1')}>Additional</NavLink></NavItem>
@@ -243,7 +269,6 @@ const ContentUpdate = () => {
           <TabPane tabId="6"><CustomerTransactions customerId={id} /></TabPane>
           <TabPane tabId="7"><CustomerProductDetails customerId={id} contentDetails={contentDetails} /></TabPane>
         </TabContent>
-      </ComponentCard>
     </div>
   );
 };
