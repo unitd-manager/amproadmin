@@ -27,6 +27,15 @@ const Test = () => {
 
 
 
+  // ✅ Select All functionality
+  const [selectAll, setSelectAll] = useState(false);
+
+  useEffect(() => {
+    if (supplier && supplier.length > 0) {
+      setSelectAll(selectedOrders.length === supplier.length);
+    }
+  }, [selectedOrders, supplier]);
+
   // ✅ Checkbox handler
   const handleCheckboxChange = (orderId) => {
     setSelectedOrders((prevSelected) =>
@@ -123,7 +132,30 @@ const generateDeliveryOrder = async () => {
 
   // ✅ Table column definitions
   const columns = [
-    { name: '', selector: 'checkbox', grow: 0, width: '3%' },
+    { 
+      name: (
+        <input
+          type="checkbox"
+          checked={selectAll}
+          ref={(input) => {
+            if (input) {
+              input.indeterminate = selectedOrders.length > 0 && selectedOrders.length < (supplier?.length || 0);
+            }
+          }}
+          onChange={() => {
+            if (selectAll) {
+              setSelectedOrders([]); // deselect all
+            } else {
+              setSelectedOrders(supplier.map((s) => s.delivery_verification_id)); // select all
+            }
+            setSelectAll(!selectAll);
+          }}
+        />
+      ), 
+      selector: 'checkbox', 
+      grow: 0, 
+      width: '3%' 
+    },
     { name: '#', selector: 'delivery_verification_id', grow: 0, wrap: true, width: '4%' },
     { name: 'Edit', selector: 'edit', grow: 0, width: 'auto', button: true, sortable: false },
     { name: 'Tran NO', selector: 'delivery_verification_code', sortable: true, grow: 0, wrap: true },

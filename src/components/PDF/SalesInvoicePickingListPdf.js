@@ -1,68 +1,64 @@
 import React, { useState, useEffect } from 'react';
 import pdfMake from 'pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
-// import { Button } from 'reactstrap';
+// import { Button } from 'reactstrap'; 
 import PropTypes from 'prop-types';
 import moment from 'moment';
 import api from '../../constants/api';
 import message from '../Message';
-import PdfFooter from './PdfFooter';
-import PdfHeader from './PdfHeader';
+import PdfFooter from './PdfFooter'; // Assuming you have a footer component
+import PdfHeader from './PdfHeader'; // Assuming you have a header component
 
 
-const SalesInvoicePickingListPdf = ({ id, settingdetails }) => {
-    SalesInvoicePickingListPdf.propTypes = {
-    id: PropTypes.any,
-    settingdetails: PropTypes.any
+const PdfPickingList = ({ selectedOrderIds }) => {
+  PdfPickingList.propTypes = {
+    selectedOrderIds: PropTypes.array,
   };
 
   const [salesOrder, setSalesOrder] = useState({});
-  const [lineItems, setLineItems] = useState();
+  const [lineItems, setLineItems] = useState([]);
   const [hfdata, setHeaderFooterData] = useState();
-  const [gTotal, setGtotal] = useState(0);
-  
-console.log(gTotal)
+
   useEffect(() => {
     api.get('/setting/getSettingsForCompany').then((res) => {
       setHeaderFooterData(res.data.data);
     });
   }, []);
-console.log("SalesOrde", salesOrder)
+
   const findCompany = (key) => {
     const filteredResult = hfdata?.find((e) => e.key_text === key);
     return filteredResult?.value || '';
   };
 
-  const fetchSalesOrderData = () => {
-    api
-      .post('/salesorder/getSalesorderById', { sales_order_id: id })
-      .then((res) => {
-        setSalesOrder(res.data.data[0] || {});
-      })
-      .catch(() => {
-        message('Sales Order Data Not Found', 'info');
-      });
+    const fetchSalesOrderData = async () => {
+    let allSalesOrders = [];
+     let allLineItems = [];
 
-    api
-      .post('/invoice/getQuoteLineItemsById', { invoice_id: id })
-      .then((res) => {
-        setLineItems(res.data.data);
-        let grandTotal = 0;
-        res.data.data.forEach((elem) => {
-          grandTotal += elem.total;
-        });
-        setGtotal(grandTotal);
-    })
-      .catch(() => {
-        message('Sales Order Line Items Not Found', 'info');
-      });
+     try {
+       const salesOrderPromises = selectedOrderIds.map(id => api.post('/invoice/getSalesorderById', { invoice_id: id }));
+      const lineItemPromises = selectedOrderIds.map(id => api.post('/invoice/getQuoteLineItemsById', { invoice_id: id }));
+
+      const salesOrderResponses = await Promise.all(salesOrderPromises);
+      const lineItemResponses = await Promise.all(lineItemPromises);
+
+      allSalesOrders = salesOrderResponses.map(res => res.data.data[0] || {});
+       allLineItems = lineItemResponses.flatMap(res => res.data.data || []);
+
+      setSalesOrder(allSalesOrders);
+      setLineItems(allLineItems);
+    } catch (error) {
+      message('Error fetching sales order data or line items', 'error');
+    }
+
+    setSalesOrder(allSalesOrders);
+    setLineItems(allLineItems);
   };
 
   useEffect(() => {
-    if (id) {
+    if (selectedOrderIds && selectedOrderIds.length > 0) {
       fetchSalesOrderData();
     }
-  }, [id]);
+  }, [selectedOrderIds]);
 
   const GetPdf = () => {
     const productItems = [
@@ -71,115 +67,70 @@ console.log("SalesOrde", salesOrder)
         { text: 'Product Name', style: 'tableHead' },
         { text: 'Uom', style: 'tableHead' },
         { text: 'CQty', style: 'tableHead' },
-        { text: 'Loose Qty', style: 'tableHead' },
-        { text: 'Carton Price', style: 'tableHead' },
-        { text: 'Discount', style: 'tableHead' },
-        { text: 'Amount', style: 'tableHead' },
       ],
     ];
+  
+    const aggregatedItems = {};
 
-    lineItems?.forEach((item, index) => {
+    lineItems.forEach((item) => {
+      if (aggregatedItems[item.product_id]) {
+        aggregatedItems[item.product_id].quantity += parseFloat(item.quantity || 0);
+        aggregatedItems[item.product_id].carton_qty += parseFloat(item.carton_qty || 0);
+      } else {
+        aggregatedItems[item.product_id] = {
+          product_name: item.product_name,
+          quantity: parseFloat(item.quantity || 0),
+          carton_qty: parseFloat(item.carton_qty || 0),
+          unit: item.unit, // Assuming unit is consistent for the same product
+        };
+      }
+    });
+
+    Object.values(aggregatedItems).forEach((item, index) => {
+      const cQty = parseFloat(item.carton_qty || 0);
       productItems.push([
         { text: `${index + 1}`, style: 'tableBody' },
         { text: `${item.product_name || ''}`, style: 'tableBody' },
-        { text: `${item.unit || ''}`, style: 'tableBody' },
-        { text: `${item.carton_qty || ''}`, style: 'tableBody' },
-        { text: `${item.loose_qty || ''}`, style: 'tableBody' },
-        { text: `${item.carton_price || ''}`, style: 'tableBody' },
-        { text: `${item.discount_value || ''}`, style: 'tableBody' },
-        { text: `${item.gross_total || ''}`, style: 'tableBody' },
+        { text: `${item.unit || ''}`, style: 'tableBody' }, // Display unit
+        { text: cQty.toFixed(2), style: 'tableBody' },
       ]);
     });
-
-    // const gst = gTotal * 0.07;
-    // const totalWithGst = gTotal + gst;
-
-
+  
     const dd = {
       pageSize: 'A4',
-      pageMargins: [40, 150, 40, 80],
-      header: PdfHeader({ findCompany }),
-      footer: PdfFooter,
+      pageMargins: [40, 150, 40, 80], // Adjust margins as needed
+            header: PdfHeader({ findCompany }),
+      footer: PdfFooter, // Assuming you have a standard footer
       content: [
-            {
-                text: 'Picking List',
-                style: 'header',
-                alignment: 'center',
-                margin: [0, 0, 0, 10],
-              },
         {
-          columns: [
-            {
-                width: '50%',
-                stack: [
-                  {
-                    table: {
-                        widths: ['auto','auto','auto'],
-                      body: [
-                        ['Selected Invoice', ':', settingdetails.invoice_code || ''],
-                      ],
-                    },
-                    layout: 'noBorders',
-                    style: 'textSize',
-                  },
-                ],
-              },
-            {
-              width: '50%',
-              stack: [
-                {
-                  table: {
-                    widths: ['auto','auto','auto'],
-                    body: [
-                        ['Print date', ':', moment().format('DD-MM-YYYY HH:mm:ss') ],
-                        ['Page No', ':',  ''],
-                    ],
-                  },
-                  layout: 'noBorders',
-                  style: 'textSize',
-                },
-              ],
-            },
-          ],
-          columnGap: 10,
+          text: findCompany('company_name') || 'Ampro PTE LTD', // Fallback if not found
+          style: 'header',
+          alignment: 'left',
+        },
+        {
+          text: 'Picking List',
+          style: 'subheader',
+          alignment: 'left',
+          margin: [0, 0, 0, 10],
+        },
+        {
+          text: `Selected Sales Invoice: ${salesOrder.map(so => so.invoice_code).join(', ') || ''}`,
+          style: 'textSize',
+          margin: [0, 0, 0, 5],
+        },
+        {
+          text: `Print Date: ${moment().format('DD-MM-YYYY HH:mm:ss')}`,
+          style: 'textSize',
+          alignment: 'right',
           margin: [0, 0, 0, 15],
         },
         {
-          layout: {
-            hLineWidth: () => 1,
-            vLineWidth: () => 1,
-            hLineColor: () => '#000',
-            vLineColor: () => '#000',
-            fillColor: (rowIndex) => {
-              return rowIndex === 0 ? '#f2f2f2' : null; // light gray header
-            },
-          },
+          layout: 'lightHorizontalLines',
           table: {
             headerRows: 1,
-            widths: ['auto', '*', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto'],
+            widths: ['auto', '*', 'auto', 'auto'], // Adjust column widths
             body: productItems,
           },
-        },
-        {
-          table: {
-            widths: ['*', 'auto'],
-            body: [
-              [
-                { text: 'Subtotal', alignment: 'right', bold: true, fontSize: 9 },
-                { text:settingdetails.sub_total || 0('en-IN', { minimumFractionDigits: 2 }),fontSize: 9, alignment: 'right' },
-              ],
-              [
-                { text: 'GST %', alignment: 'right', bold: true, fontSize: 9 },
-                { text: settingdetails.tax || 0('en-IN', { minimumFractionDigits: 2 }),fontSize: 9 , alignment: 'right' },
-              ],
-              [
-                { text: 'Total', alignment: 'right', bold: true, fontSize: 9 },
-                { text: settingdetails.invoice_amount || 0('en-IN', { minimumFractionDigits: 2 }), fontSize: 9, alignment: 'right' },
-              ],
-            ],
-          },
-          layout: 'Borders',
-          margin: [0, 0, 0, 0],
         },
       ],
       styles: {
@@ -194,28 +145,48 @@ console.log("SalesOrde", salesOrder)
         tableHead: {
           bold: true,
           fontSize: 10,
-          color: 'black',
+          color: 'white',
+          fillColor: 'black',
+          alignment: 'center',
+          padding: 5,
+          wordWrap: 'break-word', // Allow wrapping of text in header
         },
         tableBody: {
           fontSize: 9,
+          padding: 5,
+          wordWrap: 'break-word', // Wrap text in body for long words
         },
         textSize: {
           fontSize: 10,
         },
+        boldText: {
+          fontSize: 10,
+          bold: true,
+        },
+      },
+      layout: {
+        hLineWidth: () => 1, // Horizontal line width
+        vLineWidth: () => 1, // Vertical line width
+        hLineColor: () => '#000000', // Color of horizontal lines
+        vLineColor: () => '#000000', // Color of vertical lines
+        paddingLeft: () => 5, // Padding for left side
+        paddingRight: () => 5, // Padding for right side
+        paddingTop: () => 5, // Padding for top side
+        paddingBottom: () => 5, // Padding for bottom side
       },
     };
-
+  
     pdfMake.vfs = pdfFonts.pdfMake.vfs;
     pdfMake.createPdf(dd, null, null, pdfFonts.pdfMake.vfs).open();
   };
-
+  
   return (
     <>
       <a  onClick={GetPdf}>
-        Print Picking List
+        Print Pick List
       </a>
     </>
   );
 };
 
-export default SalesInvoicePickingListPdf;
+export default PdfPickingList;

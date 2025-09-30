@@ -23,7 +23,7 @@ import SalesOrderPrintWithCost from '../../components/PDF/SalesOrderPrintWithCos
 import PdfPackingList from '../../components/PDF/PdfPack';
 import PdfSalesQuote from '../../components/PDF/PdfSalesOrderQuote';
 import './salesOrderTable.css';
-
+ 
 const Test = () => {
   const [supplier, setSupplier] = useState(null);
   // const [selectedOrder, setSelectedOrder] = useState(null);
@@ -293,7 +293,7 @@ const Test = () => {
   >
     
     <PrintPerfomaList
-      id={selectedOrder?.sales_order_id}
+                    id={selectedOrder?.sales_order_id || ''}
       settingdetails={null}
       lineItem={null}
     />

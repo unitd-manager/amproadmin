@@ -44,7 +44,7 @@ const PrintPerfoma = ({ id }) => {
     api
       .post('/salesOrder/getQuoteLineItemsById', { sales_order_id: id })
       .then((res) => {
-        setLineItems(res.data.data[0]);
+        setLineItems(res.data.data);
         let grandTotal = 0;
         res.data.data.forEach((elem) => {
           grandTotal += elem.total;
