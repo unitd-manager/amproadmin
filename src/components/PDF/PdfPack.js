@@ -8,7 +8,7 @@ import api from '../../constants/api';
 import message from '../Message';
 import PdfFooter from './PdfFooter'; // Assuming you have a footer component
 import PdfHeader from './PdfHeader'; // Assuming you have a header component
-
+ 
 const PdfPackingList = ({ selectedOrderIds }) => {
   PdfPackingList.propTypes = {
     selectedOrderIds: PropTypes.array,

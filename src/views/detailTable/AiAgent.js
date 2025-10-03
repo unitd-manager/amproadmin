@@ -16,7 +16,9 @@ const PolarisAgent = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       if (inCall && currentSpeaker) {
-        const newHeights = Array(5).fill(0).map(() => Math.floor(Math.random() * 20 + 5));
+        const newHeights = Array(5)
+          .fill(0)
+          .map(() => Math.floor(Math.random() * 20 + 5));
         setWaveHeight(newHeights);
       }
     }, 300);
@@ -24,56 +26,57 @@ const PolarisAgent = () => {
   }, [inCall, currentSpeaker]);
 
   useEffect(() => {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    alert("Your browser doesn't support speech recognition.");
-    return;
-  }
-
-  const recognition = new SpeechRecognition();
-  recognition.lang = 'en-US';
-  recognition.interimResults = false;
-  recognition.continuous = true;
-
-  recognition.onstart = () => setListening(true);
-
-  recognition.onend = () => {
-    setListening(false);
-    // Only restart if in call
-    if (inCall) {
-      console.log("Restarting recognition...");
-      setTimeout(() => recognition.start(), 300); // small delay avoids "already started" errors
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Your browser doesn't support speech recognition.");
+      return;
     }
-  };
 
-  recognition.onerror = (err) => {
-    console.error("Speech recognition error:", err);
-    setListening(false);
-    if (inCall) {
-      setTimeout(() => recognition.start(), 500); // retry after error
-    }
-  };
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.continuous = true;
 
-  recognition.onresult = async (event) => {
-    const transcript = event.results[event.results.length - 1][0].transcript;
-    setCurrentSpeaker("user");
-    addMessage('You', transcript);
+    recognition.onstart = () => setListening(true);
 
-    recognition.stop(); // temporarily stop listening while AI talks
-
-    const aiReply = await fetchAIResponse(transcript);
-
-    setCurrentSpeaker("ai");
-    addMessage('Qubi', aiReply);
-    speak(aiReply, () => {
+    recognition.onend = () => {
+      setListening(false);
+      // Only restart if in call
       if (inCall) {
-        recognition.start(); // restart listening after AI finishes speaking
+        console.log('Restarting recognition...');
+        setTimeout(() => recognition.start(), 300); // small delay avoids "already started" errors
       }
-    });
-  };
+    };
 
-  recognitionRef.current = recognition;
-}, [inCall]);
+    recognition.onerror = (err) => {
+      console.error('Speech recognition error:', err);
+      setListening(false);
+      if (inCall) {
+        setTimeout(() => recognition.start(), 500); // retry after error
+      }
+    };
+
+    recognition.onresult = async (event) => {
+      const transcript = event.results[event.results.length - 1][0].transcript;
+      setCurrentSpeaker('user');
+      addMessage('You', transcript);
+
+      recognition.stop(); // temporarily stop listening while AI talks
+
+      const aiReply = await fetchAIResponse(transcript);
+
+      setCurrentSpeaker('ai');
+      addMessage('Qubi', aiReply);
+      speak(aiReply, () => {
+        if (inCall) {
+          recognition.start(); // restart listening after AI finishes speaking
+        }
+      });
+    };
+
+    recognitionRef.current = recognition;
+  }, [inCall]);
 
   const startCall = () => {
     setInCall(true);
@@ -89,24 +92,24 @@ const PolarisAgent = () => {
   };
 
   const addMessage = (sender, text) => {
-    setMessages(prev => [...prev, { id: prev.length + 1, sender, text }]);
+    setMessages((prev) => [...prev, { id: prev.length + 1, sender, text }]);
   };
 
   const fetchAIResponse = async (msg) => {
     try {
-      const res = await fetch("http://localhost:4000/command", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ command: msg, sessionId: "call-session-123" }),
+      const res = await fetch('http://localhost:4000/command', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ command: msg, sessionId: 'call-session-123' }),
       });
-      console.log('resp',res);
-    
+      console.log('resp', res);
+
       const data = await res.json();
-      console.log('data',data);
+      console.log('data', data);
       return data.summary || "Sorry, I couldn't understand.";
     } catch (err) {
-      console.error("Error fetching AI response:", err);
-      return "Something went wrong.";
+      console.error('Error fetching AI response:', err);
+      return 'Something went wrong.';
     }
   };
 
@@ -118,74 +121,92 @@ const PolarisAgent = () => {
   };
 
   return (
-  <div className="agent-container">
-    {/* Split Screen Layout */}
-    <div className="main-layout">
-      
-      {/* Left - Call Status */}
-      <div className="call-panel">
-        <h2>AI Agent</h2>
-        <div className="status">
-          {/* User */}
-          <div className="status-avatar">
-            <div className="avatar">
-              🧑
-              {currentSpeaker === "user" && (
-                <div className="wave-wrapper">
-                  {waveHeight.map((h, i) => (
-                    <div key={i} className="wave-line" style={{ height: `${h}px` }} />
-                  ))}
-                </div>
-              )}
+  
+    <div className="agent-container">
+      {/* Split Screen Layout */}
+      <div className="main-layout">
+        {/* Left - Call Status */}
+        <div className="call-panel">
+          <h2>AI Agent</h2>
+          <div className="status">
+            {/* User */}
+            <div className="status-avatar">
+              <div className="avatar">
+                🧑
+                {currentSpeaker === 'user' && (
+                  <div className="wave-wrapper">
+                    {waveHeight.map((h, i) => (
+                      <div
+                        key={i}
+                        className="wave-line"
+                        style={{ height: `${h}px` }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="name">You</div>
             </div>
-            <div className="name">You</div>
+
+            {/* Call Info */}
+            <div className="status-info">
+              <div className="label">{inCall ? 'In Call' : 'Idle'}</div>
+              <div className="connected">
+                {listening ? 'Listening' : 'Not Listening'}
+              </div>
+            </div>
+
+            {/* AI */}
+            <div className="status-avatar">
+              <div className="avatar">
+                🤖
+                {currentSpeaker === 'ai' && (
+                  <div className="wave-wrapper">
+                    {waveHeight.map((h, i) => (
+                      <div
+                        key={i}
+                        className="wave-line"
+                        style={{ height: `${h}px` }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="name">Qubi</div>
+            </div>
           </div>
 
-          {/* Call Info */}
-          <div className="status-info">
-            <div className="label">{inCall ? "In Call" : "Idle"}</div>
-            <div className="connected">{listening ? 'Listening' : 'Not Listening'}</div>
-          </div>
-
-          {/* AI */}
-          <div className="status-avatar">
-            <div className="avatar">
-              🤖
-              {currentSpeaker === "ai" && (
-                <div className="wave-wrapper">
-                  {waveHeight.map((h, i) => (
-                    <div key={i} className="wave-line" style={{ height: `${h}px` }} />
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="name">Qubi</div>
-          </div>
+          {!inCall ? (
+            <button onClick={startCall} className="listen-button">
+              📞 Start Call
+            </button>
+          ) : (
+            <button onClick={endCall} className="listen-button end-call">
+              🔴 End Call
+            </button>
+          )}
         </div>
 
-        {!inCall ? (
-          <button onClick={startCall} className="listen-button">📞 Start Call</button>
-        ) : (
-          <button onClick={endCall} className="listen-button end-call">🔴 End Call</button>
-        )}
-      </div>
-
-      {/* Right - Chat Box */}
-      <div className="chat-panel">
-        <h2>Conversation</h2>
-        <div className="chat-box">
-          {messages.map((msg) => (
-            <div key={msg.id} className={`message ${msg.sender === 'You' ? 'user' : 'agent'}`}>
-              <strong>{msg.sender}:</strong> {msg.text}
-            </div>
-          ))}
+        {/* Right - Chat Box */}
+        <div className="chat-panel">
+          <h2>Conversation</h2>
+          <div className="chat-box">
+            {messages.map((msg) => (
+              <div
+                key={msg.id}
+                className={`message ${
+                  msg.sender === 'You' ? 'user' : 'agent'
+                }`}
+              >
+                <strong>{msg.sender}:</strong> {msg.text}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-
     </div>
-  </div>
-);
-
+  );
+  
 };
 
 export default PolarisAgent;

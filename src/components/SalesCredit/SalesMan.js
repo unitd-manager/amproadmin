@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Row, Col, Form, FormGroup, Label, Input } from 'reactstrap';
 import PropTypes from 'prop-types';
-import ComponentCard from '../ComponentCard';
 import api from '../../constants/api';
 
 export default function SupplierDetails({ handleInputs, settingdetails }) {
@@ -27,18 +26,20 @@ export default function SupplierDetails({ handleInputs, settingdetails }) {
   return (
     <Form>
       <FormGroup>
-        <ComponentCard title="Customer Details">
+        <div style={{ padding: '12px', backgroundColor: '#e9e9e9', borderRadius: '4px', marginBottom: '8px' }}>
+          <h6 style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '600' }}>Salesman Details</h6>
           <Row>
-            <Col md="4">
+            <Col md="3">
               <FormGroup>
-                <Label>
+                <Label style={{ fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>
                   Sales man <span className="required"> *</span>
                 </Label>
                 <Input
                   type="select"
                   name="sales_id"
-                  onChange={handleInputs} // Updated function
+                  onChange={handleInputs}
                   value={settingdetails?.sales_id ? String(settingdetails.sales_id) : ''}
+                  style={{ fontSize: '12px', padding: '4px 6px', height: '28px' }}
                 >
                   <option value="">Please Select</option>
                   {company.map((ele) => (
@@ -52,7 +53,7 @@ export default function SupplierDetails({ handleInputs, settingdetails }) {
             
          </Row>
          
-        </ComponentCard>
+        </div>
       </FormGroup>
     </Form>
   );

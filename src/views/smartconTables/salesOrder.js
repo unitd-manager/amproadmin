@@ -10,19 +10,20 @@ import 'datatables.net-buttons/js/buttons.colVis';
 import 'datatables.net-buttons/js/buttons.flash';
 import 'datatables.net-buttons/js/buttons.html5';
 import 'datatables.net-buttons/js/buttons.print';
+ import moment from 'moment';
 import { Link } from 'react-router-dom';
 import message from '../../components/Message';
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
 import PrintPerfoma from '../../components/PDF/PrintPerfoma';
-
+import PrintPerfomaList from '../../components/PDF/PrintPerfomaList';
 import SalesOrderPrintWithCost from '../../components/PDF/SalesOrderPrintWithCost';
  import PdfPickingList from '../../components/PDF/PdfPick';
 import PdfPackingList from '../../components/PDF/PdfPack';
 import PdfSalesQuote from '../../components/PDF/PdfSalesOrderQuote';
-
-
+import './salesOrderTable.css';
+ 
 const Test = () => {
   const [supplier, setSupplier] = useState(null);
   // const [selectedOrder, setSelectedOrder] = useState(null);
@@ -77,9 +78,54 @@ const Test = () => {
   useEffect(() => {
     getSupplier();
   }, []);
+  const [selectAll, setSelectAll] = useState(false);
+  useEffect(() => {
+  if (supplier && supplier.length > 0) {
+    setSelectAll(selectedSalesOrderIds.length === supplier.length);
+  }
+}, [selectedSalesOrderIds, supplier]);
+
+
 
   const columns = [
-    { name: '', selector: 'checkbox', cell: () => <input type="checkbox" />, grow: 0, width: '3%' },
+    { name: (
+      <input
+        type="checkbox"
+        checked={selectAll}
+        ref={(input) => {
+          if (input) {
+            input.indeterminate =
+              selectedSalesOrderIds.length > 0 &&
+              selectedSalesOrderIds.length < (supplier?.length || 0);
+          }
+        }}
+        onChange={() => {
+          if (selectAll) {
+            setSelectedSalesOrderIds([]); // deselect all
+          } else {
+            setSelectedSalesOrderIds(supplier.map((s) => s.sales_order_id)); // select all
+          }
+          setSelectAll(!selectAll);
+        }}
+      />
+    ),
+    selector: 'checkbox',
+    cell: (row) => (
+      <input
+        type="checkbox"
+        checked={selectedSalesOrderIds.includes(row.sales_order_id)}
+        onChange={() => {
+          setSelectedSalesOrderIds((prev) =>
+            prev.includes(row.sales_order_id)
+              ? prev.filter((id) => id !== row.sales_order_id)
+              : [...prev, row.sales_order_id]
+          );
+        }}
+      />
+    ),
+    grow: 0,
+    width: '3%',
+  },
     { name: '#', selector: 'sales_order_id', grow: 0, wrap: true, width: '4%' },
     { name: 'Edit', selector: 'edit', cell: () => <Icon.Edit2 />, grow: 0, width: 'auto', button: true, sortable: false },
     { name: 'Tran NO', selector: 'tran_no', sortable: true, grow: 0, wrap: true },
@@ -239,15 +285,30 @@ const Test = () => {
           >
             <Trash2 size={16} />
           </Button>
-        </div>
+         
+  <Button
+    color="secondary"
+    className="ms-2"
+  
+  >
+    
+    <PrintPerfomaList
+                    id={selectedOrder?.sales_order_id || ''}
+      settingdetails={null}
+      lineItem={null}
+    />
+  </Button>
 
+        </div>
+<div className="sales-order-table">
         <CommonTable
           loading={loading}
           title="Sales Order List"
+      
           Button={
             <Dropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
               <DropdownToggle color="primary" caret className="shadow-none">
-                <Button color="primary" tag={Link} to="/SalesOrderDetails" className="shadow-none">
+                <Button color="primary" tag={Link} to="/SalesOrderDetails?tab=1" className="shadow-none">
                   New Transaction
                 </Button>
               </DropdownToggle>
@@ -299,6 +360,7 @@ const Test = () => {
             </Dropdown>
           }
         >
+
           <thead>
             <tr>
               {columns.map((col) => (
@@ -311,24 +373,23 @@ const Test = () => {
               supplier.map((element, index) => (
                 <tr key={element.sales_order_id}>
                   <td>
-                    <input
-                      type="checkbox"
-                      checked={selectedSalesOrderIds.includes(element.sales_order_id)}
-                      onChange={() => {
-                        setSelectedSalesOrderIds((prev) =>
-                          prev.includes(element.sales_order_id)
-                            ? prev.filter((ids) => ids !== element.sales_order_id)
-                            : [...prev, element.sales_order_id]
-                        );
-                        // For single-select logic elsewhere
-                        setSelectedOrder(element);
-                      }}
-                    />
+                   <input
+  type="checkbox"
+  checked={selectedSalesOrderIds.includes(element.sales_order_id)}
+  onChange={() => {
+    setSelectedSalesOrderIds((prev) =>
+      prev.includes(element.sales_order_id)
+        ? prev.filter((id) => id !== element.sales_order_id)
+        : [...prev, element.sales_order_id]
+    );
+  }}
+/>
+
                   </td>
                   <td>{index + 1}</td>
                  <td>
   {element.status !== 'Closed' ? (
-    <Link to={`/salesorderEdit/${element.sales_order_id}`}>
+    <Link to={`/salesorderEdit/${element.sales_order_id}?tab=1`}>
       <Icon.Edit2 />
     </Link>
   ) : (
@@ -337,7 +398,8 @@ const Test = () => {
 </td>
 
                   <td>{element.tran_no}</td>
-                  <td>{element.tran_date}</td>
+                 
+                  <td>{element.tran_date? moment(element.tran_date).format('DD-MM-YYYY'):''}</td>
                   <td>{element.company_name}</td>
                   <td>{element.status}</td>
                   <td>{element.printed || 'No'}</td>
@@ -349,6 +411,7 @@ const Test = () => {
               ))}
           </tbody>
         </CommonTable>
+        </div>
       </div>
     </div>
   );

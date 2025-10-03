@@ -38,7 +38,7 @@ function PopularProducts() {
 
   return (
     <div className="p-4 bg-white shadow rounded w-full max-w-5xl mx-auto">
-      <h2 className="text-lg font-bold mb-3">Popular Products</h2>
+     
 
       {/* Controls */}
       <div className="flex items-center gap-3 mb-3 flex-wrap">
@@ -76,8 +76,8 @@ function PopularProducts() {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto max-h-[400px] overflow-y-auto border rounded">
-        <table className="w-full text-sm">
+      <div className="overflow-x-auto h-[300px] overflow-y-auto border rounded">
+        <table className="w-full text-xs">
           <thead>
             <tr className="bg-gray-100 text-left">
               <th className="p-2 border">Department</th>

@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Row, Col, Form, FormGroup, Label, Input } from 'reactstrap';
+import Select from 'react-select';
 import PropTypes from 'prop-types';
-
 import api from '../../constants/api';
 
 export default function SupplierDetails({ handleInputs, settingdetails, setSettingDetails }) {
   SupplierDetails.propTypes = {
     handleInputs: PropTypes.func,
     settingdetails: PropTypes.any,
-    setSettingDetails: PropTypes.func, // Added prop to update settingdetails state
+    setSettingDetails: PropTypes.func,
   };
 
   const [company, setCompany] = useState([]);
@@ -24,108 +24,210 @@ export default function SupplierDetails({ handleInputs, settingdetails, setSetti
     getCompany();
   }, []);
 
-  // Handle company selection change
-  const handleCompanyChange = (e) => {
-    const selectedCompanyId = e.target.value;
-    handleInputs(e); // Update company_id in settingdetails
-
-    // Find selected company details
-    const selectedCompany = company.find((comp) => String(comp.company_id) === selectedCompanyId);
-
-    if (selectedCompany) {
-      // Update settingdetails with selected company data
-      setSettingDetails((prevDetails) => ({
-        ...prevDetails,
-        contact_person: selectedCompany.contact_person || '',
-        customer_code: selectedCompany.customer_code || '',
-        address_town: selectedCompany.address_town || '',
-        address_street: selectedCompany.address_street || '',
-        address_state: selectedCompany.address_state || '',
-        address_country: selectedCompany.address_country || '',
-        address_po_code: selectedCompany.address_po_code || '',
-        notes: selectedCompany.notes || '',
-      }));
-    }
-  };
-
   return (
     <Form>
       <FormGroup>
-        <div style={{ padding: '8px', backgroundColor: '#f8f9fa', borderRadius: '4px', marginBottom: '8px' }}>
-          <h6 style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#495057' }}>Customer Details</h6>
-          <Row>
-            <Col md="3">
-              <FormGroup style={{ marginBottom: '8px' }}>
-                <Label style={{ fontSize: '11px', marginBottom: '2px' }}>
-                  Customer name <span className="required"> *</span>
+        <div
+          style={{
+            padding: '8px',
+            backgroundColor: '#e9e9e9',
+            borderRadius: '4px',
+            marginBottom: '8px',
+          }}
+        >
+       
+          {/* Row 1: Customer Code + Customer Name */}
+          <Row form>
+            <Col md="6">
+              <FormGroup row style={{ marginBottom: '8px' }}>
+                <Label sm={4} style={{ fontSize: '11px', marginBottom: '0' }}>
+                  Customer Code <span className="required">*</span>
                 </Label>
-                <Input
-                  type="select"
-                  name="company_id"
-                  onChange={handleCompanyChange}
-                  value={settingdetails?.company_id ? String(settingdetails.company_id) : ''}
-                  style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }}
-                >
-                  <option value="">Please Select</option>
-                  {company.map((ele) => (
-                    <option key={ele.company_id} value={String(ele.company_id)}>
-                      {ele.company_name}
-                    </option>
-                  ))}
-                </Input>
+                <Col sm={8}>
+                  <Select
+                    options={company.map((c) => ({
+                      value: c.company_id,
+                      label: c.company_name,
+                      customer_code: c.customer_code,
+                      company_name: c.company_name,
+                    }))}
+                    onChange={(selected) => {
+                      if (!selected) return;
+                      const selectedCompany = company.find((comp) => comp.company_id === selected.value);
+                      if (selectedCompany) {
+                        setSettingDetails((prevDetails) => ({
+                          ...prevDetails,
+                          company_id: selectedCompany.company_id || '',
+                          company_name: selectedCompany.company_name || '',
+                          contact_person: selectedCompany.contact_person || '',
+                          customer_code: selectedCompany.customer_code || '',
+                          address: selectedCompany.address || '',
+                          address_street1: selectedCompany.address_street1 || '',
+                          address2: selectedCompany.address2 || '',
+                          address_country: selectedCompany.address_country || '',
+                          address_po_code: selectedCompany.address_po_code || '',
+                          remarks: selectedCompany.remarks || '',
+                        }));
+                      }
+                    }}
+                    value={
+                      settingdetails?.company_id
+                        ? {
+                            value: settingdetails.company_id,
+                            label: settingdetails.company_name,
+                            customer_code: settingdetails.customer_code,
+                          }
+                        : null
+                    }
+                    formatOptionLabel={(option, { context }) =>
+                      context === 'menu' ? option.label : option.customer_code
+                    }
+                    placeholder="Search by company name..."
+                    isClearable
+                    styles={{
+                      control: (base) => ({
+                        ...base,
+                        minHeight: '28px',
+                        height: '28px',
+                        fontSize: '11px',
+                      }),
+                      dropdownIndicator: (base) => ({ ...base, padding: '2px' }),
+                      clearIndicator: (base) => ({ ...base, padding: '2px' }),
+                      valueContainer: (base) => ({ ...base, padding: '0 6px' }),
+                      input: (base) => ({ ...base, margin: 0, padding: 0 }),
+                    }}
+                  />
+                </Col>
               </FormGroup>
             </Col>
-            <Col md="3">
-              <FormGroup style={{ marginBottom: '8px' }}>
-                <Label style={{ fontSize: '11px', marginBottom: '2px' }}>Customer Code</Label>
-                <Input type="text" name="customer_code" onChange={handleInputs} value={settingdetails?.customer_code || ''} style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }} />
+
+            <Col md="6">
+              <FormGroup row style={{ marginBottom: '8px' }}>
+                <Label sm={4} style={{ fontSize: '11px', marginBottom: '0' }}>
+                  Customer Name
+                </Label>
+                <Col sm={8}>
+                  <Input
+                    type="text"
+                    name="company_name"
+                    onChange={handleInputs}
+                    value={settingdetails?.company_name || ''}
+                    style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }}
+                  />
+                </Col>
               </FormGroup>
             </Col>
-              <Col md="3">
-              <FormGroup style={{ marginBottom: '8px' }}>
-                <Label style={{ fontSize: '11px', marginBottom: '2px' }}>Contact Address 1</Label>
-                <Input type="text" name="address_street" onChange={handleInputs} value={settingdetails?.address_street || ''} style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }} />
-              </FormGroup>
-            </Col>
-          
           </Row>
-          {/* <Row>
-            <Col md="4">
-              <FormGroup>
-                <Label>Contact Person</Label>
-                <Input type="text" name="contact_person" onChange={handleInputs} value={settingdetails?.contact_person || ''} />
-              </FormGroup>
-            </Col> 
-            <Col md="4">
-              <FormGroup>
-                <Label>Contact Address 2</Label>
-                <Input type="text" name="address_town" onChange={handleInputs} value={settingdetails?.address_town || ''} />
-              </FormGroup>
-            </Col>
-            <Col md="4">
-              <FormGroup>
-                <Label>Contact Address 3</Label>
-                <Input type="text" name="address_state" onChange={handleInputs} value={settingdetails?.address_state || ''} />
-              </FormGroup>
-            </Col>
-          </Row> */}
-          <Row>
-            <Col md="3">
-              <FormGroup style={{ marginBottom: '8px' }}>
-                <Label style={{ fontSize: '11px', marginBottom: '2px' }}>Country</Label>
-                <Input type="text" name="address_country" onChange={handleInputs} value={settingdetails?.address_country || ''} style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }} />
+
+         
+          {/* Row 3: Contact Address1 + Contact Address2 */}
+          <Row form>
+            <Col md="6">
+              <FormGroup row style={{ marginBottom: '8px' }}>
+                <Label sm={4} style={{ fontSize: '11px', marginBottom: '0' }}>
+                  Contact Address 1
+                </Label>
+                <Col sm={8}>
+                  <Input
+                    type="text"
+                    name="address"
+                    onChange={handleInputs}
+                    value={settingdetails?.address || ''}
+                    style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }}
+                  />
+                </Col>
               </FormGroup>
             </Col>
-            <Col md="3">
-              <FormGroup style={{ marginBottom: '8px' }}>
-                <Label style={{ fontSize: '11px', marginBottom: '2px' }}>Country Po Code</Label>
-                <Input type="text" name="address_po_code" onChange={handleInputs} value={settingdetails?.address_po_code || ''} style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }} />
+
+             <Col md="6">
+              <FormGroup row style={{ marginBottom: '8px' }}>
+                <Label sm={4} style={{ fontSize: '11px', marginBottom: '0' }}>
+                  Contact Address 2
+                </Label>
+                <Col sm={8}>
+                  <Input
+                    type="text"
+                    name="address2"
+                    onChange={handleInputs}
+                    value={settingdetails?.address2 || ''}
+                    style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }}
+                  />
+                </Col>
               </FormGroup>
             </Col>
-            <Col md="3">
-              <FormGroup style={{ marginBottom: '8px' }}>
-                <Label style={{ fontSize: '11px', marginBottom: '2px' }}>Remarks</Label>
-                <Input type="text" name="notes" onChange={handleInputs} value={settingdetails?.notes || ''} style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }} />
+          </Row>
+
+
+           <Row form>
+            <Col md="6">
+              <FormGroup row style={{ marginBottom: '8px' }}>
+                <Label sm={4} style={{ fontSize: '11px', marginBottom: '0' }}>
+                  Contact Address 3
+                </Label>
+                <Col sm={8}>
+                  <Input
+                    type="text"
+                    name="address_street1"
+                    onChange={handleInputs}
+                    value={settingdetails?.address_street1 || ''}
+                    style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }}
+                  />
+                </Col>
+              </FormGroup>
+            </Col>
+
+             <Col md="6">
+              <FormGroup row style={{ marginBottom: '8px' }}>
+                <Label sm={4} style={{ fontSize: '11px', marginBottom: '0' }}>
+                  Country
+                </Label>
+                <Col sm={8}>
+                  <Input
+                    type="text"
+                    name="address_country"
+                    onChange={handleInputs}
+                    value={settingdetails?.address_country || ''}
+                    style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }}
+                  />
+                </Col>
+              </FormGroup>
+            </Col>
+          </Row>
+
+        
+          {/* Row 5: Postal Code + Order Date */}
+          <Row form>
+            <Col md="6">
+              <FormGroup row style={{ marginBottom: '8px' }}>
+                <Label sm={4} style={{ fontSize: '11px', marginBottom: '0' }}>
+                  Postal Code
+                </Label>
+                <Col sm={8}>
+                  <Input
+                    type="text"
+                    name="address_po_code"
+                    onChange={handleInputs}
+                    value={settingdetails?.address_po_code || ''}
+                    style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }}
+                  />
+                </Col>
+              </FormGroup>
+            </Col>
+
+            <Col md="6">
+              <FormGroup row style={{ marginBottom: '8px' }}>
+                <Label sm={4} style={{ fontSize: '11px', marginBottom: '0' }}>
+                Remarks
+                </Label>
+                <Col sm={8}>
+                  <Input
+                    type="text"
+                    name="remarks"
+                    onChange={handleInputs}
+                    value={settingdetails?.remarks || ''}
+                    style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }}
+                  />
+                </Col>
               </FormGroup>
             </Col>
           </Row>

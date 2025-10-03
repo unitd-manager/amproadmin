@@ -2,9 +2,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Form, FormGroup, Label, Input, Button, Spinner } from 'reactstrap';
+import { Form, FormGroup, Label, Input, Button, Spinner, Row, Col } from 'reactstrap';
 import api from '../../constants/api';
 import message from '../../components/Message';
+import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
+import ComponentCard from '../../components/ComponentCard';
 
 const PriceGroupEdit = () => {
   const { id } = useParams();
@@ -74,36 +76,60 @@ const PriceGroupEdit = () => {
   }
 
   return (
-    <Form>
-      <h3>Edit Price Group</h3>
-      <FormGroup>
-        <Label>Group Name *</Label>
-        <Input
-          name="price_group_name"
-          onChange={handleChange}
-          value={groupData?.price_group_name || ''}
-        />
-      </FormGroup>
-      <FormGroup check>
-        <Label check>
-          <Input
-            type="checkbox"
-            name="is_active"
-            checked={!!groupData?.is_active}
-            onChange={handleChange}
-          />{' '}
-          Is Active
-        </Label>
-      </FormGroup>
-      <div className="mt-3">
-        <Button color="primary" onClick={handleSubmit}>
+    <>
+      {/* BreadCrumbs */}
+      <BreadCrumbs heading="New/Edit Price Group" />
+      
+      <div className="d-flex justify-content-end mb-3">
+        <Button 
+          color="primary" 
+          onClick={handleSubmit}
+          className="me-2"
+        >
           Save
-        </Button>{' '}
-        <Button color="danger" onClick={() => navigate('/PriceGroup')}>
+        </Button>
+        <Button 
+          color="secondary" 
+          onClick={() => navigate('/PriceGroup')}
+        >
           Cancel
         </Button>
       </div>
-    </Form>
+      
+      <ComponentCard title="Price Group Details">
+        <Form>
+          <Row>
+            <Col md="6">
+              <FormGroup>
+                <Label>Group Name <span className="text-danger">*</span></Label>
+                <Input
+                  name="price_group_name"
+                  onChange={handleChange}
+                  value={groupData?.price_group_name || ''}
+                  placeholder="Enter group name"
+                />
+              </FormGroup>
+            </Col>
+            <Col md="6">
+              <FormGroup check className="mt-4">
+                <div className="d-flex align-items-center">
+                  <Label check className="me-2">Is Active</Label>
+                  <div className="form-check form-switch">
+                    <Input
+                      type="switch"
+                      name="status"
+                      checked={!!groupData?.status}
+                      onChange={handleChange}
+                      className="form-check-input"
+                    />
+                  </div>
+                </div>
+              </FormGroup>
+            </Col>
+          </Row>
+        </Form>
+      </ComponentCard>
+    </>
   );
 };
 

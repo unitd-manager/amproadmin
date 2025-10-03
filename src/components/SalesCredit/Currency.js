@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Row, Col, Form, FormGroup, Label, Input } from 'reactstrap';
 import PropTypes from 'prop-types';
-import ComponentCard from '../ComponentCard';
+
 import api from '../../constants/api';
 
 export default function SupplierDetails({ handleInputs, settingdetails, setSettingDetails }) {
@@ -46,18 +46,20 @@ export default function SupplierDetails({ handleInputs, settingdetails, setSetti
   return (
     <Form>
       <FormGroup>
-        <ComponentCard title="Currency Details">
+        <div style={{ padding: '8px', backgroundColor: '#e9e9e9', borderRadius: '4px', marginBottom: '8px' }}>
+          <h6 style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#495057' }}>Currency Details</h6>
           <Row>
-            <Col md="4">
-              <FormGroup>
-                <Label>
+            <Col md="3">
+              <FormGroup style={{ marginBottom: '8px' }}>
+                <Label style={{ fontSize: '11px', marginBottom: '2px' }}>
                   Currency code <span className="required"> *</span>
                 </Label>
                 <Input
                   type="select"
                   name="currency_id"
-                  onChange={handleCompanyChange} // Updated function
+                  onChange={handleCompanyChange}
                   value={settingdetails?.currency_id ? String(settingdetails.currency_id) : ''}
+                  style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }}
                 >
                   <option value="">Please Select</option>
                   {company.map((ele) => (
@@ -68,21 +70,21 @@ export default function SupplierDetails({ handleInputs, settingdetails, setSetti
                 </Input>
               </FormGroup>
             </Col>
-            <Col md="4">
-              <FormGroup>
-                <Label>Currency Name</Label>
-                <Input type="text" name="currency_name" onChange={handleInputs} value={settingdetails?.currency_name || ''} />
+            <Col md="3">
+              <FormGroup style={{ marginBottom: '8px' }}>
+                <Label style={{ fontSize: '11px', marginBottom: '2px' }}>Currency Name</Label>
+                <Input type="text" name="currency_name" onChange={handleInputs} value={settingdetails?.currency_name || ''} style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }} />
               </FormGroup>
             </Col>
-            <Col md="4">
-              <FormGroup>
-                <Label>Currency Rate</Label>
-                <Input type="text" name="currency_rate" onChange={handleInputs} value={settingdetails?.currency_rate || ''} />
+            <Col md="3">
+              <FormGroup style={{ marginBottom: '8px' }}>
+                <Label style={{ fontSize: '11px', marginBottom: '2px' }}>Currency Rate</Label>
+                <Input type="text" name="currency_rate" onChange={handleInputs} value={settingdetails?.currency_rate || ''} style={{ fontSize: '11px', padding: '4px 6px', height: '28px' }} />
               </FormGroup>
             </Col>
           </Row>
          
-        </ComponentCard>
+        </div>
       </FormGroup>
     </Form>
   );

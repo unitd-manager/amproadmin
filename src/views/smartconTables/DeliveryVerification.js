@@ -1,4 +1,4 @@
-import React, {  useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as Icon from 'react-feather';
 import { Button } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -25,6 +25,17 @@ const Test = () => {
   const [customerFilter, setCustomerFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('Not Delivered');
 
+
+
+  // ✅ Select All functionality
+  const [selectAll, setSelectAll] = useState(false);
+
+  useEffect(() => {
+    if (supplier && supplier.length > 0) {
+      setSelectAll(selectedOrders.length === supplier.length);
+    }
+  }, [selectedOrders, supplier]);
+
   // ✅ Checkbox handler
   const handleCheckboxChange = (orderId) => {
     setSelectedOrders((prevSelected) =>
@@ -43,7 +54,7 @@ const Test = () => {
         from_date: fromDate,
         to_date: toDate,
         company_name: customerFilter,
-        delivery_status: statusFilter,
+        status: statusFilter,
       })
       .then((res) => {
         setSupplier(res.data.data);
@@ -53,6 +64,10 @@ const Test = () => {
         setLoading(false);
       });
   };
+
+    useEffect(() => {
+    getDeliveryVerifi();
+  }, []);
 
   // ✅ Generate new delivery codes
   const generateDeliveryCodes = async () => {
@@ -117,7 +132,30 @@ const generateDeliveryOrder = async () => {
 
   // ✅ Table column definitions
   const columns = [
-    { name: '', selector: 'checkbox', grow: 0, width: '3%' },
+    { 
+      name: (
+        <input
+          type="checkbox"
+          checked={selectAll}
+          ref={(input) => {
+            if (input) {
+              input.indeterminate = selectedOrders.length > 0 && selectedOrders.length < (supplier?.length || 0);
+            }
+          }}
+          onChange={() => {
+            if (selectAll) {
+              setSelectedOrders([]); // deselect all
+            } else {
+              setSelectedOrders(supplier.map((s) => s.delivery_verification_id)); // select all
+            }
+            setSelectAll(!selectAll);
+          }}
+        />
+      ), 
+      selector: 'checkbox', 
+      grow: 0, 
+      width: '3%' 
+    },
     { name: '#', selector: 'delivery_verification_id', grow: 0, wrap: true, width: '4%' },
     { name: 'Edit', selector: 'edit', grow: 0, width: 'auto', button: true, sortable: false },
     { name: 'Tran NO', selector: 'delivery_verification_code', sortable: true, grow: 0, wrap: true },
@@ -213,7 +251,7 @@ const generateDeliveryOrder = async () => {
                   </td>
                   <td>{element.delivery_verification_id}</td>
                   <td>
-                    <Link to={`/salesorderedit/${element.delivery_verification_id}`}>
+                    <Link to={`/DeliveryVerificationEdit/${element.delivery_verification_id}?tab=1`}>
                       <Icon.Edit2 />
                     </Link>
                   </td>

@@ -4,7 +4,7 @@ import { Button, Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 're
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'datatables.net-dt/js/dataTables.dataTables';
 import 'datatables.net-dt/css/jquery.dataTables.min.css';
-//import $ from 'jquery';
+//import $ from 'jquery'; 
 import 'datatables.net-buttons/js/buttons.colVis';
 import 'datatables.net-buttons/js/buttons.flash';
 import 'datatables.net-buttons/js/buttons.html5';
@@ -18,13 +18,21 @@ import SalesInvoicePickingListPdf from '../../components/PDF/SalesInvoicePicking
 import PrintLetterPdf from '../../components/PDF/PrintLetterPdf';
 import PrintPackingPdf from '../../components/PDF/PrintPackingPdf';
 import SalesInfoModal from '../../components/SalesInfoModal'; // adjust path as needed
-
-
+import './salesOrderTable.css';
+ 
 const Test = () => {
   const [supplier, setSupplier] = useState(null);
+  const [selectedInvoiceIds, setSelectedInvoiceIds] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [selectAll, setSelectAll] = useState(false);
+
+  useEffect(() => {
+    if (supplier && supplier.length > 0) {
+      setSelectAll(selectedInvoiceIds.length === supplier.length);
+    }
+  }, [selectedInvoiceIds, supplier]);
 
   const [tranNoFilter, setTranNoFilter] = useState('');
   const [fromDate, setFromDate] = useState('');
@@ -61,7 +69,43 @@ const Test = () => {
   }, []);
 
   const columns = [
-    { name: '', selector: 'checkbox', cell: () => <input type="checkbox" />, grow: 0, width: '3%' },
+    { 
+      name: (
+        <input
+          type="checkbox"
+          checked={selectAll}
+          ref={(input) => {
+            if (input) {
+              input.indeterminate = selectedInvoiceIds.length > 0 && selectedInvoiceIds.length < (supplier?.length || 0);
+            }
+          }}
+          onChange={() => {
+            if (selectAll) {
+              setSelectedInvoiceIds([]); // deselect all
+            } else {
+              setSelectedInvoiceIds(supplier.map((s) => s.invoice_id)); // select all
+            }
+            setSelectAll(!selectAll);
+          }}
+        />
+      ),
+      selector: 'checkbox',
+      cell: (row) => (
+        <input
+          type="checkbox"
+          checked={selectedInvoiceIds.includes(row.invoice_id)}
+          onChange={() => {
+            setSelectedInvoiceIds((prev) =>
+              prev.includes(row.invoice_id)
+                ? prev.filter((id) => id !== row.invoice_id)
+                : [...prev, row.invoice_id]
+            );
+          }}
+        />
+      ),
+      grow: 0,
+      width: '3%',
+    },
     { name: '#', selector: 'invoice_id', grow: 0, wrap: true, width: '4%' },
     { name: 'Edit', selector: 'edit', cell: () => <Icon.Edit2 />, grow: 0, width: 'auto', button: true, sortable: false },
     { name: 'Tran NO', selector: 'invoice_code', sortable: true, grow: 0, wrap: true },
@@ -205,11 +249,29 @@ const handleConvertToDelivryVerification = async () => {
   const [salesInfoOpen, setSalesInfoOpen] = useState(false);
 
   const handleSalesInfo = () => {
-    if (!selectedOrder || !selectedOrder.sales_order_id) {
-      message('Please select an invoice with a sales order', 'error');
+    // if (!selectedOrder || !selectedOrder.sales_order_id) {
+    //   message('Please select an invoice with a sales order', 'error');
+    //   return;
+    // }
+    setSalesInfoOpen(true);
+  };
+
+  // Add delete handler
+  const handleDeleteInvoices = async () => {
+    if (selectedInvoiceIds.length === 0) {
+      message('Please select at least one invoice to delete', 'error');
       return;
     }
-    setSalesInfoOpen(true);
+    if (!window.confirm('Are you sure you want to delete the selected invoices?')) return;
+    try {
+      await api.post('/invoice/deleteInvoice', { invoice_id: selectedInvoiceIds.join(',') });
+      message('Selected invoices deleted successfully', 'success');
+      setSelectedInvoiceIds([]);
+      setSelectedOrder(null);
+      getSupplier();
+    } catch (error) {
+      message(error.response?.data?.message || 'Failed to delete invoices', 'error');
+    }
   };
 
   return (
@@ -229,7 +291,28 @@ const handleConvertToDelivryVerification = async () => {
             <option value="Not Paid">Not Paid</option>
           </select>
           <Button color="primary" onClick={getSupplier}>Search</Button>
+          <Button
+            color="danger"
+            className="ms-2"
+            disabled={selectedInvoiceIds.length === 0}
+            onClick={handleDeleteInvoices}
+            data-testid="delete-button"
+          >
+            <Icon.Trash2 size={16} />
+          </Button>
+          <Button
+            color="secondary"
+            className="ms-2"
+            disabled={selectedInvoiceIds.length === 0}
+          >
+            <PrintLetterPdf
+              id={selectedOrder?.invoice_id}
+              settingdetails={null}
+              lineItem={null}
+            />
+          </Button>
         </div>
+<div className="sales-order-table">
 
         <CommonTable
           loading={loading}
@@ -237,7 +320,7 @@ const handleConvertToDelivryVerification = async () => {
           Button={
             <Dropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
               <DropdownToggle color="primary" caret className="shadow-none">
-                <Button color="primary" tag={Link} to="/InvoiceDetails" className="shadow-none">
+                <Button color="primary" tag={Link} to="/InvoiceDetails?tab=1" className="shadow-none">
                   New Transaction
                 </Button>
               </DropdownToggle>
@@ -248,11 +331,11 @@ const handleConvertToDelivryVerification = async () => {
 
   </DropdownItem>
   <DropdownItem>
-    <SalesInvoicePickingListPdf id={id} settingdetails={settingdetails} lineItem={lineItem} />
+    <SalesInvoicePickingListPdf  selectedOrderIds={selectedInvoiceIds} settingdetails={settingdetails} lineItem={lineItem} />
   
   </DropdownItem>
   <DropdownItem>   <PrintPackingPdf
-          id={id}
+          selectedOrderIds={selectedInvoiceIds}
           settingdetails={settingdetails}
           lineItem={lineItem}
           
@@ -283,8 +366,15 @@ const handleConvertToDelivryVerification = async () => {
                   <td>
                     <input
                       type="checkbox"
-                      checked={selectedOrder?.invoice_id === element.invoice_id}
-                      onChange={() => setSelectedOrder(element)}
+                      checked={selectedInvoiceIds.includes(element.invoice_id)}
+                      onChange={() => {
+                        setSelectedInvoiceIds((prev) =>
+                          prev.includes(element.invoice_id)
+                            ? prev.filter((ids) => ids !== element.invoice_id)
+                            : [...prev, element.invoice_id]
+                        );
+                        setSelectedOrder(element); // Keep single selection for compatibility
+                      }}
                     />
                   </td>
                   <td>{index + 1}</td>
@@ -292,7 +382,7 @@ const handleConvertToDelivryVerification = async () => {
   {element.status === 'Paid' ? (
     <Icon.Edit2 style={{ color: '#ccc', cursor: 'not-allowed' }} />
   ) : (
-    <Link to={`/InvoiceEdit/${element.invoice_id}`}>
+    <Link to={`/InvoiceEdit/${element.invoice_id}?tab=1`}>
       <Icon.Edit2 />
     </Link>
   )}
@@ -311,6 +401,7 @@ const handleConvertToDelivryVerification = async () => {
               ))}
           </tbody>
         </CommonTable>
+        </div>
       </div>
       <SalesInfoModal
         isOpen={salesInfoOpen}

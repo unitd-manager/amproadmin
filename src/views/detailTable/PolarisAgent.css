@@ -284,3 +284,19 @@
   text-align: left;
   color: green;
 }
+
+.agent-container .chat-panel .chat-box::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 5px;
+}
+
+.speech-recognition-unsupported-message {
+  background-color: #ffdddd;
+  color: #d8000c;
+  border: 1px solid #d8000c;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 5px;
+  text-align: center;
+  font-weight: bold;
+}

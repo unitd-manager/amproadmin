@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import pdfMake from 'pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
-// import { Button } from 'reactstrap';
+// import { Button } from 'reactstrap'; 
 import PropTypes from 'prop-types';
 import moment from 'moment';
 import api from '../../constants/api';
 import message from '../Message';
 import PdfFooter from './PdfFooter'; // Assuming you have a footer component
+import PdfHeader from './PdfHeader'; // Assuming you have a header component
+
 
 const PdfPickingList = ({ salesOrderIds }) => {
   PdfPickingList.propTypes = {
@@ -97,6 +99,7 @@ const PdfPickingList = ({ salesOrderIds }) => {
     const dd = {
       pageSize: 'A4',
       pageMargins: [40, 150, 40, 80], // Adjust margins as needed
+            header: PdfHeader({ findCompany }),
       footer: PdfFooter, // Assuming you have a standard footer
       content: [
         {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import * as Icon from 'react-feather';
-import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
+import { Button, Card, CardBody, Input, Row, Col,Label } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'datatables.net-dt/js/dataTables.dataTables';
 import 'datatables.net-dt/css/jquery.dataTables.min.css';
@@ -8,30 +8,46 @@ import $ from 'jquery';
 import { Link } from 'react-router-dom';
 import message from '../../components/Message';
 import api from '../../constants/api';
-import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
- 
+import './Customer.scss';
+
 const Customer = () => {
   const [customer, setCustomer] = useState([]);
   const [loading, setLoading] = useState(false);
   const [customerNameFilter, setCustomerNameFilter] = useState('');
   const [mobileFilter, setMobileFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('Active');
-  const [selectedCustomerIds, setSelectedCustomerIds] = useState([]);
-  const [modal, setModal] = useState(false);
-  const [selectedCustomerId, setSelectedCustomerId] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [showStatusFilter, setShowStatusFilter] = useState(false);
   const dataTableRef = useRef(null);
+  const filterRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setShowStatusFilter(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const getCustomer = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/contact/getContactss', {
-        params: {
-          company_name: customerNameFilter,
-          mobile: mobileFilter,
-          is_active: statusFilter === 'Active' ? 1 : statusFilter === 'Inactive' ? 0 : '',
-        },
-      });
+      const params = {
+        company_name: customerNameFilter,
+        mobile: mobileFilter,
+      };
+      
+      if (statusFilter !== 'all') {
+        params.is_active = statusFilter === 'active' ? 1 : 0;
+      }
+
+      const res = await api.get('/contact/getContactss', { params });
   
       const formattedCustomers = res.data.data.map(item => ({
         ...item,
@@ -61,31 +77,9 @@ const Customer = () => {
     }
   };
 
-  const handleActivateClick = (contactId) => {
-    setSelectedCustomerId(contactId);
-    setModal(true);
-  };
-
-  const handleActivateCustomer = async () => {
-    try {
-      await api.post('/contact/updateContactStatus', {
-        company_id: selectedCustomerId,
-        is_active: 1,
-      });
-      message('Customer activated successfully', 'success');
-      getCustomer();
-      setModal(false);
-    } catch (error) {
-      message('Error activating customer', 'error');
-      console.error('Error activating customer:', error);
-    }
-  };
-
-  const toggleModal = () => setModal(!modal);
-
   useEffect(() => {
     getCustomer();
-  }, [customerNameFilter, mobileFilter, statusFilter]);
+  }, [customerNameFilter, mobileFilter]);
 
   useEffect(() => {
     if (dataTableRef.current && $.fn.DataTable.isDataTable(dataTableRef.current)) {
@@ -114,155 +108,190 @@ const Customer = () => {
     };
   }, [customer]);
 
-  const handleCheckboxChange = (contactId, isChecked) => {
-    if (isChecked) {
-      setSelectedCustomerIds((prevIds) => [...prevIds, contactId]);
-    } else {
-      setSelectedCustomerIds((prevIds) => prevIds.filter((id) => id !== contactId));
-    }
-  };
-
-  const Contentcolumns = [
-    { name: '', selector: 'checkbox', width: '3%' },
-    { name: '#', selector: 's_no', width: '4%' },
-    { name: 'Edit', selector: 'edit', width: 'auto' },
-    { name: 'Action', selector: 'action', width: 'auto' },
-    { name: 'Customer Code', selector: 'customer_code', sortable: true, grow: 1, wrap: true },
-    { name: 'Customer Name', selector: 'company_name', sortable: true, grow: 2, wrap: true },
-    { name: 'Address', selector: 'address', sortable: true, grow: 2.5, wrap: true },
-    { name: 'Phone No', selector: 'phone', sortable: true, grow: 1, wrap: true },
-    { name: 'Email', selector: 'email', sortable: true, grow: 1.5 },
-    { name: 'Mobile', selector: 'mobile', sortable: true, grow: 1, wrap: true },
-    { name: 'Status', selector: 'formattedStatus', sortable: true, grow: 0.8, wrap: true },
-  ];
 
   return (
-    <div className="MainDiv pt-xs-25">
-      <BreadCrumbs />
-      <div className="d-flex flex-wrap gap-2 mb-3">
-        <input
-          className="form-control"
-          placeholder="Customer Name"
-          value={customerNameFilter}
-          onChange={(e) => setCustomerNameFilter(e.target.value)}
-          style={{ width: '15%' }}
-        />
-        <input
-          className="form-control"
-          placeholder="Mobile No."
-          value={mobileFilter}
-          onChange={(e) => setMobileFilter(e.target.value)}
-          style={{ width: '15%' }}
-        />
-<select
-  className="form-select"
-  style={{ width: '15%' }}
-  value={statusFilter}
-  onChange={(e) => setStatusFilter(e.target.value)}
->
-  <option value="">All Status</option>
-  <option value="Active">Active</option>
-  <option value="Inactive">Inactive</option>
-</select>
-        <Button color="primary" className="shadow-none">
-          Search
-        </Button>
-      </div>
-
-      <CommonTable
-        loading={loading}
-        title="Customer List"
-        Button={
-          <Link to="/CustomerDetails">
-            <Button color="primary" className="shadow-none">
-              Add New
-            </Button>
-          </Link>
-        }
-      >
-        <thead>
-          <tr>
-            {Contentcolumns.map((col) => (
-              <th key={col.name}>{col.name}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {customer.map((element, index) => (
-            <tr key={element.company_id}>
-              <td>
-                <input
-                  type="checkbox"
-                  checked={selectedCustomerIds.includes(element.company_id)}
-                  onChange={(e) => handleCheckboxChange(element.company_id, e.target.checked)}
+    <div className="MainDiv">
+      <Card className="mb-4">
+        <CardBody className="p-4">
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <h5 className="mb-0">Customer List</h5>
+            <Link to="/CustomerDetails">
+              <Button color="primary" size="sm" className="d-flex align-items-center">
+                <Icon.Plus size={14} className="me-1" /> Add New
+              </Button>
+            </Link>
+          </div>
+          
+          <Row className="mb-3">
+            <Col md={4}>
+              <div className="form-group mb-3 mb-md-0">
+                <Input
+                  type="text"
+                  className="form-control-sm"
+                  placeholder="Search Customer.."
+                  value={customerNameFilter}
+                  onChange={(e) => setCustomerNameFilter(e.target.value)}
                 />
-              </td>
-              <td>{index + 1}</td>
-              <td>
-                <Link to={`/CustomerEdit/${element.company_id}`}>
-                  <Icon.Edit2 />
-                </Link>
-              </td>
-              <td>
-                {element.is_active !== 1 ? (
-                  <Button
-                    color="success"
-                    className="shadow-none btn-sm"
-                    onClick={() => handleActivateClick(element.company_id)}
-                    style={{ padding: '0.25rem 0.5rem', lineHeight: 1 }}
-                  >
-                    <Icon.Check size={16} />
-                  </Button>
-                ) : (
-                  <Button
-                    color="danger"
-                    className="shadow-none btn-sm"
-                    onClick={() => handleDeleteCustomer(element.company_id)}
-                    style={{ padding: '0.25rem 0.5rem', lineHeight: 1 }}
-                  >
-                    <Icon.Trash2 size={16} />
-                  </Button>
-                )}
-              </td>
-              <td>{element.customer_code || 'N/A'}</td>
-              <td>{element.company_name || 'N/A'}</td>
-              <td>
-                <span style={{ color: 'black' }}>{element.address || ''}</span>
-                {element.address && element.address2 && <br />}
-                <span style={{ color: 'grey' }}>{element.address2 || ''}</span>
-                {!element.address && !element.address2 && 'N/A'}
-              </td>
-              <td>{element.phone || 'N/A'}</td>
-              <td>{element.email || 'N/A'}</td>
-              <td>{element.mobile || 'N/A'}</td>
-              <td>
-                <span
-                  style={{
-                    color: element.is_active === 1 ? 'green' : 'red',
-                    fontWeight: 'bold',
-                  }}
+              </div>
+            </Col>
+            <Col md={4}>
+              <div className="form-group mb-3 mb-md-0">
+                <Input
+                  type="text"
+                  className="form-control-sm"
+                  placeholder="Search Phone No"
+                  value={mobileFilter}
+                  onChange={(e) => setMobileFilter(e.target.value)}
+                />
+              </div>
+            </Col>
+            <Col md={4} className="d-flex align-items-center gap-2">
+              <div className="position-relative d-flex align-items-center" ref={filterRef}>
+                <Button 
+                  color="light" 
+                  size="sm" 
+                  className="d-flex align-items-center"
+                  onClick={() => setShowStatusFilter(!showStatusFilter)}
                 >
-                  {element.formattedStatus || 'N/A'}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </CommonTable>
+                  <Icon.Filter size={14} className="me-1" />
+                </Button>
+                {showStatusFilter && (
+                  <div 
+                    className="bg-white border rounded shadow p-2 position-absolute" 
+                    style={{
+                      width: '160px',
+                      top: '100%',
+                      left: 0,
+                      zIndex: 1000,
+                      marginTop: '5px'
+                    }}
+                  >
+                    <div className="form-check">
+                      <input
+                        type="radio"
+                        className="form-check-input"
+                        id="allStatus"
+                        name="statusFilter"
+                        checked={statusFilter === 'all'}
+                        onChange={() => {
+                          setStatusFilter('all');
+                          setShowStatusFilter(false);
+                          getCustomer();
+                        }}
+                      />
+                      <Label className="form-check-label" htmlFor="allStatus">
+                        All Status
+                      </Label>
+                    </div>
+                    <div className="form-check">
+                      <input
+                        type="radio"
+                        className="form-check-input"
+                        id="activeStatus"
+                        name="statusFilter"
+                        checked={statusFilter === 'active'}
+                        onChange={() => {
+                          setStatusFilter('active');
+                          setShowStatusFilter(false);
+                          getCustomer();
+                        }}
+                      />
+                      <Label className="form-check-label" htmlFor="activeStatus">
+                        Active
+                      </Label>
+                    </div>
+                    <div className="form-check">
+                      <input
+                        type="radio"
+                        className="form-check-input"
+                        id="inactiveStatus"
+                        name="statusFilter"
+                        checked={statusFilter === 'inactive'}
+                        onChange={() => {
+                          setStatusFilter('inactive');
+                          setShowStatusFilter(false);
+                          getCustomer();
+                        }}
+                      />
+                      <Label className="form-check-label" htmlFor="inactiveStatus">
+                        Inactive
+                      </Label>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <Button 
+                color="primary" 
+                size="sm" 
+                className="d-flex align-items-center"
+                onClick={getCustomer}
+              >
+                <Icon.Search size={14} className="me-1" /> Search
+              </Button>
+            </Col>
+          </Row>
 
-      {/* Activation Modal */}
-      <Modal isOpen={modal} toggle={toggleModal} centered>
-        <ModalHeader toggle={toggleModal}>Activate Customer</ModalHeader>
-        <ModalBody>Do you want to activate this customer?</ModalBody>
-        <ModalFooter>
-          <Button color="primary" onClick={handleActivateCustomer}>
-            Activate
-          </Button>
-          <Button color="secondary" onClick={toggleModal}>
-            Cancel
-          </Button>
-        </ModalFooter>
-      </Modal>
+          <div className="table-responsive">
+            <CommonTable loading={loading}>
+              <thead>
+                <tr>
+                  <th style={{ width: '50px' }}></th>
+                  <th style={{ width: '50px' }}></th>
+                  <th>Customer Code</th>
+                  <th>Customer Name</th>
+                  <th>Address</th>
+                  <th>Phone No</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {customer.map((element) => (
+                  <tr key={element.company_id}>
+                    <td>
+                      <button 
+                        type="button"
+                        className="btn btn-sm btn-icon p-0"
+                        onClick={() => handleDeleteCustomer(element.company_id)}
+                        title="Delete"
+                      >
+                        <Icon.Trash2 size={16} className="text-danger" />
+                      </button>
+                    </td>
+                    <td>
+                      <input 
+                        type="checkbox" 
+                        className="form-check-input"
+                        onChange={() => {}}
+                      />
+                    </td>
+                    <td>
+                      <Link to={`/CustomerEdit/${element.company_id}`} className="text-primary text-decoration-none">
+                        {element.customer_code || 'N/A'}
+                      </Link>
+                    </td>
+                    <td>
+                      <Link to={`/CustomerEdit/${element.company_id}`} className="text-primary text-decoration-none">
+                        {element.company_name || 'N/A'}
+                      </Link>
+                    </td>
+                    <td className="text-truncate" style={{ maxWidth: '200px' }}>
+                      {element.address || 'N/A'}
+                    </td>
+                    <td>{element.phone || 'N/A'}</td>
+                    <td>{element.email || 'N/A'}</td>
+                    <td>
+                      <span className={`badge ${element.is_active ? 'bg-success' : 'bg-danger'}`}>
+                        {element.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </CommonTable>
+          </div>
+        </CardBody>
+      </Card>
     </div>
   );
 };
