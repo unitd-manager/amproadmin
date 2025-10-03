@@ -302,7 +302,7 @@ const StockAdjustmentDetails = Loadable(lazy(() => import('../views/detailTable/
 
 
 //const CliDetils = Loadable(lazy(() => import('../views/detailTable/BinCliDetils')));
-// const PolarisAgent = Loadable(lazy(() => import('../views/detailTable/AiAgent')));
+ //const PolarisAgent = Loadable(lazy(() => import('../views/detailTable/AiAgent')));
 // const VoiceChatAgent = Loadable(lazy(() => import('../views/detailTable/VoiceChatAgent')));
 const BinCliEdit = Loadable(
   lazy(() => import('../views/EditData/BinCliEdit')),

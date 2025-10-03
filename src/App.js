@@ -2,6 +2,8 @@ import React, { Suspense } from 'react';
 // import { useRoutes } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { PermifyProvider } from '@permify/react-role';
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { faPrint } from '@fortawesome/free-solid-svg-icons';
 import Themeroutes from './routes/Router';
 import ThemeSelector from './layouts/theme/ThemeSelector';
 import Loader from './layouts/loader/Loader';
@@ -10,6 +12,7 @@ import { AppProvider } from './context/AppContext';
 import rbac from './context/role-based-access';
 // import ContextRBAC from './context/ContextRBAC';
 
+library.add(faPrint);
 rbac.addUserRoles('ADMIN123', ['ADMIN']);
 
 const App = () => {
