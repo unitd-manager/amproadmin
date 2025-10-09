@@ -19,7 +19,7 @@ const PdfGoodsReturn = ({ id }) => {
   // Fetch invoice + supplier + items
   const fetchInvoiceData = () => {
     api
-      .post('/purchaseinvoice/getPurchaseInvoiceById', { purchase_invoice_id: id })
+      .post('/purchaseorder/getGoodsReturnById', { goods_Return_id: id })
       .then((res) => {
         setInvoice(res.data.data[0] || {});
         setSupplier(res.data.supplier || {});
@@ -29,7 +29,7 @@ const PdfGoodsReturn = ({ id }) => {
       });
 
     api
-      .post('/purchaseinvoice/getPurchaseInvoiceItems', { purchase_invoice_id: id })
+      .post('/purchaseorder/getGoodsReturnProductByGoodsReturnId', { goods_Return_id: id })
       .then((res) => {
         setLineItems(res.data.data || []);
       })
@@ -85,7 +85,7 @@ const PdfGoodsReturn = ({ id }) => {
         {
           columns: [
             { text: 'AMPRO PTE LTD', style: 'header' },
-            { text: 'PURCHASE INVOICE', style: 'headerRight', alignment: 'right' },
+            { text: 'GOODS RETURN', style: 'headerRight', alignment: 'right' },
           ],
         },
         {
@@ -103,7 +103,7 @@ const PdfGoodsReturn = ({ id }) => {
             {
               stack: [
                 { text: 'SUPPLIER :', bold: true },
-                { text: supplier.supplier_name || '', style: 'boldText' },
+                { text: supplier.company_name || '', style: 'boldText' },
                 { text: supplier.address || '' },
                 { text: `Tel : ${supplier.phone || ''}` },
               ],
@@ -177,10 +177,9 @@ const PdfGoodsReturn = ({ id }) => {
 
   return (
     <>
-      <a onClick={GetPdf}>Print Purchase Invoice</a>
+      <a onClick={GetPdf}> print</a>
     </>
   );
 };
 
 export default PdfGoodsReturn;
- 

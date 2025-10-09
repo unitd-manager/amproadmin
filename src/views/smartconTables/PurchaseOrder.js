@@ -1,172 +1,3 @@
-// import React, { useEffect, useState } from 'react';
-// import * as Icon from 'react-feather';
-// import { Row,Col,Button } from 'reactstrap';
-// import 'bootstrap/dist/css/bootstrap.min.css';
-// import 'datatables.net-dt/js/dataTables.dataTables';
-// import 'datatables.net-dt/css/jquery.dataTables.min.css';
-// //import $ from 'jquery';
-// import 'datatables.net-buttons/js/buttons.colVis';
-// import 'datatables.net-buttons/js/buttons.flash';
-// import 'datatables.net-buttons/js/buttons.html5';
-// import 'datatables.net-buttons/js/buttons.print';
-// import { Link } from 'react-router-dom';
-// import moment from 'moment';
-// import api from '../../constants/api';
-// import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
-// import CommonTable from '../../components/CommonTable';
-// import message from '../../components/Message';
-
-
-// const PurchaseOrder = () => {
-//   //All state variable
-//   const [purchaseOrder, setPurchaseOrder] = useState(null);
-//   const[loading,setLoading]=useState(false);
-//   //Getting data from purchaseorder
-//   const getpurchaseorder = () => {
-//     setLoading(true)
-//     api.get('/purchaseorder/TabPurchaseOrder').then((res) => {
-//       setPurchaseOrder(res.data.data);
-//       setLoading(false)
-//     }).catch(()=>{
-//       setLoading(false)
-//       message('Unable to get Purchase Data')
-//     })
-//   };
-//   useEffect(() => {
-//     setTimeout(() => {
-     
-//     }, 1000);
-//     getpurchaseorder();
-//   }, []);
-// //Structure of purchaseorder list view
-//   const columns = [
-//     {
-//       name: '#',
-//       grow: 0,
-//       wrap: true,
-//       width: '4%',
-//     },
-//     {
-//       name: 'Edit',
-//       selector: 'edit',
-//       cell: () => <Icon.Edit2 />,
-//       grow: 0,
-//       width: 'auto',
-//       button: true,
-//       sortable: false,
-//     },
-//     {
-//       name: 'PO Code',
-//       selector: 'po_code',
-//       sortable: true,
-//       grow: 0,
-//       wrap: true,
-//     },
-//     {
-//       name: 'Title',
-//       selector: 'title',
-//       sortable: true,
-//       grow: 2,
-//       wrap: true,
-//     },
-   
-//     {
-//       name: 'Status',
-//       selector: 'status',
-//       sortable: true,
-//       width: 'auto',
-//       grow: 3,
-
-//     },
-//     {
-//       name: 'PO Date',
-//       selector: 'purchase_order_date',
-//       sortable: true,
-//       width: 'auto',
-//       grow: 3,
-
-//     },
-//     {
-//       name: 'Supplier Invoice Code',
-//       selector: 'supplier_inv_code',
-//       sortable: true,
-//       width: 'auto',
-//       grow: 3,
-
-//     },
-//     {
-//       name: 'Creation Date',
-//       selector: 'creation_date',
-//       sortable: true,
-//       width: 'auto',
-//       grow: 3,
-
-//     },
-//   ];
-//   return (
-//     <div className="MainDiv">
-//       <div className=" pt-xs-25">
-//         <BreadCrumbs/>
-
-//         <CommonTable
-//         loading={loading}
-//           title="Purchase Order List"
-//           Button={
-//             <>
-//             <Row>
-//               <Col md="6">
-//             <Link to="/purchaseorderDetails">
-//               <Button color="primary" className="shadow-none">
-//                 New
-//               </Button>
-//             </Link>
-//             </Col>
-//             <Col md="6">
-//             <a href="http://43.228.126.245/pyramidapi/storage/excelsheets/PurchaseOrder.xlsx" download>
-//              <Button color="primary" className="shadow-none" >
-//                Sample
-//              </Button>
-//              </a>
-//              </Col>
-//              </Row>
-//             </>
-//           }
-//         >
-//                     <thead>
-//             <tr>
-//               {columns.map((cell) => {
-//                 return <td key={cell.name}>{cell.name}</td>;
-//               })}
-//             </tr>
-//           </thead>
-//           <tbody>
-//             {purchaseOrder &&
-//               purchaseOrder.map((element, index) => {
-//                 return (
-//                   <tr key={element.purchase_order_id}>
-//                     <td>{index + 1}</td>
-//                     <td>
-//                       <Link to={`/purchaseorderEdit/${element.purchase_order_id}`}><Icon.Edit2 />
-//                       </Link>
-//                     </td>
-//                     <td>{element.po_code}</td>
-//                     <td>{element.title ? element.title :element.title_field}</td>
-//                     <td>{element.status}</td>
-//                     <td>{element.purchase_order_date? moment(element.purchase_order_date).format('YYYY-MM-DD'):''}</td>
-//                     <td>{element.supplier_inv_code}</td>
-//                     <td>{element.creation_date? moment(element.creation_date).format('YYYY-MM-DD'):''}</td>
-//                   </tr>
-//                 );
-//               })}
-//           </tbody>
-//           </CommonTable>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default PurchaseOrder;
-
 /*eslint-disable*/
 import React, { useState, useEffect } from 'react';
 import {
@@ -190,7 +21,7 @@ const PurchaseOrder = () => {
   const [goodsReturns, setGoodsReturns] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedTranNos, setSelectedTranNos] = useState([]);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const [statusModal, setStatusModal] = useState(false);
@@ -237,13 +68,31 @@ const PurchaseOrder = () => {
   const handleNewTransactionClick = () => {
     navigate('/PurchaseOrderDetails'); // Example
   };
-
+ const handleDeleteSelected = async () => {
+    if (selectedIds.length === 0) {
+      alert('Please select at least one record to delete.');
+      return;
+    }
+    if (window.confirm('Are you sure you want to delete the selected records?')) {
+      try {
+        await Promise.all(selectedIds.map(purchaseInvoiceId =>
+          api.post('/purchaseorder/deletePurchaseorder', { purchase_order_id: purchaseInvoiceId })
+        ));
+        message('PurchaseOrders deleted successfully!','success');
+        setSelectedIds([]);
+        fetchData();
+      } catch (err) {
+        console.error(err);
+        alert('Failed to delete selected records.');
+      }
+    }
+  };
   const handlePrintwithoutPrice = async () => {
-    if (selectedTranNos.length !== 1) {
+    if (selectedIds.length !== 1) {
       alert('Select a single Purchase Order to print.');
       return;
     }
-    const tranNo = selectedTranNos[0];
+    const tranNo = selectedIds;
     const res = await api.get(`/purchaseorder/getPoByTranNo/${tranNo}`);
     const poData = res.data.data;
 
@@ -262,14 +111,40 @@ const PurchaseOrder = () => {
     win.print();
     win.close();
   };
+ const convertToGra = () => {
+    if (selectedIds.length === 0) {
+    alert('Please select at least one Goods Return to convert.');
+    return;
+  }
+    api.post("/purchaseorder/ConvertToPurchaseInvoice", { purchase_order_ids: selectedIds })
+      .then(() => {
+        message("Converted to GRA successfully",'success');
+        setSelectedIds([]);
+      })
+      .catch(() => message.error("Conversion failed"));
+  };
+
+  const repeatPurchaseOrder = () => {
+    
+    if (selectedIds.length === 0) {
+    alert('Please select at least one record to convert.');
+    return;
+  }
+    api.post("/purchaseorder/repeatPurchaseOrder", { purchase_order_ids: selectedIds })
+      .then(() => {
+        message("Purchase orders repeated successfully",'success');
+        setSelectedIds([]);
+      })
+      .catch(() => message.error("Repeat failed"));
+  };
 
   const handleConverttoGra = async () => {
-    if (selectedTranNos.length !== 1) {
+    if (selectedIds.length !== 1) {
       alert('Please select one PO to convert.');
       return;
     }
     try {
-      await api.post('/purchaseorder/convertToGRA', { tran_no: selectedTranNos[0] });
+      await api.post('/purchaseorder/convertToGRA', { tran_no: selectedIds[0] });
       alert('Converted to GRA!');
     } catch (err) {
       console.error(err);
@@ -278,7 +153,7 @@ const PurchaseOrder = () => {
   };
 
   const handleChangeStatus = () => {
-    if (selectedTranNos.length !== 1) {
+    if (selectedIds.length !== 1) {
       alert('Select one PO to change status');
       return;
     }
@@ -288,7 +163,7 @@ const PurchaseOrder = () => {
   const submitNewStatus = async () => {
     try {
       await api.post('/purchaseorder/changeStatus', {
-        tran_no: selectedTranNos[0],
+        tran_no: selectedIds[0],
         status: newStatus
       });
       alert('Status updated!');
@@ -301,13 +176,13 @@ const PurchaseOrder = () => {
   };
 
   const handleRepeatPurchaseOrder = async () => {
-    if (selectedTranNos.length !== 1) {
+    if (selectedIds.length !== 1) {
       alert('Select one PO to repeat');
       return;
     }
     try {
       const res = await api.post('purchaseorder/repeatGoodsReceipt', {
-        tran_no: selectedTranNos[0]
+        tran_no: selectedIds[0]
       });
       alert('Repeated successfully');
       navigate(`/PurchaseOrderEdit/${res.data.new_id}`);
@@ -339,19 +214,19 @@ const PurchaseOrder = () => {
       <Row className="mb-3">
         <Col md={10}>
           <Button color="primary" onClick={handleSearch}><i className="fa fa-search" /></Button>{' '}
-          {/* <Button color="secondary"><i className="fa fa-print" /></Button>{' '}
-          <Button color="danger"><i className="fa fa-trash" /></Button> */}
+          <Button color="secondary"><i className="fa fa-print" /></Button>{' '}
+          <Button color="danger" onClick={handleDeleteSelected}><i className="fa fa-trash" /></Button>
         </Col>
         <Col md={2} className="text-right">
           <ButtonDropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
             <Button color="primary" onClick={handleNewTransactionClick}>New Transaction</Button>
             <DropdownToggle caret color="primary" />
-            {/* <DropdownMenu end>
+            <DropdownMenu end>
               <DropdownItem onClick={handlePrintwithoutPrice}>Print Without Price</DropdownItem>
-              <DropdownItem onClick={handleConverttoGra}>Convert To GRA</DropdownItem>
+              <DropdownItem onClick={convertToGra}>Convert To GRA</DropdownItem>
               <DropdownItem onClick={handleChangeStatus}>Change Status</DropdownItem>
-              <DropdownItem onClick={handleRepeatPurchaseOrder}>Repeat Purchase Order</DropdownItem>
-            </DropdownMenu> */}
+              <DropdownItem onClick={repeatPurchaseOrder}>Repeat Purchase Order</DropdownItem>
+            </DropdownMenu>
           </ButtonDropdown>
         </Col>
       </Row>
@@ -371,13 +246,13 @@ const PurchaseOrder = () => {
         </thead>
         <tbody>
           {goodsReturns.length > 0 ? goodsReturns.map((item) => (
-            <tr key={item.goods_receipt_id}>
+            <tr key={item.purchase_order_id}>
               <td>
                 <Input
                   type="checkbox"
                   onChange={(e) => {
                     const tranNo = item.tran_no;
-                    setSelectedTranNos(prev =>
+                    setSelectedIds(prev =>
                       e.target.checked ? [...prev, tranNo] : prev.filter(no => no !== tranNo)
                     );
                   }}

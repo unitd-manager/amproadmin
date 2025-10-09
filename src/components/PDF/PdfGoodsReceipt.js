@@ -19,7 +19,7 @@ const PdfGoodsReceipt = ({ id }) => {
   // Fetch invoice + supplier + items
   const fetchInvoiceData = () => {
     api
-      .post('/purchaseorder/getGoodsReceiptById', { goods_receipt_id: id })
+      .post('/purchaseorder/getGoodsReceiptById', { goods_Receipt_id: id })
       .then((res) => {
         setInvoice(res.data.data[0] || {});
         setSupplier(res.data.supplier || {});
@@ -29,7 +29,7 @@ const PdfGoodsReceipt = ({ id }) => {
       });
 
     api
-      .post('/purchaseorder/getGrProductByGoodsReceiptId', { goods_receipt_id: id })
+      .post('/purchaseorder/getGrProductByGoodsReceiptId', { goods_Receipt_id: id })
       .then((res) => {
         setLineItems(res.data.data || []);
       })
@@ -85,7 +85,7 @@ const PdfGoodsReceipt = ({ id }) => {
         {
           columns: [
             { text: 'AMPRO PTE LTD', style: 'header' },
-            { text: 'PURCHASE INVOICE', style: 'headerRight', alignment: 'right' },
+            { text: 'GOODS RECEIPT', style: 'headerRight', alignment: 'right' },
           ],
         },
         {
@@ -103,7 +103,7 @@ const PdfGoodsReceipt = ({ id }) => {
             {
               stack: [
                 { text: 'SUPPLIER :', bold: true },
-                { text: supplier.supplier_name || '', style: 'boldText' },
+                { text: supplier.company_name || '', style: 'boldText' },
                 { text: supplier.address || '' },
                 { text: `Tel : ${supplier.phone || ''}` },
               ],
@@ -177,7 +177,7 @@ const PdfGoodsReceipt = ({ id }) => {
 
   return (
     <>
-      <a onClick={GetPdf}>Print Goods Receipt</a>
+      <a onClick={GetPdf}> print</a>
     </>
   );
 };

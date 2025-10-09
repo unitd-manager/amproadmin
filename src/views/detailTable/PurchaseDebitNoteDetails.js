@@ -1210,7 +1210,7 @@ useEffect(() => {
 
       {/* Center column (center aligned) */}
       <Col md="6" className="text-center">
-        <div className="text-muted small">
+        {/* <div className="text-muted small">
           Additional Charges <span className="text-primary">0.00</span>
         </div>
         <div className="text-muted small">
@@ -1218,7 +1218,7 @@ useEffect(() => {
         </div>
         <div className="fw-bold mt-1">
           Final Total : <span>{Number(finalTotal)?.toFixed(2)}</span>
-        </div>
+        </div> */}
       </Col>
 
       {/* Right column */}

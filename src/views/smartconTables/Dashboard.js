@@ -27,6 +27,8 @@ const Dashboard = () => {
   const [recentInvoices, setRecentInvoices] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
   const [salestotalvalue, setSalesTotalValue] = useState({});
+  const [purchaseTotalValue, setPurchaseTotalValue] = useState({});
+  const [recentPurchaseInvoices, setRecentPurchaseInvoices] = useState([]);
 
   // Toggle tab
   const toggle = (tab) => {
@@ -81,6 +83,22 @@ const Dashboard = () => {
       .post('/salesOrder/getSalesOrderDashboard', {tran_date: today })
       .then((res) => {
         setRecentOrders(res.data.data);
+      })
+      .catch((err) => console.error(err));
+
+    api
+      .get('/purchaseorder/getPurchaseTotalOutstanding')
+      .then((res) => {
+        setPurchaseTotalValue(res.data.data[0]);
+        console.log('Purchase Total Value:', res.data.data[0]);
+      })
+      .catch((err) => console.error(err));
+
+    api
+      .post('/purchaseorder/getPurchaseInvoiceDashboard', {invoice_date: today })
+      .then((res) => {
+        setRecentPurchaseInvoices(res.data.data);
+        console.log('Recent Purchase Invoices:', res.data.data);
       })
       .catch((err) => console.error(err));
   }, []);
@@ -378,7 +396,79 @@ const Dashboard = () => {
           </Row> */}
         </TabPane>
         <TabPane tabId="3">
-          <h5>Purchase Tab Content</h5>
+          <Row>
+            <Col md="6">
+              <Card className="shadow-sm mb-4 h-100">
+                <CardHeader className="bg-white d-flex flex-column justify-content-between">
+                  <h5 className="mb-0">Recent Purchase Invoices</h5>
+                  <div className="d-flex align-items-center">
+                    <FaChartBar size={24} color="#007bff" className="me-2" />
+                    <div>
+                      <strong>Total Purchase: </strong>${purchaseTotalValue.totalPurchase}
+                    </div>
+                  </div>
+                  <div className="d-flex align-items-center mt-2">
+                    <FaMoneyBillWave size={24} color="#28a745" className="me-2" />
+                    <div>
+                      <strong>Total Outstanding: </strong>${purchaseTotalValue.totalOutstanding}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardBody>
+                  <Table bordered responsive>
+                    <thead className="table-light">
+                      <tr>
+                        <th>Date</th>
+                        <th>Invoice No</th>
+                        <th>Customer</th>
+                        <th>Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recentPurchaseInvoices.length > 0 ? (
+                        recentPurchaseInvoices.map((inv) => (
+                          <tr key={inv.purchase_invoice_id}>
+                            <td>{inv.invoice_date}</td>
+                            <td>{inv.invoice_code}</td>
+                            <td>{inv.company_name}</td>
+                            <td>{inv.invoice_amount}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="4">No purchase invoices found for today.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </Table>
+                </CardBody>
+              </Card>
+            </Col>
+            <Col md="6">
+              <Card className="shadow-sm mb-4 h-100">
+                <CardHeader className="bg-white">
+                  <h5 className="mb-0">Recent Purchase Orders</h5>
+                </CardHeader>
+                <CardBody>
+                  <Table bordered responsive>
+                    <thead className="table-light">
+                      <tr>
+                        <th>Date</th>
+                        <th>Invoice No</th>
+                        <th>Customer</th>
+                        <th>Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td colSpan="4">No DataAvailable</td>
+                      </tr>
+                    </tbody>
+                  </Table>
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
         </TabPane>
         <TabPane tabId="4">
           <h5>Finance Tab Content</h5>

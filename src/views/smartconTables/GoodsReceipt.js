@@ -5,8 +5,10 @@ import {
   DropdownItem, ButtonDropdown
 } from 'reactstrap';
 import moment from 'moment';
+import { ToastContainer } from 'react-toastify';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../constants/api';
+import message from '../../components/Message';
 
 const GoodsReturnList = () => {
   const [filters, setFilters] = useState({
@@ -21,7 +23,7 @@ const GoodsReturnList = () => {
   const [goodsReturns, setGoodsReturns] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-const [selectedTranNos, setSelectedTranNos] = useState([]);
+const [selectedIds, setSelectedIds] = useState([]);
 
 const [supplierOptions, setSupplierOptions] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -65,7 +67,25 @@ const fetchData = async () => {
     setCurrentPage(1);
     fetchData();
   };
-
+ const handleDeleteSelected = async () => {
+    if (selectedIds.length === 0) {
+      alert('Please select at least one record to delete.');
+      return;
+    }
+    if (window.confirm('Are you sure you want to delete the selected records?')) {
+      try {
+        await Promise.all(selectedIds.map(purchaseInvoiceId =>
+          api.post('/purchaseorder/deleteGoodsReceipt', { goods_receipt_id: purchaseInvoiceId })
+        ));
+        message('Goods Receipt deleted successfully!','success');
+        setSelectedIds([]);
+        fetchData();
+      } catch (err) {
+        console.error(err);
+        alert('Failed to delete selected records.');
+      }
+    }
+  };
   const handlePrev = () => setCurrentPage(prev => Math.max(prev - 1, 1));
   const handleNext = () => setCurrentPage(prev => prev + 1);
 
@@ -75,47 +95,38 @@ const fetchData = async () => {
     // e.g., navigate to /createGoodsReturn
   };
 
-const handleConvertToPurchaseInvoice = async () => {
-  if (selectedTranNos.length === 0) {
+
+  const convertToPurchaseInvoice = () => {
+    if (selectedIds.length === 0) {
     alert('Please select at least one Goods Return to convert.');
     return;
   }
+    api.post("/purchaseorder/ConvertToPurchaseInvoice", { goods_receipt_ids: selectedIds })
+      .then(() => {
+        message("Converted to Purchase Invoice successfully",'success');
+        setSelectedIds([]);
+      })
+      .catch(() => message.error("Conversion failed"));
+  };
 
-  try {
-    await api.post('purchaseorder/ConvertToPurchaseInvoice', {
-      tran_nos: selectedTranNos
-    });
-    alert('Successfully converted to debit note!');
-    fetchData(); // Refresh the table
-  } catch (err) {
-    console.error('Error converting:', err);
-    alert('Failed to convert to debit note.');
-  }
-};
-
-const handleRepeatGoodsReceipt = async () => {
-  if (selectedTranNos.length !== 1) {
-    alert('Please select one Goods Return to repeat.');
+  const repeatGoodsReceipt = () => {
+    
+    if (selectedIds.length === 0) {
+    alert('Please select at least one Goods Return to convert.');
     return;
   }
-
-  try {
-     await api.post('purchaseorder/repeatGoodsReceipt', {
-      tran_no: selectedTranNos[0]
-    });
-    alert('Goods Return repeated successfully.');
-    fetchData();
-  } catch (err) {
-    console.error('Error repeating:', err);
-    alert('Failed to repeat Goods Return.');
-  }
-};
-
+    api.post("/purchaseorder/repeatGoodsReceipt", { goods_receipt_ids: selectedIds })
+      .then(() => {
+        message("Goods Receipts repeated successfully",'success');
+        setSelectedIds([]);
+      })
+      .catch(() => message.error("Repeat failed"));
+  };
 
   return (
     <div className="p-4 bg-light">
       <h4 className="mb-4">Goods Receipt Management</h4>
-
+<ToastContainer/>
       <Row className="mb-3">
         <Col md={2}><Input name="tran_no" placeholder="Tran No" value={filters.tran_no} onChange={handleFilterChange} /></Col>
         <Col md={2}><Input type="date" name="from_date" value={filters.from_date} onChange={handleFilterChange} /></Col>
@@ -150,8 +161,8 @@ const handleRepeatGoodsReceipt = async () => {
       <Row className="mb-3">
         <Col md={10}>
           <Button color="primary" onClick={handleSearch}><i className="fa fa-search" /></Button>{' '}
-          {/* <Button color="secondary"><i className="fa fa-print" /></Button>{' '}
-          <Button color="danger"><i className="fa fa-trash" /></Button> */}
+          <Button color="secondary"><i className="fa fa-print" /></Button>{' '}
+          <Button color="danger" onClick={handleDeleteSelected}><i className="fa fa-trash" /></Button>
         </Col>
         <Col md={2} className="text-right">
           <ButtonDropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
@@ -159,10 +170,10 @@ const handleRepeatGoodsReceipt = async () => {
               New Transaction
             </Button>
             <DropdownToggle caret color="primary" />
-            {/* <DropdownMenu end>
-              <DropdownItem onClick={() => handleConvertToPurchaseInvoice}>Convert to Purchase Invoice</DropdownItem>
-              <DropdownItem onClick={() => handleRepeatGoodsReceipt}>Repeat Goods Receipt </DropdownItem>
-            </DropdownMenu> */}
+            <DropdownMenu end>
+              <DropdownItem onClick={() => convertToPurchaseInvoice()}>Convert to Purchase Invoice</DropdownItem>
+              <DropdownItem onClick={() => repeatGoodsReceipt()}>Repeat Goods Receipt </DropdownItem>
+            </DropdownMenu>
           </ButtonDropdown>
         </Col>
       </Row>
@@ -188,11 +199,11 @@ const handleRepeatGoodsReceipt = async () => {
   <Input
     type="checkbox"
     onChange={(e) => {
-      const tranNo = item.tran_no;
+      const id = item.goods_receipt_id;
       if (e.target.checked) {
-        setSelectedTranNos(prev => [...prev, tranNo]);
+        setSelectedIds(prev => [...prev, id]);
       } else {
-        setSelectedTranNos(prev => prev.filter(no => no !== tranNo));
+        setSelectedIds(prev => prev.filter(no => no !== id));
       }
     }}
   />

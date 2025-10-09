@@ -598,33 +598,7 @@ useEffect(() => {
     </Col>
   </Row>
 
-  <Row>
-    {/* Delivery Date & DO No */}
-    <Col md="6">
-      <Row className="mb-1">
-        <Col md="4">
-          <Label className="small mb-1">Delivery Date</Label>
-        </Col>
-        <Col md="8">
-          <Input bsSize="sm" className="py-0 px-1" type="date" name="delivery_date"
-              value={formData?.delivery_date}
-              onChange={handleChange} />
-        </Col>
-      </Row>
-    </Col>
-    <Col md="6">
-      <Row className="mb-1">
-        <Col md="4">
-          <Label className="small mb-1">DO No</Label>
-        </Col>
-        <Col md="8">
-          <Input bsSize="sm" className="py-0 px-1" name="do_no"
-              value={formData?.do_no}
-              onChange={handleChange} />
-        </Col>
-      </Row>
-    </Col>
-  </Row>
+  
 </TabPane>
                 {/* Currency Tab */}
                 <TabPane tabId="2">

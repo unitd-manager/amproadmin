@@ -669,39 +669,7 @@ useEffect(() => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1"  name="invoice_no"
               value={formData?.invoice_no}
-              onChange={handleChange}  onKeyDown={handleKeyDown}/>
-        </Col>
-      </Row>
-    </Col>
-  </Row>
-
-  <Row>
-    {/* Delivery Date & DO No */}
-    <Col md="6">
-      <Row className="mb-1">
-        <Col md="4">
-          <Label className="small mb-1">Delivery Date</Label>
-        </Col>
-        <Col md="8">
-          <Input bsSize="sm" className="py-0 px-1" type="date" name="delivery_date"
-              value={formData?.delivery_date}
-              onChange={handleChange}  onKeyDown={handleKeyDown}/>
-        </Col>
-      </Row>
-    </Col>
-    <Col md="6">
-      <Row className="mb-1">
-        <Col md="4">
-          <Label className="small mb-1">DO No</Label>
-        </Col>
-        <Col md="8">
-          <Input
-            bsSize="sm"
-            className="py-0 px-1"
-            name="do_no"
-            value={formData?.do_no}
-            onChange={handleChange}
-            onKeyDown={(e) => {
+              onChange={handleChange}    onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
                 // Focus the first product code Select in the table
@@ -712,12 +680,13 @@ useEffect(() => {
               } else {
                 handleKeyDown(e);
               }
-            }}
-          />
+            }} />
         </Col>
       </Row>
     </Col>
   </Row>
+
+  
 </TabPane>
                 {/* Currency Tab */}
                 <TabPane tabId="2">
@@ -1210,7 +1179,7 @@ useEffect(() => {
 
       {/* Center column (center aligned) */}
       <Col md="6" className="text-center">
-        <div className="text-muted small">
+        {/* <div className="text-muted small">
           Additional Charges <span className="text-primary">0.00</span>
         </div>
         <div className="text-muted small">
@@ -1218,7 +1187,7 @@ useEffect(() => {
         </div>
         <div className="fw-bold mt-1">
           Final Total : <span>{Number(finalTotal)?.toFixed(2)}</span>
-        </div>
+        </div> */}
       </Col>
 
       {/* Right column */}

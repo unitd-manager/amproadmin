@@ -15,12 +15,13 @@ const PdfPurchaseInvoiceList = ({ ids }) => {
   const [invoices, setInvoices] = useState([]);
 
   const fetchInvoicesData = () => {
+    console.log('Fetching invoices for IDs:', ids);
     // Assuming your backend API can accept multiple IDs
     api
       .post('/purchaseorder/getPurchaseInvoicesByIds', { purchase_invoice_ids: ids })
       .then((res) => {
         setInvoices(res.data.data || []); // Each invoice object includes supplier + lineItems
-    console.log('res.data',res.data);
+    console.log('Fetched invoices data:', res.data.data);
     })
       .catch(() => {
         message('Invoices Not Found', 'info');

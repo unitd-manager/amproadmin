@@ -31,7 +31,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarAlt, faPlus, faPrint } from '@fortawesome/free-solid-svg-icons';
 import api from "../../constants/api";
 import ProductInfoModal from "../../components/PurchaseOrder/ProductInfoModal";
-import PdfPurchaseInvoice from "../../components/PDF/PdfPurchaseInvoice";
+import PdfPurchaseDebitNote from "../../components/PDF/PdfPurchaseDebitNote";
 
 const PurchaseDebitNoteEdit = () => {
 
@@ -943,7 +943,7 @@ useEffect(() => {
 
       {/* Center column (center aligned) */}
       <Col md="6" className="text-center">
-        <div className="text-muted small">
+        {/* <div className="text-muted small">
           Additional Charges <span className="text-primary">0.00</span>
         </div>
         <div className="text-muted small">
@@ -951,7 +951,7 @@ useEffect(() => {
         </div>
         <div className="fw-bold mt-1">
           Final Total : <span>{Number(finalTotal)?.toFixed(2)}</span>
-        </div>
+        </div> */}
       </Col>
 
       {/* Right column */}
@@ -984,7 +984,7 @@ useEffect(() => {
   <Col className="d-flex justify-content-end">
     <Button size="sm" style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#fff' }} className="me-2">
       <FontAwesomeIcon icon={faPrint} className="me-1" />
-    <PdfPurchaseInvoice id={id} />
+    <PdfPurchaseDebitNote id={id} />
     </Button>
     <div className="btn-group">
       <Button size="sm" style={{ backgroundColor: '#213042', borderColor: '#213042', color: '#fff' }} onClick={()=>handleSubmit()}>

@@ -21,13 +21,13 @@ const GoodsReturnList = () => {
   const [goodsReturns, setGoodsReturns] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-const [selectedTranNos, setSelectedTranNos] = useState([]);
+const [selectedIds, setSelectedIds] = useState([]);
 const [supplierOptions, setSupplierOptions] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
 
-  console.log('selected trans nos:', selectedTranNos);
+  console.log('selected trans nos:', selectedIds);
   const navigate=useNavigate();
   
   const fetchData = async () => {
@@ -79,15 +79,15 @@ const [supplierOptions, setSupplierOptions] = useState([]);
   };
 
 const handleConvertToDebitNote = async () => {
-  console.log('selected trans nos:', selectedTranNos);
-  if (selectedTranNos.length === 0) {
+  console.log('selected trans nos:', selectedIds);
+  if (selectedIds.length === 0) {
     alert('Please select at least one Goods Return to convert.');
     return;
   }
 
   try {
-    await api.post('purchaseorder/convertToDebitNote', {
-      tran_nos: selectedTranNos
+    await api.post('/purchaseorder/ConvertToPurchaseDebitNote', {
+      goods_return_ids: selectedIds
     });
     alert('Successfully converted to debit note!');
     fetchData(); // Refresh the table
@@ -96,18 +96,36 @@ const handleConvertToDebitNote = async () => {
     alert('Failed to convert to debit note.');
   }
 };
-
+const handleDeleteSelected = async () => {
+    if (selectedIds.length === 0) {
+      alert('Please select at least one record to delete.');
+      return;
+    }
+    if (window.confirm('Are you sure you want to delete the selected records?')) {
+      try {
+        await Promise.all(selectedIds.map(purchaseInvoiceId =>
+          api.post('/purchaseorder/deleteGoodsReturn', { goods_return_id: purchaseInvoiceId })
+        ));
+        message('Goods Return deleted successfully!','success');
+        setSelectedIds([]);
+        fetchData();
+      } catch (err) {
+        console.error(err);
+        alert('Failed to delete selected records.');
+      }
+    }
+  };
 const handleRepeatGoodsReturn = async () => {
   
-  console.log('selected trans nos:', selectedTranNos);
-  if (selectedTranNos.length !== 1) {
+  console.log('selected trans nos:', selectedIds);
+  if (selectedIds.length === 0) {
     alert('Please select one Goods Return to repeat.');
     return;
   }
 
   try {
-     await api.post('purchaseorder/repeatGoodsReturn', {
-      tran_no: selectedTranNos[0]
+     await api.post('/purchaseorder/repeatGoodsReturn', {
+      goods_return_ids: selectedIds
     });
     alert('Goods Return repeated successfully.');
     fetchData();
@@ -157,8 +175,8 @@ const handleRepeatGoodsReturn = async () => {
       <Row className="mb-3">
         <Col md={10}>
           <Button color="primary" onClick={handleSearch}><i className="fa fa-search" /></Button>{' '}
-          {/* <Button color="secondary"><i className="fa fa-print" /></Button>{' '}
-          <Button color="danger"><i className="fa fa-trash" /></Button> */}
+          <Button color="secondary"><i className="fa fa-print" /></Button>{' '}
+          <Button color="danger" onClick={handleDeleteSelected}><i className="fa fa-trash" /></Button>
         </Col>
         <Col md={2} className="text-right">
           <ButtonDropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
@@ -166,10 +184,10 @@ const handleRepeatGoodsReturn = async () => {
               New Transaction
             </Button>
             <DropdownToggle caret color="primary" />
-            {/* <DropdownMenu end>
-              <DropdownItem onClick={() => handleConvertToDebitNote}>Convert to Debit Note</DropdownItem>
-              <DropdownItem onClick={() => handleRepeatGoodsReturn}>Repeat Goods Return</DropdownItem>
-            </DropdownMenu> */}
+            <DropdownMenu end>
+              <DropdownItem onClick={() => handleConvertToDebitNote()}>Convert to Debit Note</DropdownItem>
+              <DropdownItem onClick={() => handleRepeatGoodsReturn()}>Repeat Goods Return</DropdownItem>
+            </DropdownMenu>
           </ButtonDropdown>
         </Col>
       </Row>
@@ -190,16 +208,16 @@ const handleRepeatGoodsReturn = async () => {
         </thead>
         <tbody>
           {goodsReturns.length > 0 ? goodsReturns.map((item) => (
-            <tr key={item.goods_receipt_id}>
+            <tr key={item.goods_return_id}>
              <td>
   <Input
     type="checkbox"
     onChange={(e) => {
-      const tranNo = item.tran_no;
+      const id = item.goods_return_id;
       if (e.target.checked) {
-        setSelectedTranNos(prev => [...prev, tranNo]);
+        setSelectedIds(prev => [...prev, id]);
       } else {
-        setSelectedTranNos(prev => prev.filter(no => no !== tranNo));
+        setSelectedIds(prev => prev.filter(no => no !== id));
       }
     }}
   />
