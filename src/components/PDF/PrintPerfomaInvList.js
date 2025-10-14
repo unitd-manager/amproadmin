@@ -35,10 +35,10 @@ console.log(id,"wsed")
     try {
       // Fetch sales order data for all IDs
       const salesOrderPromises = id.map(orderId =>
-        api.post('/salesorder/getSalesorderById', { sales_order_id: orderId })
+        api.post('/invoice/getSalesorderById', { invoice_id: orderId })
       );
       const lineItemPromises = id.map(orderId =>
-        api.post('/salesOrder/getQuoteLineItemsById', { sales_order_id: orderId })
+        api.post('/invoice/getQuoteLineItemsById', { invoice_id: orderId })
       );
 
       const salesOrderResponses = await Promise.all(salesOrderPromises);
@@ -61,14 +61,14 @@ console.log(id,"wsed")
   };
 
 
-  //  const [taxType, setTaxType] = React.useState('');
+  // const [taxType, setTaxType] = React.useState('');
  const [taxRate] = React.useState(0.09); // Set default tax rate to 9%
   //  console.log(taxType)
   //  React.useEffect(() => {
   //   const fetchBillDiscountAndTax = async () => {
   //     try {
-  //       const response = await api.post('/salesOrder/getSalesorderById', {
-  //         sales_order_id: id,
+  //       const response = await api.post('/invoice/getSalesorderById', {
+  //         invoice_id: id,
   //       });
   
   //       const data = response.data.data[0];
@@ -241,11 +241,11 @@ console.log(id,"wsed")
                       body: [
                         [
                           { text: 'TRAN NO', margin: [5, 3, 5, 3] },
-                          { text: salesOrder.tran_no || '', margin: [5, 3, 5, 3] }
+                          { text: salesOrder.invoice_code || '', margin: [5, 3, 5, 3] }
                         ],
                         [
                           { text: 'TRAN DATE', margin: [5, 3, 5, 3] },
-                          { text: salesOrder.tran_date ? moment(salesOrder.tran_date).format('DD-MM-YYYY') : '', margin: [5, 3, 5, 3] }
+                          { text: salesOrder.invoice_date ? moment(salesOrder.invoice_date).format('DD-MM-YYYY') : '', margin: [5, 3, 5, 3] }
                         ],
                         [
                           { text: 'TERMS', margin: [5, 3, 5, 3] },
