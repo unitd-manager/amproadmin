@@ -10,11 +10,11 @@ import message from '../Message';
 import PdfFooter from './PdfFooter'; // Assuming you have a footer component
 import PdfHeader from './PdfHeader'; // Assuming you have a header component
 
-const PrintPerfoma = ({ id }) => {
-    PrintPerfoma.propTypes = {
-    id: PropTypes.any,
+const PrintPerfomaList = ({ id }) => {
+    PrintPerfomaList.propTypes = {
+    id: PropTypes.arrayOf(PropTypes.any).isRequired,
   };
-
+console.log(id,"wsed")
   const [salesOrder, setSalesOrder] = useState({});
   const [lineItems, setLineItems] = useState();
   const [hfdata, setHeaderFooterData] = useState();
@@ -31,29 +31,33 @@ const PrintPerfoma = ({ id }) => {
     return filteredResult?.value || '';
   };
  
-  const fetchSalesOrderData = () => {
-    api
-      .post('/salesorder/getSalesorderById', { sales_order_id: id })
-      .then((res) => {
-        setSalesOrder(res.data.data[0] || {});
-      })
-      .catch(() => {
-        message('Sales Order Data Not Found', 'info');
-      });
+  const fetchSalesOrderData = async () => {
+    try {
+      // Fetch sales order data for all IDs
+      const salesOrderPromises = id.map(orderId =>
+        api.post('/salesorder/getSalesorderById', { sales_order_id: orderId })
+      );
+      const lineItemPromises = id.map(orderId =>
+        api.post('/salesOrder/getQuoteLineItemsById', { sales_order_id: orderId })
+      );
 
-    api
-      .post('/salesOrder/getQuoteLineItemsById', { sales_order_id: id })
-      .then((res) => {
-        setLineItems(res.data.data[0]);
-        let grandTotal = 0;
-        res.data.data.forEach((elem) => {
-          grandTotal += elem.total;
-        });
-        setGtotal(grandTotal);
-      })
-      .catch(() => {
-        message('Sales Order Line Items Not Found', 'info');
+      const salesOrderResponses = await Promise.all(salesOrderPromises);
+      const lineItemResponses = await Promise.all(lineItemPromises);
+
+      const allSalesOrders = salesOrderResponses.map(res => res.data.data[0] || {});
+      const allLineItems = lineItemResponses.map(res => res.data.data).flat();
+
+      setSalesOrder(allSalesOrders[0]); // Keep the first one for header info
+      setLineItems(allLineItems);
+
+      let grandTotal = 0;
+      allLineItems.forEach((elem) => {
+        grandTotal += elem.total || 0;
       });
+      setGtotal(grandTotal);
+    } catch (error) {
+      message('Error fetching sales order data', 'error');
+    }
   };
 
 
@@ -100,6 +104,11 @@ const PrintPerfoma = ({ id }) => {
   }, [id]);
 
   const GetPdf = () => {
+    if (!lineItems || lineItems.length === 0) {
+      message('No line items found', 'warning');
+      return;
+    }
+
     const productItems = [
       [
         { text: 'No', style: 'tableHead' },
@@ -398,4 +407,4 @@ const PrintPerfoma = ({ id }) => {
   );
 };
 
-export default PrintPerfoma;
+export default PrintPerfomaList;
