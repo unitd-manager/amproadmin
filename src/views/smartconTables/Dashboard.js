@@ -15,10 +15,26 @@ import {
   CardBody,
   Table,
 } from "reactstrap";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+
 import { FaChartBar, FaMoneyBillWave } from 'react-icons/fa';
 import api from "../../constants/api";
 import RecentSalesOrders from "../../components/dashboard/generalDashboard/RecentSalesOrder";
 import RecentSalesInvoices from "../../components/dashboard/generalDashboard/RecentSalesInvoices";
+import SalesReportFor30Days from "../../components/dashboard/generalDashboard/SalesReportFor30Days";
+import SalesReportForLast12Months from "../../components/dashboard/generalDashboard/SalesReportForLast12Months";
+import PopularProducts from "../../components/dashboard/PopularProducts";
+import CatagoryWiseProduct from "../../components/dashboard/generalDashboard/CatagoryWiseProduct"
+import DepartmentWiseProduct from "../../components/dashboard/generalDashboard/DepartmentWiseProduct";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("1");
@@ -101,6 +117,7 @@ const Dashboard = () => {
         console.log('Recent Purchase Invoices:', res.data.data);
       })
       .catch((err) => console.error(err));
+      
   }, []);
 
   return (
@@ -202,6 +219,8 @@ const Dashboard = () => {
                         <th>Last Week</th>
                         <th>Previous Week</th>
                       </tr>
+
+
                     </thead>
                     <tbody>
                       {weeklySales.map((row) => (
@@ -304,8 +323,141 @@ const Dashboard = () => {
 
         {/* Other Tabs */}
         <TabPane tabId="2">
-        <RecentSalesOrders />
-          <RecentSalesInvoices />
+          <Row className="mt-3">
+            <Col md="6">
+              <Card className="shadow-sm mb-4" style={{ height: '400px', overflow: 'auto' }}>
+                <RecentSalesInvoices />
+              </Card>
+            </Col>
+            <Col md="6">
+              <Card className="shadow-sm mb-4" style={{ height: '400px', overflow: 'auto' }}>
+                <RecentSalesOrders />
+              </Card>
+            </Col>
+          </Row>
+           <Row className="mt-3">
+           <Col md="6">
+              <Card className="shadow-sm mb-4" style={{ height: '400px', overflow: 'auto' }}>
+                <CardHeader className="bg-white">
+                  <h5 className="mb-0">Weekly Sales Data</h5>
+                </CardHeader>
+                <CardBody>
+                  <Table bordered responsive>
+                    <thead className="table-light">
+                      <tr>
+                        <th>Day</th>
+                        <th>Current Week</th>
+                        <th>Last Week</th>
+                        <th>Previous Week</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {weeklySales.map((row) => (
+                        <tr key={row.sales_order_id}>
+                          <td>{row.day}</td>
+                          <td>{row.currentWeek}</td>
+                          <td>{row.lastWeek}</td>
+                          <td>{row.previousWeek}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </CardBody>
+              </Card>
+            </Col>
+            <Col md="6">
+              <Card className="shadow-sm mb-4" style={{ height: '400px', overflow: 'auto' }}>
+                <SalesReportFor30Days />
+              </Card>
+            </Col>
+          </Row>
+           <Row className="mt-3">
+            <Col md="6">
+              <Card className="shadow-sm mb-4" style={{ height: '400px', overflow: 'auto' }}>
+                <CardHeader className="bg-white">
+                  <h5 className="mb-0">Sales Analysis Data</h5>
+                </CardHeader>
+                <CardBody>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Total Sales:</span>
+                    <strong>${salesData.totalSales}</strong>
+                  </div>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Total Bills:</span>
+                    <strong>{salesData.totalBills}</strong>
+                  </div>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Total Items:</span>
+                    <strong>{salesData.totalItems}</strong>
+                  </div>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Avg/Bill:</span>
+                    <strong>${salesData.avgBill}</strong>
+                  </div>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Avg/Item:</span>
+                    <strong>${salesData.avgItem}</strong>
+                  </div>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Total Cost:</span>
+                    <strong>${salesData.totalCost}</strong>
+                  </div>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Profit:</span>
+                    <strong>${salesData.profit}</strong>
+                  </div>
+                  <div className="d-flex justify-content-between">
+                    <span>Margin:</span>
+                    <strong>{salesData.margin}%</strong>
+                  </div>
+                </CardBody>
+              </Card>
+            </Col>
+            <Col md="6">
+    <Card className="shadow-sm mb-4" style={{ height: '400px', overflow: 'auto' }}>
+      <CardHeader className="bg-white">
+        <h5 className="mb-0">Last 12 Weeks Sales</h5>
+      </CardHeader>
+      <CardBody>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={weeklySales}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="week" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="sales" fill="#9c27b0" name="Week Sales" barSize={40} radius={[8, 8, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </CardBody>
+    </Card>
+  </Col>
+
+          </Row>
+          <Row className="mt-3">
+            <Col md="6">
+              <Card className="shadow-sm mb-4" style={{ height: '400px', overflow: 'auto' }}>
+                <DepartmentWiseProduct/>
+              </Card>
+            </Col>
+            <Col md="6">
+              <Card className="shadow-sm mb-4" style={{ height: '400px', overflow: 'auto' }}>
+                <SalesReportForLast12Months />
+              </Card>
+            </Col>
+          </Row>
+          <Row className="mt-3">
+            <Col md="6">
+              <Card className="shadow-sm mb-4" style={{ height: '400px', overflow: 'auto' }}>
+                <CatagoryWiseProduct />
+              </Card>
+            </Col>
+            <Col md="6">
+              <Card className="shadow-sm mb-4" style={{ height: '400px', overflow: 'auto' }}>
+                <PopularProducts />
+              </Card>
+            </Col>
+          </Row>
           {/* <Row className="mt-3">
             <Col md="6">
               <Card className="shadow-sm mb-4">
