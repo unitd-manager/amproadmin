@@ -156,7 +156,7 @@ const navigate=useNavigate();
     });
     
     // Fetch table data
-    api.post("/purchaseorder/getPoProductByPurchaseOrderId",{purchase_order_id:id}).then((response) => { 
+    api.post("/purchaseorder/TabPurchaseOrderLineItemById",{purchase_order_id:id}).then((response) => { 
       const updatedRows = response.data.data.map(product => ({
         ...product,
         total: Number(product.total) || 0,
@@ -242,10 +242,12 @@ useEffect(() => {
   
     // Handle product selection
     const handleProductSelect = (index, selectedProduct) => {
+      console.log('selectedProduct:', selectedProduct);
       const updatedRows = [...rows];
-      updatedRows[index].product_id = selectedProduct.product_id;
+      updatedRows[index].product_id = selectedProduct.value;
       updatedRows[index].product_code = selectedProduct.product_code;
       updatedRows[index].product_name = selectedProduct.product_name;
+      console.log('updatedRows[index].product_code:', updatedRows[index].product_code);
       setRows(updatedRows);
     };
   // Handle form submit (example API call structure)
@@ -281,6 +283,7 @@ useEffect(() => {
       message('Network connection error.', 'error');
     });
   };
+  
   const handleRowChange = (id, field, value) => {
     setRows(prevRows =>
       prevRows.map(row => {
@@ -290,7 +293,9 @@ useEffect(() => {
           if (field === "product_code") {
             const product = tableData.find(item => item.product_code === value);
             if (product) {
+              
               updatedRow.product_name = product.product_name;
+              updatedRow.product_id = product.product_id;
               updatedRow.carton_price = product.carton_price;
               updatedRow.qty = 0;
               updatedRow.loose_qty = 0;
@@ -381,7 +386,7 @@ useEffect(() => {
         {/* <Card className="shadow-sm">
           <CardBody className="p-3"> */}
             {/* Header */}
-            <h6 className="mb-2">Add/Edit Purchase Invoice</h6>
+            <h6 className="mb-2">Add/Edit Purchase Order</h6>
 
             <Form>
               {/* Tran No & Date */}
@@ -695,8 +700,48 @@ useEffect(() => {
                 >
                   {idx + 1}
                 </td>
-                <td style={{ padding: '0.3rem' }}>{p.product_code}</td>
-                <td style={{ padding: '0.3rem' }}>{p.product_name}</td>
+                {/* <td style={{ padding: '0.3rem' }}>{p.product_code}</td>
+                <td style={{ padding: '0.3rem' }}>{p.product_name}</td> */}
+                     <td style={{ padding: "0.3rem", minWidth: "200px" }}>
+  <Select
+    options={products.map((pr) => ({
+      value: pr.product_id,
+      label: `${pr.product_code} - ${pr.product_name}`,
+      product_code: pr.product_code,
+      product_name: pr.product_name,
+    }))}
+    value={
+      p.product_id
+        ? {
+            value: p.product_id,
+            label: `${p.product_code} - ${p.product_name}`,
+          }
+        : null
+    }
+    onChange={(selectedOption) => handleProductSelect(idx, selectedOption)}
+    placeholder="Select Product"
+    onKeyDown={(e) => handleKeyDown(e, idx, 'product_code')}
+    filterOption={(candidate, input) => {
+      if (!input) return true;
+      const lowerInput = input.toLowerCase();
+      return (
+        candidate.data.product_code.toLowerCase().includes(lowerInput) ||
+        candidate.data.product_name.toLowerCase().includes(lowerInput)
+      );
+    }}
+  />
+</td>
+
+
+            {/* Product Name (auto updated) */}
+            <td style={{ padding: "0.3rem" }}>
+              <input
+                type="text"
+                className="form-control form-control-sm"
+                value={p.product_name || ""}
+                readOnly
+              />
+            </td>
                 <td style={{ padding: '0.3rem' }}>{p.carton_qty}</td>
                 <td style={{ padding: '0.3rem' }}>{p.loose_qty}</td>
                 <td style={{ padding: '0.3rem' }}>{p.qty}</td>
@@ -949,7 +994,7 @@ useEffect(() => {
   <Row className="mt-2" style={{ backgroundColor: '#212529', padding: '8px' }}>
   {/* Cancel on left */}
   <Col className="d-flex justify-content-start">
-    <Button size="sm" style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#fff' }} className="me-2"  onClick={()=>navigate('/PurchaseInvoice')}>
+    <Button size="sm" style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#fff' }} className="me-2"  onClick={()=>navigate('/PurchaseOrder')}>
       Cancel
     </Button>
   </Col>

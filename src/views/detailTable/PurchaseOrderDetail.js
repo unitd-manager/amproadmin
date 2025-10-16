@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useState,useEffect} from "react";
+import React, { useState,useEffect, useRef, createRef} from "react";
 import {
   Container,
   Row,
@@ -118,41 +118,113 @@ const { id } = useParams();
       grossTotal: 0,
     },
   ]);
+  const productCodeRefs = useRef([]);
+
+  useEffect(() => {
+    productCodeRefs.current = rows.map(
+      (row, i) => productCodeRefs.current[i] || createRef()
+    );
+  }, [rows]);
   const handleAddExtraFields = (id) => {
     setRows(rows.map(p =>
       p.po_product_id === id ? { ...p, showExtraFields: !p.showExtraFields, remarks: p.remarks || '', foc_qty: p.foc_qty || 0 } : p
     ));
   };
 // Utility function to handle Enter key focus shift
-const handleKeyDown = (e) => {
+const handleKeyDown = (e, idx, field) => {
   if (e.key === "Enter") {
     e.preventDefault(); // prevent form submission
-    const form = e.target.form;
-    const index = Array.prototype.indexOf.call(form, e.target);
-    form.elements[index + 1]?.focus(); // focus next element if exists
+
+    const fieldOrder = [
+      'product_code',
+      'carton_qty',
+      'loose_qty',
+      'qty',
+      'carton_price',
+      'price',
+      'discount_percentage',
+      'discount_amount',
+      'gross_total',
+    ];
+
+    const currentPoProductId = rows[idx].po_product_id;
+
+    if (field === 'product_code') {
+          requestAnimationFrame(() => {
+            const productCodeRef = productCodeRefs.current[idx];
+            if (productCodeRef && productCodeRef.current && productCodeRef.current.inputRef) {
+              productCodeRef.current.inputRef.focus();
+            }
+            const nextInputField = document.querySelector(`[name="carton_qty-${currentPoProductId}"]`);
+            if (nextInputField) nextInputField.focus();
+          });
+        } else {
+      const currentFieldIndex = fieldOrder.indexOf(field);
+      const nextFieldIndex = currentFieldIndex + 1;
+
+      if (nextFieldIndex < fieldOrder.length) {
+        // Focus the next field in the current row
+        const nextField = fieldOrder[nextFieldIndex];
+        const nextInputField = document.querySelector(`[name="${nextField}-${currentPoProductId}"]`);
+        if (nextInputField) {
+          nextInputField.focus();
+        }
+      } else {
+        // If it's the last field in the current row (gross_total), move to the next row's product_code
+        const nextRowIdx = idx + 1; // This is the array index of the next row
+
+        if (rows[nextRowIdx]) { // Check if the next row object exists
+          const nextRowPoProductId = rows[nextRowIdx].po_product_id;
+            requestAnimationFrame(() => {
+              const nextRowProductCodeRef = productCodeRefs.current[nextRowIdx];
+            if (nextRowProductCodeRef && nextRowProductCodeRef.current && nextRowProductCodeRef.current.inputRef) {
+              nextRowProductCodeRef.current.inputRef.focus();
+            }
+            });
+        } else {
+          // If no next row, add a new row and then focus its product_code
+          addNewRow((newPoProductId) => {
+            const newRowProductCodeInput = document.querySelector(`[name="product_code-${newPoProductId}"]`);
+            if (newRowProductCodeInput) {
+              newRowProductCodeInput.focus();
+            }
+          });
+        }
+      }
+    }
   }
 };
 
-  const addNewRow = () => {
-    setRows((prevRows) => [
-      ...prevRows,
-      {
-        po_product_id: prevRows.length > 0 ? Math.max(...prevRows.map(r => r.po_product_id)) + 1 : 1,
-        product_code: "",
-        product_name: "",
-        carton_qty: 0,
-        loose_qty: 0,
-        carton_price: 0,
-        qty: 0,
-        price: 0,
-        total: 0,
-        discount: 0,
-        total_price: 0,
-        discount_percentage: 0,
-        discount_amount: 0,
-        grossTotal: 0,
-      },
-    ]);
+  const addNewRow = (callback) => {
+    let newPoProductId;
+    setRows((prevRows) => {
+      newPoProductId = prevRows.length > 0 ? Math.max(...prevRows.map(r => r.po_product_id)) + 1 : 1;
+      const updatedRows = [
+        ...prevRows,
+        {
+          po_product_id: newPoProductId,
+          product_code: "",
+          product_name: "",
+          carton_qty: 0,
+          loose_qty: 0,
+          carton_price: 0,
+          qty: 0,
+          price: 0,
+          total: 0,
+          discount: 0,
+          total_price: 0,
+          discount_percentage: 0,
+          discount_amount: 0,
+          grossTotal: 0,
+        },
+      ];
+      return updatedRows;
+    });
+    if (callback && typeof callback === 'function') {
+      // Execute callback after state update, ensuring the new row is rendered
+      setTimeout(() => callback(newPoProductId), 0);
+    }
+    return newPoProductId;
   };
 
 
@@ -787,6 +859,7 @@ useEffect(() => {
                 </td>
          <td style={{ padding: "0.3rem", minWidth: "200px" }}>
   <Select
+    name={`product_code-${p.po_product_id}`}
     options={products.map((pr) => ({
       value: pr.product_id,
       label: `${pr.product_code} - ${pr.product_name}`,
@@ -804,6 +877,7 @@ useEffect(() => {
     onChange={(selectedOption) => handleProductSelect(idx, selectedOption)}
     placeholder="Select Product"
     onKeyDown={(e) => handleKeyDown(e, idx, 'product_code')}
+    ref={productCodeRefs.current[idx]}
     filterOption={(candidate, input) => {
       if (!input) return true;
       const lowerInput = input.toLowerCase();
@@ -832,6 +906,7 @@ useEffect(() => {
                   <Input
                     type="text"
                     bsSize="sm"
+                    name={`carton_qty-${p.po_product_id}`}
                     value={p?.carton_qty === 0 ? '' : p?.carton_qty}
                     onBlur={(e) => {
                       const val = e.target.value;
@@ -846,12 +921,13 @@ useEffect(() => {
                     }}
                     onFocus={(e) => e.target.select()}
                     style={{ width: '80px', textAlign: 'right' }}
-                  onKeyDown={handleKeyDown} />
+                  onKeyDown={(e) => handleKeyDown(e, idx, 'carton_qty')} />
                 </td>
                  <td style={{ padding: '0.3rem' }}>
                   <Input
                     type="text"
                     bsSize="sm"
+                    name={`loose_qty-${p.po_product_id}`}
                     value={p?.loose_qty === 0 ? '' : p?.loose_qty}
                     onBlur={(e) => {
                       const val = e.target.value;
@@ -866,12 +942,13 @@ useEffect(() => {
                     }}
                     onFocus={(e) => e.target.select()}
                     style={{ width: '80px', textAlign: 'right' }}
-                   onKeyDown={handleKeyDown}/>
+                   onKeyDown={(e) => handleKeyDown(e, idx, 'loose_qty')}/>
                 </td>
                  <td style={{ padding: '0.3rem' }}>
                   <Input
                     type="text"
                     bsSize="sm"
+                    name={`qty-${p.po_product_id}`}
                     value={p?.qty === 0 ? '' : p?.qty}
                     onBlur={(e) => {
                       const val = e.target.value;
@@ -886,12 +963,13 @@ useEffect(() => {
                     }}
                     onFocus={(e) => e.target.select()}
                     style={{ width: '80px', textAlign: 'right' }}
-                   onKeyDown={handleKeyDown}/>
+                   onKeyDown={(e) => handleKeyDown(e, idx, 'qty')}/>
                 </td>
                 <td style={{ padding: '0.3rem' }}>
                   <Input
                     type="text"
                     bsSize="sm"
+                    name={`carton_price-${p.po_product_id}`}
                     value={p?.carton_price === 0 ? '' : p?.carton_price}
                     onBlur={(e) => {
                       const val = e.target.value;
@@ -906,12 +984,13 @@ useEffect(() => {
                     }}
                     onFocus={(e) => e.target.select()}
                     style={{ width: '80px', textAlign: 'right' }}
-                  onKeyDown={handleKeyDown} />
+                  onKeyDown={(e) => handleKeyDown(e, idx, 'carton_price')} />
                 </td>
                 <td style={{ padding: '0.3rem' }}>
                   <Input
                     type="text"
                     bsSize="sm"
+                    name={`price-${p.po_product_id}`}
                     value={p?.price === 0 ? '' : p?.price}
                     onBlur={(e) => {
                       const val = e.target.value;
@@ -926,31 +1005,7 @@ useEffect(() => {
                     }}
                     onFocus={(e) => e.target.select()}
                     style={{ width: '80px', textAlign: 'right' }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        const currentRowIndex = rows.findIndex(r => r.po_product_id === p.po_product_id);
-                        const nextRowIndex = currentRowIndex + 1;
-                        const nextRow = rows[nextRowIndex];
-                        if (nextRow) {
-                          const nextProductCodeInput = document.querySelector(
-                            `input[name="product_code_${nextRow.po_product_id}"]`
-                          );
-                          if (nextProductCodeInput) nextProductCodeInput.focus();
-                        } else {
-                          // If no next row, focus the first product code input of a new row
-                          addNewRow();
-                          setTimeout(() => {
-                            const newRow = rows[rows.length - 1];
-                            const newProductCodeInput = document.querySelector(
-                              `input[name="product_code_${newRow.po_product_id}"]`
-                            );
-                            if (newProductCodeInput) newProductCodeInput.focus();
-                          }, 100);
-                        }
-                      }
-                    }}
-                  />
+                    onKeyDown={(e) => handleKeyDown(e, idx, 'price')}/>
                 </td>
                 <td style={{ padding: '0.3rem' }}>
                   <Input
@@ -981,7 +1036,8 @@ useEffect(() => {
                       }}
                       onFocus={(e) => e.target.select()}
                       style={{ width: '50%', marginRight: '2px', textAlign: 'right' }}
-                      name={`discount_percentage_${p.po_product_id}`}
+                      name={`discount_percentage-${p.po_product_id}`}
+                      onKeyDown={(e) => handleKeyDown(e, idx, 'discount_percentage')}
                   />
                     <Input
                       type="text"
@@ -1000,7 +1056,8 @@ useEffect(() => {
                       }}
                       onFocus={(e) => e.target.select()}
                       style={{ width: '50%', textAlign: 'right' }}
-                      name={`discount_amount_${p.po_product_id}`}
+                      name={`discount_amount-${p.po_product_id}`}
+                      onKeyDown={(e) => handleKeyDown(e, idx, 'discount_amount')}
                     />
                   </div>
                 </td>
@@ -1011,7 +1068,33 @@ useEffect(() => {
                     value={Number(p.grossTotal).toFixed(2)}
                     readOnly
                     style={{ width: '80px', textAlign: 'right' }}
-                    name={`gross_total_${p.po_product_id}`}
+                    name={`gross_total-${p.po_product_id}`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const nextRowIdx = idx + 1;
+                        if (rows[nextRowIdx]) {
+                          // next row exists: focus its product_code input
+                          const targetId = rows[nextRowIdx].po_product_id;
+                          console.log('targetproduct code ',targetId);
+                          setTimeout(() => {
+                            const nextProductInput = document.querySelector(`[name="product_code-${targetId}"] input`);
+                            console.log('targetproduct focus ', nextProductInput);
+                            if (nextProductInput) nextProductInput.focus();
+                          }, 0);
+                        } else {
+                          // no next row: add one and focus its product_code after render
+                          addNewRow((newPoProductId) => {
+                            setTimeout(() => {
+                              const nextProductInput = document.querySelector(`[name="product_code-${newPoProductId}"] input`);
+                              if (nextProductInput) nextProductInput.focus();
+                            }, 0);
+                          });
+                        }
+                      } else {
+                        handleKeyDown(e, idx, 'gross_total');
+                      }
+                    }}
                    />
                 </td>
                 <td style={{ padding: '0.3rem', whiteSpace: 'nowrap' }}>

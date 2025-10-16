@@ -116,7 +116,7 @@ const PurchaseOrder = () => {
     alert('Please select at least one Goods Return to convert.');
     return;
   }
-    api.post("/purchaseorder/ConvertToPurchaseInvoice", { purchase_order_ids: selectedIds })
+    api.post("/purchaseorder/ConvertToGra", { purchase_order_ids: selectedIds })
       .then(() => {
         message("Converted to GRA successfully",'success');
         setSelectedIds([]);
@@ -251,7 +251,7 @@ const PurchaseOrder = () => {
                 <Input
                   type="checkbox"
                   onChange={(e) => {
-                    const tranNo = item.tran_no;
+                    const tranNo = item.purchase_order_id;
                     setSelectedIds(prev =>
                       e.target.checked ? [...prev, tranNo] : prev.filter(no => no !== tranNo)
                     );
