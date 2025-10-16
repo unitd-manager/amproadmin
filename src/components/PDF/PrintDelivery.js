@@ -56,37 +56,37 @@ const PrintPerfoma = ({ id }) => {
   };
 
 
-   const [taxType, setTaxType] = React.useState('');
-   const [taxRate, setTaxRate] = React.useState(0);
-   console.log(taxType)
-   React.useEffect(() => {
-    const fetchBillDiscountAndTax = async () => {
-      try {
-        const response = await api.post('/salesOrder/getDeliveryorderById', {
-          delivery_order_id: id,
-        });
+  //  const [taxType, setTaxType] = React.useState('');
+ const [taxRate] = React.useState(0.09); // Set default tax rate to 9%
+  //  console.log(taxType)
+  //  React.useEffect(() => {
+  //   const fetchBillDiscountAndTax = async () => {
+  //     try {
+  //       const response = await api.post('/salesOrder/getDeliveryorderById', {
+  //         delivery_order_id: id,
+  //       });
   
-        const data = response.data.data[0];
+  //       const data = response.data.data[0];
        
   
-        const type = data?.tax_type || '';
-        setTaxType(type);
+  //       const type = data?.tax_type || '';
+  //       setTaxType(type);
   
-        const taxResponse = await api.post('/valuelist/getValueListByKeyText', {
-          value: type, // use this instead of taxType
-        });
+  //       const taxResponse = await api.post('/valuelist/getValueListByKeyText', {
+  //         value: type, // use this instead of taxType
+  //       });
   
-        const taxCode = parseFloat(taxResponse.data.data[0]?.code) || 0;
-        setTaxRate(taxCode / 100);
-      } catch (error) {
-        console.error('Failed to fetch bill discount or tax info:', error);
-      }
-    };
+  //       const taxCode = parseFloat(taxResponse.data.data[0]?.code) || 0;
+  //       setTaxRate(taxCode / 100);
+  //     } catch (error) {
+  //       console.error('Failed to fetch bill discount or tax info:', error);
+  //     }
+  //   };
   
-    if (id) {
-      fetchBillDiscountAndTax();
-    }
-  }, [id]);
+  //   if (id) {
+  //     fetchBillDiscountAndTax();
+  //   }
+  // }, [id]);
   
 
   const gst = gTotal * taxRate;

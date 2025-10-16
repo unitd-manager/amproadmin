@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import * as Icon from 'react-feather';
 import pdfMake from 'pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 //import { Button } from 'reactstrap';
@@ -9,11 +10,11 @@ import message from '../Message';
 import PdfFooter from './PdfFooter'; // Assuming you have a footer component
 import PdfHeader from './PdfHeader'; // Assuming you have a header component
 
-const PrintPerfoma = ({ id }) => {
-    PrintPerfoma.propTypes = {
-    id: PropTypes.any,
+const PrintPerfomaList = ({ id }) => {
+    PrintPerfomaList.propTypes = {
+    id: PropTypes.arrayOf(PropTypes.any).isRequired,
   };
-
+console.log(id,"wsed")
   const [salesOrder, setSalesOrder] = useState({});
   const [lineItems, setLineItems] = useState();
   const [hfdata, setHeaderFooterData] = useState();
@@ -30,40 +31,44 @@ const PrintPerfoma = ({ id }) => {
     return filteredResult?.value || '';
   };
  
-  const fetchSalesOrderData = () => {
-    api
-      .post('/salesorder/getSalesorderById', { sales_order_id: id })
-      .then((res) => {
-        setSalesOrder(res.data.data[0] || {});
-      })
-      .catch(() => {
-        message('Sales Order Data Not Found', 'info');
-      });
+  const fetchSalesOrderData = async () => {
+    try {
+      // Fetch sales order data for all IDs
+      const salesOrderPromises = id.map(orderId =>
+        api.post('/invoice/getSalesorderById', { invoice_id: orderId })
+      );
+      const lineItemPromises = id.map(orderId =>
+        api.post('/invoice/getQuoteLineItemsById', { invoice_id: orderId })
+      );
 
-    api
-      .post('/salesOrder/getQuoteLineItemsById', { sales_order_id: id })
-      .then((res) => {
-        setLineItems(res.data.data);
-        let grandTotal = 0;
-        res.data.data.forEach((elem) => {
-          grandTotal += elem.total;
-        });
-        setGtotal(grandTotal);
-      })
-      .catch(() => {
-        message('Sales Order Line Items Not Found', 'info');
+      const salesOrderResponses = await Promise.all(salesOrderPromises);
+      const lineItemResponses = await Promise.all(lineItemPromises);
+
+      const allSalesOrders = salesOrderResponses.map(res => res.data.data[0] || {});
+      const allLineItems = lineItemResponses.map(res => res.data.data).flat();
+
+      setSalesOrder(allSalesOrders[0]); // Keep the first one for header info
+      setLineItems(allLineItems);
+
+      let grandTotal = 0;
+      allLineItems.forEach((elem) => {
+        grandTotal += elem.total || 0;
       });
+      setGtotal(grandTotal);
+    } catch (error) {
+      message('Error fetching sales order data', 'error');
+    }
   };
 
 
-  //  const [taxType, setTaxType] = React.useState('');
+  // const [taxType, setTaxType] = React.useState('');
  const [taxRate] = React.useState(0.09); // Set default tax rate to 9%
   //  console.log(taxType)
   //  React.useEffect(() => {
   //   const fetchBillDiscountAndTax = async () => {
   //     try {
-  //       const response = await api.post('/salesOrder/getSalesorderById', {
-  //         sales_order_id: id,
+  //       const response = await api.post('/invoice/getSalesorderById', {
+  //         invoice_id: id,
   //       });
   
   //       const data = response.data.data[0];
@@ -99,6 +104,11 @@ const PrintPerfoma = ({ id }) => {
   }, [id]);
 
   const GetPdf = () => {
+    if (!lineItems || lineItems.length === 0) {
+      message('No line items found', 'warning');
+      return;
+    }
+
     const productItems = [
       [
         { text: 'No', style: 'tableHead' },
@@ -231,11 +241,11 @@ const PrintPerfoma = ({ id }) => {
                       body: [
                         [
                           { text: 'TRAN NO', margin: [5, 3, 5, 3] },
-                          { text: salesOrder.tran_no || '', margin: [5, 3, 5, 3] }
+                          { text: salesOrder.invoice_code || '', margin: [5, 3, 5, 3] }
                         ],
                         [
                           { text: 'TRAN DATE', margin: [5, 3, 5, 3] },
-                          { text: salesOrder.tran_date ? moment(salesOrder.tran_date).format('DD-MM-YYYY') : '', margin: [5, 3, 5, 3] }
+                          { text: salesOrder.invoice_date ? moment(salesOrder.invoice_date).format('DD-MM-YYYY') : '', margin: [5, 3, 5, 3] }
                         ],
                         [
                           { text: 'TERMS', margin: [5, 3, 5, 3] },
@@ -391,10 +401,10 @@ const PrintPerfoma = ({ id }) => {
   return (
     <>
       <a   onClick={GetPdf}>
-        Print Performa
+       <Icon.Printer size={16} />
       </a>
     </>
   );
 };
 
-export default PrintPerfoma;
+export default PrintPerfomaList;
