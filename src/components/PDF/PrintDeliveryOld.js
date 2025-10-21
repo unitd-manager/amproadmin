@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import * as Icon from 'react-feather';
 import pdfMake from 'pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 //import { Button } from 'reactstrap';
@@ -10,11 +9,11 @@ import message from '../Message';
 import PdfFooter from './PdfFooter'; // Assuming you have a footer component
 import PdfHeader from './PdfHeader'; // Assuming you have a header component
 
-const PrintPerfomaList = ({ id }) => {
-    PrintPerfomaList.propTypes = {
-    id: PropTypes.arrayOf(PropTypes.any).isRequired,
+const PrintPerfoma = ({ id }) => {
+    PrintPerfoma.propTypes = {
+    id: PropTypes.any,
   };
-console.log(id,"wsed")
+
   const [salesOrder, setSalesOrder] = useState({});
   const [lineItems, setLineItems] = useState();
   const [hfdata, setHeaderFooterData] = useState();
@@ -31,33 +30,29 @@ console.log(id,"wsed")
     return filteredResult?.value || '';
   };
  
-  const fetchSalesOrderData = async () => {
-    try {
-      // Fetch sales order data for all IDs
-      const salesOrderPromises = id.map(orderId =>
-        api.post('/salesorder/getSalesorderById', { sales_order_id: orderId })
-      );
-      const lineItemPromises = id.map(orderId =>
-        api.post('/salesOrder/getQuoteLineItemsById', { sales_order_id: orderId })
-      );
-
-      const salesOrderResponses = await Promise.all(salesOrderPromises);
-      const lineItemResponses = await Promise.all(lineItemPromises);
-
-      const allSalesOrders = salesOrderResponses.map(res => res.data.data[0] || {});
-      const allLineItems = lineItemResponses.map(res => res.data.data).flat();
-
-      setSalesOrder(allSalesOrders[0]); // Keep the first one for header info
-      setLineItems(allLineItems);
-
-      let grandTotal = 0;
-      allLineItems.forEach((elem) => {
-        grandTotal += elem.total || 0;
+  const fetchSalesOrderData = () => {
+    api
+      .post('/salesorder/getDeliveryorderById', { delivery_order_id: id })
+      .then((res) => {
+        setSalesOrder(res.data.data[0] || {});
+      })
+      .catch(() => {
+        message('Sales Order Data Not Found', 'info');
       });
-      setGtotal(grandTotal);
-    } catch (error) {
-      message('Error fetching sales order data', 'error');
-    }
+
+    api
+      .post('/invoice/getDeliveryLineItemsById', { delivery_order_id: id })
+      .then((res) => {
+        setLineItems(res.data.data);
+        let grandTotal = 0;
+        res.data.data.forEach((elem) => {
+          grandTotal += elem.total;
+        });
+        setGtotal(grandTotal);
+      })
+      .catch(() => {
+        message('Sales Order Line Items Not Found', 'info');
+      });
   };
 
 
@@ -67,8 +62,8 @@ console.log(id,"wsed")
   //  React.useEffect(() => {
   //   const fetchBillDiscountAndTax = async () => {
   //     try {
-  //       const response = await api.post('/salesOrder/getSalesorderById', {
-  //         sales_order_id: id,
+  //       const response = await api.post('/salesOrder/getDeliveryorderById', {
+  //         delivery_order_id: id,
   //       });
   
   //       const data = response.data.data[0];
@@ -104,11 +99,6 @@ console.log(id,"wsed")
   }, [id]);
 
   const GetPdf = () => {
-    if (!lineItems || lineItems.length === 0) {
-      message('No line items found', 'warning');
-      return;
-    }
-
     const productItems = [
       [
         { text: 'No', style: 'tableHead' },
@@ -127,7 +117,7 @@ console.log(id,"wsed")
       productItems.push([
         { text: `${index + 1}`, style: 'tableBody' },
         { text: `${item.product_name || ''}`, style: 'tableBody' },
-        { text: `${item.unit || ''}`, style: 'tableBody' },
+        { text: `${item.quantity || ''}`, style: 'tableBody' },
         { text: `${item.carton_qty || ''}`, style: 'tableBody' },
         { text: `${item.loose_qty || ''}`, style: 'tableBody' },
         { text: `${item.foc || ''}`, style: 'tableBody' },
@@ -176,14 +166,29 @@ console.log(id,"wsed")
         
         {
             columns: [
-         
+              // {
+              //   width: '50%',
+              //   stack: [
+              //     { text: 'Customer Address:', bold: true },
+              //     { text: '', margin: [8, 0, 0, 0] },
+              //     { text: salesOrder.company_name || '', margin: [8, 0, 0, 0] },
+              //     { text: salesOrder.address_street || '', margin: [8, 0, 0, 0] },
+              //     { text: salesOrder.address_down || '', margin: [8, 0, 0, 0] },
+              //     { text: salesOrder.address_country || '', margin: [8, 0, 0, 0] },
+              //     { text: salesOrder.address_po_code || '', margin: [8, 0, 0, 0] },
+              //     { text: '', margin: [8, 0, 0, 0] },
+              //     { text: 'TEL: 6789098765', margin: [8, 5, 0, 0] },
+              //   ],
+              //   layout: 'Borders',
+              // style: 'textSize',
+              // },
               {
                 width: '50%',
                 table: {
                   widths: ['*'],
                   body: [
                     [
-                      { text: 'Customer:', bold: true }
+                      { text: 'Customer Address:', bold: true }
                     ],
                     [
                       {
@@ -209,7 +214,7 @@ console.log(id,"wsed")
                 },
                 layout: {
                   // Outside borders for other rows
-                  hLineWidth: (i, node) => (i === 0 || i === node.table.body.length ? 0.5 : 1), // Top and bottom borders
+                  hLineWidth: (i, node) => (i === 0 || i === node.table.body.length ? 0.5 : 0), // Top and bottom borders
                   vLineWidth: (i, node) => (i === 0 || i === node.table.widths.length ? 0.5 : 0), // Left and right borders
                   hLineColor: () => '#000000',
                   vLineColor: () => '#000000'
@@ -226,11 +231,11 @@ console.log(id,"wsed")
                       body: [
                         [
                           { text: 'TRAN NO', margin: [5, 3, 5, 3] },
-                          { text: salesOrder.tran_no || '', margin: [5, 3, 5, 3] }
+                          { text: salesOrder.delivery_code || '', margin: [5, 3, 5, 3] }
                         ],
                         [
                           { text: 'TRAN DATE', margin: [5, 3, 5, 3] },
-                          { text: salesOrder.tran_date ? moment(salesOrder.tran_date).format('DD-MM-YYYY') : '', margin: [5, 3, 5, 3] }
+                          { text: salesOrder.date ? moment(salesOrder.tran_date).format('DD-MM-YYYY') : '', margin: [5, 3, 5, 3] }
                         ],
                         [
                           { text: 'TERMS', margin: [5, 3, 5, 3] },
@@ -251,7 +256,7 @@ console.log(id,"wsed")
                         return i === 0 || i === node.table.body.length ? 0.5 : 0;
                       },
                       vLineWidth(i, node) {
-                        return i === 0 || i === node.table.widths.length ? 0.5 : 1;
+                        return i === 0 || i === node.table.widths.length ? 0.5 : 0;
                       },
                       hLineColor() {
                         return '#000000';
@@ -274,7 +279,7 @@ console.log(id,"wsed")
           
         {
           layout: {
-            hLineWidth: (i) => (i === 0 || i === 1) ? 1 : 0,
+            hLineWidth: () => 1,
             vLineWidth: () => 1,
             hLineColor: () => '#000',
             vLineColor: () => '#000',
@@ -386,10 +391,10 @@ console.log(id,"wsed")
   return (
     <>
       <a   onClick={GetPdf}>
-       <Icon.Printer size={16} />
+        Print Performa
       </a>
     </>
   );
 };
 
-export default PrintPerfomaList;
+export default PrintPerfoma;

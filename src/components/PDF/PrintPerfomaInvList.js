@@ -10,15 +10,16 @@ import message from '../Message';
 import PdfFooter from './PdfFooter'; // Assuming you have a footer component
 import PdfHeader from './PdfHeader'; // Assuming you have a header component
 
-const PrintPerfomaList = ({ id }) => {
-    PrintPerfomaList.propTypes = {
+const PrintPerfomaInvList = ({ id }) => {
+  PrintPerfomaInvList.propTypes = {
     id: PropTypes.arrayOf(PropTypes.any).isRequired,
   };
-console.log(id,"wsed")
-  const [salesOrder, setSalesOrder] = useState({});
-  const [lineItems, setLineItems] = useState();
+  console.log(id, "wsed");
+  const [salesOrders, setSalesOrders] = useState([]);
+  const [lineItems, setLineItems] = useState([]);
   const [hfdata, setHeaderFooterData] = useState();
-  const [gTotal, setGtotal] = useState(0);
+  const [ setGtotal] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api.get('/setting/getSettingsForCompany').then((res) => {
@@ -33,6 +34,7 @@ console.log(id,"wsed")
  
   const fetchSalesOrderData = async () => {
     try {
+      setLoading(true);
       // Fetch sales order data for all IDs
       const salesOrderPromises = id.map(orderId =>
         api.post('/invoice/getSalesorderById', { invoice_id: orderId })
@@ -44,10 +46,19 @@ console.log(id,"wsed")
       const salesOrderResponses = await Promise.all(salesOrderPromises);
       const lineItemResponses = await Promise.all(lineItemPromises);
 
-      const allSalesOrders = salesOrderResponses.map(res => res.data.data[0] || {});
-      const allLineItems = lineItemResponses.map(res => res.data.data).flat();
+      const allSalesOrders = salesOrderResponses.flatMap(res => res.data.data.map(item => ({ ...item, invoice_id: String(item.invoice_id) })) || []);
+      const allLineItems = lineItemResponses.map((res, index) => {
+        // Add the invoice information to each line item for grouping
+        const items = res.data.data || [];
+        return items.map(item => ({
+          ...item,
+          invoice_id: id[index],
+          invoice_code: allSalesOrders[index]?.invoice_code || '',
+          invoice_date: allSalesOrders[index]?.invoice_date || ''
+        }));
+      }).flat();
 
-      setSalesOrder(allSalesOrders[0]); // Keep the first one for header info
+      setSalesOrders(allSalesOrders);
       setLineItems(allLineItems);
 
       let grandTotal = 0;
@@ -55,47 +66,14 @@ console.log(id,"wsed")
         grandTotal += elem.total || 0;
       });
       setGtotal(grandTotal);
+      setLoading(false);
     } catch (error) {
       message('Error fetching sales order data', 'error');
+      setLoading(false);
     }
   };
 
-
-  // const [taxType, setTaxType] = React.useState('');
- const [taxRate] = React.useState(0.09); // Set default tax rate to 9%
-  //  console.log(taxType)
-  //  React.useEffect(() => {
-  //   const fetchBillDiscountAndTax = async () => {
-  //     try {
-  //       const response = await api.post('/invoice/getSalesorderById', {
-  //         invoice_id: id,
-  //       });
-  
-  //       const data = response.data.data[0];
-       
-  
-  //       const type = data?.tax_type || '';
-  //       setTaxType(type);
-  
-  //       const taxResponse = await api.post('/valuelist/getValueListByKeyText', {
-  //         value: type, // use this instead of taxType
-  //       });
-  
-  //       const taxCode = parseFloat(taxResponse.data.data[0]?.code) || 0;
-  //       setTaxRate(taxCode / 100);
-  //     } catch (error) {
-  //       console.error('Failed to fetch bill discount or tax info:', error);
-  //     }
-  //   };
-  
-  //   if (id) {
-  //     fetchBillDiscountAndTax();
-  //   }
-  // }, [id]);
-  
-
-  const gst = gTotal * taxRate;
-    const totalWithGst = gTotal + gst;
+  const [taxRate] = React.useState(0.09); // Set default tax rate to 9%
 
   useEffect(() => {
     if (id) {
@@ -109,40 +87,74 @@ console.log(id,"wsed")
       return;
     }
 
-    const productItems = [
-      [
-        { text: 'No', style: 'tableHead' },
-        { text: 'Description', style: 'tableHead' },
-        { text: 'Uom', style: 'tableHead' },
-        { text: 'CTN', style: 'tableHead' },
-        { text: 'PCS', style: 'tableHead' },
-        { text: 'F.O.C', style: 'tableHead' },
-        { text: 'C/PRI', style: 'tableHead' },
-        { text: 'U/PRI', style: 'tableHead' },
-        { text: 'Amount', style: 'tableHead' },
-      ],
-    ];
-
-    lineItems.forEach((item, index) => {
-      productItems.push([
-        { text: `${index + 1}`, style: 'tableBody' },
-        { text: `${item.product_name || ''}`, style: 'tableBody' },
-        { text: `${item.quantity || ''}`, style: 'tableBody' },
-        { text: `${item.carton_qty || ''}`, style: 'tableBody' },
-        { text: `${item.loose_qty || ''}`, style: 'tableBody' },
-        { text: `${item.foc || ''}`, style: 'tableBody' },
-        { text: `${item.carton_price || ''}`, style: 'tableBody' },
-        { text: `${item.wholesale_price || ''}`, style: 'tableBody' },
-        { text: `${item.total || ''}`, style: 'tableBody' },
-      ]);
+    // Group line items by invoice
+    const invoiceGroups = {};
+    lineItems.forEach(item => {
+      if (!invoiceGroups[item.invoice_id]) {
+        invoiceGroups[item.invoice_id] = {
+          items: [],
+          invoice_code: item.invoice_code,
+          invoice_date: item.invoice_date
+        };
+      }
+      invoiceGroups[item.invoice_id].items.push(item);
     });
 
-    const dd = {
-      pageSize: 'A4',
-      pageMargins: [40, 150, 40, 80], // Adjust margins as needed
-      header: PdfHeader({ findCompany }), // Assuming your header needs company info
-      footer: PdfFooter, // Assuming you have a standard footer
-      content: [
+    // Create content for each invoice
+    const allContent = [];
+    const invoiceIds = Object.keys(invoiceGroups);
+
+    // For each invoice, create a separate section in the PDF
+    invoiceIds.forEach((invoiceId, index) => {
+      const invoiceData = invoiceGroups[invoiceId];
+      const invoiceItems = invoiceData.items;
+      const currentSalesOrder = salesOrders.find(order => String(order.invoice_id) === invoiceId) || salesOrders[0] || {};
+      
+      // Calculate subtotal for this invoice
+      let invoiceSubtotal = 0;
+      invoiceItems.forEach(item => {
+        invoiceSubtotal += item.total || 0;
+      });
+      
+      const invoiceGst = invoiceSubtotal * taxRate;
+      const invoiceTotalWithGst = invoiceSubtotal + invoiceGst;
+
+      // Create table rows for this invoice's items
+      const productItems = [
+        [
+          { text: 'No', style: 'tableHead' },
+          { text: 'Description', style: 'tableHead' },
+          { text: 'Uom', style: 'tableHead' },
+          { text: 'CTN', style: 'tableHead' },
+          { text: 'PCS', style: 'tableHead' },
+          { text: 'F.O.C', style: 'tableHead' },
+          { text: 'C/PRI', style: 'tableHead' },
+          { text: 'U/PRI', style: 'tableHead' },
+          { text: 'Amount', style: 'tableHead' },
+        ],
+      ];
+
+      invoiceItems.forEach((item, itemIndex) => {
+        productItems.push([
+          { text: `${itemIndex + 1}`, style: 'tableBody' },
+          { text: `${item.product_name || ''}`, style: 'tableBody' },
+          { text: `${item.unit || ''}`, style: 'tableBody' },
+          { text: `${item.carton_qty || ''}`, style: 'tableBody' },
+          { text: `${item.loose_qty || ''}`, style: 'tableBody' },
+          { text: `${item.foc || ''}`, style: 'tableBody' },
+          { text: `${item.carton_price || ''}`, style: 'tableBody' },
+          { text: `${item.wholesale_price || ''}`, style: 'tableBody' },
+          { text: `${item.total || ''}`, style: 'tableBody' },
+        ]);
+      });
+
+      // Add page break between invoices, except for the first one
+      if (index > 0) {
+        allContent.push({ text: '', pageBreak: 'before' });
+      }
+
+      // Add invoice header and content
+      allContent.push(
         {
           columns: [
             { width: '*', text: '' }, // left spacer
@@ -175,121 +187,94 @@ console.log(id,"wsed")
         },
         
         {
-            columns: [
-              // {
-              //   width: '50%',
-              //   stack: [
-              //     { text: 'Customer Address:', bold: true },
-              //     { text: '', margin: [8, 0, 0, 0] },
-              //     { text: salesOrder.company_name || '', margin: [8, 0, 0, 0] },
-              //     { text: salesOrder.address_street || '', margin: [8, 0, 0, 0] },
-              //     { text: salesOrder.address_down || '', margin: [8, 0, 0, 0] },
-              //     { text: salesOrder.address_country || '', margin: [8, 0, 0, 0] },
-              //     { text: salesOrder.address_po_code || '', margin: [8, 0, 0, 0] },
-              //     { text: '', margin: [8, 0, 0, 0] },
-              //     { text: 'TEL: 6789098765', margin: [8, 5, 0, 0] },
-              //   ],
-              //   layout: 'Borders',
-              // style: 'textSize',
-              // },
-              {
-                width: '50%',
-                table: {
-                  widths: ['*'],
-                  body: [
-                    [
-                      { text: 'Customer Address:', bold: true }
-                    ],
-                    [
-                      {
-                        text: [
-                          salesOrder.company_name || '', '\n',
-                          salesOrder.address_street || '', '\n',
-                          salesOrder.address_down || '', '\n',
-                          salesOrder.address_country || '', '\n',
-                          salesOrder.address_po_code || '', '\n',
-                          'TEL: 6789098765', '\n', '\n','\n',
-                        ],
-                        margin: [8, 4, 0, 4],
-                        layout: {
-                          // Full borders for the Customer Address row
-                          hLineWidth: (i, node) => (i === 0 || i === node.table.body.length ? 0.5 : 0), // Border on top and bottom
-                          vLineWidth: (i, node) => (i === 0 || i === node.table.widths.length ? 0.5 : 0), // Border on left and right
-                          hLineColor: () => '#000000',
-                          vLineColor: () => '#000000',
-                        }
-                      }
-                    ]
+          columns: [
+            {
+              width: '50%',
+              table: {
+                widths: ['*'],
+                body: [
+                  [
+                    { text: 'Customer Address:', bold: true }
+                  ],
+                  [
+                    {
+                      text: [
+                        currentSalesOrder.company_name || '', '\n',
+                        currentSalesOrder.address_street || '', '\n',
+                        currentSalesOrder.address_down || '', '\n',
+                        currentSalesOrder.address_country || '', '\n',
+                        currentSalesOrder.address_po_code || '', '\n',
+                        'TEL: 6789098765', '\n', '\n','\n',
+                      ],
+                      margin: [8, 4, 0, 4],
+                    }
                   ]
-                },
-                layout: {
-                  // Outside borders for other rows
-                  hLineWidth: (i, node) => (i === 0 || i === node.table.body.length ? 0.5 : 0), // Top and bottom borders
-                  vLineWidth: (i, node) => (i === 0 || i === node.table.widths.length ? 0.5 : 0), // Left and right borders
-                  hLineColor: () => '#000000',
-                  vLineColor: () => '#000000'
-                },
-                style: 'textSize'
-              },
-              
-              {
-                width: '50%',
-                stack: [
-                  {
-                    table: {
-                      widths: ['30%', '65%'],
-                      body: [
-                        [
-                          { text: 'TRAN NO', margin: [5, 3, 5, 3] },
-                          { text: salesOrder.invoice_code || '', margin: [5, 3, 5, 3] }
-                        ],
-                        [
-                          { text: 'TRAN DATE', margin: [5, 3, 5, 3] },
-                          { text: salesOrder.invoice_date ? moment(salesOrder.invoice_date).format('DD-MM-YYYY') : '', margin: [5, 3, 5, 3] }
-                        ],
-                        [
-                          { text: 'TERMS', margin: [5, 3, 5, 3] },
-                          { text: salesOrder.terms || '', margin: [5, 3, 5, 3] }
-                        ],
-                        [
-                          { text: 'PAGE', margin: [5, 3, 5, 3] },
-                          { text: salesOrder.order_no || '', margin: [5, 3, 5, 3] }
-                        ],
-                        [
-                          { text: 'AGENT NAME', margin: [5, 3, 5, 3] },
-                          { text: salesOrder.gst_reg_no || '', margin: [5, 3, 5, 3] }
-                        ],
-                      ]
-                    },
-                    layout: {
-                      hLineWidth(i, node) {
-                        return i === 0 || i === node.table.body.length ? 0.5 : 0;
-                      },
-                      vLineWidth(i, node) {
-                        return i === 0 || i === node.table.widths.length ? 0.5 : 0;
-                      },
-                      hLineColor() {
-                        return '#000000';
-                      },
-                      vLineColor() {
-                        return '#000000';
-                      }
-                    },
-                    
-                    
-                    style: 'textSize',
-                  }
                 ]
               },
-              
-            ],
-            columnGap: 10,
-            margin: [0, 0, 0, 15],
-          },
-          
+              layout: {
+                hLineWidth: (i, node) => (i === 0 || i === node.table.body.length ? 1 : 1),
+                vLineWidth: (i, node) => (i === 0 || i === node.table.widths.length ? 0.5 : 0),
+                hLineColor: () => '#000000',
+                vLineColor: () => '#000000'
+              },
+              style: 'textSize'
+            },
+            
+            {
+              width: '50%',
+              stack: [
+                {
+                  table: {
+                    widths: ['30%', '65%'],
+                    body: [
+                      [
+                        { text: 'TRAN NO', margin: [5, 3, 5, 3] },
+                        { text: invoiceData.invoice_code || '', margin: [5, 3, 5, 3] }
+                      ],
+                      [
+                        { text: 'TRAN DATE', margin: [5, 3, 5, 3] },
+                        { text: invoiceData.invoice_date ? moment(invoiceData.invoice_date).format('DD-MM-YYYY') : '', margin: [5, 3, 5, 3] }
+                      ],
+                      [
+                        { text: 'TERMS', margin: [5, 3, 5, 3] },
+                        { text: currentSalesOrder.terms || '', margin: [5, 3, 5, 3] }
+                      ],
+                      [
+                        { text: 'PAGE', margin: [5, 3, 5, 3] },
+                        { text: currentSalesOrder.order_no || '', margin: [5, 3, 5, 3] }
+                      ],
+                      [
+                        { text: 'AGENT NAME', margin: [5, 3, 5, 3] },
+                        { text: currentSalesOrder.gst_reg_no || '', margin: [5, 3, 5, 3] }
+                      ],
+                    ]
+                  },
+                  layout: {
+                    hLineWidth(i, node) {
+                      return i === 0 || i === node.table.body.length ? 0.5 : 0;
+                    },
+                    vLineWidth(i, node) {
+                      return i === 0 || i === node.table.widths.length ? 0.5 : 1;
+                    },
+                    hLineColor() {
+                      return '#000000';
+                    },
+                    vLineColor() {
+                      return '#000000';
+                    }
+                  },
+                  style: 'textSize',
+                }
+              ]
+            },
+          ],
+          columnGap: 10,
+          margin: [0, 0, 0, 15],
+        },
+        
         {
           layout: {
-            hLineWidth: () => 1,
+            hLineWidth: (i) => (i === 0 || i === 1) ? 1 : 0,
             vLineWidth: () => 1,
             hLineColor: () => '#000',
             vLineColor: () => '#000',
@@ -316,17 +301,17 @@ console.log(id,"wsed")
                   margin: [5, 5, 5, 5],
                 },
                 { text: 'Subtotal   :', bold: true, alignment: 'center', margin: [5, 5, 5, 5] },
-                { text: gTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right', margin: [5, 5, 5, 5] }
+                { text: invoiceSubtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right', margin: [5, 5, 5, 5] }
               ],
               [
                 {}, // empty cell due to rowspan
                 { text: 'GST  :', bold: true, alignment: 'center', margin: [5, 5, 5, 5] },
-                { text: gst.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right', margin: [5, 5, 5, 5] }
+                { text: invoiceGst.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right', margin: [5, 5, 5, 5] }
               ],
               [
                 {}, // empty cell due to rowspan
                 { text: 'Net Total  :', bold: true, alignment: 'center', margin: [5, 5, 5, 5] },
-                { text: totalWithGst.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right', margin: [5, 5, 5, 5] }
+                { text: invoiceTotalWithGst.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right', margin: [5, 5, 5, 5] }
               ]
             ]
           },
@@ -345,32 +330,39 @@ console.log(id,"wsed")
           margin: [0, 5, 0, 0],
           style: 'textSize'
         },
-         {
-                  margin: [0, 80, 0, 0], // space from totals
-                  columns: [
-                    {
-                      width: '50%',
-                      
-                      stack: [
-                        { text: '________________________________________________', margin: [0, 0, 0, 10]},
-                        { text: 'Good Received in Good condition', italics: true, alignment: 'center',fontSize: 8 },
-                        { text: 'Customer Authorised Signature and' , italics: true, alignment: 'center', fontSize: 8},
-                        { text: 'company stamp', italics: true, alignment: 'center', fontSize: 8 },
-                      ],
-                      style: 'textSize',
-                    },
-                    {
-                      width: '50%',
-                      alignment: 'left',
-                      stack: [
-                        { text: '________________________________________________', margin: [0, 0, 0, 10]},
-                        { text: 'for AMPRO PTE LTD', alignment: 'center', fontSize: 8  },
-                      ],
-                      style: 'textSize',
-                    },
-                  ],
-                },
-      ],
+        {
+          margin: [0, 80, 0, 0], // space from totals
+          columns: [
+            {
+              width: '50%',
+              stack: [
+                { text: '________________________________________________', margin: [0, 0, 0, 10]},
+                { text: 'Good Received in Good condition', italics: true, alignment: 'center',fontSize: 8 },
+                { text: 'Customer Authorised Signature and' , italics: true, alignment: 'center', fontSize: 8},
+                { text: 'company stamp', italics: true, alignment: 'center', fontSize: 8 },
+              ],
+              style: 'textSize',
+            },
+            {
+              width: '50%',
+              alignment: 'left',
+              stack: [
+                { text: '________________________________________________', margin: [0, 0, 0, 10]},
+                { text: 'for AMPRO PTE LTD', alignment: 'center', fontSize: 8  },
+              ],
+              style: 'textSize',
+            },
+          ],
+        }
+      );
+    });
+
+    const dd = {
+      pageSize: 'A4',
+      pageMargins: [40, 150, 40, 80], // Adjust margins as needed
+      header: PdfHeader({ findCompany }), // Assuming your header needs company info
+      footer: PdfFooter, // Assuming you have a standard footer
+      content: allContent,
       styles: {
         header: {
           fontSize: 18,
@@ -384,6 +376,7 @@ console.log(id,"wsed")
           bold: true,
           fontSize: 10,
           color: 'black',
+          
         },
         tableBody: {
           fontSize: 9,
@@ -393,18 +386,23 @@ console.log(id,"wsed")
         },
       },
     };
-
-    pdfMake.vfs = pdfFonts.pdfMake.vfs;
+    
+    // Create the PDF document
+   pdfMake.vfs = pdfFonts.pdfMake.vfs;
     pdfMake.createPdf(dd, null, null, pdfFonts.pdfMake.vfs).open();
   };
-
+  
   return (
-    <>
-      <a   onClick={GetPdf}>
-       <Icon.Printer size={16} />
-      </a>
-    </>
+    <div>
+      {loading ? (
+        <div>Loading...</div>
+      ) : (
+        <div>
+          <button type="button" onClick={GetPdf}><Icon.Printer size={16} /></button>
+        </div>
+      )}
+    </div>
   );
 };
 
-export default PrintPerfomaList;
+export default PrintPerfomaInvList;
