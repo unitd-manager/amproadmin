@@ -11,9 +11,10 @@ import 'datatables.net-buttons/js/buttons.flash';
 import 'datatables.net-buttons/js/buttons.html5';
 import 'datatables.net-buttons/js/buttons.print';
 import { Link } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
 
 import message from '../../components/Message';
-import PrintPerfoma from '../../components/PDF/PrintPerfoma';
+import PrintPerfoma from '../../components/PDF/PrintSalesReturn';
 
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
@@ -232,10 +233,15 @@ const Test = () => {
           <Button
             color="secondary"
             className="ms-2"
-            disabled={selectedSalesReturnIds.length === 0}
+             onClick={() => {
+      if (selectedSalesReturnIds.length !== 1) {
+        message('Please Select Only One Transaction to Print', 'warning');
+      }
+    }}
           >
             <PrintPerfoma
-              id={selectedOrder?.sales_return_id}
+                    id={selectedSalesReturnIds.length === 1 ? selectedSalesReturnIds : []}
+
               settingdetails={null}
               lineItem={null}
             />
@@ -312,7 +318,7 @@ const Test = () => {
         </CommonTable>
         </div>
       </div>
-     
+     <ToastContainer />
     </div>
   );
 };

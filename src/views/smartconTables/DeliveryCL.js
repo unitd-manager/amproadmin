@@ -377,7 +377,7 @@ const [newDeliveryDate, setNewDeliveryDate] = useState(() => new Date().toISOStr
             disabled={selectedDeliveryOrderIds.length === 0}
           >
             <PrintPerfoma
-      id={selectedOrder?.delivery_order_id}
+      id={selectedDeliveryOrderIds}
       settingdetails={null}
       lineItem={null}
     />

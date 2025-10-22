@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import * as Icon from 'react-feather';
-import { Button, Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
+import { Button, Dropdown, DropdownToggle, DropdownMenu, DropdownItem} from 'reactstrap';
 import { Trash2 } from 'react-feather';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'datatables.net-dt/js/dataTables.dataTables';
@@ -12,7 +12,9 @@ import 'datatables.net-buttons/js/buttons.html5';
 import 'datatables.net-buttons/js/buttons.print';
  import moment from 'moment';
 import { Link } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
 import message from '../../components/Message';
+
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
@@ -294,11 +296,14 @@ const Test = () => {
   <Button
     color="secondary"
     className="ms-2"
-  
+    onClick={() => {
+      if (selectedSalesOrderIds.length !== 1) {
+        message('Please Select Only One Transaction to Print', 'warning');
+      }
+    }}
   >
-    
     <PrintPerfomaList
-                    id={selectedSalesOrderIds}
+      id={selectedSalesOrderIds.length === 1 ? selectedSalesOrderIds : []}
       settingdetails={null}
       lineItem={null}
     />
@@ -429,6 +434,7 @@ const Test = () => {
         </CommonTable>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 };
