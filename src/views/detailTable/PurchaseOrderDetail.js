@@ -131,6 +131,7 @@ const { id } = useParams();
     ));
   };
 // Utility function to handle Enter key focus shift
+// Utility function to handle Enter key focus shift
 const handleKeyDown = (e, idx, field) => {
   if (e.key === "Enter") {
     e.preventDefault(); // prevent form submission
@@ -139,61 +140,78 @@ const handleKeyDown = (e, idx, field) => {
       'product_code',
       'carton_qty',
       'loose_qty',
-      'qty',
+      'qty', // You don't have a qty input in the code
       'carton_price',
       'price',
-      'discount_percentage',
-      'discount_amount',
+      'discount_percentage', // Missing input in provided code
+      'discount_amount',     // Missing input in provided code
       'gross_total',
     ];
 
-    const currentPoProductId = rows[idx].po_product_id;
+    const currentPoProductId = rows[idx]?.po_product_id;
+    if (!currentPoProductId) return;
 
-    if (field === 'product_code') {
-          requestAnimationFrame(() => {
-            const productCodeRef = productCodeRefs.current[idx];
-            if (productCodeRef && productCodeRef.current && productCodeRef.current.inputRef) {
-              productCodeRef.current.inputRef.focus();
-            }
-            const nextInputField = document.querySelector(`[name="carton_qty-${currentPoProductId}"]`);
-            if (nextInputField) nextInputField.focus();
-          });
+    // --- Helper to focus the Product Select (for React Select) ---
+    const focusProductSelect = (rowIndex) => {
+      // Use setTimeout to ensure the focus happens after the current rendering cycle
+      setTimeout(() => {
+        const selectRef = productCodeRefs.current[rowIndex];
+        
+        // React-Select exposes a .focus() method on its instance
+        if (selectRef && typeof selectRef.focus === "function") {
+          selectRef.focus();
         } else {
-      const currentFieldIndex = fieldOrder.indexOf(field);
-      const nextFieldIndex = currentFieldIndex + 1;
-
-      if (nextFieldIndex < fieldOrder.length) {
-        // Focus the next field in the current row
-        const nextField = fieldOrder[nextFieldIndex];
-        const nextInputField = document.querySelector(`[name="${nextField}-${currentPoProductId}"]`);
-        if (nextInputField) {
-          nextInputField.focus();
+          // Fallback for complex Select component structure
+          // This targets the inner hidden input wrapper of a standard Select
+          const targetId = rows[rowIndex]?.po_product_id;
+          const inputEl = document.querySelector(
+            `[name="product_code-${targetId}"] input`
+          );
+          if (inputEl) {
+            inputEl.focus();
+          } else {
+            // console.warn("Could not focus product_code for row", rowIndex);
+          }
         }
+      }, 50); // Small timeout to allow DOM to catch up
+    };
+    // -----------------------------------------------------------
+
+    const currentFieldIndex = fieldOrder.indexOf(field);
+
+    if (currentFieldIndex === fieldOrder.length - 1) {
+      // ---- LAST FIELD (gross_total) -> MOVE TO NEXT ROW ----
+      const nextRowIdx = idx + 1;
+      if (rows[nextRowIdx]) {
+        // Next row exists, focus its product_code
+        focusProductSelect(nextRowIdx);
       } else {
-        // If it's the last field in the current row (gross_total), move to the next row's product_code
-        const nextRowIdx = idx + 1; // This is the array index of the next row
-
-        if (rows[nextRowIdx]) { // Check if the next row object exists
-          const nextRowPoProductId = rows[nextRowIdx].po_product_id;
-            requestAnimationFrame(() => {
-              const nextRowProductCodeRef = productCodeRefs.current[nextRowIdx];
-            if (nextRowProductCodeRef && nextRowProductCodeRef.current && nextRowProductCodeRef.current.inputRef) {
-              nextRowProductCodeRef.current.inputRef.focus();
-            }
-            });
-        } else {
-          // If no next row, add a new row and then focus its product_code
-          addNewRow((newPoProductId) => {
-            const newRowProductCodeInput = document.querySelector(`[name="product_code-${newPoProductId}"]`);
-            if (newRowProductCodeInput) {
-              newRowProductCodeInput.focus();
-            }
-          });
-        }
+        // No next row: add one and focus its product_code
+        // The callback ensures we focus AFTER the new row state is processed
+        addNewRow(() => {
+          focusProductSelect(idx + 1);
+        });
       }
+    } else if (currentFieldIndex !== -1) {
+      // ---- MOVE TO NEXT FIELD IN CURRENT ROW ----
+      const nextField = fieldOrder[currentFieldIndex + 1];
+      
+      // FIX: Use requestAnimationFrame for immediate focus on the next standard input
+      requestAnimationFrame(() => {
+        const nextInputField = document.querySelector(
+          `[name="${nextField}-${currentPoProductId}"]`
+        );
+        if (nextInputField) nextInputField.focus();
+      });
     }
   }
+  
+  // NOTE: If you are calling handleKeyDown without idx and field (like in your TranNo, TranDate inputs), 
+  // you must update those calls to pass the correct arguments, or remove the call if not needed.
+  // The call in Request Delivery Date is the one that causes an error since it passes an event only.
 };
+
+
 
   const addNewRow = (callback) => {
     let newPoProductId;
@@ -729,7 +747,8 @@ useEffect(() => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1" type="date"  name="request_delivery_date"
               value={formData?.request_delivery_date}
-              onChange={handleChange}  onKeyDown={(e) => {
+              onChange={handleChange} 
+               onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
                 // Focus the first product code Select in the table
@@ -740,7 +759,8 @@ useEffect(() => {
               } else {
                 handleKeyDown(e);
               }
-            }}/>
+            }}
+            />
         </Col>
       </Row>
     </Col>
@@ -877,7 +897,7 @@ useEffect(() => {
     onChange={(selectedOption) => handleProductSelect(idx, selectedOption)}
     placeholder="Select Product"
     onKeyDown={(e) => handleKeyDown(e, idx, 'product_code')}
-    ref={productCodeRefs.current[idx]}
+    ref={(el) => (productCodeRefs.current[idx] = el)}
     filterOption={(candidate, input) => {
       if (!input) return true;
       const lowerInput = input.toLowerCase();
@@ -1069,32 +1089,28 @@ useEffect(() => {
                     readOnly
                     style={{ width: '80px', textAlign: 'right' }}
                     name={`gross_total-${p.po_product_id}`}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        const nextRowIdx = idx + 1;
-                        if (rows[nextRowIdx]) {
-                          // next row exists: focus its product_code input
-                          const targetId = rows[nextRowIdx].po_product_id;
-                          console.log('targetproduct code ',targetId);
-                          setTimeout(() => {
-                            const nextProductInput = document.querySelector(`[name="product_code-${targetId}"] input`);
-                            console.log('targetproduct focus ', nextProductInput);
-                            if (nextProductInput) nextProductInput.focus();
-                          }, 0);
-                        } else {
-                          // no next row: add one and focus its product_code after render
-                          addNewRow((newPoProductId) => {
-                            setTimeout(() => {
-                              const nextProductInput = document.querySelector(`[name="product_code-${newPoProductId}"] input`);
-                              if (nextProductInput) nextProductInput.focus();
-                            }, 0);
-                          });
-                        }
-                      } else {
-                        handleKeyDown(e, idx, 'gross_total');
-                      }
-                    }}
+                 // ... inside Request Delivery Date Input
+onKeyDown={(e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    // Use the reliable focus method for the first product select
+    const firstSelectRef = productCodeRefs.current[0];
+    if (firstSelectRef && typeof firstSelectRef.focus === "function") {
+      firstSelectRef.focus();
+    } else {
+       // Fallback for DOM query if ref is not yet populated
+       const firstProductSelect = document.querySelector(
+         `[name="product_code-${rows[0]?.po_product_id}"] input`
+       );
+       if (firstProductSelect) firstProductSelect.focus();
+    }
+  } 
+  // IMPORTANT: Remove the line below, as it calls handleKeyDown incorrectly and causes errors.
+  // else {
+  //   handleKeyDown(e); 
+  // }
+}}
+
                    />
                 </td>
                 <td style={{ padding: '0.3rem', whiteSpace: 'nowrap' }}>
