@@ -10,8 +10,8 @@ import message from '../Message';
 import PdfFooter from './PdfFooter'; // Assuming you have a footer component
 import PdfHeader from './PdfHeader'; // Assuming you have a header component
 
-const PdfPurchaseInvoiceList = ({ id }) => {
-  PdfPurchaseInvoiceList.propTypes = {
+const PdfGoodsReceiptList = ({ id }) => {
+  PdfGoodsReceiptList.propTypes = {
     id: PropTypes.arrayOf(PropTypes.any).isRequired,
   };
   console.log(id, "wsed");
@@ -37,22 +37,22 @@ const PdfPurchaseInvoiceList = ({ id }) => {
       setLoading(true);
       // Fetch sales order data for all IDs
       const salesOrderPromises = id.map(orderId =>
-        api.post('/purchaseorder/getPurchaseInvoiceById', { purchase_invoice_id: orderId })
+        api.post('/purchaseorder/getGoodsReceiptById', { goods_receipt_id: orderId })
       );
       const lineItemPromises = id.map(orderId =>
-        api.post('/purchaseorder/getPiProductsByPurchaseInvoiceId', { purchase_invoice_id: orderId })
+        api.post('/purchaseorder/getGrProductsByGoodsReceiptId', { goods_receipt_id: orderId })
       );
 
       const salesOrderResponses = await Promise.all(salesOrderPromises);
       const lineItemResponses = await Promise.all(lineItemPromises);
 
-      const allSalesOrders = salesOrderResponses.flatMap(res => res.data.data.map(item => ({ ...item, purchase_invoice_id: String(item.purchase_invoice_id) })) || []);
+      const allSalesOrders = salesOrderResponses.flatMap(res => res.data.data.map(item => ({ ...item, goods_receipt_id: String(item.goods_receipt_id) })) || []);
       const allLineItems = lineItemResponses.map((res, index) => {
         // Add the invoice information to each line item for grouping
         const items = res.data.data || [];
         return items.map(item => ({
           ...item,
-          purchase_invoice_id: id[index],
+          goods_receipt_id: id[index],
           invoice_code: allSalesOrders[index]?.invoice_code || '',
           invoice_date: allSalesOrders[index]?.invoice_date || ''
         }));
@@ -90,14 +90,14 @@ const PdfPurchaseInvoiceList = ({ id }) => {
     // Group line items by invoice
     const invoiceGroups = {};
     lineItems.forEach(item => {
-      if (!invoiceGroups[item.purchase_invoice_id]) {
-        invoiceGroups[item.purchase_invoice_id] = {
+      if (!invoiceGroups[item.goods_receipt_id]) {
+        invoiceGroups[item.goods_receipt_id] = {
           items: [],
           invoice_code: item.invoice_code,
           invoice_date: item.invoice_date
         };
       }
-      invoiceGroups[item.purchase_invoice_id].items.push(item);
+      invoiceGroups[item.goods_receipt_id].items.push(item);
     });
 
     // Create content for each invoice
@@ -108,7 +108,7 @@ const PdfPurchaseInvoiceList = ({ id }) => {
     invoiceIds.forEach((invoiceId, index) => {
       const invoiceData = invoiceGroups[invoiceId];
       const invoiceItems = invoiceData.items;
-      const currentSalesOrder = salesOrders.find(order => String(order.purchase_invoice_id) === invoiceId) || salesOrders[0] || {};
+      const currentSalesOrder = salesOrders.find(order => String(order.goods_receipt_id) === invoiceId) || salesOrders[0] || {};
       
       // Calculate subtotal for this invoice
       let invoiceSubtotal = 0;
@@ -405,4 +405,4 @@ const PdfPurchaseInvoiceList = ({ id }) => {
   );
 };
 
-export default PdfPurchaseInvoiceList;
+export default PdfGoodsReceiptList;
