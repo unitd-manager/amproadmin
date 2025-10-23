@@ -81,10 +81,10 @@ const PdfPackingList = ({ selectedOrderIds }) => {
       let totalQuantity = 0; // To store the sum of all quantities for current order
 console.log(totalQuantity, 'totalQuantity')
       lineItemsForOrder.forEach((item, index) => {
-        const lQty = parseFloat(item.loose_qty || 0);
-        const fQty = parseFloat(item.foc_qty || 0);
-        const cQty = parseFloat(item.carton_qty || 0);
-        const quantity = parseFloat(item.quantity || 0); // Assuming 'quantity' represents the base quantity
+        const lQty = parseFloat(item.loose_qty || '');
+        const fQty = parseFloat(item.foc_qty || '');
+        const cQty = parseFloat(item.carton_qty || '');
+        const quantity = parseFloat(item.quantity || ''); // Assuming 'quantity' represents the base quantity
 
         productItems.push([
           { text: `${index + 1}`, style: 'tableBody' },

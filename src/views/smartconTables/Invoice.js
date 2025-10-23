@@ -330,7 +330,7 @@ const handleConvertToDelivryVerification = async () => {
               <DropdownMenu>
                 <DropdownItem onClick={generateReceipt}>Receive Payment</DropdownItem>
                 <DropdownItem>
-    <PrintLetterPdf id={id} settingdetails={settingdetails} lineItem={lineItem} />
+    <PrintLetterPdf id={selectedInvoiceIds} settingdetails={settingdetails} lineItem={lineItem} />
 
   </DropdownItem>
   <DropdownItem>
