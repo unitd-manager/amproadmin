@@ -360,10 +360,11 @@ const Test = () => {
                 <DropdownItem onClick={() => { /* TODO: Add updated weight info logic */ }}>Updated Weight Info</DropdownItem>
                 <DropdownItem>
                   <PrintPerfoma
-                    id={selectedSalesOrderIds.length === 1 ? selectedSalesOrderIds[0] : selectedOrder?.sales_order_id || ''}
+      id={selectedSalesOrderIds.length === 1 ? selectedSalesOrderIds : []}
                     settingdetails={null}
                     lineItem={null}
                   />
+                  
                 
                 </DropdownItem>
               </DropdownMenu>

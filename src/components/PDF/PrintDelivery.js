@@ -151,6 +151,20 @@ const PrintPerfomaInvList = ({ id }) => {
         ]);
       });
 
+       for (let i = 0; i < 10; i++) {
+      productItems.push([
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+      ]);
+    }
+
       // Add page break between invoices, except for the first one
       if (index > 0) {
         allContent.push({ text: '', pageBreak: 'before' });
@@ -201,14 +215,15 @@ const PrintPerfomaInvList = ({ id }) => {
                   ],
                   [
                     {
-                      text: [
-                        currentSalesOrder.company_name || '', '\n',
-                        currentSalesOrder.address_street || '', '\n',
-                        currentSalesOrder.address_down || '', '\n',
-                        currentSalesOrder.address_country || '', '\n',
-                        currentSalesOrder.address_po_code || '', '\n',
-                        'TEL: 6789098765', '\n', '\n','\n',
-                      ],
+                        text: [
+                          currentSalesOrder.company_name || '', '\n',
+                          currentSalesOrder.address1 || '', '\n',
+                          currentSalesOrder.address2 || '', '\n',
+                           currentSalesOrder.address_street || '', '\n',
+                          currentSalesOrder.address_country || '', ' - ',
+                          currentSalesOrder.address_po_code || '', '\n',
+                          `TEL:${currentSalesOrder.phone || 'NULL'}`, '\n', '\n','\n',
+                        ],
                       margin: [8, 4, 0, 4],
                     }
                   ]

@@ -225,7 +225,7 @@ const ContentUpdate = () => {
                 <FormGroup row><Label sm="3">Address 1</Label><Col sm="7"><Input type="text" name="address1" value={contentDetails.address1 || ''} onChange={handleInputs} /></Col></FormGroup>
                 <FormGroup row><Label sm="3">City</Label><Col sm="7"><Input type="text" name="city" value={contentDetails.city || ''} onChange={handleInputs} /></Col></FormGroup>
                 <FormGroup row><Label sm="3">State</Label><Col sm="7"><Input type="text" name="state" value={contentDetails.state || ''} onChange={handleInputs} /></Col></FormGroup>
-                <FormGroup row><Label sm="3">Postal Code</Label><Col sm="7"><Input type="text" name="postal_code" value={contentDetails.postal_code || ''} onChange={handleInputs} /></Col></FormGroup>
+                <FormGroup row><Label sm="3">Postal Code</Label><Col sm="7"><Input type="text" name="address_po_code" value={contentDetails.address_po_code || ''} onChange={handleInputs} /></Col></FormGroup>
                 <FormGroup row><Label sm="3">Phone</Label><Col sm="7"><Input type="text" name="phone" value={contentDetails.phone || ''} onChange={handleInputs} /></Col></FormGroup>
                 <FormGroup row><Label sm="3">Mobile</Label><Col sm="7"><Input type="text" name="mobile" value={contentDetails.mobile || ''} onChange={handleInputs} /></Col></FormGroup>
                 <FormGroup row><Label sm="3">Email</Label><Col sm="7"><Input type="email" name="email" value={contentDetails.email || ''} onChange={handleInputs} /></Col></FormGroup>
@@ -239,8 +239,8 @@ const ContentUpdate = () => {
                 <FormGroup row><Label sm="3">Terms</Label><Col sm="7"><Input type="select" name="terms" value={contentDetails.terms || ''} onChange={handleInputs}><option value="">Select Terms</option></Input></Col></FormGroup>
                 <FormGroup row><Label sm="3">Credit Limit</Label><Col sm="7"><Input type="text" name="credit_limit" value={contentDetails.credit_limit || ''} onChange={handleInputs} /></Col></FormGroup>
                 <FormGroup row><Label sm="3">Address 2</Label><Col sm="7"><Input type="text" name="address2" value={contentDetails.address2 || ''} onChange={handleInputs} /></Col></FormGroup>
-                <FormGroup row><Label sm="3">Address 3</Label><Col sm="7"><Input type="text" name="address3" value={contentDetails.address3 || ''} onChange={handleInputs} /></Col></FormGroup>
-                <FormGroup row><Label sm="3">Country</Label><Col sm="7"><Input type="text" name="country" value={contentDetails.country || ''} onChange={handleInputs} /></Col></FormGroup>
+                <FormGroup row><Label sm="3">Address 3</Label><Col sm="7"><Input type="text" name="address_street" value={contentDetails.address_street || ''} onChange={handleInputs} /></Col></FormGroup>
+                <FormGroup row><Label sm="3">Country</Label><Col sm="7"><Input type="text" name="address_country" value={contentDetails.address_country || ''} onChange={handleInputs} /></Col></FormGroup>
                 <FormGroup row><Label sm="3">Remarks</Label><Col sm="7"><Input type="textarea" name="remarks" value={contentDetails.remarks || ''} onChange={handleInputs} rows="3" /></Col></FormGroup>
                 <FormGroup row><Label sm="3">Cheque Print Name</Label><Col sm="7"><Input type="text" name="cheque_print_name" value={contentDetails.cheque_print_name || ''} onChange={handleInputs} /></Col></FormGroup>
                 <FormGroup row>
