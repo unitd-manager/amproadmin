@@ -3,16 +3,18 @@ import * as Icon from 'react-feather';
 import { Button, Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
 import Swal from 'sweetalert2';
 import { Link, useParams } from 'react-router-dom';
-import DataTable from 'react-data-table-component';
 import message from '../../components/Message';
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import QRCodeModal from '../../components/ProductTable/QRCodeModal';
+import CommonTable from '../../components/CommonTable';
+import './ProductCL.css';
 
 const SectionDetails = () => {
   const [section, setSection] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRows, setSelectedRows] = useState([]);
+  console.log("selectre", setSelectedRows)
   const [searchTerm, setSearchTerm] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
@@ -91,6 +93,15 @@ const [qrProduct, setQrProduct] = useState(null);
     styleFabric: '',
   });
 
+  // Row selection toggle
+  const handleRowSelect = (row) => {
+    if (selectedRows.some((r) => r.product_id === row.product_id)) {
+      setSelectedRows(selectedRows.filter((r) => r.product_id !== row.product_id));
+    } else {
+  setSelectedRows([...selectedRows, row]);
+    }
+  };
+
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
@@ -107,6 +118,7 @@ const [qrProduct, setQrProduct] = useState(null);
           item.product_code?.toString().includes(searchTerm)
       )
     : filteredSection;
+    console.log("filter", filteredData)
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -209,22 +221,39 @@ const [qrProduct, setQrProduct] = useState(null);
     {
       name: 'Action',
       cell: (row) => (
-        <>
-          <Button
-            color="danger"
-            size="sm"
-            onClick={() => handleDelete(row.product_id)}
-            className="me-1"
-          >
-            <Icon.Trash2 size={14} />
-          </Button>
-          <Link to={`/ProductCLEdit/${row.product_id}/?tab=1`}>
-            <Icon.Edit2 size={14} />
-          </Link>
-        </>
+        <Button
+          color="danger"
+          size="sm"
+          onClick={() => handleDelete(row.product_id)}
+          className="me-1"
+        >
+          <Icon.Trash2 size={14} />
+        </Button>
       ),
     },
-    { name: 'Product Code', selector: (row) => row.product_code, sortable: true },
+    {
+      name: (
+        <input
+          type="checkbox"
+          checked={selectedRows.length > 0 && filteredSection.length > 0 && selectedRows.length === filteredSection.length}
+          onChange={() => {
+            if (selectedRows.length === filteredSection.length) {
+              setSelectedRows([]);
+            } else {
+              setSelectedRows([...filteredSection]);
+            }
+          }}
+        />
+      ),
+      cell: (row) => (
+        <input
+          type="checkbox"
+          checked={selectedRows.some((r) => r.product_id === row.product_id)}
+          onChange={() => handleRowSelect(row)}
+        />
+      ),
+    },
+    { name: 'Code', selector: (row) => row.product_code, sortable: true },
     { name: 'Product Name', selector: (row) => row.title, sortable: true },
     { name: 'Department', selector: (row) => row.department_name, sortable: true },
     { name: 'Product Name2', selector: (row) => row.alternative_product_name },
@@ -242,23 +271,11 @@ const [qrProduct, setQrProduct] = useState(null);
 
   return (
     <div className="MainDiv">
-      <BreadCrumbs />
-      <div className="d-flex justify-content-between align-items-center mb-2">
-        <input
-          type="text"
-          placeholder="Search Product..."
-          className="form-control w-25"
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <div className="d-flex align-items-center">
-          <Button
-            color="light"
-            className="me-2"
-            onClick={() => setShowFilter((prev) => !prev)}
-            title="Show Filters"
-          >
-            <Icon.Filter size={20} />
-          </Button>
+      <div className="pt-xs-25">
+        <BreadCrumbs />
+        {/* First row: Title and New Product button */}
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h4 className="mb-0">Product Management</h4>
           <Dropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
             <DropdownToggle color="primary" caret className="shadow-none">
               <Button color="primary" tag={Link} to="/ProductCLDetails" className="shadow-none">
@@ -271,7 +288,57 @@ const [qrProduct, setQrProduct] = useState(null);
             </DropdownMenu>
           </Dropdown>
         </div>
-      </div>
+
+        {/* Second row: Barcode/Product Name filters, Search/Clear buttons */}
+        <div className="d-flex align-items-center mb-3 gap-2">
+          <input
+            type="text"
+            placeholder="Search Productcode/BarCode."
+            className="form-control me-2"
+            style={{ width: 220 }}
+            name="productCode"
+            value={filters.productCode}
+            onChange={handleFilterChange}
+          />
+          <input
+            type="text"
+            placeholder="Product Name"
+            className="form-control me-2"
+            style={{ width: 220 }}
+            name="productName"
+            value={filters.productName}
+            onChange={handleFilterChange}
+          />
+          <Button color="primary" className="me-2" onClick={handleSearch}>Search</Button>
+          <Button color="primary" outline className="me-2" onClick={handleClear}>Clear</Button>
+          <Button
+            color="light"
+            className="me-2"
+            onClick={() => setShowFilter((prev) => !prev)}
+            title="Show Filters"
+          >
+            <Icon.Filter size={20} />
+          </Button>
+        </div>
+
+        {/* Third row: Show entries dropdown */}
+        <div className="d-flex align-items-center mb-3">
+          <label htmlFor="entriesDropdown" className="me-2 mb-0">
+            Show
+            <select
+              id="entriesDropdown"
+              className="form-select ms-2"
+              style={{ width: 100 }}
+              value={filters.entries || 50}
+              onChange={e => setFilters(prev => ({ ...prev, entries: e.target.value }))}
+            >
+              {[10, 25, 50, 100].map(num => (
+                <option key={num} value={num}>{num}</option>
+              ))}
+            </select>
+          </label>
+          <span className="mb-0">entries</span>
+        </div>
 
       {showFilter && (
         <div className="mb-3 p-3 bg-light rounded border">
@@ -341,19 +408,116 @@ const [qrProduct, setQrProduct] = useState(null);
         </div>
       )}
 
-      <DataTable
-        columns={columns}
-        data={filteredData}
-        pagination
-        selectableRows
-        onSelectedRowsChange={({ selectedRows: rows }) => setSelectedRows(rows)}
-        progressPending={loading}
-        highlightOnHover
-        responsive
-        striped
-      />
-      <QRCodeModal isOpen={qrModalOpen} toggle={() => setQrModalOpen(false)} qrData={qrProduct} />
+      <div className="sales-order-table">
+        <CommonTable
+          loading={loading}
+          title="Product List"
+        >
 
+          <thead>
+            <tr>
+              {columns.map((col) => (
+                <td
+                  key={col.name}
+                    style={(() => {
+                      switch (col.name) {
+                        case 'Product Name':
+                          return { minWidth: '400px', maxWidth: '600px', whiteSpace: 'normal', wordBreak: 'break-word' };
+                        case 'Product Code':
+                          return { minWidth: '120px', maxWidth: '160px', whiteSpace: 'normal', wordBreak: 'break-word' };
+                        case 'Department':
+                          return { minWidth: '120px', maxWidth: '160px', whiteSpace: 'normal', wordBreak: 'break-word' };
+                        case 'Product Name2':
+                          return { minWidth: '120px', maxWidth: '160px', whiteSpace: 'normal', wordBreak: 'break-word' };
+                        case 'UOM':
+                          return { minWidth: '80px', maxWidth: '100px', whiteSpace: 'normal', wordBreak: 'break-word' };
+                        case 'Part No':
+                          return { minWidth: '100px', maxWidth: '120px', whiteSpace: 'normal', wordBreak: 'break-word' };
+                        case 'Unit Cost':
+                          return { minWidth: '100px', maxWidth: '120px', whiteSpace: 'normal', wordBreak: 'break-word' };
+                        case 'Retail Price':
+                          return { minWidth: '100px', maxWidth: '120px', whiteSpace: 'normal', wordBreak: 'break-word' };
+                        case 'Ecommerce Price':
+                          return { minWidth: '100px', maxWidth: '120px', whiteSpace: 'normal', wordBreak: 'break-word' };
+                        case 'Wholesale Price':
+                          return { minWidth: '100px', maxWidth: '120px', whiteSpace: 'normal', wordBreak: 'break-word' };
+                        case 'Carton Price':
+                          return { minWidth: '100px', maxWidth: '120px', whiteSpace: 'normal', wordBreak: 'break-word' };
+                        case 'Carton Qty':
+                          return { minWidth: '80px', maxWidth: '100px', whiteSpace: 'normal', wordBreak: 'break-word' };
+                        case 'Loose Qty':
+                          return { minWidth: '80px', maxWidth: '100px', whiteSpace: 'normal', wordBreak: 'break-word' };
+                        case 'Quantity':
+                          return { minWidth: '100px', maxWidth: '120px', whiteSpace: 'normal', wordBreak: 'break-word' };
+                        default:
+                          return { minWidth: '80px', maxWidth: '120px', whiteSpace: 'normal', wordBreak: 'break-word' };
+                      }
+                    })()}
+                >
+                  {col.name}
+                  <span style={{ marginLeft: 4, fontSize: 12 }}>
+                    <span style={{ cursor: 'pointer' }}>&uarr;</span>
+                    <span style={{ cursor: 'pointer', marginLeft: 2 }}>&darr;</span>
+                  </span>
+                </td>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {section && section.length > 0 ? (
+              section.map((row) => (
+                <tr key={row.product_id}>
+                  <td>
+                    <Button
+                      color="danger"
+                      size="sm"
+                      onClick={() => handleDelete(row.product_id)}
+                      className="me-1"
+                    >
+                      <Icon.Trash2 size={14} />
+                    </Button>
+                    </td>
+                    <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.some((r) => r.product_id === row.product_id)}
+                      onChange={() => handleRowSelect(row)}
+                      className="me-2"
+                    />
+                    </td>
+                    
+                  <td>{row.product_code}</td>
+                  <td>
+                    <Link to={`/ProductCLEdit/${row.product_id}/?tab=1`}>
+                      {row.title}
+                    </Link>
+                  </td>
+                  <td>{row.department_name}</td>
+                  <td>{row.alternative_product_name}</td>
+                  <td>{row.unit}</td>
+                  <td>{row.part_number}</td>
+                  <td>{row.purchase_unit_cost}</td>
+                  <td>{row.retail_price}</td>
+                  <td>{row.ecommerce_price}</td>
+                  <td>{row.wholesale_price}</td>
+                  <td>{row.carton_price}</td>
+                  <td>{row.carton_qty}</td>
+                  <td>{row.loose_qty}</td>
+                  <td>{row.qty_in_stock}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="15" className="text-center">
+                  {loading ? 'Loading...' : 'No products found'}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </CommonTable>
+        </div>
+        <QRCodeModal isOpen={qrModalOpen} toggle={() => setQrModalOpen(false)} qrData={qrProduct} />
+      </div>
     </div>
   );
 };

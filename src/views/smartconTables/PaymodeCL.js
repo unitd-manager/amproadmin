@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { FaFilter } from 'react-icons/fa';
 import {
   Table,
   Button,
@@ -15,6 +16,7 @@ const Paymode = () => {
   const [filteredPaymodes, setFilteredPaymodes] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [showFilter, setShowFilter] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 10;
   const navigate = useNavigate();
@@ -38,7 +40,7 @@ const Paymode = () => {
 
     if (statusFilter !== '') {
       filtered = filtered.filter((item) =>
-        item.status?.toString() === statusFilter
+        (item.is_active !== undefined ? item.is_active.toString() : '') === statusFilter
       );
     }
 
@@ -68,43 +70,57 @@ const handleDelete = (id) => {
 
   return (
     <div className="container">
-      <Row className="align-items-center mb-3">
-        <Col xs="6">
-          <h4>Paymode Management</h4>
-        </Col>
-        <Col xs="6" className="text-end">
-          <Button color="primary" onClick={() => navigate('/PaymodeDetailsCL')}>
+      <h4 className="mb-3">Paymode Management</h4>
+      <Row className="align-items-center mb-2">
+        <Col xs="6" className="d-flex align-items-center">
+          <Button
+            color="primary"
+            className="custom-btn"
+            onClick={() => navigate('/PaymodeDetailsCL')}
+            style={{ minWidth: 130, fontWeight: 600 }}
+          >
             Add New(+)
           </Button>
         </Col>
-      </Row>
-
-      <Row className="mb-3 align-items-center">
-        <Col xs="3">
-          <Label className="mb-1">Filter (Active/Inactive):</Label>
-          <Input
-            type="select"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="">All</option>
-            <option value="1">Active</option>
-            <option value="0">Inactive</option>
-          </Input>
-        </Col>
-        <Col xs="6">
-          <Label className="mb-1">Search Paymode:</Label>
+        <Col xs="6" className="d-flex justify-content-end align-items-center">
+          <Label className="mb-0 me-2">Search Paymode:</Label>
           <Input
             type="text"
             placeholder="Type to search..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ width: 180, marginRight: 8 }}
           />
-        </Col>
-        <Col xs="2">
-          <Label className="invisible d-block">Search Button</Label>
+          <Button
+            color="primary"
+            className="custom-btn me-2"
+            onClick={() => setSearchTerm(searchTerm)}
+            style={{ minWidth: 80 }}
+          >
+            Search
+          </Button>
+          <span style={{ cursor: 'pointer' }} onClick={() => setShowFilter((prev) => !prev)}>
+            <FaFilter size={22} color="#0d6efd" title="Filter" />
+          </span>
         </Col>
       </Row>
+      {showFilter && (
+        <Row className="mb-2 align-items-center">
+          <Col xs="12" className="d-flex justify-content-end align-items-center">
+            <Label className="mb-0 me-2">Filter(Active/Inactive):</Label>
+            <Input
+              type="select"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              style={{ width: 120, display: 'inline-block' }}
+            >
+              <option value="">All</option>
+              <option value="1">Active</option>
+              <option value="0">Inactive</option>
+            </Input>
+          </Col>
+        </Row>
+      )}
 
       <Table bordered responsive>
         <thead>
@@ -154,30 +170,47 @@ const handleDelete = (id) => {
         </tbody>
       </Table>
 
-      <div className="d-flex justify-content-between align-items-center">
-        <div>
-          <strong>Total Records: {filteredPaymodes.length}</strong>
-        </div>
-        <div>
+      <div className="d-flex flex-column align-items-center mt-3">
+        <div className="d-flex align-items-center justify-content-center mb-2" style={{ border: '1px solid #0d6efd', borderRadius: 20, padding: '4px 24px', background: '#f8f9fa' }}>
           <Button
-            color="light"
+            color="primary"
+            className="custom-btn"
+            style={{ borderRadius: 20, marginRight: 10, minWidth: 90 }}
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
           >
             Previous
           </Button>
-          <span className="mx-2">
-            Page {currentPage} of {totalPages}
+          <span style={{ fontWeight: 600, color: '#0d6efd', margin: '0 12px' }}>
+            {currentPage}
           </span>
           <Button
-            color="light"
+            color="primary"
+            className="custom-btn"
+            style={{ borderRadius: 20, minWidth: 90 }}
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
           >
             Next
           </Button>
         </div>
+        <div style={{ width: '100%', textAlign: 'left', marginTop: 4 }}>
+          <strong>Total Records : {filteredPaymodes.length}</strong>
+        </div>
       </div>
+      <style>{`
+        .custom-btn {
+          background-color: #0d6efd !important;
+          border-color: #0d6efd !important;
+          color: #fff !important;
+          transition: background 0.2s, color 0.2s;
+        }
+        .custom-btn:hover, .custom-btn:focus {
+          background-color: #38b6ff !important;
+          border-color: #38b6ff !important;
+          color: #fff !important;
+        }
+      `}</style>
     </div>
   );
 };

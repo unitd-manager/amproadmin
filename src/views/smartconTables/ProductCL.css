@@ -1,0 +1,24 @@
+.sales-order-table {
+  font-size: 12px;   /* Reduce font size */
+}
+
+
+.sales-order-table input,
+.sales-order-table select,
+.sales-order-table button {
+  font-size: 11px;
+  padding: 3px 6px;
+}
+
+.sales-order-table table {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+}
+.sales-order-table th, .sales-order-table td {
+  padding: 4px 8px;
+  white-space: normal;
+  word-break: break-word;
+  overflow: visible;
+  text-overflow: unset;
+}

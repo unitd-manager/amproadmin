@@ -115,7 +115,7 @@ const PaymodeInsert = () => {
           <Label sm={4} for="paymode_name">
             Paymode Name<span className='required'> *</span>
           </Label>
-          <Col sm={8}>
+          <Col sm={4}>
             <Input
               name="paymode_name"
               id="paymode_name"
@@ -131,7 +131,7 @@ const PaymodeInsert = () => {
           <Label sm={4} for="sort_order">
             Sort Order
           </Label>
-          <Col sm={8}>
+          <Col sm={4}>
             <Input
               name="sort_order"
               id="sort_order"
@@ -147,7 +147,7 @@ const PaymodeInsert = () => {
           <Label sm={4} for="remarks">
             Remarks
           </Label>
-          <Col sm={8}>
+          <Col sm={4}>
             <Input
               name="remarks"
               id="remarks"
@@ -163,7 +163,7 @@ const PaymodeInsert = () => {
           <Label sm={4} for="payment_type">
             Payment Type<span className='required'> *</span>
           </Label>
-          <Col sm={8}>
+          <Col sm={4}>
             <Input
               type="select"
               name="payment_type"
@@ -188,7 +188,7 @@ const PaymodeInsert = () => {
               <Label sm={4} for="public_key">
                 Public Key
               </Label>
-              <Col sm={8}>
+              <Col sm={4}>
                 <Input
                   name="public_key"
                   id="public_key"
@@ -202,7 +202,7 @@ const PaymodeInsert = () => {
               <Label sm={4} for="private_key">
                 Private Key
               </Label>
-              <Col sm={8}>
+              <Col sm={4}>
                 <Input
                   name="private_key"
                   id="private_key"
@@ -220,7 +220,7 @@ const PaymodeInsert = () => {
             <Label sm={4} for="paypal_email">
               PayPal Email
             </Label>
-            <Col sm={8}>
+            <Col sm={4}>
               <Input
                 name="paypal_email"
                 id="paypal_email"
@@ -238,7 +238,7 @@ const PaymodeInsert = () => {
               <Label sm={4} for="merchant_id">
                 Merchant ID
               </Label>
-              <Col sm={8}>
+              <Col sm={4}>
                 <Input
                   name="merchant_id"
                   id="merchant_id"
@@ -252,7 +252,7 @@ const PaymodeInsert = () => {
               <Label sm={4} for="public_key">
                 Public Key
               </Label>
-              <Col sm={8}>
+              <Col sm={4}>
                 <Input
                   name="public_key"
                   id="public_key"
@@ -266,7 +266,7 @@ const PaymodeInsert = () => {
               <Label sm={4} for="private_key">
                 Private Key
               </Label>
-              <Col sm={8}>
+              <Col sm={4}>
                 <Input
                   name="private_key"
                   id="private_key"
@@ -284,7 +284,7 @@ const PaymodeInsert = () => {
               <Label sm={4} for="need_reference_image">
                 Need Reference Image
               </Label>
-              <Col sm={8}>
+              <Col sm={4}>
                 <Input
                   name="need_reference_image"
                   id="need_reference_image"
@@ -298,7 +298,7 @@ const PaymodeInsert = () => {
               <Label sm={4} for="payment_reference_no">
                  Payment Reference Number
               </Label>
-              <Col sm={8}>
+              <Col sm={4}>
                 <Input
                   name="payment_reference_no"
                   id="payment_reference_no"
@@ -428,7 +428,7 @@ const PaymodeInsert = () => {
         {/* Location Multi-select */}
 <FormGroup row>
   <Label sm={4}>Location</Label>
-  <Col sm={8}>
+  <Col sm={4}>
     <div style={{ border: '1px solid #ccc', padding: '10px', maxHeight: '150px', overflowY: 'auto' }}>
       <div>
   <Input

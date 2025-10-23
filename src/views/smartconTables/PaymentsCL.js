@@ -1,14 +1,13 @@
-// src/views/Finance/PaymentsCL.js
 import React, { useEffect, useState } from 'react';
 import {
   Row,
   Col,
   Input,
+  Button,
   UncontrolledDropdown,
   DropdownToggle,
   DropdownMenu,
-  DropdownItem,
-  Button
+  DropdownItem
 } from 'reactstrap';
 import { Link } from 'react-router-dom';
 import DataTable from 'react-data-table-component';
@@ -16,7 +15,6 @@ import * as Icon from 'react-feather';
 import Swal from 'sweetalert2';
 import api from '../../constants/api';
 import message from '../../components/Message';
-import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import EditActionModal from '../../components/Payments/EditActionModal';
 import PaymentVoucherModal from '../../components/Payments/PaymentVoucherModal';
 import PaymentsPrintPdf from '../../components/PDF/PaymentsPrintPdf';
@@ -26,7 +24,7 @@ const PaymentsCL = () => {
   const [filteredPayments, setFilteredPayments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Filter fields
+  // Filters
   const [paymentNo, setPaymentNo] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
@@ -34,21 +32,21 @@ const PaymentsCL = () => {
   const [chequeNo, setChequeNo] = useState('');
   const [paidAmount, setPaidAmount] = useState('');
   const [payMode, setPayMode] = useState('');
-  const [printPaymentId, setPrintPaymentId] = useState(null);
 
-  // selection & modal
+  // Selection & modals
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [voucherModalOpen, setVoucherModalOpen] = useState(false);
+  const [printPaymentId, setPrintPaymentId] = useState(null);
 
+  // Fetch payments
   const getPayments = () => {
     setLoading(true);
     api
       .get('/payments/getPayments')
       .then((res) => {
-        const data = res.data.data || [0];
+        const data = res.data.data || [];
         setPayments(data);
-        console.log('Payments fetched:', data);
         setFilteredPayments(data);
         setLoading(false);
       })
@@ -62,21 +60,30 @@ const PaymentsCL = () => {
     getPayments();
   }, []);
 
+  // Filter logic
   useEffect(() => {
     let filtered = payments;
 
-    if (paymentNo) filtered = filtered.filter((x) => (x.payment_no || '').includes(paymentNo));
+    if (paymentNo)
+      filtered = filtered.filter((x) =>
+        (x.payment_no || '').toLowerCase().includes(paymentNo.toLowerCase())
+      );
     if (supplier)
       filtered = filtered.filter((x) =>
         (x.company_name || '').toLowerCase().includes(supplier.toLowerCase())
       );
-    if (chequeNo) filtered = filtered.filter((x) => (x.cheque_no || '').includes(chequeNo));
-    if (paidAmount) filtered = filtered.filter((x) =>
-      (x.paid_amount || '').toString().includes(paidAmount)
-    );
-    if (payMode) filtered = filtered.filter((x) =>
-      (x.pay_mode || '').toLowerCase() === payMode.toLowerCase()
-    );
+    if (chequeNo)
+      filtered = filtered.filter((x) =>
+        (x.cheque_no || '').toLowerCase().includes(chequeNo.toLowerCase())
+      );
+    if (paidAmount)
+      filtered = filtered.filter((x) =>
+        (x.paid_amount || '').toString().includes(paidAmount)
+      );
+    if (payMode)
+      filtered = filtered.filter(
+        (x) => (x.paymode_name || '').toLowerCase() === payMode.toLowerCase()
+      );
     if (fromDate && toDate) {
       filtered = filtered.filter((x) => {
         const date = new Date(x.payment_date);
@@ -87,7 +94,16 @@ const PaymentsCL = () => {
     setFilteredPayments(filtered);
   }, [paymentNo, supplier, chequeNo, paidAmount, payMode, fromDate, toDate, payments]);
 
+  // Delete handler
   const handleDelete = (id) => {
+    if (!selectedPayment) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Select at least one payment',
+        confirmButtonText: 'OK',
+      });
+      return;
+    }
     Swal.fire({
       title: 'Are you sure?',
       text: 'You won’t be able to revert this!',
@@ -111,12 +127,12 @@ const PaymentsCL = () => {
     });
   };
 
+  // Edit Payment handler
   const handleEditClick = () => {
     if (!selectedPayment) {
-      // same wording as your screenshot
       Swal.fire({
         icon: 'warning',
-        title: 'Select Atleast One Payment',
+        title: 'Select a payment to edit',
         confirmButtonText: 'OK',
       });
       return;
@@ -124,32 +140,42 @@ const PaymentsCL = () => {
     setEditModalOpen(true);
   };
 
+  // Payment Voucher handler
+  const handleVoucherClick = () => {
+    if (!selectedPayment) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Select a payment first',
+        confirmButtonText: 'OK',
+      });
+      return;
+    }
+    setVoucherModalOpen(true);
+  };
+
+  // Print handler
   const handlePrintClick = () => {
     if (!selectedPayment) {
       Swal.fire({
         icon: 'warning',
-        title: 'Select Atleast One Payment',
+        title: 'Select a payment to print',
         confirmButtonText: 'OK',
       });
       return;
     }
     setPrintPaymentId(selectedPayment.payments_id);
-    console.log("🔍 Printing payment with ID:", selectedPayment.payments_id);
   };
 
-//   const handleVoucher = () => {
-//   if (!selectedPayment) {
-//     Swal.fire({
-//       icon: 'warning',
-//       title: 'Select Atleast One Payment',
-//       confirmButtonText: 'OK',
-//     });
-//     return;
-//   }
-//   setVoucherModalOpen(true);
-// };
+  // Recap handler (placeholder)
+  const handleRecapClick = () => {
+    Swal.fire({
+      icon: 'info',
+      title: 'Recap feature coming soon!',
+      confirmButtonText: 'OK',
+    });
+  };
 
-
+  // Table columns
   const columns = [
     { name: 'Payment No', selector: (row) => row.payment_no, sortable: true },
     { name: 'Payment Date', selector: (row) => row.payment_date, sortable: true },
@@ -158,40 +184,41 @@ const PaymentsCL = () => {
     { name: 'Paid Amount', selector: (row) => row.paid_amount, sortable: true },
     { name: 'Credit Amount', selector: (row) => row.credit_amount, sortable: true },
     { name: 'Deposit Amount', selector: (row) => row.deposit_amount, sortable: true },
-    {
-      name: 'Action',
-      cell: (row) => (
-        <>
-          {/* <Icon.Edit2
-            size={16}
-            className="me-2"
-            style={{ cursor: 'pointer' }}
-            onClick={() => {
-              setSelectedPayment(row);
-              setEditModalOpen(true);
-            }}
-            title="Edit"
-          /> */}
-          <Icon.Trash2
-            size={16}
-            color="red"
-            style={{ cursor: 'pointer' }}
-            onClick={() => handleDelete(row.payments_id)}
-            title="Delete"
-          />
-        </>
-      ),
-      width: '100px',
-    },
   ];
 
   return (
     <div className="MainDiv">
-      <BreadCrumbs />
-      <h4 className="mb-3">Payments Management</h4>
 
-      {/* Filters */}
-      <Row className="mb-3">
+      {/* Header + Dropdown */}
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h4 className="mb-0">Payments Management</h4>
+
+        <UncontrolledDropdown>
+          <DropdownToggle color="primary" caret>
+            Add Payment
+          </DropdownToggle>
+          <DropdownMenu end>
+            <DropdownItem tag={Link} to="/PaymentDetailsCL">
+              <Icon.PlusCircle size={14} className="me-2" /> Add Payment
+            </DropdownItem>
+            <DropdownItem onClick={handleEditClick}>
+              <Icon.Edit2 size={14} className="me-2" /> Edit Payment
+            </DropdownItem>
+            <DropdownItem onClick={handleVoucherClick}>
+              <Icon.FileText size={14} className="me-2" /> Payment Voucher
+            </DropdownItem>
+            <DropdownItem onClick={handleRecapClick}>
+              <Icon.List size={14} className="me-2" /> Recap
+            </DropdownItem>
+            <DropdownItem onClick={handlePrintClick}>
+              <Icon.Printer size={14} className="me-2" /> Print Payment Voucher
+            </DropdownItem>
+          </DropdownMenu>
+        </UncontrolledDropdown>
+      </div>
+
+      {/* Row 1 – Main Filters */}
+      <Row className="align-items-end mb-2">
         <Col md="2">
           <Input
             placeholder="Payment No"
@@ -215,34 +242,32 @@ const PaymentsCL = () => {
             onChange={(e) => setToDate(e.target.value)}
           />
         </Col>
-        <Col md="2">
+        <Col md="3">
           <Input
             placeholder="Supplier"
             value={supplier}
             onChange={(e) => setSupplier(e.target.value)}
           />
         </Col>
-        <Col md="2">
-          <Input
-            placeholder="Cheque No"
-            value={chequeNo}
-            onChange={(e) => setChequeNo(e.target.value)}
-          />
-        </Col>
-        <Col md="2">
-          <Input
-            placeholder="Paid Amount"
-            value={paidAmount}
-            onChange={(e) => setPaidAmount(e.target.value)}
-          />
-        </Col>
 
-        <Col md="2" className="mt-2">
-          <Input
-            type="select"
-            value={payMode}
-            onChange={(e) => setPayMode(e.target.value)}
+        {/* Search / Print / Delete */}
+        <Col md="3" className="d-flex justify-content-end">
+          <Button color="primary" className="me-2" onClick={getPayments}>
+            <Icon.Search size={16} />
+          </Button>
+          <Button
+            color="danger"
+            onClick={() => handleDelete(selectedPayment?.payments_id)}
           >
+            <Icon.Trash2 size={16} />
+          </Button>
+        </Col>
+      </Row>
+
+      {/* Row 2 – Secondary Filters */}
+      <Row className="mb-3">
+        <Col md="3">
+          <Input type="select" value={payMode} onChange={(e) => setPayMode(e.target.value)}>
             <option value="">Select Paymode</option>
             <option value="Cash">Cash</option>
             <option value="Cheque">Cheque</option>
@@ -250,37 +275,23 @@ const PaymentsCL = () => {
             <option value="TT">TT</option>
           </Input>
         </Col>
+        <Col md="3">
+          <Input
+            placeholder="Cheque No"
+            value={chequeNo}
+            onChange={(e) => setChequeNo(e.target.value)}
+          />
+        </Col>
+        <Col md="3">
+          <Input
+            placeholder="Paid Amount"
+            value={paidAmount}
+            onChange={(e) => setPaidAmount(e.target.value)}
+          />
+        </Col>
       </Row>
-      
 
-      {/* Add Payment Dropdown */}
-      <div className="d-flex justify-content-end mb-2">
-        
-       <UncontrolledDropdown className="d-inline-block ms-1">
-    <DropdownToggle caret color="primary" >
-      <Link to="/PaymentDetailsCL">
-      <Button color="primary">Add Payment</Button>
-    </Link>
-    </DropdownToggle>
-    <DropdownMenu end/>
-      <DropdownMenu end>
-        {/* <DropdownItem onClick={handleVoucher}>Payment Voucher</DropdownItem> */}
-        <DropdownItem onClick={() => { /* Implement recap */ message('Recap clicked', 'info'); }}>Recap</DropdownItem>
-        <DropdownItem onClick={handleEditClick}>Edit</DropdownItem>
-      </DropdownMenu>
-    </UncontrolledDropdown>
-    <Button color="secondary" type="button" onClick={handlePrintClick}>
-          <Icon.Printer size={16} className="me-1" />
-         
-            <DropdownItem>   <PaymentsPrintPdf
-         
-            paymentId={printPaymentId}
-          onClose={() => setPrintPaymentId(null)}
-        /></DropdownItem>
-        </Button>
-      </div>
-
-      {/* Payment List Table */}
+      {/* Data Table */}
       <DataTable
         columns={columns}
         data={filteredPayments}
@@ -290,23 +301,31 @@ const PaymentsCL = () => {
         progressPending={loading}
         striped
         selectableRows
-        selectableRowsSingle // allow only one selection at a time
+        selectableRowsSingle
         onSelectedRowsChange={(state) => setSelectedPayment(state.selectedRows[0] || null)}
       />
 
-      {/* Edit Modal */}
+      {/* Modals */}
       <EditActionModal
         isOpen={editModalOpen}
         toggle={() => setEditModalOpen((s) => !s)}
         payment={selectedPayment}
         refreshPayments={getPayments}
       />
+
       <PaymentVoucherModal
-  isOpen={voucherModalOpen}
-  toggle={() => setVoucherModalOpen(false)}
-  payment={selectedPayment}
-/>
-     
+        isOpen={voucherModalOpen}
+        toggle={() => setVoucherModalOpen(false)}
+        payment={selectedPayment}
+      />
+
+      {/* Print PDF */}
+      {printPaymentId && (
+        <PaymentsPrintPdf
+          paymentId={printPaymentId}
+          onClose={() => setPrintPaymentId(null)}
+        />
+      )}
     </div>
   );
 };

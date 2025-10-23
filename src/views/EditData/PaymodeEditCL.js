@@ -93,8 +93,8 @@ const PaymodeEdit = () => {
   const renderInput = (label, name, type = 'text', extra = null) => (
     <FormGroup>
       <Row>
-        <Col md={3}><Label>{label}</Label></Col>
-        <Col md={9}><Input type={type} name={name} value={paymode[name] || ''} onChange={handleChange} {...extra} /></Col>
+        <Col md={4}><Label>{label}</Label></Col>
+        <Col md={4}><Input type={type} name={name} value={paymode[name] || ''} onChange={handleChange} {...extra} /></Col>
       </Row>
     </FormGroup>
   );
@@ -102,7 +102,7 @@ const PaymodeEdit = () => {
   const renderCheckbox = (label, name) => (
     <FormGroup check>
       <Row>
-        <Col md={{ size: 9, offset: 3 }}>
+        <Col md={{ size: 9, offset: 4 }}>
           <Label check>
             <Input type="checkbox" name={name} checked={paymode[name] || false} onChange={handleChange} />
             {` ${label}`}
@@ -124,8 +124,8 @@ const PaymodeEdit = () => {
 
         <FormGroup>
           <Row>
-            <Col md={3}><Label>Payment Type*</Label></Col>
-            <Col md={9}>
+            <Col md={4}><Label>Payment Type*</Label></Col>
+            <Col md={4}>
               <Input type="select" name="payment_type" value={paymode.payment_type || ''} onChange={handleChange}>
                 <option value="">-- Select Payment Type --</option>
                 {paymentTypes.map((pt) => (
@@ -168,8 +168,8 @@ const PaymodeEdit = () => {
 
         <FormGroup>
           <Row>
-            <Col md={3}><Label>Location</Label></Col>
-            <Col md={9}>
+            <Col md={4}><Label>Location</Label></Col>
+            <Col md={4}>
               <div style={{ border: '1px solid #ccc', padding: '10px', maxHeight: '150px', overflowY: 'auto' }}>
                 <div>
                   <Input type="checkbox" onChange={handleUnselectAll} /> Unselect All
