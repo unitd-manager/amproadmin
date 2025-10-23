@@ -9,6 +9,7 @@ import { ToastContainer } from 'react-toastify';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../constants/api';
 import message from '../../components/Message';
+import PdfGoodsReceiptList from '../../components/PDF/PdfGoodsReceiptList';
 
 const GoodsReturnList = () => {
   const [filters, setFilters] = useState({
@@ -161,7 +162,7 @@ const fetchData = async () => {
       <Row className="mb-3">
         <Col md={10}>
           <Button color="primary" onClick={handleSearch}><i className="fa fa-search" /></Button>{' '}
-          <Button color="secondary"><i className="fa fa-print" /></Button>{' '}
+        <Button color="secondary"><PdfGoodsReceiptList id={selectedIds}/></Button>{' '}
           <Button color="danger" onClick={handleDeleteSelected}><i className="fa fa-trash" /></Button>
         </Col>
         <Col md={2} className="text-right">
