@@ -265,7 +265,7 @@ const CatalogueManagement = () => {
       {/* Conditionally Render PDFs Based on Selected Option */}
       {showPdf && selectedPrintOption === 'Print With Price' && (
         <CataloguePrintWithCostPdf
-          catalogueIds={selectedCatalogueIds}
+          catalogueId={selectedCatalogueIds[0]}
           printOption={selectedPrintOption}
           onClose={() => {
             setShowPdf(false);
@@ -278,12 +278,12 @@ const CatalogueManagement = () => {
 
       {showPdf && selectedPrintOption === 'Print With Retail Price' && (
         <CataloguePrintWithRetailPrice
-          catalogueIds={selectedCatalogueIds}
+          catalogueId={selectedCatalogueIds[0]}
           printOption={selectedPrintOption}
           onClose={() => {
             setShowPdf(false);
             setSelectedPrintOption('');
-            setSelectedCatalogueIds(null);
+            setSelectedCatalogueIds([]);
             getCatalogue();
           }}
         />
@@ -291,12 +291,12 @@ const CatalogueManagement = () => {
 
       {showPdf && selectedPrintOption === 'Print Without Price' && (
         <CataloguePrintWithoutPrice
-          catalogueIds={selectedCatalogueIds}
+          catalogueId={selectedCatalogueIds[0]}
           printOption={selectedPrintOption}
           onClose={() => {
             setShowPdf(false);
             setSelectedPrintOption('');
-            setSelectedCatalogueIds(null);
+            setSelectedCatalogueIds([]);
             getCatalogue();
           }}
         />
@@ -304,12 +304,12 @@ const CatalogueManagement = () => {
 
       {showPdf && selectedPrintOption === 'Print With Stock' && (
         <CataloguePrintWithStock
-          catalogueIds={selectedCatalogueIds}
+          catalogueId={selectedCatalogueIds[0]}
           printOption={selectedPrintOption}
           onClose={() => {
             setShowPdf(false);
             setSelectedPrintOption('');
-            setSelectedCatalogueIds(null);
+            setSelectedCatalogueIds([]);
             getCatalogue();
           }}
         />

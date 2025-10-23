@@ -10,8 +10,10 @@ import 'datatables.net-buttons/js/buttons.flash';
 import 'datatables.net-buttons/js/buttons.html5';
 import 'datatables.net-buttons/js/buttons.print';
 import { Link } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
 import message from '../../components/Message';
 import api from '../../constants/api';
+import PrintCreditNoteList from '../../components/PDF/PrintCreditNoteList';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
 
@@ -20,7 +22,7 @@ import './salesOrderTable.css';
 
 const Test = () => {
   const [supplier, setSupplier] = useState(null);
-  const [ setSelectedOrder] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const [selectedSalesCreditIds, setSelectedSalesCreditIds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -33,7 +35,7 @@ const Test = () => {
   const [statusFilter, setStatusFilter] = useState('Not Paid');
 
   const toggleDropdown = () => setDropdownOpen((prevState) => !prevState);
-
+console.log(selectedOrder);
   const getSupplier = () => {
     setLoading(true);
     api
@@ -169,7 +171,12 @@ const Test = () => {
             className="ms-2"
             disabled={selectedSalesCreditIds.length === 0}
           >
-            <Icon.Printer size={16} />
+            
+              <PrintCreditNoteList
+                                 id={selectedSalesCreditIds}
+      settingdetails={null}
+      lineItem={null}
+    />
           </Button>
         </div>
 <div className="sales-order-table">
@@ -237,6 +244,7 @@ const Test = () => {
         </CommonTable>
         </div>
       </div>
+    <ToastContainer />
     </div>
   );
 };

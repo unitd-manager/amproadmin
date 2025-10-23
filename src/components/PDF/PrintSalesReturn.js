@@ -35,10 +35,10 @@ console.log(id,"wsed")
     try {
       // Fetch sales order data for all IDs
       const salesOrderPromises = id.map(orderId =>
-        api.post('/salesorder/getSalesorderById', { sales_order_id: orderId })
+        api.post('/salesreturn/getSalesorderById', { sales_return_id: orderId })
       );
       const lineItemPromises = id.map(orderId =>
-        api.post('/salesOrder/getQuoteLineItemsById', { sales_order_id: orderId })
+        api.post('/salesreturn/getQuoteLineItemsById', { sales_return_id: orderId })
       );
 
       const salesOrderResponses = await Promise.all(salesOrderPromises);
@@ -68,7 +68,7 @@ console.log(id,"wsed")
   //   const fetchBillDiscountAndTax = async () => {
   //     try {
   //       const response = await api.post('/salesOrder/getSalesorderById', {
-  //         sales_order_id: id,
+  //         sales_return_id: id,
   //       });
   
   //       const data = response.data.data[0];
@@ -105,7 +105,7 @@ console.log(id,"wsed")
 
   const GetPdf = () => {
     if (!lineItems || lineItems.length === 0) {
-      message('No line items found', 'warning');
+     
       return;
     }
 
@@ -226,11 +226,11 @@ console.log(id,"wsed")
                       body: [
                         [
                           { text: 'TRAN NO', margin: [5, 3, 5, 3] },
-                          { text: salesOrder.tran_no || '', margin: [5, 3, 5, 3] }
+                          { text: salesOrder.sales_return_code || '', margin: [5, 3, 5, 3] }
                         ],
                         [
                           { text: 'TRAN DATE', margin: [5, 3, 5, 3] },
-                          { text: salesOrder.tran_date ? moment(salesOrder.tran_date).format('DD-MM-YYYY') : '', margin: [5, 3, 5, 3] }
+                          { text: salesOrder.sales_return_date ? moment(salesOrder.sales_return_date).format('DD-MM-YYYY') : '', margin: [5, 3, 5, 3] }
                         ],
                         [
                           { text: 'TERMS', margin: [5, 3, 5, 3] },
