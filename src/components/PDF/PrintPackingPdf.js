@@ -1,168 +1,226 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import pdfMake from 'pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
+// import { Button } from 'reactstrap';
 import PropTypes from 'prop-types';
 import moment from 'moment';
-import api from '../../constants/api'; 
+import api from '../../constants/api';
 import message from '../Message';
-
-
-const PrintPackingPdf = ({ id, settingdetails, lineItem }) => {
-  PrintPackingPdf.propTypes = {
-    id: PropTypes.any,
-    settingdetails: PropTypes.any,
-    lineItem: PropTypes.any,
+import PdfFooter from './PdfFooter'; // Assuming you have a footer component
+import PdfHeader from './PdfHeader'; // Assuming you have a header component
+ 
+const PdfPackingList = ({ selectedOrderIds }) => {
+  PdfPackingList.propTypes = {
+    selectedOrderIds: PropTypes.array,
   };
 
-  const [invoice, setInvoice] = useState(settingdetails || {});
-  const [items, setItems] = useState(lineItem || []);
+  const [allSalesOrders, setAllSalesOrders] = useState([]);
+  const [allLineItems, setAllLineItems] = useState([]);
+  const [hfdata, setHeaderFooterData] = useState();
 
   useEffect(() => {
-   
-      api.post('/invoice/getSalesorderById', { invoice_id: id })
-        .then((res) => setInvoice(res.data.data[0] || {}))
-        .catch(() => message('Invoice Data Not Found', 'info'));
-    
- 
-      api.post('/invoice/getQuoteLineItemsById', { invoice_id: id })
-        .then((res) => setItems(res.data.data))
-        .catch(() => message('Line Items Not Found', 'info'));
-    
-  }, [id]);
-
-  const getGrandTotal = () => {
-    let total = 0;
-    (items || []).forEach((item) => {
-      total += Number(item.carton_qty || 0);
+    api.get('/setting/getSettingsForCompany').then((res) => {
+      setHeaderFooterData(res.data.data);
     });
-    return total;
+  }, []);
+
+  const findCompany = (key) => {
+    const filteredResult = hfdata?.find((e) => e.key_text === key);
+    return filteredResult?.value || '';
   };
 
-  const GetPdf = () => {
-    pdfMake.vfs = pdfFonts.pdfMake.vfs;
-    // Table header: merged row for 'Product Name', then actual headers
-    const tableBody = [
-    //   [
-    //     { text: 'Product Name', style: 'tableHead', colSpan: 6, alignment: 'center', margin: [0, 2, 0, 2] }, {}, {}, {}, {}, {}
-    //   ],
-      [
-        { text: 'S.No', style: 'tableHead', alignment: 'center' },
-        { text: 'Product Name', style: 'tableHead', alignment: 'center' },
-        { text: 'Uom', style: 'tableHead', alignment: 'center' },
-        { text: 'LQty', style: 'tableHead', alignment: 'center' },
-        { text: 'FocQty', style: 'tableHead', alignment: 'center' },
-        { text: 'CQty', style: 'tableHead', alignment: 'center' },
-      ],
-    ];
-    (items || []).forEach((item, idx) => {
-      tableBody.push([
-        { text: idx + 1, style: 'tableBody', alignment: 'center' },
-        { text: item.product_name || '', style: 'tableBody', alignment: 'left' },
-        { text: item.unit || '', style: 'tableBody', alignment: 'center' },
-        { text: item.loose_qty || '', style: 'tableBody', alignment: 'center' },
-        { text: item.foc_qty || '', style: 'tableBody', alignment: 'center' },
-        { text: item.carton_qty || '', style: 'tableBody', alignment: 'center' },
-      ]);
+  const fetchAllSalesOrderData = async () => {
+    const salesOrdersPromises = selectedOrderIds.map(async (orderId) => {
+      try {
+        const salesOrderRes = await api.post('/invoice/getSalesOrderById', { invoice_id: orderId });
+        const lineItemsRes = await api.post('/invoice/getQuoteLineItemsById', { invoice_id: orderId });
+        return {
+          salesOrder: salesOrderRes.data.data[0] || {},
+          lineItems: { orderId, items: lineItemsRes.data.data || [] },
+        };
+      } catch (error) {
+        message(`Data Not Found for Sales Order ID: ${orderId}`, 'info');
+        return null; // Return null for failed fetches
+      }
     });
-    const dd = {
-      pageSize: 'A4',
-      pageMargins: [40, 60, 40, 40],
-      content: [
+
+    const results = await Promise.all(salesOrdersPromises);
+    const validResults = results.filter(result => result !== null);
+
+    setAllSalesOrders(validResults.map(result => result.salesOrder));
+    setAllLineItems(validResults.map(result => result.lineItems));
+  };
+
+  useEffect(() => {
+    if (selectedOrderIds && selectedOrderIds.length > 0) {
+      fetchAllSalesOrderData();
+    }
+  }, [selectedOrderIds]);
+
+  const GetPdf = () => {
+    const allContent = [];
+    let grandTotalQuantity = 0;
+
+    allSalesOrders.forEach((salesOrder, salesOrderIndex) => {
+      const lineItemsForOrder = allLineItems.find(item => item.orderId === salesOrder.invoice_id)?.items || [];
+
+      const productItems = [
+        [
+          { text: 'S.No', style: 'tableHead' },
+          { text: 'Product Name', style: 'tableHead' },
+          { text: 'Uom', style: 'tableHead' },
+          { text: 'LQty', style: 'tableHead' },
+          { text: 'FocQty', style: 'tableHead' },
+          { text: 'CQty', style: 'tableHead' },
+        ],
+      ];
+
+      let totalLooseQty = 0;
+      let totalFocQty = 0;
+      let totalCQty = 0;
+      let totalQuantity = 0; // To store the sum of all quantities for current order
+console.log(totalQuantity, 'totalQuantity')
+      lineItemsForOrder.forEach((item, index) => {
+        const lQty = parseFloat(item.loose_qty || '');
+        const fQty = parseFloat(item.foc_qty || '');
+        const cQty = parseFloat(item.carton_qty || '');
+        const quantity = parseFloat(item.quantity || ''); // Assuming 'quantity' represents the base quantity
+
+        productItems.push([
+          { text: `${index + 1}`, style: 'tableBody' },
+          { text: `${item.product_name || ''}`, style: 'tableBody' },
+          { text: `${item.unit || ''}`, style: 'tableBody' },
+          { text: lQty.toFixed(2), style: 'tableBody' },
+          { text: fQty.toFixed(2), style: 'tableBody' },
+          { text: cQty.toFixed(2), style: 'tableBody' },
+        ]);
+        totalLooseQty += lQty;
+        totalFocQty += fQty;
+        totalCQty += cQty;
+        totalQuantity += quantity; // Accumulate the base quantity
+      });
+
+      productItems.push([
+        { text: '', style: 'tableBody' },
+        { text: 'Total', style: 'boldText', alignment: 'right' },
+        { text: '', style: 'tableBody' },
+        { text: totalLooseQty.toFixed(2), style: 'boldText' },
+        { text: totalFocQty.toFixed(2), style: 'boldText' },
+        { text: totalCQty.toFixed(2), style: 'boldText' },
+      ]);
+
+      allContent.push(
+        {
+          text: findCompany('company_name') || '',
+          style: 'header',
+          alignment: 'center',
+          margin: [0, salesOrderIndex === 0 ? 0 : 20, 0, 0], // Add margin between orders
+        },
         {
           columns: [
             {
-              width: '*',
-              stack: [
-                { text: 'AMPRO PTE LTD', style: 'header', alignment: 'left', margin: [0, 0, 0, 2] },
-                { text: 'Sales Invoice PackingList', style: 'subheader', alignment: 'left', margin: [0, 0, 0, 2] }
-              ]
+              text: `Date: ${moment().format('DD-MM-YYYY')}`,
+              style: 'textSize',
             },
             {
-              width: 'auto',
-              stack: [
-                { text: `Print Date : ${moment().format('M/D/YYYY h:mm:ss A')}`, alignment: 'right', style: 'meta', margin: [0, 0, 0, 2] },
-                { text: 'Page No : 1/1', alignment: 'right', style: 'meta', margin: [0, 0, 0, 2] }
-              ]
-            }
-          ]
+              text: `Invoice Code: ${salesOrder.invoice_code || ''}`,
+              style: 'textSize',
+              alignment: 'right',
+            },
+          ],
+          margin: [0, 0, 0, 5],
         },
         {
-          table: {
-            widths: ['*'],
-            body: [
-              [
-                {
-                  text: [
-                    'S.No   ',
-                    moment(invoice.invoice_date).format('DD/MM/YYYY') || '', '   ',
-                    invoice.invoice_code || '', '   ',
-                    invoice.company_name || ''
-                  ],
-                  style: 'meta',
-                  alignment: 'left',
-                  margin: [0, 2, 0, 2]
-                }
-              ]
-            ]
-          },
-          layout: {
-            hLineWidth: (i, node) => (i === 0 || i === node.table.body.length ? 1 : 0),
-            vLineWidth: () => 0,
-            hLineColor: () => '#000',
-            vLineColor: () => '#000'
-          },
-          margin: [0, 4, 0, 4]
+          columns: [
+            {
+              text: `Customer Code: ${salesOrder.customer_code || ''}`,
+              style: 'textSize',
+            },
+            {
+              text: `Customer Name: ${salesOrder.company_name || ''}`,
+              style: 'textSize',
+              alignment: 'right',
+            },
+          ],
+          margin: [0, 0, 0, 15],
         },
-        { text: ' ', margin: [0, 0, 0, 2] },
         {
+          layout: 'lightHorizontalLines',
           table: {
-            headerRows: 2,
+            headerRows: 1,
             widths: ['auto', '*', 'auto', 'auto', 'auto', 'auto'],
-            body: tableBody,
-          },
-          layout: {
-            hLineWidth: (i, node) => (i === 2 || i === node.table.body.length ? 1.5 : 1),
-            vLineWidth: () => 1,
-            hLineColor: () => '#000',
-            vLineColor: () => '#000',
-            fillColor: (rowIndex) => (rowIndex === 0 ? null : rowIndex === 1 ? '#f2f2f2' : null),
+            body: productItems,
           },
         },
         {
-          table: {
-            widths: ['*', '*', '*', '*', '*', 'auto'],
-            body: [
-              [
-                { text: `Total For InvoiceNo : ${invoice.invoice_code || ''}`, alignment: 'right', bold: true, margin: [0, 8, 0, 0], colSpan: 5 }, {}, {}, {}, {},
-                { text: getGrandTotal(), alignment: 'center', bold: true, margin: [0, 8, 0, 0] }
-              ],
-              [
-                { text: 'Grand Total', alignment: 'right', bold: true, colSpan: 5 }, {}, {}, {}, {},
-                { text: getGrandTotal(), alignment: 'center', bold: true }
-              ]
-            ]
-          },
-          layout: 'noBorders',
-          margin: [0, 8, 0, 0]
+          columns: [
+            {
+              text: `Total for Invoice No: ${salesOrder.invoice_code || salesOrder.tran_no || ''}`,
+              style: 'boldText',
+              alignment: 'right',
+              margin: [0, 10, 10, 0],
+            },
+            {
+              text: `Total Carton Qty: ${totalCQty.toFixed(2)}`,
+              style: 'boldText',
+              alignment: 'right',
+              margin: [10, 10, 0, 0],
+            },
+          ],
         },
-      ],
+      );
+      grandTotalQuantity += totalCQty;
+    });
+
+    allContent.push(
+      { text: '', margin: [0, 20] }, // Spacer
+      {
+        text: `Grand Total: ${grandTotalQuantity.toFixed(2)}`,
+        style: 'boldText',
+        alignment: 'right',
+      },
+    );
+
+    const dd = {
+      pageSize: 'A4',
+      pageMargins: [40, 150, 40, 80],
+      header: PdfHeader({ findCompany }),
+      footer: PdfFooter,
+      content: allContent,
       styles: {
-        header: { fontSize: 18, bold: true },
-        subheader: { fontSize: 14, bold: true },
-        tableHead: { bold: true, fontSize: 10, color: 'black' },
-        tableBody: { fontSize: 9 },
-        meta: { fontSize: 10 },
+        header: {
+          fontSize: 18,
+          bold: true,
+        },
+        tableHead: {
+          bold: true,
+          fontSize: 10,
+          color: 'black',
+        },
+        tableBody: {
+          fontSize: 9,
+        },
+        textSize: {
+          fontSize: 10,
+        },
+        boldText: {
+          fontSize: 10,
+          bold: true,
+        },
       },
     };
+
     pdfMake.vfs = pdfFonts.pdfMake.vfs;
     pdfMake.createPdf(dd, null, null, pdfFonts.pdfMake.vfs).open();
   };
 
   return (
-    <a  onClick={GetPdf} >
-      Print Packing List
-    </a>
+    <>
+      <a onClick={GetPdf}>
+        Print Packing
+      </a>
+    </>
   );
 };
 
-export default PrintPackingPdf; 
+export default PdfPackingList;

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import * as Icon from 'react-feather';
+// import { Trash2 } from 'react-feather';
 import { Button, Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'datatables.net-dt/js/dataTables.dataTables';
@@ -10,17 +11,23 @@ import 'datatables.net-buttons/js/buttons.flash';
 import 'datatables.net-buttons/js/buttons.html5';
 import 'datatables.net-buttons/js/buttons.print';
 import { Link } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+
 import message from '../../components/Message';
+import PrintPerfoma from '../../components/PDF/PrintSalesReturn';
+
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
-
+import './salesOrderTable.css';
 
 const Test = () => {
   const [supplier, setSupplier] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedSalesReturnIds, setSelectedSalesReturnIds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [selectAll, setSelectAll] = useState(false);
 
   const [tranNoFilter, setTranNoFilter] = useState('');
   const [fromDate, setFromDate] = useState('');
@@ -56,8 +63,69 @@ const Test = () => {
     getSupplier();
   }, []);
 
+  useEffect(() => {
+    if (supplier && supplier.length > 0) {
+      setSelectAll(selectedSalesReturnIds.length === supplier.length);
+    }
+  }, [selectedSalesReturnIds, supplier]);
+
+  const handleDeleteOrders = async () => {
+    if (selectedSalesReturnIds.length === 0) {
+      message('Please select at least one sales return to delete', 'error');
+      return;
+    }
+    if (!window.confirm('Are you sure you want to delete the selected sales returns?')) return;
+    try {
+      await api.post('/salesreturn/deleteSalesReturn', { sales_return_id: selectedSalesReturnIds.join(',') });
+      message('Selected sales returns deleted successfully', 'success');
+      setSelectedSalesReturnIds([]);
+      setSelectedOrder(null);
+      getSupplier();
+    } catch (error) {
+      message(error.response?.data?.message || 'Failed to delete sales returns', 'error');
+    }
+  };
+
   const columns = [
-    { name: '', selector: 'checkbox', cell: () => <input type="checkbox" />, grow: 0, width: '3%' },
+    { name: (
+      <input
+        type="checkbox"
+        checked={selectAll}
+        ref={(input) => {
+          if (input) {
+            input.indeterminate =
+              selectedSalesReturnIds.length > 0 &&
+              selectedSalesReturnIds.length < (supplier?.length || 0);
+          }
+        }}
+        onChange={() => {
+          if (selectAll) {
+            setSelectedSalesReturnIds([]); // deselect all
+          } else {
+            setSelectedSalesReturnIds(supplier.map((s) => s.sales_return_id)); // select all
+          }
+          setSelectAll(!selectAll);
+        }}
+      />
+    ),
+    selector: 'checkbox',
+    cell: (row) => (
+      <input
+        type="checkbox"
+        checked={selectedSalesReturnIds.includes(row.sales_return_id)}
+        onChange={() => {
+          setSelectedSalesReturnIds((prev) =>
+            prev.includes(row.sales_return_id)
+              ? prev.filter((id) => id !== row.sales_return_id)
+              : [...prev, row.sales_return_id]
+          );
+          setSelectedOrder(row);
+        }}
+      />
+    ),
+    grow: 0,
+    width: '3%'
+    },
     { name: '#', selector: 'sales_return_id', grow: 0, wrap: true, width: '4%' },
     { name: 'Edit', selector: 'edit', cell: () => <Icon.Edit2 />, grow: 0, width: 'auto', button: true, sortable: false },
     { name: 'Tran NO', selector: 'sales_return_code', sortable: true, grow: 0, wrap: true },
@@ -150,8 +218,36 @@ const Test = () => {
             <option value="Paid">Paid</option>
             <option value="Not Paid">Not Paid</option>
           </select>
-          <Button color="primary" onClick={getSupplier}>Search</Button>
+          <Button color="primary" onClick={getSupplier}>
+            <Icon.Search size={16} /> Search
+          </Button>
+          <Button
+            color="danger"
+            className="ms-2"
+            disabled={selectedSalesReturnIds.length === 0}
+            onClick={handleDeleteOrders}
+            data-testid="delete-button"
+          >
+            <Icon.Trash2 size={16} />
+          </Button>
+          <Button
+            color="secondary"
+            className="ms-2"
+             onClick={() => {
+      if (selectedSalesReturnIds.length !== 1) {
+        message('Please Select Only One Transaction to Print', 'warning');
+      }
+    }}
+          >
+            <PrintPerfoma
+                    id={selectedSalesReturnIds.length === 1 ? selectedSalesReturnIds : []}
+
+              settingdetails={null}
+              lineItem={null}
+            />
+          </Button>
         </div>
+<div className="sales-order-table">
 
         <CommonTable
           loading={loading}
@@ -159,7 +255,7 @@ const Test = () => {
           Button={
             <Dropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
               <DropdownToggle color="primary" caret className="shadow-none">
-                <Button color="primary" tag={Link} to="/SalesReturnDetails" className="shadow-none">
+                <Button color="primary" tag={Link} to="/SalesReturnDetails?tab=1" className="shadow-none">
                   New Transaction
                 </Button>
               </DropdownToggle>
@@ -186,8 +282,15 @@ const Test = () => {
                   <td>
                     <input
                       type="checkbox"
-                      checked={selectedOrder?.sales_return_id === element.sales_return_id}
-                      onChange={() => setSelectedOrder(element)}
+                      checked={selectedSalesReturnIds.includes(element.sales_return_id)}
+                      onChange={() => {
+                        setSelectedSalesReturnIds((prev) =>
+                          prev.includes(element.sales_return_id)
+                            ? prev.filter((id) => id !== element.sales_return_id)
+                            : [...prev, element.sales_return_id]
+                        );
+                        setSelectedOrder(element);
+                      }}
                     />
                   </td>
                   <td>{index + 1}</td>
@@ -195,7 +298,7 @@ const Test = () => {
   {element.status === 'Paid' ? (
     <Icon.Edit2 style={{ color: '#ccc', cursor: 'not-allowed' }} />
   ) : (
-    <Link to={`/SalesReturnEdit/${element.sales_return_id}`}>
+    <Link to={`/SalesReturnEdit/${element.sales_return_id}?tab=1`}>
       <Icon.Edit2 />
     </Link>
   )}
@@ -213,8 +316,9 @@ const Test = () => {
               ))}
           </tbody>
         </CommonTable>
+        </div>
       </div>
-     
+     <ToastContainer />
     </div>
   );
 };

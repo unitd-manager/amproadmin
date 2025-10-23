@@ -8,7 +8,7 @@ import api from '../../constants/api';
 import message from '../Message';
 import PdfFooter from './PdfFooter'; // Assuming you have a footer component
 import PdfHeader from './PdfHeader'; // Assuming you have a header component
-
+ 
 const PdfPackingList = ({ selectedOrderIds }) => {
   PdfPackingList.propTypes = {
     selectedOrderIds: PropTypes.array,
@@ -27,6 +27,12 @@ const PdfPackingList = ({ selectedOrderIds }) => {
   const findCompany = (key) => {
     const filteredResult = hfdata?.find((e) => e.key_text === key);
     return filteredResult?.value || '';
+  };
+
+  // Helper function to format numbers - returns empty string for 0 and NaN
+  const formatNumber = (value) => {
+    const num = parseFloat(value || 0);
+    return (num === 0 || Number.isNaN(num)) ? '' : num.toFixed(2);
   };
 
   const fetchAllSalesOrderData = async () => {
@@ -82,7 +88,7 @@ const PdfPackingList = ({ selectedOrderIds }) => {
 console.log(totalQuantity, 'totalQuantity')
       lineItemsForOrder.forEach((item, index) => {
         const lQty = parseFloat(item.loose_qty || 0);
-        const fQty = parseFloat(item.foc_qty || 0);
+        const fQty = parseFloat(item.foc || 0);
         const cQty = parseFloat(item.carton_qty || 0);
         const quantity = parseFloat(item.quantity || 0); // Assuming 'quantity' represents the base quantity
 
@@ -90,9 +96,9 @@ console.log(totalQuantity, 'totalQuantity')
           { text: `${index + 1}`, style: 'tableBody' },
           { text: `${item.product_name || ''}`, style: 'tableBody' },
           { text: `${item.unit || ''}`, style: 'tableBody' },
-          { text: lQty.toFixed(2), style: 'tableBody' },
-          { text: fQty.toFixed(2), style: 'tableBody' },
-          { text: cQty.toFixed(2), style: 'tableBody' },
+          { text: formatNumber(lQty), style: 'tableBody' },
+          { text: formatNumber(fQty), style: 'tableBody' },
+          { text: formatNumber(cQty), style: 'tableBody' },
         ]);
         totalLooseQty += lQty;
         totalFocQty += fQty;
@@ -104,9 +110,9 @@ console.log(totalQuantity, 'totalQuantity')
         { text: '', style: 'tableBody' },
         { text: 'Total', style: 'boldText', alignment: 'right' },
         { text: '', style: 'tableBody' },
-        { text: totalLooseQty.toFixed(2), style: 'boldText' },
-        { text: totalFocQty.toFixed(2), style: 'boldText' },
-        { text: totalCQty.toFixed(2), style: 'boldText' },
+        { text: formatNumber(totalLooseQty), style: 'boldText' },
+        { text: formatNumber(totalFocQty), style: 'boldText' },
+        { text: formatNumber(totalCQty), style: 'boldText' },
       ]);
 
       allContent.push(
@@ -161,7 +167,7 @@ console.log(totalQuantity, 'totalQuantity')
               margin: [0, 10, 10, 0],
             },
             {
-              text: `Total Carton Qty: ${totalCQty.toFixed(2)}`,
+              text: `Total Carton Qty: ${formatNumber(totalCQty)}`,
               style: 'boldText',
               alignment: 'right',
               margin: [10, 10, 0, 0],
@@ -175,7 +181,7 @@ console.log(totalQuantity, 'totalQuantity')
     allContent.push(
       { text: '', margin: [0, 20] }, // Spacer
       {
-        text: `Grand Total: ${grandTotalQuantity.toFixed(2)}`,
+        text: `Grand Total: ${formatNumber(grandTotalQuantity)}`,
         style: 'boldText',
         alignment: 'right',
       },

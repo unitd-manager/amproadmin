@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Row,
   Col,
@@ -7,48 +7,67 @@ import {
   Button,
   Label,
   Input,
-  // TabContent,
-  // TabPane,
-  // Nav,
-  // NavItem,
-  // NavLink,
+  TabContent,
+  TabPane,
+  Nav,
+  NavItem,
+  NavLink,
 } from 'reactstrap';
-// import classnames from 'classnames';
-import { useNavigate } from 'react-router-dom';
+import classnames from 'classnames';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
-import ComponentCard from '../../components/ComponentCard';
 import message from '../../components/Message';
-import api from '../../constants/api'; // Ensure this path is correct
-// import CustomerSalesmenInsert, { saveSalesmenToBackend } from '../../components/CustomerInsert/SalesManInsert';
-
-// // Import child components
-// import CustomerLogininsert from '../../components/CustomerInsert/CustomerLoginInsert';
-// import ContactPersonInsert from '../../components/CustomerInsert/ContactPersonInsert';
-// import CustomerShippingDetailInsert from '../../components/CustomerInsert/ShippingDetailInsert';
-// import ContentMoreDetailsInsert from '../../components/CustomerInsert/CustomerMoreDetailsInsert'; // Corrected name to match earlier discussion
+import api from '../../constants/api';
+import CustomerLogin from '../../components/Customer/CustomerLogin';
+import ContactPerson from '../../components/Customer/ContactPerson';
+import CustomerShippingDetail from '../../components/Customer/ShippingDetail';
+import CustomerSalesmen from '../../components/Customer/SalesMan';
+import CustomerTransactions from '../../components/Customer/Module';
+import CustomerProductDetails from '../../components/Customer/ProductDetails';
 
 const CustomerDetails = () => {
   const navigate = useNavigate();
+  const { id } = useParams(); // For edit mode
 
+  const [activeTab, setActiveTab] = useState('1');
+  const [contentDetails, setContentDetails] = useState({});
   const [customerDetails, setCustomerDetails] = useState({
     customer_code: '',
     company_name: '',
   });
 
-  // const [associatedSalesmen, setAssociatedSalesmen] = useState([]);
-  // const [associatedContactPersons, setAssociatedContactPersons] = useState([]);
+  // Fetch details if editing
+  useEffect(() => {
+    if (id) {
+      api
+        .post('company/getCompanyById', { company_id: id })
+        .then((res) => {
+          setCustomerDetails(res.data.data[0]);
+          setContentDetails(res.data.data[0]);
+        })
+        .catch((err) => {
+          console.error('Error fetching customer:', err);
+          message('Error fetching customer details', 'error');
+        });
+    }
+  }, [id]);
 
-  // const [activeTab, setActiveTab] = useState('1');
-
-  const handleInputs = (e) => {
-    setCustomerDetails({ ...customerDetails, [e.target.name]: e.target.value });
+  // Toggle tabs
+  const toggle = (tab) => {
+    if (activeTab !== tab) setActiveTab(tab);
   };
 
-  // const toggle = (tab) => {
-  //   if (activeTab !== tab) setActiveTab(tab);
-  // };
+  // Handle form inputs
+  const handleInputs = (e) => {
+    const { name, value, type, checked } = e.target;
+    const val = type === 'checkbox' || type === 'switch' ? (checked ? 1 : 0) : value;
 
+    setCustomerDetails((prev) => ({ ...prev, [name]: val }));
+    setContentDetails((prev) => ({ ...prev, [name]: val }));
+  };
+
+  // Insert customer
   const insertCustomerData = async () => {
     if (!customerDetails.company_name.trim() || !customerDetails.customer_code.trim()) {
       message('Please fill all required fields.', 'error');
@@ -57,28 +76,81 @@ const CustomerDetails = () => {
 
     try {
       const res = await api.post('company/insertCompany', customerDetails);
-      const insertedContactId = res.data.data.insertId;
-      if (insertedContactId) {
-        message('Customer details inserted successfully.', 'success');
+      const insertedId = res.data.data.insertId;
+      if (insertedId) {
+        message('Customer inserted successfully.', 'success');
         setTimeout(() => {
-          navigate(`/CustomerEdit/${insertedContactId}`);
+          navigate(`/CustomerEdit/${insertedId}`);
         }, 300);
-      } else {
-        throw new Error('Failed to get inserted ID.');
       }
     } catch (error) {
-      console.error('Error in customer insertion process:', error);
-      message('Failed to insert customer. Please try again.', 'error');
+      console.error('Insert error:', error);
+      message('Failed to insert customer. Try again.', 'error');
     }
   };
+
+  // Edit customer
+  const editCustomerData = async () => {
+    if (!customerDetails.company_name.trim() || !customerDetails.customer_code.trim()) {
+      message('Please fill all required fields.', 'error');
+      return;
+    }
+
+    try {
+      await api.post('company/editCompany', customerDetails);
+      message('Customer updated successfully.', 'success');
+    } catch (error) {
+      console.error('Update error:', error);
+      message('Failed to update customer. Try again.', 'error');
+    }
+  };
+
+  // Cancel button
+  const handleCancel = () => navigate('/Customer');
 
   return (
     <div>
       <BreadCrumbs />
       <ToastContainer />
-      <Row>
-        <Col md="10">
-          <ComponentCard title="New Customer Details">
+      <div style={{ minHeight: '100vh', padding: '5px', width: '100%' }}>
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h4 className="m-0">{id ? 'Edit Customer' : 'New Customer'}</h4>
+        </div>
+
+        {/* Fixed Cancel Button */}
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            left: '20px',
+            zIndex: 1000,
+          }}
+        >
+          <Button color="secondary" onClick={handleCancel} className="shadow">
+            Cancel
+          </Button>
+        </div>
+
+        {/* Fixed Save Button */}
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            right: '20px',
+            zIndex: 1000,
+          }}
+        >
+          <Button
+            color="primary"
+            onClick={id ? editCustomerData : insertCustomerData}
+            className="shadow"
+          >
+            Save
+          </Button>
+        </div>
+
+        <Row>
+          <Col md="10">
             <Form>
               <FormGroup>
                 <Row>
@@ -87,7 +159,7 @@ const CustomerDetails = () => {
                     <Input
                       type="text"
                       onChange={handleInputs}
-                      value={customerDetails.customer_code}
+                      value={customerDetails.customer_code || ''}
                       name="customer_code"
                     />
                   </Col>
@@ -98,122 +170,122 @@ const CustomerDetails = () => {
                     <Input
                       type="text"
                       onChange={handleInputs}
-                      value={customerDetails.company_name}
+                      value={customerDetails.company_name || ''}
                       name="company_name"
                       required
                     />
                   </Col>
                 </Row>
               </FormGroup>
-
-              {/* <ComponentCard>
-                <Nav tabs>
-                  <NavItem>
-                    <NavLink
-                      className={classnames({ active: activeTab === '1' })}
-                      onClick={() => toggle('1')}
-                    >
-                      More Details
-                    </NavLink>
-                  </NavItem>
-                  <NavItem>
-                    <NavLink
-                      className={classnames({ active: activeTab === '2' })}
-                      onClick={() => toggle('2')}
-                    >
-                      Customer Login Info
-                    </NavLink>
-                  </NavItem>
-                  <NavItem>
-                    <NavLink
-                      className={classnames({ active: activeTab === '3' })}
-                      onClick={() => toggle('3')}
-                    >
-                      Contact Person
-                    </NavLink>
-                  </NavItem>
-                  <NavItem>
-                    <NavLink
-                      className={classnames({ active: activeTab === '4' })}
-                      onClick={() => toggle('4')}
-                    >
-                      Shipping Detail
-                    </NavLink>
-                  </NavItem>
-                  <NavItem>
-                    <NavLink
-                      className={classnames({ active: activeTab === '5' })}
-                      onClick={() => toggle('5')}
-                    >
-                      Salesman
-                    </NavLink>
-                  </NavItem>
-                </Nav>
-
-                <TabContent activeTab={activeTab} className="p-4">
-                  <TabPane tabId="1">
-                    <ContentMoreDetailsInsert
-                      handleInputs={handleInputs}
-                      contentDetails={customerDetails} // Pass the entire state for display/prefill
-                    />
-                  </TabPane>
-
-                  <TabPane tabId="2">
-                    <CustomerLogininsert
-                      handleInputs={handleInputs}
-                      contentDetails={customerDetails} // Pass the entire state
-                    />
-                  </TabPane>
-
-                  <TabPane tabId="3">
-                    <ContactPersonInsert
-                      setContactsData={setAssociatedContactPersons} // This prop updates the parent's state
-                      // We don't pass handleInputs/contentDetails here, as ContactPersonInsert manages a list
-                    />
-                  </TabPane>
-
-                  <TabPane tabId="4">
-                    <CustomerShippingDetailInsert
-                      handleInputs={handleInputs}
-                      contentDetails={customerDetails} // Pass the entire state
-                    />
-                  </TabPane>
-
-                  <TabPane tabId="5">
-                    <CustomerSalesmenInsert
-                      contactId={null} // Important: This is a new customer, so no contactId yet.
-                                      // The component should adapt to this for new entries.
-                      setSalesmenData={setAssociatedSalesmen} // This prop updates the parent's state
-                    />
-                  </TabPane>
-                </TabContent>
-              </ComponentCard> */}
-
-              <FormGroup>
-                <Row>
-                  <div className="pt-3 mt-3 d-flex align-items-center gap-2">
-                    <Button
-                      className="shadow-none"
-                      color="primary"
-                      onClick={insertCustomerData}
-                      disabled={!customerDetails.customer_code || !customerDetails.company_name}
-                    >
-                      Save
-                    </Button>
-                    <Button
-                      onClick={() => navigate(-1)}
-                      type="button"
-                      className="btn btn-dark shadow-none"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </Row>
-              </FormGroup>
             </Form>
-          </ComponentCard>
-        </Col>
-      </Row>
+          </Col>
+        </Row>
+
+        {/* Tabs */}
+        <Nav tabs>
+          <NavItem>
+            <NavLink className={classnames({ active: activeTab === '1' })} onClick={() => toggle('1')}>
+              Additional
+            </NavLink>
+          </NavItem>
+          <NavItem>
+            <NavLink className={classnames({ active: activeTab === '2' })} onClick={() => toggle('2')}>
+              Customer Login Info
+            </NavLink>
+          </NavItem>
+          <NavItem>
+            <NavLink className={classnames({ active: activeTab === '3' })} onClick={() => toggle('3')}>
+              Contact
+            </NavLink>
+          </NavItem>
+          <NavItem>
+            <NavLink className={classnames({ active: activeTab === '4' })} onClick={() => toggle('4')}>
+              Shipping Detail
+            </NavLink>
+          </NavItem>
+          <NavItem>
+            <NavLink className={classnames({ active: activeTab === '5' })} onClick={() => toggle('5')}>
+              Salesman
+            </NavLink>
+          </NavItem>
+          <NavItem>
+            <NavLink className={classnames({ active: activeTab === '6' })} onClick={() => toggle('6')}>
+              Transactions
+            </NavLink>
+          </NavItem>
+          <NavItem>
+            <NavLink className={classnames({ active: activeTab === '7' })} onClick={() => toggle('7')}>
+              Product Details
+            </NavLink>
+          </NavItem>
+        </Nav>
+
+        {/* Tab Content */}
+        <TabContent activeTab={activeTab} style={{ overflow: 'visible' }}>
+          <TabPane tabId="1">
+            {/* Example: Additional fields */}
+           <Row>
+                         {/* Left Column */}
+                         <Col md="6">
+                           <FormGroup row><Label sm="3">Address 1</Label><Col sm="7"><Input type="text" name="address1" value={contentDetails.address1 || ''} onChange={handleInputs} /></Col></FormGroup>
+                           <FormGroup row><Label sm="3">City</Label><Col sm="7"><Input type="text" name="city" value={contentDetails.city || ''} onChange={handleInputs} /></Col></FormGroup>
+                           <FormGroup row><Label sm="3">State</Label><Col sm="7"><Input type="text" name="state" value={contentDetails.state || ''} onChange={handleInputs} /></Col></FormGroup>
+                           <FormGroup row><Label sm="3">Postal Code</Label><Col sm="7"><Input type="text" name="postal_code" value={contentDetails.postal_code || ''} onChange={handleInputs} /></Col></FormGroup>
+                           <FormGroup row><Label sm="3">Phone</Label><Col sm="7"><Input type="text" name="phone" value={contentDetails.phone || ''} onChange={handleInputs} /></Col></FormGroup>
+                           <FormGroup row><Label sm="3">Mobile</Label><Col sm="7"><Input type="text" name="mobile" value={contentDetails.mobile || ''} onChange={handleInputs} /></Col></FormGroup>
+                           <FormGroup row><Label sm="3">Email</Label><Col sm="7"><Input type="email" name="email" value={contentDetails.email || ''} onChange={handleInputs} /></Col></FormGroup>
+                           <FormGroup row><Label sm="3">Website</Label><Col sm="7"><Input type="text" name="website" value={contentDetails.website || ''} onChange={handleInputs} /></Col></FormGroup>
+                           <FormGroup row><Label sm="3">Fax</Label><Col sm="7"><Input type="text" name="fax" value={contentDetails.fax || ''} onChange={handleInputs} /></Col></FormGroup>
+                         </Col>
+           
+                         {/* Right Column */}
+                         <Col md="6">
+                           <FormGroup row><Label sm="3">Company Reg. No</Label><Col sm="7"><Input type="text" name="company_reg_no" value={contentDetails.company_reg_no || ''} onChange={handleInputs} /></Col></FormGroup>
+                           <FormGroup row><Label sm="3">Terms</Label><Col sm="7"><Input type="select" name="terms" value={contentDetails.terms || ''} onChange={handleInputs}><option value="">Select Terms</option></Input></Col></FormGroup>
+                           <FormGroup row><Label sm="3">Credit Limit</Label><Col sm="7"><Input type="text" name="credit_limit" value={contentDetails.credit_limit || ''} onChange={handleInputs} /></Col></FormGroup>
+                           <FormGroup row><Label sm="3">Address 2</Label><Col sm="7"><Input type="text" name="address2" value={contentDetails.address2 || ''} onChange={handleInputs} /></Col></FormGroup>
+                           <FormGroup row><Label sm="3">Address 3</Label><Col sm="7"><Input type="text" name="address3" value={contentDetails.address3 || ''} onChange={handleInputs} /></Col></FormGroup>
+                           <FormGroup row><Label sm="3">Country</Label><Col sm="7"><Input type="text" name="country" value={contentDetails.country || ''} onChange={handleInputs} /></Col></FormGroup>
+                           <FormGroup row><Label sm="3">Remarks</Label><Col sm="7"><Input type="textarea" name="remarks" value={contentDetails.remarks || ''} onChange={handleInputs} rows="3" /></Col></FormGroup>
+                           <FormGroup row><Label sm="3">Cheque Print Name</Label><Col sm="7"><Input type="text" name="cheque_print_name" value={contentDetails.cheque_print_name || ''} onChange={handleInputs} /></Col></FormGroup>
+                           <FormGroup row>
+                             <Label sm="3">Status</Label>
+                             <Col sm="7" className="d-flex align-items-center">
+                               <div className="form-check form-switch">
+                                 <Input
+                                   type="switch"
+                                   name="is_active"
+                                   checked={contentDetails.is_active === 1}
+                                   onChange={handleInputs}
+                                   className="form-check-input"
+                                 />
+                               </div>
+                             </Col>
+                           </FormGroup>
+                         </Col>
+                       </Row>
+          </TabPane>
+
+          <TabPane tabId="2">
+            <CustomerLogin handleInputs={handleInputs} contentDetails={contentDetails} />
+          </TabPane>
+          <TabPane tabId="3">
+            <ContactPerson contactId={id} contentDetails={contentDetails} />
+          </TabPane>
+          <TabPane tabId="4">
+            <CustomerShippingDetail contactId={id} contentDetails={contentDetails} />
+          </TabPane>
+          <TabPane tabId="5">
+            <CustomerSalesmen customerId={id} contentDetails={contentDetails} />
+          </TabPane>
+          <TabPane tabId="6">
+            <CustomerTransactions customerId={id} />
+          </TabPane>
+          <TabPane tabId="7">
+            <CustomerProductDetails customerId={id} contentDetails={contentDetails} />
+          </TabPane>
+        </TabContent>
+      </div>
     </div>
   );
 };

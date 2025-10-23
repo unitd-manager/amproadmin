@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import {  Form,  TabContent,TabPane,  Row, Col, FormGroup, Label, Input,Button} from 'reactstrap';
+import {  Form,  TabContent,TabPane,  Row, Col, FormGroup, Label, Input} from 'reactstrap';
 import { ToastContainer } from 'react-toastify';
 // import * as Icon from 'react-feather';
 import Swal from 'sweetalert2';
@@ -13,26 +13,26 @@ import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../form-editor/editor.scss';
 // import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
-import ComponentCard from '../../components/ComponentCard';
- import ComponentCardV2 from '../../components/ComponentCardV2';
+//import ComponentCard from '../../components/ComponentCard';
+//  import ComponentCardV2 from '../../components/ComponentCardV2';
 import message from '../../components/Message';
 import api from '../../constants/api';
 import Tab from '../../components/ProjectTabs/Tab';
 import creationdatetime from '../../constants/creationdatetime';
 
 //import ApiButton from '../../components/ApiButton';
-import Customer from '../../components/Invoice/Customer';
-import Currency from '../../components/Invoice/Currency';
-import Shipping from '../../components/Invoice/Shipping';
-import SalesMan from '../../components/Invoice/SalesMan';
-// import QuoteLineItem from '../../components/Invoice/QuoteLineItem';
-// import EditLineItemModal from '../../components/Invoice/EditLineItemModal';
-import SalesOrderProducts from '../../components/Invoice/DeliveryOrderProducts';
+import Customer from '../../components/Delivery/Customer';
+import Currency from '../../components/Delivery/Currency';
+import Shipping from '../../components/Delivery/Shipping';
+import SalesMan from '../../components/Delivery/SalesMan';
+// import QuoteLineItem from '../../components/Delivery/QuoteLineItem';
+// import EditLineItemModal from '../../components/Delivery/EditLineItemModal';
+import SalesOrderProducts from '../../components/Delivery/SalesOrderProductsEdit';
 
 import AppContext from '../../context/AppContext';
 
 
-const SalesOrderEdit = () => {
+const InvoiceEdit = () => {
    const { id } = useParams();
  
   const [activeTab, setActiveTab] = useState('1');
@@ -126,142 +126,124 @@ const editSettingData = () => {
         message('Unable to edit record.', 'error');
       });
 };
+
+const insertSettingData = () => {
+  settingdetails.creation_date = creationdatetime;
+  settingdetails.created_by = loggedInuser.first_name;
+  return api
+    .post('/salesOrder/insertDeliveryOrder', settingdetails)
+    .then((res) => {
+      message('Record inserted successfully', 'success');
+      const insertedDataId = res.data.data.insertId;
+        setTimeout(() => {
+            navigate(`/DeliveryOrderEdit/${insertedDataId}?tab=1`);
+          }, 300);
+    })
+    .catch(() => {
+      message('Unable to insert record.', 'error');
+    });
+};
+
+const saveSalesOrder = () => {
+  if (id) {
+    editSettingData();
+  } else {
+    insertSettingData();
+  }
+};
 useEffect(() => {
   getSettingById();
       getLineItem();
 }, [id]);
  return (
-    <div>   
-      <Form>     
-        <ComponentCardV2>
-                        <Row>
-                          <Col>
-                            <Button
-                              color="primary"
-                              onClick={() => {
-                                editSettingData();
-                                setTimeout(() => {
-                                  navigate('/DeliveryCL');
-                                  window.location.reload();
-                                }, 1100);
-                              }}
-                            >
-                              Save
-                            </Button>
-                          </Col>
-                          <Col>
-                            <Button
-                              color="primary"
-                              onClick={() => {
-                                editSettingData();
-                              }}
-                            >
-                              Apply
-                            </Button>
-                          </Col>
-                          <Col>
-                            <Button
-                              color="dark"
-                              onClick={() => {
-                                navigate('/DeliveryCL');
-                                console.log('back to list');
-                              }}
-                            >
-                              Back to List
-                            </Button>
-                          </Col>
-                        </Row>
-                      </ComponentCardV2>
-      </Form>
+  <div >
+      {/* Fixed Header Section */}
+      <div style={{ flexShrink: 0, backgroundColor: '#ffffff', borderBottom: '1px solid #dee2e6', padding: '4px 8px' }}>
+        <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '4px', color: '#495057' }}>Add/Edit Invoice</div>
+        <Form>
+          <Row>
+            <Col md="2">
+              <FormGroup style={{ marginBottom: '4px' }}>
+                <Label style={{ fontSize: '10px', marginBottom: '1px' }}>Tran No</Label>
+                <Input
+                  type="text"
+                  onChange={handleInputs}
+                  value={settingdetails && settingdetails.delivery_code}
+                  name="delivery_code"
+                  style={{ backgroundColor: '#e9ecef', fontSize: '10px', padding: '2px 4px', height: '24px' }}
+                  
+                />
+              </FormGroup>
+            </Col>
+            <Col md="2">
+              <FormGroup style={{ marginBottom: '4px' }}>
+                <Label style={{ fontSize: '10px', marginBottom: '1px' }}>Tran Date</Label>
+                <Input
+                  type="date"
+                  onChange={handleInputs}
+                  value={settingdetails && settingdetails.date}
+                  name="date"
+                  style={{ fontSize: '10px', padding: '2px 4px', height: '24px' }}
+                />
+              </FormGroup>
+            </Col>
+          </Row>
+        </Form>
+      </div>
       <ToastContainer></ToastContainer>
-      <Form>
-        <FormGroup>
-          <ComponentCard title="Setting Details" creationModificationDate={settingdetails}>
-            {' '}
-            <Row>
-              <Col md="4">
-                <FormGroup>
-                  <Label>Tran No</Label>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={settingdetails && settingdetails.delivery_code}
-                    name="tran_no"
-                  ></Input>
-                </FormGroup>
-              </Col>
-              <Col md="4">
-                <FormGroup>
-                  <Label>Tran Date</Label>
-                  <Input
-                    type="date"
-                    onChange={handleInputs}
-                    value={settingdetails && settingdetails.tran_date}
-                    name="tran_date"
-                  />
-                </FormGroup>
-              </Col>
-             
-            </Row>
-          </ComponentCard>
-        </FormGroup>
-      </Form>
-      <ComponentCard title="More Details">
-        {/* Replace toggle and tabs with your implementation */}
-        <Tab toggle={toggle} tabs={tabs} />
-            <TabContent className="p-4" activeTab={activeTab}>
-              <TabPane tabId="1">
+      
+   
+            {/* Compact tabs */}
+            <Tab toggle={toggle} tabs={tabs} />
+            <TabContent style={{ padding: '4px 6px' }} activeTab={activeTab}>
+              <TabPane tabId="1" >
                 <Customer
                  settingdetails={settingdetails}
                  handleInputs={handleInputs}
                  setSettingDetails={setSettingDetails}
                 ></Customer>
-       </TabPane>
-          <TabPane tabId="2">
-            <Currency
-             setSettingDetails={setSettingDetails}
-            settingdetails={settingdetails}
-            handleInputs={handleInputs}
-            ></Currency>
-     </TabPane>
-          <TabPane tabId="3">
-            <Shipping
-            settingdetails={settingdetails}
-            handleInputs={handleInputs}
-            setSettingDetails={setSettingDetails}
-            ></Shipping>
-          </TabPane>
-          <TabPane tabId="4">
-            <SalesMan
-             settingdetails={settingdetails}
-             handleInputs={handleInputs}
-             ></SalesMan>
-          </TabPane>
-       
+              </TabPane>
+              <TabPane tabId="2">
+                <Currency
+                 setSettingDetails={setSettingDetails}
+                settingdetails={settingdetails}
+                handleInputs={handleInputs}
+                ></Currency>
+              </TabPane>
+              <TabPane tabId="3">
+                <Shipping
+                settingdetails={settingdetails}
+                handleInputs={handleInputs}
+                setSettingDetails={setSettingDetails}
+                ></Shipping>
+              </TabPane>
+              <TabPane tabId="4">
+                <SalesMan
+                 settingdetails={settingdetails}
+                 handleInputs={handleInputs}
+                 ></SalesMan>
+              </TabPane>
          
+            </TabContent>
+     
+              <SalesOrderProducts
+                addLineItemModal={addLineItemModal}
+                setAddLineItemModal={setAddLineItemModal}
+                lineItem={lineItem}
+                setEditLineModelItem={setEditLineModelItem}
+                setEditLineModal={setEditLineModal}
+                editLineModal={editLineModal}
+                editLineModelItem={editLineModelItem}
+                saveSalesOrder={saveSalesOrder}
+                getLineItem={getLineItem}
+                deleteRecord={deleteRecord}
+                id={id}
+                setViewLineModal={setViewLineModal}
+              />
         
-        </TabContent>
-      </ComponentCard>
-      <>
-      <ComponentCard title="Products">
-      <SalesOrderProducts
-  addLineItemModal={addLineItemModal}
-  setAddLineItemModal={setAddLineItemModal}
-  lineItem={lineItem}
-  setEditLineModelItem={setEditLineModelItem}
-  setEditLineModal={setEditLineModal}
-  editLineModal={editLineModal}
-  editLineModelItem={editLineModelItem}
-  getLineItem={getLineItem}
-  deleteRecord={deleteRecord}
-  id={id}
-  setViewLineModal={setViewLineModal}
-/>
-
-      </ComponentCard>
-      </>
     </div>
+ 
   );
 };
 
-export default SalesOrderEdit;
+export default InvoiceEdit;

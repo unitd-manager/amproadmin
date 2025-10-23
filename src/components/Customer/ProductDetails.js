@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Row,
   Col,
-  FormGroup,
   Label,
   Input,
   Button,
@@ -139,13 +138,13 @@ export default function CustomerProductDetails({ customerId }) {
     }
   };
 
-  const handleTableInputChange = (id, fieldName, value) => {
-    setCustomerProductList(
-      customerProductList.map((product) =>
-        product.id === id ? { ...product, [fieldName]: value } : product
-      )
-    );
-  };
+  // const handleTableInputChange = (id, fieldName, value) => {
+  //   setCustomerProductList(
+  //     customerProductList.map((product) =>
+  //       product.id === id ? { ...product, [fieldName]: value } : product
+  //     )
+  //   );
+  // };
 
   // Modify the handleDeleteAction function
 const handleDeleteAction = async (id) => {
@@ -169,102 +168,143 @@ const handleDeleteAction = async (id) => {
 };
 
   return (
-    <div>
-      <Row className="mb-4 align-items-end">
-        <Col md="4">
-          <FormGroup>
-            <Label>Product Code</Label>
-            <Input
-              type="select"
-              onChange={handleNewProductInputs}
-              value={newProduct.product_code}
-              name="product_code"
-            >
-              <option value="">Select Product</option>
-              {allProducts.map((p) => (
-                <option key={p.product_id} value={p.product_code}>
-                  {p.product_code}
-                </option>
-              ))}
-            </Input>
-          </FormGroup>
-        </Col>
-        <Col md="4">
-          <FormGroup>
-            <Label>Product Name</Label>
-            <Input
-              type="text"
-              onChange={handleNewProductInputs}
-              value={newProduct.product_name}
-              name="product_name"
-              readOnly
-            />
-          </FormGroup>
-        </Col>
-        <Col md="4">
-          <FormGroup>
-            <Label>Wholesale Price</Label>
-            <Input
-              type="number"
-              onChange={handleNewProductInputs}
-              value={newProduct.wholesale_price}
-              name="wholesale_price"
-            
-            />
-          </FormGroup>
-        </Col>
-        <Col md="12" className="text-right mt-3">
-          <Button color="success" onClick={addProduct}>
-            Add Product
-          </Button>
-        </Col>
-      </Row>
-
-      <hr />
-
-      <h4>Product List</h4>
-      {customerProductList.length > 0 ? (
-        <Table responsive bordered>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Product Code</th>
-              <th>Product Name</th>
-              <th>Wholesale Price</th>
-              <th>Fixed Price</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {customerProductList.map((product, index) => (
-              <tr key={product.id}>
-                <td>{index + 1}</td>
-                <td>{product.product_code}</td>
-                <td>{product.product_name}</td>
-                <td>{product.wholesale_price}</td>
-                <td>
+    <div className="container-fluid">
+      <div className="card">
+        <div className="card-header bg-primary text-white">
+          <h5 className="mb-0">Product Details</h5>
+        </div>
+        <div className="card-body">
+          <Row className="mb-3">
+            <Col sm={6}>
+              <Row className="mb-3">
+                <Col sm={4} className="d-flex align-items-center">
+                  <Label className="mb-0 fw-bold">Product Code</Label>
+                </Col>
+                <Col sm={8}>
+                  <Input
+                    type="select"
+                    className="form-control-sm"
+                    onChange={handleNewProductInputs}
+                    value={newProduct.product_code}
+                    name="product_code"
+                  >
+                    <option value="">Select Product</option>
+                    {allProducts.map((p) => (
+                      <option key={p.product_id} value={p.product_code}>
+                        {p.product_code}
+                      </option>
+                    ))}
+                  </Input>
+                </Col>
+              </Row>
+              <Row className="mb-3">
+                <Col sm={4} className="d-flex align-items-center">
+                  <Label className="mb-0 fw-bold">Product Name</Label>
+                </Col>
+                <Col sm={8}>
+                  <Input
+                    type="text"
+                    className="form-control-sm"
+                    onChange={handleNewProductInputs}
+                    value={newProduct.product_name}
+                    name="product_name"
+                    readOnly
+                  />
+                </Col>
+              </Row>
+            </Col>
+            <Col sm={6}>
+              <Row className="mb-3">
+                <Col sm={4} className="d-flex align-items-center">
+                  <Label className="mb-0 fw-bold">Wholesale Price</Label>
+                </Col>
+                <Col sm={8}>
                   <Input
                     type="number"
-                    value={product.fixed_price}
-                    onChange={(e) => handleTableInputChange(product.id, 'fixed_price', e.target.value)}
-                    placeholder="Enter Fixed Price"
+                    className="form-control-sm"
+                    onChange={handleNewProductInputs}
+                    value={newProduct.wholesale_price}
+                    name="wholesale_price"
+                    readOnly
                   />
-                </td>
-                <td>
-                  <Button color="success" size="sm" onClick={() => handleTickAction(product.product_company_id)} className="me-2">
-                    <i className="fa fa-check"></i>
-                  </Button>
-                  <Button color="danger" size="sm" onClick={() => handleDeleteAction(product.product_company_id)}>
-                    <i className="fa fa-trash"></i>
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      ) : (
-        <p>No products added yet.</p>
-      )}
+                </Col>
+              </Row>
+              <Row className="mb-3">
+                <Col sm={4} className="d-flex align-items-center">
+                  <Label className="mb-0 fw-bold">Fixed Price</Label>
+                </Col>
+                <Col sm={8}>
+                  <Input
+                    type="number"
+                    className="form-control-sm"
+                    onChange={handleNewProductInputs}
+                    value={newProduct.fixed_price}
+                    name="fixed_price"
+                  />
+                </Col>
+              </Row>
+            </Col>
+          </Row>
+
+          <div className="d-flex justify-content-end">
+            <Button color="primary" size="sm" onClick={addProduct}>
+              {newProduct.existing_id ? 'Update' : 'Add Product'}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="card mt-4">
+        <div className="card-header bg-primary text-white">
+          <h5 className="mb-0">Product List</h5>
+        </div>
+        <div className="card-body">
+          {customerProductList.length > 0 ? (
+            <Table responsive bordered>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Product Code</th>
+                  <th>Product Name</th>
+                  <th>Wholesale Price</th>
+                  <th>Fixed Price</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {customerProductList.map((product, index) => (
+                  <tr key={product.product_company_id || index}>
+                    <td>{index + 1}</td>
+                    <td>{product.product_code}</td>
+                    <td>{product.product_name}</td>
+                    <td>{product.wholesale_price}</td>
+                    <td>{product.fixed_price}</td>
+                    <td>
+                      <Button
+                        color="info"
+                        size="sm"
+                        className="me-2"
+                        onClick={() => handleTickAction(product.product_company_id)}
+                      >
+                        <i className="fa fa-edit"></i> Edit
+                      </Button>
+                      <Button
+                        color="danger"
+                        size="sm"
+                        onClick={() => handleDeleteAction(product.product_company_id)}
+                      >
+                        <i className="fa fa-trash"></i> Delete
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          ) : (
+            <div className="text-center p-3">No products added yet.</div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

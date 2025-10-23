@@ -9,15 +9,19 @@ import message from '../../components/Message';
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
-//import PrintPerfoma from '../../components/PDF/PrintDelivery';
+//import PrintPerfomaList from '../../components/PDF/PrintDeliveryList';
 
+import PrintPerfoma from '../../components/PDF/PrintDelivery';
+import './salesOrderTable.css';
 
 const DeliveryOrderList = () => {
   const navigate = useNavigate();
   const [deliveryOrders, setDeliveryOrders] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedDeliveryOrderIds, setSelectedDeliveryOrderIds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [selectAll, setSelectAll] = useState(false);
 
   const [tranNoFilter, setTranNoFilter] = useState('');
   const [fromDate, setFromDate] = useState('');
@@ -29,9 +33,6 @@ const DeliveryOrderList = () => {
 
   const [isChangeDateModalOpen, setIsChangeDateModalOpen] = useState(false);
 const [newDeliveryDate, setNewDeliveryDate] = useState(() => new Date().toISOString().split('T')[0]);
-
-
-  const toggleDropdown = () => setDropdownOpen((prevState) => !prevState);
 
   const getDeliveryOrders = () => {
     setLoading(true);
@@ -51,23 +52,78 @@ const [newDeliveryDate, setNewDeliveryDate] = useState(() => new Date().toISOStr
         setLoading(false);
       });
   };
+  const handleDeleteOrders = async () => {
+    if (selectedDeliveryOrderIds.length === 0) {
+      message('Please select at least one delivery order to delete', 'error');
+      return;
+    }
+    if (!window.confirm('Are you sure you want to delete the selected delivery orders?')) return;
+    try {
+      await api.post('/salesOrder/deleteDeliveryOrder', { delivery_order_id: selectedDeliveryOrderIds.join(',') });
+      message('Selected delivery orders deleted successfully', 'success');
+      setSelectedDeliveryOrderIds([]);
+      setSelectedOrder(null);
+      getDeliveryOrders();
+    } catch (error) {
+      message(error.response?.data?.message || 'Failed to delete delivery orders', 'error');
+    }
+  };
+
+ 
+
+  const toggleDropdown = () => setDropdownOpen((prevState) => !prevState);
+
 
   useEffect(() => {
     getDeliveryOrders();
   }, []);
+
+  useEffect(() => {
+    if (deliveryOrders && deliveryOrders.length > 0) {
+      setSelectAll(selectedDeliveryOrderIds.length === deliveryOrders.length);
+    }
+  }, [selectedDeliveryOrderIds, deliveryOrders]);
+
   const columns = [
-    { 
-      name: '', 
-      selector: 'checkbox', 
+    {
+      name: (
+        <input
+          type="checkbox"
+          checked={selectAll}
+          ref={(input) => {
+            if (input) {
+              input.indeterminate =
+                selectedDeliveryOrderIds.length > 0 &&
+                selectedDeliveryOrderIds.length < (deliveryOrders?.length || 0);
+            }
+          }}
+          onChange={() => {
+            if (selectAll) {
+              setSelectedDeliveryOrderIds([]); // deselect all
+            } else {
+              setSelectedDeliveryOrderIds(deliveryOrders.map((d) => d.delivery_order_id)); // select all
+            }
+            setSelectAll(!selectAll);
+          }}
+        />
+      ),
+      selector: 'checkbox',
       cell: (row) => (
         <input
           type="checkbox"
-          checked={selectedOrder?.delivery_order_id === row.delivery_order_id}
-          onChange={() => setSelectedOrder(row)}
+          checked={selectedDeliveryOrderIds.includes(row.delivery_order_id)}
+          onChange={() => {
+            setSelectedDeliveryOrderIds((prev) =>
+              prev.includes(row.delivery_order_id)
+                ? prev.filter((id) => id !== row.delivery_order_id)
+                : [...prev, row.delivery_order_id]
+            );
+            setSelectedOrder(row); // Keep single selection for compatibility
+          }}
         />
-      ), 
-      grow: 0, 
-      width: '3%' 
+      ),
+      grow: 0,
+      width: '3%'
     },
         { name: 'Edit', selector: 'edit', cell: () => <Icon.Edit2 />, grow: 0, width: 'auto', button: true, sortable: false },
     
@@ -306,15 +362,35 @@ const [newDeliveryDate, setNewDeliveryDate] = useState(() => new Date().toISOStr
           <Button color="primary" onClick={getDeliveryOrders}>
             <Icon.Search size={16} /> Search
           </Button>
+          <Button
+            color="danger"
+            className="ms-2"
+            disabled={selectedDeliveryOrderIds.length === 0}
+            onClick={handleDeleteOrders}
+            data-testid="delete-button"
+          >
+            <Icon.Trash2 size={16} />
+          </Button>
+          <Button
+            color="secondary"
+            className="ms-2"
+            disabled={selectedDeliveryOrderIds.length === 0}
+          >
+            <PrintPerfoma
+      id={selectedDeliveryOrderIds}
+      settingdetails={null}
+      lineItem={null}
+    />
+          </Button>
         </div>
-
+<div className="sales-order-table">
         <CommonTable
           loading={loading}
           title="Delivery Order Management"
           Button={
             <Dropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
               <DropdownToggle color="primary" caret>
-               <Button color="primary" tag={Link} to="/DeliveryOrderDetails" className="shadow-none">
+               <Button color="primary" tag={Link} to="/DeliveryOrderDetails?tab=1" className="shadow-none">
                                 New Transaction
                               </Button>
               </DropdownToggle>
@@ -385,13 +461,20 @@ const [newDeliveryDate, setNewDeliveryDate] = useState(() => new Date().toISOStr
                   <td>
                     <input
                       type="checkbox"
-                      checked={selectedOrder?.delivery_order_id === element.delivery_order_id}
-                      onChange={() => setSelectedOrder(element)}
+                      checked={selectedDeliveryOrderIds.includes(element.delivery_order_id)}
+                      onChange={() => {
+                        setSelectedDeliveryOrderIds((prev) =>
+                          prev.includes(element.delivery_order_id)
+                            ? prev.filter((ids) => ids !== element.delivery_order_id)
+                            : [...prev, element.delivery_order_id]
+                        );
+                        setSelectedOrder(element); // Keep single selection for compatibility
+                      }}
                     />
                   </td>
                    <td>
                     {element.status !== 'Completed' ? (
-                      <Link to={`/DeliveryOrderEdit/${element.delivery_order_id}`}>
+                      <Link to={`/DeliveryOrderEdit/${element.delivery_order_id}?tab=1`}>
                         <Icon.Edit2 />
                       </Link>
                     ) : (
@@ -410,7 +493,7 @@ const [newDeliveryDate, setNewDeliveryDate] = useState(() => new Date().toISOStr
               ))}
           </tbody>
         </CommonTable>
-     
+     </div>
       </div>
       {isChangeDateModalOpen && (
   <div className="modal show d-block" tabIndex="-1" role="dialog">

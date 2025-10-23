@@ -15,10 +15,26 @@ import {
   CardBody,
   Table,
 } from "reactstrap";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+
 import { FaChartBar, FaMoneyBillWave } from 'react-icons/fa';
 import api from "../../constants/api";
 import RecentSalesOrders from "../../components/dashboard/generalDashboard/RecentSalesOrder";
 import RecentSalesInvoices from "../../components/dashboard/generalDashboard/RecentSalesInvoices";
+import SalesReportFor30Days from "../../components/dashboard/generalDashboard/SalesReportFor30Days";
+import SalesReportForLast12Months from "../../components/dashboard/generalDashboard/SalesReportForLast12Months";
+import PopularProducts from "../../components/dashboard/PopularProducts";
+import CatagoryWiseProduct from "../../components/dashboard/generalDashboard/CatagoryWiseProduct"
+import DepartmentWiseProduct from "../../components/dashboard/generalDashboard/DepartmentWiseProduct";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("1");
@@ -27,6 +43,8 @@ const Dashboard = () => {
   const [recentInvoices, setRecentInvoices] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
   const [salestotalvalue, setSalesTotalValue] = useState({});
+  const [purchaseTotalValue, setPurchaseTotalValue] = useState({});
+  const [recentPurchaseInvoices, setRecentPurchaseInvoices] = useState([]);
 
   // Toggle tab
   const toggle = (tab) => {
@@ -83,6 +101,23 @@ const Dashboard = () => {
         setRecentOrders(res.data.data);
       })
       .catch((err) => console.error(err));
+
+    api
+      .get('/purchaseorder/getPurchaseTotalOutstanding')
+      .then((res) => {
+        setPurchaseTotalValue(res.data.data[0]);
+        console.log('Purchase Total Value:', res.data.data[0]);
+      })
+      .catch((err) => console.error(err));
+
+    api
+      .post('/purchaseorder/getPurchaseInvoiceDashboard', {invoice_date: today })
+      .then((res) => {
+        setRecentPurchaseInvoices(res.data.data);
+        console.log('Recent Purchase Invoices:', res.data.data);
+      })
+      .catch((err) => console.error(err));
+      
   }, []);
 
   return (
@@ -184,6 +219,8 @@ const Dashboard = () => {
                         <th>Last Week</th>
                         <th>Previous Week</th>
                       </tr>
+
+
                     </thead>
                     <tbody>
                       {weeklySales.map((row) => (
@@ -286,8 +323,141 @@ const Dashboard = () => {
 
         {/* Other Tabs */}
         <TabPane tabId="2">
-        <RecentSalesOrders />
-          <RecentSalesInvoices />
+          <Row className="mt-3">
+            <Col md="6">
+              <Card className="shadow-sm mb-4" style={{ height: '400px', overflow: 'auto' }}>
+                <RecentSalesInvoices />
+              </Card>
+            </Col>
+            <Col md="6">
+              <Card className="shadow-sm mb-4" style={{ height: '400px', overflow: 'auto' }}>
+                <RecentSalesOrders />
+              </Card>
+            </Col>
+          </Row>
+           <Row className="mt-3">
+           <Col md="6">
+              <Card className="shadow-sm mb-4" style={{ height: '400px', overflow: 'auto' }}>
+                <CardHeader className="bg-white">
+                  <h5 className="mb-0">Weekly Sales Data</h5>
+                </CardHeader>
+                <CardBody>
+                  <Table bordered responsive>
+                    <thead className="table-light">
+                      <tr>
+                        <th>Day</th>
+                        <th>Current Week</th>
+                        <th>Last Week</th>
+                        <th>Previous Week</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {weeklySales.map((row) => (
+                        <tr key={row.sales_order_id}>
+                          <td>{row.day}</td>
+                          <td>{row.currentWeek}</td>
+                          <td>{row.lastWeek}</td>
+                          <td>{row.previousWeek}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </CardBody>
+              </Card>
+            </Col>
+            <Col md="6">
+              <Card className="shadow-sm mb-4" style={{ height: '400px', overflow: 'auto' }}>
+                <SalesReportFor30Days />
+              </Card>
+            </Col>
+          </Row>
+           <Row className="mt-3">
+            <Col md="6">
+              <Card className="shadow-sm mb-4" style={{ height: '400px', overflow: 'auto' }}>
+                <CardHeader className="bg-white">
+                  <h5 className="mb-0">Sales Analysis Data</h5>
+                </CardHeader>
+                <CardBody>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Total Sales:</span>
+                    <strong>${salesData.totalSales}</strong>
+                  </div>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Total Bills:</span>
+                    <strong>{salesData.totalBills}</strong>
+                  </div>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Total Items:</span>
+                    <strong>{salesData.totalItems}</strong>
+                  </div>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Avg/Bill:</span>
+                    <strong>${salesData.avgBill}</strong>
+                  </div>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Avg/Item:</span>
+                    <strong>${salesData.avgItem}</strong>
+                  </div>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Total Cost:</span>
+                    <strong>${salesData.totalCost}</strong>
+                  </div>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Profit:</span>
+                    <strong>${salesData.profit}</strong>
+                  </div>
+                  <div className="d-flex justify-content-between">
+                    <span>Margin:</span>
+                    <strong>{salesData.margin}%</strong>
+                  </div>
+                </CardBody>
+              </Card>
+            </Col>
+            <Col md="6">
+    <Card className="shadow-sm mb-4" style={{ height: '400px', overflow: 'auto' }}>
+      <CardHeader className="bg-white">
+        <h5 className="mb-0">Last 12 Weeks Sales</h5>
+      </CardHeader>
+      <CardBody>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={weeklySales}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="week" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="sales" fill="#9c27b0" name="Week Sales" barSize={40} radius={[8, 8, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </CardBody>
+    </Card>
+  </Col>
+
+          </Row>
+          <Row className="mt-3">
+            <Col md="6">
+              <Card className="shadow-sm mb-4" style={{ height: '400px', overflow: 'auto' }}>
+                <DepartmentWiseProduct/>
+              </Card>
+            </Col>
+            <Col md="6">
+              <Card className="shadow-sm mb-4" style={{ height: '400px', overflow: 'auto' }}>
+                <SalesReportForLast12Months />
+              </Card>
+            </Col>
+          </Row>
+          <Row className="mt-3">
+            <Col md="6">
+              <Card className="shadow-sm mb-4" style={{ height: '400px', overflow: 'auto' }}>
+                <CatagoryWiseProduct />
+              </Card>
+            </Col>
+            <Col md="6">
+              <Card className="shadow-sm mb-4" style={{ height: '400px', overflow: 'auto' }}>
+                <PopularProducts />
+              </Card>
+            </Col>
+          </Row>
           {/* <Row className="mt-3">
             <Col md="6">
               <Card className="shadow-sm mb-4">
@@ -378,7 +548,79 @@ const Dashboard = () => {
           </Row> */}
         </TabPane>
         <TabPane tabId="3">
-          <h5>Purchase Tab Content</h5>
+          <Row>
+            <Col md="6">
+              <Card className="shadow-sm mb-4 h-100">
+                <CardHeader className="bg-white d-flex flex-column justify-content-between">
+                  <h5 className="mb-0">Recent Purchase Invoices</h5>
+                  <div className="d-flex align-items-center">
+                    <FaChartBar size={24} color="#007bff" className="me-2" />
+                    <div>
+                      <strong>Total Purchase: </strong>${purchaseTotalValue.totalPurchase}
+                    </div>
+                  </div>
+                  <div className="d-flex align-items-center mt-2">
+                    <FaMoneyBillWave size={24} color="#28a745" className="me-2" />
+                    <div>
+                      <strong>Total Outstanding: </strong>${purchaseTotalValue.totalOutstanding}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardBody>
+                  <Table bordered responsive>
+                    <thead className="table-light">
+                      <tr>
+                        <th>Date</th>
+                        <th>Invoice No</th>
+                        <th>Customer</th>
+                        <th>Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recentPurchaseInvoices.length > 0 ? (
+                        recentPurchaseInvoices.map((inv) => (
+                          <tr key={inv.purchase_invoice_id}>
+                            <td>{inv.invoice_date}</td>
+                            <td>{inv.invoice_code}</td>
+                            <td>{inv.company_name}</td>
+                            <td>{inv.invoice_amount}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="4">No purchase invoices found for today.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </Table>
+                </CardBody>
+              </Card>
+            </Col>
+            <Col md="6">
+              <Card className="shadow-sm mb-4 h-100">
+                <CardHeader className="bg-white">
+                  <h5 className="mb-0">Recent Purchase Orders</h5>
+                </CardHeader>
+                <CardBody>
+                  <Table bordered responsive>
+                    <thead className="table-light">
+                      <tr>
+                        <th>Date</th>
+                        <th>Invoice No</th>
+                        <th>Customer</th>
+                        <th>Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td colSpan="4">No DataAvailable</td>
+                      </tr>
+                    </tbody>
+                  </Table>
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
         </TabPane>
         <TabPane tabId="4">
           <h5>Finance Tab Content</h5>

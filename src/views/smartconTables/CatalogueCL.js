@@ -28,7 +28,8 @@ const CatalogueManagement = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [printModalOpen, setPrintModalOpen] = useState(false);
   const [selectedPrintOption, setSelectedPrintOption] = useState('');
-  const [selectedCatalogueId, setSelectedCatalogueId] = useState(null);
+  //const [selectedCatalogueId, setSelectedCatalogueId] = useState(null);
+  const [selectedCatalogueIds, setSelectedCatalogueIds] = useState([]);
   const [showPdf, setShowPdf] = useState(false);
   const [showStatusFilter, setShowStatusFilter] = useState(false);
 
@@ -111,8 +112,8 @@ const CatalogueManagement = () => {
       message('Please select a print option', 'info');
       return;
     }
-    if (!selectedCatalogueId) {
-      message('Please select a catalogue by checkbox', 'info');
+    if (selectedCatalogueIds.length === 0) {
+      message('Please select at least one catalogue', 'info');
       return;
     }
     setPrintModalOpen(false); // Close the modal
@@ -124,13 +125,21 @@ const CatalogueManagement = () => {
       name: '',
       cell: (row) => (
         <Input
-          type="radio"
-          name="selectedCatalogue"
-          onChange={() => setSelectedCatalogueId(row.catalogue_id)}
-          checked={selectedCatalogueId === row.catalogue_id}
+          type="checkbox"
+          onChange={(e) => {
+            const isChecked = e.target.checked;
+            if (isChecked) {
+              setSelectedCatalogueIds([...selectedCatalogueIds, row.catalogue_id]);
+            } else {
+              setSelectedCatalogueIds(
+                selectedCatalogueIds.filter((id) => id !== row.catalogue_id)
+              );
+            }
+          }}
+          checked={selectedCatalogueIds.includes(row.catalogue_id)}
         />
       ),
-      width: '40px',
+      width: '5%',
       ignoreRowClick: true,
       allowOverflow: true,
       button: true,
@@ -142,38 +151,38 @@ const CatalogueManagement = () => {
       cell: (row) => (
         <Link to={`/CatalogueCLEdit/${row.catalogue_id}`}>{row.catalogue_name}</Link>
       ),
-      width: '250px',
+      width: '50%',
     },
     {
       name: 'Remarks',
       selector: (row) => row.remarks,
       sortable: true,
-      width: '200px',
+      width: '25%',
     },
     {
       name: 'SortOrder',
       selector: (row) => row.sort_order,
       sortable: true,
-      width: '100px',
+      width: '10%',
     },
     {
       name: 'Action',
       cell: (row) => (
         <>
+          <Link to={`/CatalogueAddProduct/${row.catalogue_id}`} className="me-3">
+            <Icon.Edit2 size={14} />
+          </Link>
           <Button
             color="danger"
             size="sm"
             onClick={() => handleDelete(row.catalogue_id)}
-            className="me-1"
+            className=""
           >
             <Icon.Trash2 size={14} />
           </Button>
-          <Link to={`/CatalogueAddProduct/${row.catalogue_id}`}>
-            <Icon.Edit2 size={14} />
-          </Link>
         </>
       ),
-      width: '120px',
+      width: '10%',
     },
   ];
 
@@ -191,11 +200,11 @@ const CatalogueManagement = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{ width: '250px' }}
           />
-          <Button color="light" onClick={toggleShowStatusFilter} className="shadow-none me-2">
-            <Icon.Filter size={20} />
+          <Button color="" onClick={togglePrintModal} className="shadow-none me-2">
+            <Icon.Printer size={20} />
           </Button>
-          <Button color="info" onClick={togglePrintModal} className="shadow-none me-2">
-            <Icon.Printer size={20} /> Print
+          <Button color="" onClick={toggleShowStatusFilter} className="shadow-none me-2">
+            <Icon.Filter size={20} />
           </Button>
           <Button color="primary" tag={Link} to="/CatalogueDetailsCL" className="shadow-none">
             Add New(+)
@@ -256,12 +265,12 @@ const CatalogueManagement = () => {
       {/* Conditionally Render PDFs Based on Selected Option */}
       {showPdf && selectedPrintOption === 'Print With Price' && (
         <CataloguePrintWithCostPdf
-          catalogueId={selectedCatalogueId}
+          catalogueId={selectedCatalogueIds[0]}
           printOption={selectedPrintOption}
           onClose={() => {
             setShowPdf(false);
             setSelectedPrintOption('');
-            setSelectedCatalogueId(null);
+            setSelectedCatalogueIds([]);
             getCatalogue();
           }}
         />
@@ -269,12 +278,12 @@ const CatalogueManagement = () => {
 
       {showPdf && selectedPrintOption === 'Print With Retail Price' && (
         <CataloguePrintWithRetailPrice
-          catalogueId={selectedCatalogueId}
+          catalogueId={selectedCatalogueIds[0]}
           printOption={selectedPrintOption}
           onClose={() => {
             setShowPdf(false);
             setSelectedPrintOption('');
-            setSelectedCatalogueId(null);
+            setSelectedCatalogueIds([]);
             getCatalogue();
           }}
         />
@@ -282,12 +291,12 @@ const CatalogueManagement = () => {
 
       {showPdf && selectedPrintOption === 'Print Without Price' && (
         <CataloguePrintWithoutPrice
-          catalogueId={selectedCatalogueId}
+          catalogueId={selectedCatalogueIds[0]}
           printOption={selectedPrintOption}
           onClose={() => {
             setShowPdf(false);
             setSelectedPrintOption('');
-            setSelectedCatalogueId(null);
+            setSelectedCatalogueIds([]);
             getCatalogue();
           }}
         />
@@ -295,12 +304,12 @@ const CatalogueManagement = () => {
 
       {showPdf && selectedPrintOption === 'Print With Stock' && (
         <CataloguePrintWithStock
-          catalogueId={selectedCatalogueId}
+          catalogueId={selectedCatalogueIds[0]}
           printOption={selectedPrintOption}
           onClose={() => {
             setShowPdf(false);
             setSelectedPrintOption('');
-            setSelectedCatalogueId(null);
+            setSelectedCatalogueIds([]);
             getCatalogue();
           }}
         />

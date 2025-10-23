@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Row,
   Col,
-  FormGroup,
   Label,
   Input,
   Button,
@@ -102,124 +101,190 @@ export default function CustomerShippingDetail({ contactId }) {
   };
 
   return (
-    <div>
-      <Row className="mb-4">
-        <Col md="6">
-          <FormGroup>
-            <Label>Delivery Name</Label>
-            <Input
-              type="text"
-              onChange={handleNewShippingInputs}
-              value={newShippingDetail.delivery_name}
-              name="delivery_name"
-            />
-          </FormGroup>
-          <FormGroup>
-            <Label>Delivery Address1</Label>
-            <Input
-              type="text"
-              onChange={handleNewShippingInputs}
-              value={newShippingDetail.delivery_address1}
-              name="delivery_address1"
-            />
-          </FormGroup>
-          <FormGroup>
-            <Label>Delivery Address2</Label>
-            <Input
-              type="text"
-              onChange={handleNewShippingInputs}
-              value={newShippingDetail.delivery_address2}
-              name="delivery_address2"
-            />
-          </FormGroup>
-          <FormGroup>
-            <Label>Delivery Address3</Label>
-            <Input
-              type="text"
-              onChange={handleNewShippingInputs}
-              value={newShippingDetail.delivery_address3}
-              name="delivery_address3"
-            />
-          </FormGroup>
-          <FormGroup>
-            <Label>Phone No</Label>
-            <Input
-              type="text"
-              onChange={handleNewShippingInputs}
-              value={newShippingDetail.phone_no}
-              name="phone_no"
-            />
-          </FormGroup>
-          <FormGroup check>
-            <Input
-              type="checkbox"
-              onChange={handleNewShippingInputs}
-              name="default_load_on_invoice"
-              checked={newShippingDetail.default_load_on_invoice === 1}
-            />
-            <Label check>Default Load On Invoice</Label>
-          </FormGroup>
-        </Col>
+    <div className="container-fluid">
+      <div className="card">
+        <div className="card-header bg-primary text-white">
+          <h5 className="mb-0">Shipping Details</h5>
+        </div>
+        <div className="card-body">
+          <Row>
+            <Col sm={6}>
+              <Row className="mb-3">
+                <Col sm={4} className="d-flex align-items-center">
+                  <Label className="mb-0 fw-bold">Delivery Name</Label>
+                </Col>
+                <Col sm={8}>
+                  <Input
+                    type="text"
+                    className="form-control-sm"
+                    onChange={handleNewShippingInputs}
+                    value={newShippingDetail.delivery_name}
+                    name="delivery_name"
+                  />
+                </Col>
+              </Row>
+              <Row className="mb-3">
+                <Col sm={4} className="d-flex align-items-center">
+                  <Label className="mb-0 fw-bold">Delivery Address1</Label>
+                </Col>
+                <Col sm={8}>
+                  <Input
+                    type="text"
+                    className="form-control-sm"
+                    onChange={handleNewShippingInputs}
+                    value={newShippingDetail.delivery_address1}
+                    name="delivery_address1"
+                  />
+                </Col>
+              </Row>
+              <Row className="mb-3">
+                <Col sm={4} className="d-flex align-items-center">
+                  <Label className="mb-0 fw-bold">Delivery Address2</Label>
+                </Col>
+                <Col sm={8}>
+                  <Input
+                    type="text"
+                    className="form-control-sm"
+                    onChange={handleNewShippingInputs}
+                    value={newShippingDetail.delivery_address2}
+                    name="delivery_address2"
+                  />
+                </Col>
+              </Row>
+              <Row className="mb-3">
+                <Col sm={4} className="d-flex align-items-center">
+                  <Label className="mb-0 fw-bold">Delivery Address3</Label>
+                </Col>
+                <Col sm={8}>
+                  <Input
+                    type="text"
+                    className="form-control-sm"
+                    onChange={handleNewShippingInputs}
+                    value={newShippingDetail.delivery_address3}
+                    name="delivery_address3"
+                  />
+                </Col>
+              </Row>
+              <Row className="mb-3">
+                <Col sm={4} className="d-flex align-items-center">
+                  <Label className="mb-0 fw-bold">Phone No</Label>
+                </Col>
+                <Col sm={8}>
+                  <Input
+                    type="text"
+                    className="form-control-sm"
+                    onChange={handleNewShippingInputs}
+                    value={newShippingDetail.phone_no}
+                    name="phone_no"
+                  />
+                </Col>
+              </Row>
+            </Col>
 
-        <Col md="6">
-          <FormGroup>
-            <Label>Fax No</Label>
-            <Input
-              type="text"
-              onChange={handleNewShippingInputs}
-              value={newShippingDetail.fax_no}
-              name="fax_no"
-            />
-          </FormGroup>
-          <FormGroup>
-            <Label>Email</Label>
-            <Input
-              type="text"
-              onChange={handleNewShippingInputs}
-              value={newShippingDetail.email}
-              name="email"
-            />
-          </FormGroup>
-          <FormGroup>
-            <Label>Hand Phone No</Label>
-            <Input
-              type="text"
-              onChange={handleNewShippingInputs}
-              value={newShippingDetail.handphone_no}
-              name="handphone_no"
-            />
-          </FormGroup>
+            <Col sm={6}>
+              <Row className="mb-3">
+                <Col sm={4} className="d-flex align-items-center">
+                  <Label className="mb-0 fw-bold">Fax No</Label>
+                </Col>
+                <Col sm={8}>
+                  <Input
+                    type="text"
+                    className="form-control-sm"
+                    onChange={handleNewShippingInputs}
+                    value={newShippingDetail.fax_no}
+                    name="fax_no"
+                  />
+                </Col>
+              </Row>
+              <Row className="mb-3">
+                <Col sm={4} className="d-flex align-items-center">
+                  <Label className="mb-0 fw-bold">Email</Label>
+                </Col>
+                <Col sm={8}>
+                  <Input
+                    type="text"
+                    className="form-control-sm"
+                    onChange={handleNewShippingInputs}
+                    value={newShippingDetail.email}
+                    name="email"
+                  />
+                </Col>
+              </Row>
+              <Row className="mb-3">
+                <Col sm={4} className="d-flex align-items-center">
+                  <Label className="mb-0 fw-bold">HandPhone No</Label>
+                </Col>
+                <Col sm={8}>
+                  <Input
+                    type="text"
+                    className="form-control-sm"
+                    onChange={handleNewShippingInputs}
+                    value={newShippingDetail.handphone_no}
+                    name="handphone_no"
+                  />
+                </Col>
+              </Row>
+              <Row className="mb-3">
+                <Col sm={4} className="d-flex align-items-center">
+                  <Label className="mb-0 fw-bold">Country/Postal</Label>
+                </Col>
+                <Col sm={8}>
+                  <Input
+                    type="text"
+                    className="form-control-sm"
+                    onChange={handleNewShippingInputs}
+                    value={newShippingDetail.country_postal}
+                    name="country_postal"
+                  />
+                </Col>
+              </Row>
+              <Row className="mb-3">
+                <Col sm={4} className="d-flex align-items-center">
+                  <Label className="mb-0 fw-bold">Attention</Label>
+                </Col>
+                <Col sm={8}>
+                  <Input
+                    type="text"
+                    className="form-control-sm"
+                    onChange={handleNewShippingInputs}
+                    value={newShippingDetail.attention}
+                    name="attention"
+                  />
+                </Col>
+              </Row>
+              <Row className="mb-3">
+                <Col sm={8} className="offset-sm-4">
+                  <div className="form-check">
+                    <Input
+                      type="checkbox"
+                      className="form-check-input"
+                      id="defaultLoadOnInvoice"
+                      onChange={handleNewShippingInputs}
+                      name="default_load_on_invoice"
+                      checked={newShippingDetail.default_load_on_invoice === 1}
+                    />
+                    <Label className="form-check-label fw-bold" check for="defaultLoadOnInvoice">
+                      Default Load On Invoice
+                    </Label>
+                  </div>
+                </Col>
+              </Row>
+            </Col>
+          </Row>
 
-          <FormGroup>
-            <Label>Country/Postal</Label>
-            <Input
-              type="text"
-              onChange={handleNewShippingInputs}
-              value={newShippingDetail.country_postal}
-              name="country_postal"
-            />
-          </FormGroup>
-          <FormGroup>
-            <Label>Attention</Label>
-            <Input
-              type="text"
-              onChange={handleNewShippingInputs}
-              value={newShippingDetail.attention}
-              name="attention"
-            />
-          </FormGroup>
-        </Col>
+          <div className="d-flex justify-content-end mt-3">
+            <Button color="primary" size="sm" onClick={addShippingDetail}>
+              Add Shipping
+            </Button>
+          </div>
+        </div>
+      </div>
 
-        <Col md="12" className="text-right mt-3">
-          <Button color="success" onClick={addShippingDetail}>
-            Add Shipping Detail
-          </Button>
-        </Col>
-      </Row>
-
-      <hr />
-
-      <h4>Existing Shipping Details</h4>
+      <div className="card mt-4">
+        <div className="card-header bg-primary text-white">
+          <h5 className="mb-0">Existing Shipping Details</h5>
+        </div>
+        <div className="card-body">
       {shippingDetailList.length > 0 ? (
         <Table responsive bordered>
           <thead>
@@ -268,8 +333,10 @@ export default function CustomerShippingDetail({ contactId }) {
           </tbody>
         </Table>
       ) : (
-        <p>No shipping details added yet.</p>
+        <div className="text-center p-3">No shipping details added yet.</div>
       )}
+        </div>
+      </div>
     </div>
   );
 }
