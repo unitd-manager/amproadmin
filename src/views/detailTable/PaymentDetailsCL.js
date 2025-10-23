@@ -24,8 +24,6 @@ import api from '../../constants/api';
 import AppContext from '../../context/AppContext';
 import creationdatetime from '../../constants/creationdatetime';
 
-
-
 const PaymentManagement = () => {
   const [activeTab, setActiveTab] = useState('1');
   const [supplierDetails, setSupplierDetails] = useState({
@@ -54,7 +52,7 @@ const PaymentManagement = () => {
   const [toDate, setToDate] = useState('');
   const navigate = useNavigate();
   const { loggedInuser } = useContext(AppContext);
-  // Fetch suppliers
+
   const fetchSuppliers = async () => {
     try {
       const res = await api.get('/payments/getSupplierDropdown');
@@ -62,12 +60,10 @@ const PaymentManagement = () => {
       setSuppliers(Array.isArray(supplierData) ? supplierData : []);
     } catch (err) {
       console.error('Error fetching suppliers:', err);
-      setSuppliers([]);
       message('Failed to fetch suppliers', 'error');
     }
   };
 
-  // Fetch pay modes
   const fetchPayModes = async () => {
     try {
       const res = await api.get('/payments/getPaymodeDropdown');
@@ -75,12 +71,10 @@ const PaymentManagement = () => {
       setPayModes(Array.isArray(payModeData) ? payModeData : []);
     } catch (err) {
       console.error('Error fetching pay modes:', err);
-      setPayModes([]);
       message('Failed to fetch pay modes', 'error');
     }
   };
 
-  // Fetch accounts
   const fetchAccounts = async () => {
     try {
       const res = await api.get('/payments/getAccountsDropdown');
@@ -88,7 +82,6 @@ const PaymentManagement = () => {
       setAccounts(Array.isArray(accountData) ? accountData : []);
     } catch (err) {
       console.error('Error fetching accounts:', err);
-      setAccounts([]);
       message('Failed to fetch accounts', 'error');
     }
   };
@@ -125,7 +118,6 @@ const PaymentManagement = () => {
     }
   };
 
-
   const fetchInvoices = async () => {
     if (!supplierDetails.supplierId) {
       message('Please select a supplier first', 'warning');
@@ -133,10 +125,7 @@ const PaymentManagement = () => {
     }
     try {
       const res = await api.get(`/payments/getInvoices/${supplierDetails.supplierId}`, {
-        params: {
-          fromDate,
-          toDate,
-        },
+        params: { fromDate, toDate },
       });
       const invoiceData = res.data?.data || [];
       setInvoices(Array.isArray(invoiceData) ? invoiceData : []);
@@ -146,76 +135,68 @@ const PaymentManagement = () => {
     }
   };
 
-const handleSave = async () => {
-  try {
-    // 1. Insert into payments (header)
-    const paymentRes = await api.post("/payments/insertPayment", {
-      supplier_id: supplierDetails.supplierId,
-      payment_date: supplierDetails.paymentDate,
-      paid_amount: supplierDetails.paidAmountToSupplier,
-      created_by: loggedInuser.first_name,
-      creation_date: creationdatetime,
-      paymode_id: supplierDetails.paymode,
-      remarks: supplierDetails.remarks,
-      critical_remarks: supplierDetails.criticalRemarks,
-      payment_no: supplierDetails.voucherno,
-    });
+  const handleSave = async () => {
+    try {
+      const paymentRes = await api.post('/payments/insertPayment', {
+        supplier_id: supplierDetails.supplierId,
+        payment_date: supplierDetails.paymentDate,
+        paid_amount: supplierDetails.paidAmountToSupplier,
+        created_by: loggedInuser.first_name,
+        creation_date: creationdatetime,
+        paymode_id: supplierDetails.paymode,
+        remarks: supplierDetails.remarks,
+        critical_remarks: supplierDetails.criticalRemarks,
+        payment_no: supplierDetails.voucherno,
+      });
 
-    const paymentsId = paymentRes.data.data.insertId;
-    if (!paymentsId) {
-      message("Payment ID not returned from server", "error");
-      return;
+      const paymentsId = paymentRes.data.data.insertId;
+      if (!paymentsId) {
+        message('Payment ID not returned from server', 'error');
+        return;
+      }
+
+      await Promise.all(
+        selectedInvoices.map(async (invoiceId) => {
+          const invoice = invoices.find((inv) => inv.purchase_invoice_id === invoiceId);
+          if (!invoice) return;
+
+          const paidAmt = invoice.payable_amount || 0;
+
+          await api.post('/payments/insertPaymentHistory', {
+            payments_id: paymentsId,
+            purchase_invoice_id: invoiceId,
+            paid_amount: paidAmt,
+            created_by: loggedInuser.first_name,
+            creation_date: creationdatetime,
+          });
+        })
+      );
+
+      await api.post('/payments/updateMultipleInvoiceStatus', {
+        invoices: selectedInvoices.map((invoiceId) => {
+          const invoice = invoices.find((inv) => inv.purchase_invoice_id === invoiceId);
+          return {
+            purchase_invoice_id: invoiceId,
+            paid_amount: invoice?.payable_amount || 0,
+          };
+        }),
+        creation_date: creationdatetime,
+        modified_by: loggedInuser.first_name,
+      });
+
+      message('Payment saved successfully!', 'success');
+      navigate('/paymentsCL');
+    } catch (err) {
+      console.error('Error saving payment:', err);
+      message('Error saving payment', 'error');
     }
-
-    // 2. Insert payment history for each invoice
-    await Promise.all(
-      selectedInvoices.map(async (invoiceId) => {
-        const invoice = invoices.find((inv) => inv.purchase_invoice_id === invoiceId);
-        if (!invoice) return;
-
-        const paidAmt = invoice.payable_amount || 0;
-
-        // Insert into paymenthistory
-        await api.post("/payments/insertPaymentHistory", {
-          payments_id: paymentsId,
-          purchase_invoice_id: invoiceId,
-          paid_amount: paidAmt,
-          created_by: loggedInuser.first_name,
-          creation_date: creationdatetime,
-        });
-      })
-    );
-
-    // 3. Once paymenthistory is inserted → update all invoice statuses in bulk
-    await api.post("/payments/updateMultipleInvoiceStatus", {
-      invoices: selectedInvoices.map((invoiceId) => {
-        const invoice = invoices.find((inv) => inv.purchase_invoice_id === invoiceId);
-        return {
-          purchase_invoice_id: invoiceId,
-          paid_amount: invoice?.payable_amount || 0,
-        };
-      }),
-      creation_date: creationdatetime,
-      modified_by: loggedInuser.first_name,
-    });
-
-    message("Payment saved successfully!", "success");
-    navigate("/paymentsCL");
-  } catch (err) {
-    console.error("Error saving payment:", err);
-    message("Error saving payment", "error");
-  }
-};
-
-
-
+  };
 
   const totalPaidAmount = invoices.reduce((sum, inv) => sum + (inv.paid || 0), 0);
 
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
     setSupplierDetails((prev) => ({ ...prev, paymentDate: today }));
-
     fetchSuppliers();
     fetchPayModes();
     fetchAccounts();
@@ -224,9 +205,11 @@ const handleSave = async () => {
   const handleCancel = () => {
     navigate('/paymentsCL');
   };
-const handleDeleteInvoice = (id) => {
-  setInvoices((prev) => prev.filter((inv) => inv.purchase_invoice_id !== id));
-};
+
+  const handleDeleteInvoice = (id) => {
+    setInvoices((prev) => prev.filter((inv) => inv.purchase_invoice_id !== id));
+  };
+
   return (
     <Container fluid className="p-4">
       <h3>Payment Management</h3>
@@ -250,147 +233,189 @@ const handleDeleteInvoice = (id) => {
               </NavLink>
             </NavItem>
           </Nav>
+
           <TabContent activeTab={activeTab} className="mt-3">
+            {/* Supplier Tab */}
             <TabPane tabId="1">
               <Row>
+                
+
+                {/* RIGHT SIDE */}
                 <Col md={6}>
-                  <FormGroup>
-                    <Label>Payment Date</Label>
-                    <Input
-                      type="date"
-                      name="paymentDate"
-                      value={supplierDetails.paymentDate}
-                      onChange={handleSupplierChange}
-                    />
+                  <FormGroup row className="align-items-center">
+                    <Label sm="4">Payment Date</Label>
+                    <Col sm="8">
+                      <Input
+                        type="date"
+                        name="paymentDate"
+                        value={supplierDetails.paymentDate}
+                        onChange={handleSupplierChange}
+                      />
+                    </Col>
                   </FormGroup>
-                  <FormGroup>
-                    <Label>Supplier Code</Label>
-                    <Input
-                      type="select"
-                      name="supplierCode"
-                      value={supplierDetails.supplierCode}
-                      onChange={handleSupplierChange}
-                    >
-                      <option value="">Search Supplier Code</option>
-                      {suppliers.map((s) => (
-                        <option key={s.supplier_id} value={s.supplier_code}>
-                          {s.supplier_code}
-                        </option>
-                      ))}
-                    </Input>
+
+                  <FormGroup row className="align-items-center">
+                    <Label sm="4">Supplier Code</Label>
+                    <Col sm="8">
+                      <Input
+                        type="select"
+                        name="supplierCode"
+                        value={supplierDetails.supplierCode}
+                        onChange={handleSupplierChange}
+                      >
+                        <option value="">Search Supplier Code</option>
+                        {suppliers.map((s) => (
+                          <option key={s.supplier_id} value={s.supplier_code}>
+                            {s.supplier_code}
+                          </option>
+                        ))}
+                      </Input>
+                    </Col>
                   </FormGroup>
-                  <FormGroup>
-                    <Label>Supplier Name</Label>
-                    <Input
-                      name="supplierName"
-                      value={supplierDetails.supplierName}
-                      readOnly
-                    />
+
+                  <FormGroup row className="align-items-center">
+                    <Label sm="4">Supplier Name</Label>
+                    <Col sm="8">
+                      <Input
+                        name="supplierName"
+                        value={supplierDetails.supplierName}
+                        readOnly
+                      />
+                    </Col>
                   </FormGroup>
-                  <FormGroup>
-                    <Label>Remarks</Label>
-                    <Input
-                      type="textarea"
-                      name="remarks"
-                      value={supplierDetails.remarks}
-                      onChange={handleSupplierChange}
-                    />
+
+                  <FormGroup row className="align-items-center">
+                    <Label sm="4">Remarks</Label>
+                    <Col sm="8">
+                      <Input
+                        type="textarea"
+                        name="remarks"
+                        value={supplierDetails.remarks}
+                        onChange={handleSupplierChange}
+                      />
+                    </Col>
                   </FormGroup>
-                  <FormGroup>
-                    <Label>Critical Remarks</Label>
-                    <Input
-                      type="textarea"
-                      name="criticalRemarks"
-                      value={supplierDetails.criticalRemarks}
-                      onChange={handleSupplierChange}
-                    />
+
+                  <FormGroup row className="align-items-center">
+                    <Label sm="4">Critical Remarks</Label>
+                    <Col sm="8">
+                      <Input
+                        type="textarea"
+                        name="criticalRemarks"
+                        value={supplierDetails.criticalRemarks}
+                        onChange={handleSupplierChange}
+                      />
+                    </Col>
                   </FormGroup>
-                  <FormGroup>
-                    <Label>Paid Amount To Supplier</Label>
-                    <Input
-                      type="number"
-                      name="paidAmountToSupplier"
-                      value={supplierDetails.paidAmountToSupplier}
-                      onChange={handleSupplierChange}
-                    />
-                    <Button color="info" className="mt-2">
-                      Split
-                    </Button>
+
+                  <FormGroup row className="align-items-center">
+                    <Label sm="4">Paid Amount To Supplier</Label>
+                    <Col sm="8">
+                      <div className="d-flex">
+                        <Input
+                          type="number"
+                          name="paidAmountToSupplier"
+                          value={supplierDetails.paidAmountToSupplier}
+                          onChange={handleSupplierChange}
+                        />
+                        <Button color="info" className="ms-2">
+                          Split
+                        </Button>
+                      </div>
+                    </Col>
                   </FormGroup>
                 </Col>
+
+                {/* LEFT SIDE */}
                 <Col md={6}>
-                  <FormGroup>
-                    <Label>Voucher No</Label>
-                    <Input
-                      name="voucherno"
-                      value={supplierDetails.voucherno}
-                      onChange={handleSupplierChange}
-                    />
+                  <FormGroup row className="align-items-center">
+                    <Label sm="4">Voucher No</Label>
+                    <Col sm="8">
+                      <Input
+                        name="voucherno"
+                        value={supplierDetails.voucherno}
+                        onChange={handleSupplierChange}
+                      />
+                    </Col>
                   </FormGroup>
-                  <FormGroup>
-                    <Label>Pay Mode</Label>
-                    <Input
-                      type="select"
-                      name="paymode"
-                      value={supplierDetails.paymode}
-                      onChange={handleSupplierChange}
-                    >
-                      <option value="">Select PayMode</option>
-                      {payModes.map((p) => (
-                        <option key={p.paymode_id} value={p.paymode_id}>
-                          {p.paymode_name}
-                        </option>
-                      ))}
-                    </Input>
+
+                  <FormGroup row className="align-items-center">
+                    <Label sm="4">Pay Mode</Label>
+                    <Col sm="8">
+                      <Input
+                        type="select"
+                        name="paymode"
+                        value={supplierDetails.paymode}
+                        onChange={handleSupplierChange}
+                      >
+                        <option value="">Select PayMode</option>
+                        {payModes.map((p) => (
+                          <option key={p.paymode_id} value={p.paymode_id}>
+                            {p.paymode_name}
+                          </option>
+                        ))}
+                      </Input>
+                    </Col>
                   </FormGroup>
-                  <FormGroup>
-                    <Label>Accounts</Label>
-                    <Input
-                      type="select"
-                      name="accounts"
-                      value={supplierDetails.accounts}
-                      onChange={handleSupplierChange}
-                    >
-                      <option value="">Select Accounts</option>
-                      {accounts.map((acc) => (
-                        <option key={acc.valuelist_id} value={acc.value}>
-                          {acc.value}
-                        </option>
-                      ))}
-                    </Input>
+
+                  <FormGroup row className="align-items-center">
+                    <Label sm="4">Accounts</Label>
+                    <Col sm="8">
+                      <Input
+                        type="select"
+                        name="accounts"
+                        value={supplierDetails.accounts}
+                        onChange={handleSupplierChange}
+                      >
+                        <option value="">Select Accounts</option>
+                        {accounts.map((acc) => (
+                          <option key={acc.valuelist_id} value={acc.value}>
+                            {acc.value}
+                          </option>
+                        ))}
+                      </Input>
+                    </Col>
                   </FormGroup>
                 </Col>
               </Row>
             </TabPane>
+
+            {/* Currency Tab */}
             <TabPane tabId="2">
               <Row>
                 <Col md={6}>
-                  <FormGroup>
-                    <Label>Currency</Label>
-                    <Input
-                      name="currency"
-                      value={currencyDetails.currency}
-                      onChange={handleCurrencyChange}
-                    />
+                  <FormGroup row className="align-items-center">
+                    <Label sm="4">Currency</Label>
+                    <Col sm="8">
+                      <Input
+                        name="currency"
+                        value={currencyDetails.currency}
+                        onChange={handleCurrencyChange}
+                      />
+                    </Col>
                   </FormGroup>
-                  <FormGroup>
-                    <Label>Currency Name</Label>
-                    <Input
-                      name="currencyName"
-                      value={currencyDetails.currencyName}
-                      onChange={handleCurrencyChange}
-                    />
+                  <FormGroup row className="align-items-center">
+                    <Label sm="4">Currency Name</Label>
+                    <Col sm="8">
+                      <Input
+                        name="currencyName"
+                        value={currencyDetails.currencyName}
+                        onChange={handleCurrencyChange}
+                      />
+                    </Col>
                   </FormGroup>
                 </Col>
                 <Col md={6}>
-                  <FormGroup>
-                    <Label>Currency Rate</Label>
-                    <Input
-                      type="number"
-                      name="currencyRate"
-                      value={currencyDetails.currencyRate}
-                      onChange={handleCurrencyChange}
-                    />
+                  <FormGroup row className="align-items-center">
+                    <Label sm="4">Currency Rate</Label>
+                    <Col sm="8">
+                      <Input
+                        type="number"
+                        name="currencyRate"
+                        value={currencyDetails.currencyRate}
+                        onChange={handleCurrencyChange}
+                      />
+                    </Col>
                   </FormGroup>
                 </Col>
               </Row>
@@ -399,6 +424,7 @@ const handleDeleteInvoice = (id) => {
         </CardBody>
       </Card>
 
+      {/* Payment Table Section */}
       <Card className="mt-4">
         <CardBody>
           <div className="d-flex align-items-center justify-content-between mb-3">
@@ -429,6 +455,7 @@ const handleDeleteInvoice = (id) => {
               </FormGroup>
             </div>
           </div>
+
           <Table responsive bordered>
             <thead>
               <tr>
@@ -460,27 +487,32 @@ const handleDeleteInvoice = (id) => {
                   <td>
                     <Input
                       type="checkbox"
-                      onChange={(e) => handleInvoiceSelection(e, invoice.purchase_invoice_id)}
+                      onChange={(e) =>
+                        handleInvoiceSelection(e, invoice.purchase_invoice_id)
+                      }
                       checked={selectedInvoices.includes(invoice.purchase_invoice_id)}
                     />
                   </td>
                   <td>{invoice.carry_days || ''}</td>
                   <td>{Number(invoice.credit_amount).toFixed(2)}</td>
                   <td>
-        <FaTrash
-          style={{ cursor: 'pointer', color: 'red' }}
-          onClick={() => handleDeleteInvoice(invoice.purchase_invoice_id)}
-        />
-      </td>
+                    <FaTrash
+                      style={{ cursor: 'pointer', color: 'red' }}
+                      onClick={() => handleDeleteInvoice(invoice.purchase_invoice_id)}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
           </Table>
         </CardBody>
       </Card>
-      <div className="d-flex justify-content-between align-items-center mt-3">
-        <Button color="secondary" onClick={handleCancel}>Cancel</Button>
 
+      {/* Footer Buttons */}
+      <div className="d-flex justify-content-between align-items-center mt-3">
+        <Button color="secondary" onClick={handleCancel}>
+          Cancel
+        </Button>
         <div className="d-flex align-items-center">
           <h5 className="mb-0 me-3">
             Total Paid Amount: $ {totalPaidAmount.toFixed(2)}

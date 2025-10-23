@@ -2,570 +2,613 @@ import React from 'react';
 import { Row, Col, Form, FormGroup, Label, Input } from 'reactstrap';
 import PropTypes from 'prop-types';
 import { ToastContainer } from 'react-toastify';
-import ComponentCard from '../ComponentCard';
 
+// Custom switch style
+const switchStyle = {
+  width: 40,
+  height: 22,
+  background: '#e0e0e0',
+  borderRadius: 12,
+  position: 'relative',
+  display: 'inline-block',
+  marginLeft: 8,
+  marginRight: 8,
+  verticalAlign: 'middle',
+};
+const sliderStyle = (checked) => ({
+  position: 'absolute',
+  left: checked ? 20 : 2,
+  top: 2,
+  width: 18,
+  height: 18,
+  background: checked ? '#00bfff' : '#fff',
+  borderRadius: '50%',
+  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  transition: 'left 0.2s',
+});
 
+function Switch({ checked, onChange, name }) {
+  return (
+    <span
+      style={switchStyle}
+      onClick={() => onChange({ target: { name, value: !checked } })}
+    >
+      <span style={sliderStyle(checked)} />
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) =>
+          onChange({ target: { name, value: e.target.checked } })
+        }
+        name={name}
+        style={{
+          opacity: 0,
+          width: 40,
+          height: 22,
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          margin: 0,
+          cursor: 'pointer',
+        }}
+        tabIndex={-1}
+      />
+    </span>
+  );
+}
 
-export default function ProductDetail({ productDetails, handleInputs,categorydropdown, departmentdropdown, subcategorydropdown, branddropdown, supplierdropdown }) {
-    ProductDetail.propTypes = {
-    productDetails: PropTypes.object,
-    handleInputs: PropTypes.func,
-    categorydropdown: PropTypes.array,
-    departmentdropdown: PropTypes.array,
-    subcategorydropdown: PropTypes.array,
-    branddropdown: PropTypes.array,
-    supplierdropdown: PropTypes.array,
-  };
+Switch.propTypes = {
+  checked: PropTypes.bool.isRequired,
+  onChange: PropTypes.func.isRequired,
+  name: PropTypes.string.isRequired,
+};
+
+export default function ProductDetail({
+  productDetails,
+  handleInputs,
+  categorydropdown,
+  departmentdropdown,
+  subcategorydropdown,
+  branddropdown,
+  supplierdropdown,
+}) {
+  if (!productDetails) {
+    return (
+      <div style={{ padding: 32, textAlign: 'center' }}>
+        No product data available.
+      </div>
+    );
+  }
+
   return (
     <>
+      <ToastContainer />
       <Form>
-        <FormGroup>
-        <ComponentCard title="Product Details" creationModificationDate={productDetails}>
-            <ToastContainer></ToastContainer>
-            <Row>
-              <Col md="3">
-                <FormGroup>
-                  <Label> Product code </Label>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={productDetails && productDetails.product_code}
-                    name="product_code"
-                    disabled
-                  />
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  <Label> Product Name </Label><span className="required"> *</span>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={productDetails && productDetails.title}
-                    name="title"
-                  />
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  {/* Category title from Category table */}
-                  <Label>Department</Label>
-                  <Input
-                    type="select"
-                    name="department_cli_id"
-                    value={productDetails && productDetails.department_id}
-                    onChange={handleInputs}
-                  >
-                    <option defaultValue="selected">Please Select</option>
-                    {departmentdropdown &&
-                      departmentdropdown.map((ele) => {
-                        return (
-                          <option key={ele.department_cli_id} value={ele.department_cli_id}>
-                            {ele.department_name}
-                          </option>
-                        );
-                      })}
-                  </Input>
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  {/* Category title from Category table */}
-                  <Label>Category</Label>
-                  <Input
-                    type="select"
-                    name="category_id"
-                    value={productDetails && productDetails.category_id}
-                    onChange={handleInputs}
-                  >
-                    <option defaultValue="selected">Please Select</option>
-                    {categorydropdown &&
-                      categorydropdown.map((ele) => {
-                        return (
-                          <option key={ele.category_id} value={ele.category_id}>
-                            {ele.category_title}
-                          </option>
-                        );
-                      })}
-                  </Input>
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  {/* Category title from Category table */}
-                  <Label>Sub Category</Label>
-                  <Input
-                    type="select"
-                    name="sub_category_id"
-                    value={productDetails && productDetails.sub_category_id}
-                    onChange={handleInputs}
-                  >
-                    <option defaultValue="selected">Please Select</option>
-                    {subcategorydropdown &&
-                      subcategorydropdown.map((ele) => {
-                        return (
-                          <option key={ele.sub_category_id} value={ele.sub_category_id}>
-                            {ele.sub_category_title}
-                          </option>
-                        );
-                      })}
-                  </Input>
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  {/* Category title from Category table */}
-                  <Label>Brand</Label>
-                  <Input
-                    type="select"
-                    name="brand_id"
-                    value={productDetails && productDetails.brand_id}
-                    onChange={handleInputs}
-                  >
-                    <option defaultValue="selected">Please Select</option>
-                    {branddropdown &&
-                      branddropdown.map((ele) => {
-                        return (
-                          <option key={ele.brand_id} value={ele.brand_id}>
-                            {ele.brand_name}
-                          </option>
-                        );
-                      })}
-                  </Input>
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  {/* Category title from Category table */}
-                  <Label>Supplier</Label>
-                  <Input
-                    type="select"
-                    name="supplier_id"
-                    value={productDetails && productDetails.supplier_id}
-                    onChange={handleInputs}
-                  >
-                    <option defaultValue="selected">Please Select</option>
-                    {supplierdropdown &&
-                      supplierdropdown.map((ele) => {
-                        return (
-                          <option key={ele.supplier_id} value={ele.supplier_id}>
-                            {ele.company_name}
-                          </option>
-                        );
-                      })}
-                  </Input>
-                </FormGroup>
-              </Col>
-              
-              <Col md="3">
-                <FormGroup>
-                  <Label>Product Type</Label>
-                  <Input
-                    type="select"
-                    onChange={handleInputs}
-                    value={productDetails && productDetails.product_type}
-                    name="product_type"
-                  >
-                    <option defaultValue="selected"> Please Select </option>
-                    <option value="Stock Item">Stock Item</option>
-                    <option value="Non Stock Item">Non Stock Item</option>
-                    <option value="Service Item">Service Item</option>
-                  </Input>
-                </FormGroup>
-              </Col>
-            </Row>
-            <Row>
-              <Col md="3">
-                <FormGroup>
-                  <Label> Tax Percentage </Label>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={productDetails && productDetails.tax_percentage}
-                    name="tax_percentage"
-                  />
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  <Label> Display Order </Label>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={productDetails && productDetails.display_order}
-                    name="display_order"
-                  />
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  <Label>Purchase UOM </Label>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={productDetails && productDetails.purchase_uom}
-                    name="purchase_uom"
-                  />
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  <Label>Sales UOM </Label>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={productDetails && productDetails.sales_uom}
-                    name="sales_uom"
-                  />
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  <Label>Pcs/Carton</Label>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={productDetails && productDetails.pcs_per_carton}
-                    name="pcs_per_carton"
-                  />
-                </FormGroup>
-              </Col>
-              {/* <Col md="3">
-                <FormGroup>
-                  <Label>Unit</Label>
-                  <Input
-                    type="select"
-                    value={productDetails && productDetails.unit}
-                    name="unit"
-                    onChange={handleInputs}
-                  >
-                    <option defaultValue="selected">Please Select</option>
-                    <option value="Box">Box</option>
-                    <option value="Piece">Piece</option>
-                    <option value="Kg">Kg</option>
-                  </Input>
-                </FormGroup>
-              </Col> */}
- 
-              <Col md="3">
-                <FormGroup>
-                  <Label> Weight </Label>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={productDetails && productDetails.product_weight}
-                    name="product_weight"
-                  />
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  <Label> Purchase Unit Cost </Label>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={productDetails && productDetails.purchase_unit_cost}
-                    name="purchase_unit_cost"
-                  />
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  <Label>Operation Cost</Label>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={productDetails && productDetails.operation_cost}
-                    name="operation_cost"
-                  />
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  <Label>Retail Price </Label>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={productDetails && productDetails.retail_price}
-                    name="retail_price"
-                  />
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  <Label>Min Retail Price</Label>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={productDetails && productDetails.min_retail_price}
-                    name="min_retail_price"
-                  />
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  <Label> WholeSale Price </Label>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={productDetails && productDetails.wholesale_price}
-                    name="wholesale_price"
-                  />
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  <Label> Min WholeSale Price </Label>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={productDetails && productDetails.min_wholesale_price}
-                    name="min_wholesale_price"
-                  />
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  <Label> Carton Price </Label>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={productDetails && productDetails.carton_price}
-                    name="carton_price"
-                  />
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  <Label> Min Carton Price </Label>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={productDetails && productDetails.min_carton_price}
-                    name="min_carton_price"
-                  />
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  <Label> Style/Fabric </Label>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={productDetails && productDetails.style_fabric}
-                    name="style_fabric"
-                  />
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  <Label> Model No </Label>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={productDetails && productDetails.model_no}
-                    name="model_no"
-                  />
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  <Label> Carton Weight </Label>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={productDetails && productDetails.carton_weight}
-                    name="carton_weight"
-                  />
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  <Label> M3 Per Carton  </Label>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={productDetails && productDetails.m3_per_carton}
-                    name="m3_per_carton"
-                  />
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  <Label> Bin </Label>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={productDetails && productDetails.bin}
-                    name="bin"
-                  />
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <FormGroup>
-                  <Label> Remarks/Other Name </Label>
-                  <Input
-                    type="text"
-                    onChange={handleInputs}
-                    value={productDetails && productDetails.remarks}
-                    name="remarks"
-                  />
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <Label>Show On Purchase</Label>
-                <FormGroup>
-                  <Label>Yes</Label>
-                  &nbsp;
-                  <Input
-                    name="show_on_purchase"
-                    value="1"
-                    type="radio"
-                    defaultChecked={productDetails && productDetails.show_on_purchase === 1 && true}
-                    onChange={handleInputs}
-                  />
-                  &nbsp; &nbsp;
-                  <Label>No</Label>
-                  &nbsp;
-                  <Input
-                    name="show_on_purchase"
-                    value="0"
-                    type="radio"
-                    defaultChecked={productDetails && productDetails.show_on_purchase === 0 && true}
-                    onChange={handleInputs}
-                  />
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <Label>Show On Sales</Label>
-                <FormGroup>
-                  <Label>Yes</Label>
-                  &nbsp;
-                  <Input
-                    name="show_on_sales"
-                    value="1"
-                    type="radio"
-                    defaultChecked={productDetails && productDetails.show_on_sales === 1 && true}
-                    onChange={handleInputs}
-                  />
-                  &nbsp; &nbsp;
-                  <Label>No</Label>
-                  &nbsp;
-                  <Input
-                    name="show_on_sales"
-                    value="0"
-                    type="radio"
-                    defaultChecked={productDetails && productDetails.show_on_sales === 0 && true}
-                    onChange={handleInputs}
-                  />
-                </FormGroup>
-              </Col>
-
-              <Col md="3">
-                <Label>Is Ative</Label>
-                <FormGroup>
-                  <Label>Yes</Label>
-                  &nbsp;
-                  <Input
-                    name="is_active"
-                    value="1"
-                    type="radio"
-                    defaultChecked={productDetails && productDetails.is_active === 1 && true}
-                    onChange={handleInputs}
-                  />
-                  &nbsp; &nbsp;
-                  <Label>No</Label>
-                  &nbsp;
-                  <Input
-                    name="is_active"
-                    value="0"
-                    type="radio"
-                    defaultChecked={productDetails && productDetails.is_active === 0 && true}
-                    onChange={handleInputs}
-                  />
-                </FormGroup>
-              </Col>
-
-              <Col md="3">
-                <Label>EProcurement</Label>
-                <FormGroup>
-                  <Label>Yes</Label>
-                  &nbsp;
-                  <Input
-                    name="eprocurement"
-                    value="1"
-                    type="radio"
-                    defaultChecked={productDetails && productDetails.eprocurement === 1 && true}
-                    onChange={handleInputs}
-                  />
-                  &nbsp; &nbsp;
-                  <Label>No</Label>
-                  &nbsp;
-                  <Input
-                    name="eprocurement"
-                    value="0"
-                    type="radio"
-                    defaultChecked={productDetails && productDetails.eprocurement === 0 && true}
-                    onChange={handleInputs}
-                  />
-                </FormGroup>
-              </Col>
-              
-              <Col md="3">
-                <Label>Ecommerce</Label>
-                <FormGroup>
-                  <Label>Yes</Label>
-                  &nbsp;
-                  <Input
-                    name="ecommerce"
-                    value="1"
-                    type="radio"
-                    defaultChecked={productDetails && productDetails.ecommerce === 1 && true}
-                    onChange={handleInputs}
-                  />
-                  &nbsp; &nbsp;
-                  <Label>No</Label>
-                  &nbsp;
-                  <Input
-                    name="ecommerce"
-                    value="0"
-                    type="radio"
-                    defaultChecked={productDetails && productDetails.ecommerce === 0 && true}
-                    onChange={handleInputs}
-                  />
-                </FormGroup>
-              </Col>
-              <Col md="3">
-                <Label>Show On POS</Label>
-                <FormGroup>
-                  <Label>Yes</Label>
-                  &nbsp;
-                  <Input
-                    name="show_on_pos"
-                    value="1"
-                    type="radio"
-                    defaultChecked={productDetails && productDetails.show_on_pos === 1 && true}
-                    onChange={handleInputs}
-                  />
-                  &nbsp; &nbsp;
-                  <Label>No</Label>
-                  &nbsp;
-                  <Input
-                    name="show_on_pos"
-                    value="0"
-                    type="radio"
-                    defaultChecked={productDetails && productDetails.show_on_pos === 0 && true}
-                    onChange={handleInputs}
-                  />
-                </FormGroup>
-              </Col>
-            </Row>
-          </ComponentCard>
        
-        </FormGroup>
+          {/* Product Code/Name at top */}
+          {/* Two-column grid for product details */}
+          <Row>
+            <Col md="6">
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Department *
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="select"
+                    name="department"
+                    value={productDetails.department || ''}
+                    onChange={handleInputs}
+                  >
+                    <option value="">Select</option>
+                    {departmentdropdown.map((d) => (
+                      <option
+                        key={d.department_cli_id}
+                        value={d.department_name}
+                      >
+                        {d.department_name}
+                      </option>
+                    ))}
+                  </Input>
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Sub Category
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="select"
+                    name="sub_category"
+                    value={productDetails.sub_category || ''}
+                    onChange={handleInputs}
+                  >
+                    <option value="">Select</option>
+                    {subcategorydropdown.map((s) => (
+                      <option key={s.sub_category_id} value={s.sub_category_title}>
+                        {s.sub_category_title}
+                      </option>
+                    ))}
+                  </Input>
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Supplier
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="select"
+                    name="supplier"
+                    value={productDetails.supplier || ''}
+                    onChange={handleInputs}
+                  >
+                    <option value="">Select</option>
+                    {supplierdropdown.map((s) => (
+                      <option key={s.supplier_id} value={s.company_name}>
+                        {s.company_name}
+                      </option>
+                    ))}
+                  </Input>
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Tax Percentage
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="number"
+                    name="tax_percentage"
+                    value={productDetails.tax_percentage || ''}
+                    onChange={handleInputs}
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Purchase UOM
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="text"
+                    name="purchase_uom"
+                    value={productDetails.purchase_uom || ''}
+                    onChange={handleInputs}
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Pcs/Carton
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="number"
+                    name="pcs_carton"
+                    value={productDetails.pcs_carton || ''}
+                    onChange={handleInputs}
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Purchase Unit Cost
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="number"
+                    name="purchase_unit_cost"
+                    value={productDetails.purchase_unit_cost || ''}
+                    onChange={handleInputs}
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Retail Price
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="number"
+                    name="retail_price"
+                    value={productDetails.retail_price || ''}
+                    onChange={handleInputs}
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  WholeSale Price
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="number"
+                    name="wholesale_price"
+                    value={productDetails.wholesale_price || ''}
+                    onChange={handleInputs}
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Carton Price
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="number"
+                    name="carton_price"
+                    value={productDetails.carton_price || ''}
+                    onChange={handleInputs}
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Style/Fabric
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="text"
+                    name="style_fabric"
+                    value={productDetails.style_fabric || ''}
+                    onChange={handleInputs}
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Carton Weight
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="number"
+                    name="carton_weight"
+                    value={productDetails.carton_weight || ''}
+                    onChange={handleInputs}
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Bin
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="text"
+                    name="bin"
+                    value={productDetails.bin || ''}
+                    onChange={handleInputs}
+                  />
+                </Col>
+              </FormGroup>
+            </Col>
+            <Col md="6">
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Category *
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="select"
+                    name="category"
+                    value={productDetails.category || ''}
+                    onChange={handleInputs}
+                  >
+                    <option value="">Select</option>
+                    {categorydropdown.map((c) => (
+                      <option key={c.category_id} value={c.category_title}>
+                        {c.category_title}
+                      </option>
+                    ))}
+                  </Input>
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Brand *
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="select"
+                    name="brand"
+                    value={productDetails.brand || ''}
+                    onChange={handleInputs}
+                  >
+                    <option value="">Select</option>
+                    {branddropdown.map((b) => (
+                      <option key={b.brand_id} value={b.brand_name}>
+                        {b.brand_name}
+                      </option>
+                    ))}
+                  </Input>
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Product Type
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="text"
+                    name="product_type"
+                    value={productDetails.product_type || ''}
+                    onChange={handleInputs}
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Display Order
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="number"
+                    name="display_order"
+                    value={productDetails.display_order || ''}
+                    onChange={handleInputs}
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Sales UOM *
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="text"
+                    name="sales_uom"
+                    value={productDetails.sales_uom || ''}
+                    onChange={handleInputs}
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Weight
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="number"
+                    name="weight"
+                    value={productDetails.weight || ''}
+                    onChange={handleInputs}
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Operation Cost
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="number"
+                    name="operation_cost"
+                    value={productDetails.operation_cost || ''}
+                    onChange={handleInputs}
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Min Retail Price
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="number"
+                    name="min_retail_price"
+                    value={productDetails.min_retail_price || ''}
+                    onChange={handleInputs}
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Min WholeSale Price
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="number"
+                    name="min_wholesale_price"
+                    value={productDetails.min_wholesale_price || ''}
+                    onChange={handleInputs}
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Min Car Price
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="number"
+                    name="min_car_price"
+                    value={productDetails.min_car_price || ''}
+                    onChange={handleInputs}
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Model No
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="text"
+                    name="model_no"
+                    value={productDetails.model_no || ''}
+                    onChange={handleInputs}
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  M3 Per Carton
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="number"
+                    name="m3_per_carton"
+                    value={productDetails.m3_per_carton || ''}
+                    onChange={handleInputs}
+                  />
+                </Col>
+              </FormGroup>
+              <FormGroup row className="mb-2">
+                <Label sm={5} className="col-form-label">
+                  Remarks/Other Name
+                </Label>
+                <Col sm={7}>
+                  <Input
+                    type="text"
+                    name="remarks"
+                    value={productDetails.remarks || ''}
+                    onChange={handleInputs}
+                  />
+                </Col>
+              </FormGroup>
+            </Col>
+          </Row>
+
+          {/* Switches: first row left-aligned, second row centered */}
+          <div style={{ marginLeft: 0, marginTop: 16, marginBottom: 8 }}>
+            {/* First row: distributed left, center, right */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', minWidth: 180 }}>
+                 <Label className="mb-0 ms-2">Show On Purchase</Label>
+                <Switch
+                  name="show_on_purchase"
+                  checked={!!productDetails.show_on_purchase}
+                  onChange={handleInputs}
+                />
+               
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', minWidth: 180, justifyContent: 'center' }}>
+                <Label className="mb-0 ms-2">Show On Sales</Label>
+                <Switch
+                  name="show_on_sales"
+                  checked={!!productDetails.show_on_sales}
+                  onChange={handleInputs}
+                />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', minWidth: 180, justifyContent: 'flex-end' }}>
+                 <Label className="mb-0 ms-2">IsActive</Label>
+                <Switch
+                  name="is_active"
+                  checked={!!productDetails.is_active}
+                  onChange={handleInputs}
+                />             
+              </div>
+            </div>
+            {/* Second row: centered */}
+            <div style={{ display: 'flex', gap: '32px', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', minWidth: 180 }}>
+                <Switch
+                  name="eprocurement"
+                  checked={!!productDetails.eprocurement}
+                  onChange={handleInputs}
+                />
+                <Label className="mb-0 ms-2">EProcurement</Label>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', minWidth: 180 }}>
+                <Switch
+                  name="ecommerce"
+                  checked={!!productDetails.ecommerce}
+                  onChange={handleInputs}
+                />
+                <Label className="mb-0 ms-2">ECommerce</Label>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', minWidth: 180 }}>
+                <Switch
+                  name="show_on_pos"
+                  checked={!!productDetails.show_on_pos}
+                  onChange={handleInputs}
+                />
+                <Label className="mb-0 ms-2">Show On POS</Label>
+              </div>
+            </div>
+          </div>
+
+          {/* Product Image with delete icon and size, left-aligned below switches */}
+          {productDetails.image_url && (
+            <div className="d-flex flex-column align-items-start mt-4" style={{ marginLeft: 0 }}>
+              <div style={{ position: 'relative', border: '1px solid #ddd', borderRadius: 4, padding: 16, background: '#fff', minWidth: 220 }}>
+                {/* Delete icon (trash) in bottom left */}
+                <button
+                  type="button"
+                  style={{
+                    position: 'absolute',
+                    left: 8,
+                    bottom: 8,
+                    background: '#fff',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                  }}
+                  aria-label="Delete image"
+                  // onClick={handleDeleteImage} // Uncomment and implement if needed
+                >
+                  <span role="img" aria-label="delete" style={{ fontSize: 22 }}>&#128465;</span>
+                </button>
+                <img
+                  src={productDetails.image_url}
+                  alt="Product"
+                  style={{ maxWidth: 180, maxHeight: 180, display: 'block' }}
+                />
+              </div>
+              <div className="mt-2" style={{ fontSize: 16, color: '#333', marginLeft: 8 }}>
+                ({productDetails.image_size})
+              </div>
+            </div>
+          )}
       </Form>
-     
-     
     </>
   );
 }
+
+ProductDetail.propTypes = {
+  productDetails: PropTypes.shape({
+    product_code: PropTypes.string,
+    product_name: PropTypes.string,
+    department: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    sub_category: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    supplier: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    tax_percentage: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    purchase_uom: PropTypes.string,
+    pcs_carton: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    purchase_unit_cost: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    retail_price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    wholesale_price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    carton_price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    style_fabric: PropTypes.string,
+    carton_weight: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    bin: PropTypes.string,
+    category: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    brand: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    product_type: PropTypes.string,
+    display_order: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    sales_uom: PropTypes.string,
+    weight: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    operation_cost: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    min_retail_price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    min_wholesale_price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    min_car_price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    model_no: PropTypes.string,
+    m3_per_carton: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    remarks: PropTypes.string,
+    show_on_purchase: PropTypes.bool,
+    show_on_sales: PropTypes.bool,
+    is_active: PropTypes.bool,
+    eprocurement: PropTypes.bool,
+    ecommerce: PropTypes.bool,
+    show_on_pos: PropTypes.bool,
+    image_url: PropTypes.string,
+    image_size: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  }).isRequired,
+  handleInputs: PropTypes.func.isRequired,
+  categorydropdown: PropTypes.arrayOf(PropTypes.object).isRequired,
+  departmentdropdown: PropTypes.arrayOf(PropTypes.object).isRequired,
+  subcategorydropdown: PropTypes.arrayOf(PropTypes.object).isRequired,
+  branddropdown: PropTypes.arrayOf(PropTypes.object).isRequired,
+  supplierdropdown: PropTypes.arrayOf(PropTypes.object).isRequired,
+};

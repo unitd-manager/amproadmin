@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Row, Col, Form, FormGroup, Button, TabContent, TabPane } from 'reactstrap';
+import { Row, Col, Form, FormGroup, Button, TabContent, TabPane, Label, Input } from 'reactstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Editor } from 'react-draft-wysiwyg';
 import draftToHtml from 'draftjs-to-html';
@@ -208,28 +208,67 @@ const getSupplier = () => {
            
           <ProductEditButtons id={id} editProductData={editProductData} navigate={navigate} />
           {/* Product Details Form */}
-          <ProductDetail
-            productDetails={productDetails}
-            handleInputs={handleInputs}
-            categorydropdown={categorydropdown}
-            departmentdropdown={departmentdropdown}
-            subcategorydropdown={subcategorydropdown}
-            branddropdown={branddropdown}
-            supplierdropdown={supplierdropdown}
-          ></ProductDetail>
+          
      
       </FormGroup>
       </Form>
-      <Form>
-      <ComponentCard title="Stock">
-        <Stock
-                ProductId={id}
-                getProductById={getProductById}
-                productDetails={productDetails}
-              ></Stock>
+      {/* New Card with Tabs for Product and Stock */}
+      <ComponentCard>
+        {/* Product Code and Product Name at the top of the card */}
+        <div className="d-flex mb-3 gap-3">
+          <div style={{ flex: 1 }}>
+            <FormGroup>
+              <Label for="product_code">Product Code</Label>
+              <Input
+                id="product_code"
+                name="product_code"
+                type="text"
+                value={productDetails?.product_code || ''}
+                onChange={handleInputs}
+                disabled
+              />
+            </FormGroup>
+          </div>
+          <div style={{ flex: 2 }}>
+            <FormGroup>
+              <Label for="product_title">Product Name</Label>
+              <Input
+                id="product_title"
+                name="title"
+                type="text"
+                value={productDetails?.title || ''}
+                onChange={handleInputs}
+                required
+              />
+            </FormGroup>
+          </div>
+        </div>
+        <Tab
+          tabs={[{ id: 'product', name: 'Product' }, { id: 'stock', name: 'Stock' }]}
+          toggle={setActiveTab}
+          activeTab={activeTab}
+        />
+        <TabContent activeTab={activeTab} className="p-3">
+          <TabPane tabId="product">
+            <ProductDetail
+              productDetails={productDetails}
+              handleInputs={handleInputs}
+              categorydropdown={categorydropdown}
+              departmentdropdown={departmentdropdown}
+              subcategorydropdown={subcategorydropdown}
+              branddropdown={branddropdown}
+              supplierdropdown={supplierdropdown}
+            />
+          </TabPane>
+          <TabPane tabId="stock">
+            <Stock
+              ProductId={id}
+              getProductById={getProductById}
+              productDetails={productDetails}
+            />
+          </TabPane>
+        </TabContent>
       </ComponentCard>
-
-      </Form>
         {/* Delivery address Form */}
         <ComponentCard title="More Details">
         <Tab toggle={toggle} tabs={tabs} />

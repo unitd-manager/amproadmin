@@ -7,7 +7,6 @@ import {
   ModalFooter,
   Button,
   Form,
-  FormGroup,
   Label,
   Input,
   Row,
@@ -22,16 +21,17 @@ const EditActionModal = ({ isOpen, toggle, payment, refreshPayments }) => {
     payment_no: '',
     company_name: '',
     payment_date: '',
-    paymode_id: '',
+    paymode_id: '', 
     bank_name: '',
-    cheque_ref_date: '',
+    cheque_reference_date: '',
     remarks: '',
     accounts: '',
-    cheque_ref_no: ''
+    cheque_reference_no: ''
   });
 
   const [banks, setBanks] = useState([]);
   const [payModes, setPayModes] = useState([]);
+  console.log(payModes,'payModes');
   const [accounts, setAccounts] = useState([]);
 
   useEffect(() => {
@@ -43,47 +43,40 @@ const EditActionModal = ({ isOpen, toggle, payment, refreshPayments }) => {
         payment_date: payment.payment_date || '',
         paymode_id: payment.paymode_id || '',
         bank_name: payment.bank_name || '',
-        cheque_ref_date: payment.cheque_ref_date || '',
+        cheque_reference_date: payment.cheque_reference_date || '',
         remarks: payment.remarks || '',
         accounts: payment.accounts || '',
-        cheque_ref_no: payment.cheque_ref_no || ''
+        cheque_reference_no: payment.cheque_reference_no || ''
       });
     }
   }, [payment]);
 
-  useEffect(() => {
-    api.get('/payments/getBankDropdown')
-      .then(res => {
-        const banksData = res.data && res.data.data ? res.data.data : [];
-        console.log('Banks data:', banksData);
-        setBanks(banksData);
-      })
-      .catch(() => message('Unable to fetch banks', 'error'));
+ useEffect(() => {
+  // Fetch banks
+  api.get('/payments/getBankDropdown')
+    .then(res => {
+      console.log('Banks Response:', res.data);
+      setBanks(res.data?.data || []);
+    })
+    .catch(() => message('Unable to fetch banks', 'error'));
 
-    api.get('/payments/getPaymodeDropdown')
-      .then(res => {
-        const payModesData = res.data && res.data.data ? res.data.data : [];
-        console.log('PayModes data:', payModesData);
-        if (!Array.isArray(payModesData)) {
-          message('PayModes data is not an array', 'error');
-          setPayModes([]);
-        } else {
-          setPayModes(payModesData);
-        }
-      })
-      .catch(() => {
-        message('Unable to fetch pay modes', 'error');
-        setPayModes([]);
-      });
+  // Fetch paymodes
+  api.get('/payments/getPaymodeDropdown')
+    .then(res => {
+      console.log('PayModes Response:', res.data);
+      setPayModes(res.data || []);
+    })
+    .catch(() => message('Unable to fetch pay modes', 'error'));
 
-    api.get('/payments/getAccountsDropdown')
-      .then(res => {
-        const accountsData = res.data && res.data.data ? res.data.data : [];
-        console.log('Accounts data:', accountsData);
-        setAccounts(accountsData);
-      })
-      .catch(() => message('Unable to fetch accounts', 'error'));
-  }, []);
+  // Fetch accounts
+  api.get('/payments/getAccountsDropdown')
+    .then(res => {
+      console.log('Accounts Response:', res.data);
+      setAccounts(res.data?.data || []);
+    })
+    .catch(() => message('Unable to fetch accounts', 'error'));
+}, []);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -104,144 +97,151 @@ const EditActionModal = ({ isOpen, toggle, payment, refreshPayments }) => {
   };
 
   return (
-    <Modal isOpen={isOpen} toggle={toggle} size="lg">
-      <ModalHeader toggle={toggle}>Edit Payments</ModalHeader>
+    <Modal isOpen={isOpen} toggle={toggle} size="xl">
+      <ModalHeader toggle={toggle} className="fw-bold">
+        Edit Payments
+      </ModalHeader>
       <ModalBody>
         <Form>
-          <Row>
-            <Col md={6} className="d-flex align-items-center">
-              <div>
-                <Label className="mb-1">Payment No</Label>
-                <div style={{ fontWeight: 'bold' }}>{formData.payment_no}</div>
-              </div>
+          {/* Top section */}
+          <Row className="mb-3">
+            <Col md={2}>
+              <Label className="fw-bold">Payment No</Label>
+              </Col>
+              <Col md={4}>
+              {formData.payment_no}
             </Col>
-            <Col md={6} className="d-flex align-items-center">
-              <div>
-                <Label className="mb-1">Supplier Name</Label>
-                <div style={{ fontWeight: 'bold', whiteSpace: 'pre-wrap' }}>{formData.company_name}</div>
-              </div>
-            </Col>
-          </Row>
-         <br></br>
-
-          <Row>
-            <Col md={6}>
-              <FormGroup>
-                <Label>Payment Date</Label>
-                <Input
-                  type="date"
-                  name="payment_date"
-                  value={formData.payment_date}
-                  onChange={handleChange}
-                />
-              </FormGroup>
-            </Col>
-            <Col md={6}>
-              <FormGroup>
-                <Label>Remarks</Label>
-                <Input
-                  type="text"
-                  name="remarks"
-                  value={formData.remarks}
-                  onChange={handleChange}
-                />
-              </FormGroup>
+            <Col md={2}>
+              <Label className="fw-bold">Supplier Name</Label></Col><Col md={4}>
+              {formData.company_name}
             </Col>
           </Row>
+          <br></br>
+          <br></br>
+          
 
-          <Row>
-            <Col md={6}>
-              <FormGroup>
-                <Label>PayMode</Label>
-                <Input
-                  type="select"
-                  name="paymode_id"
-                  value={formData.paymode_id}
-                  onChange={handleChange}
-                >
-                  <option value="">Select PayMode</option>
-                  {payModes.map(pm => (
-                    <option key={pm.paymode_id} value={pm.paymode_id}>
-                      {pm.paymode_name}
-                    </option>
-                  ))}
-                </Input>
-              </FormGroup>
+
+          {/* Payment Date / Remarks */}
+          <Row className="mb-3 align-items-center">
+            <Col md={2}><Label>Payment Date</Label></Col>
+            <Col md={4}>
+              <Input
+                type="date"
+                name="payment_date"
+                value={formData.payment_date}
+                onChange={handleChange}
+              />
             </Col>
-            <Col md={6}>
-              <FormGroup>
-                <Label>Accounts</Label>
-                <Input
-                  type="select"
-                  name="accounts"
-                  value={formData.accounts}
-                  onChange={handleChange}
-                >
-                  <option value="">Select Account</option>
-                  {accounts.map(acc => (
-                    <option key={acc.valuelist_id} value={acc.value}>
-                      {acc.value}
-                    </option>
-                  ))}
-                </Input>
-              </FormGroup>
+            <Col md={2}><Label>Remarks</Label></Col>
+            <Col md={4}>
+              <Input
+                type="text"
+                name="remarks"
+                value={formData.remarks}
+                onChange={handleChange}
+              />
             </Col>
           </Row>
 
-          <Row>
-            <Col md={6}>
-              <FormGroup>
-                <Label>Bank</Label>
-                <Input
-                  type="select"
-                  name="bank_name"
-                  value={formData.bank_name}
-                  onChange={handleChange}
-                >
-                  <option value="">Select Bank</option>
-                  {banks.map(bank => (
-                    <option key={bank.valuelist_id} value={bank.value}>
-                      {bank.value}
-                    </option>
-                  ))}
-                </Input>
-              </FormGroup>
+          {/* PayMode / Accounts */}
+          <Row className="mb-3 align-items-center">
+            <Col md={2}><Label>PayMode</Label></Col>
+            <Col md={4}>
+              <Input
+                type="select"
+                name="paymode_id"
+                value={formData.paymode_id}
+                onChange={handleChange}
+              >
+                <option value="">Select PayMode</option>
+                {payModes.map(pm => (
+                  <option key={pm.paymode_id} value={pm.paymode_id}>
+                    {pm.paymode_name}
+                  </option>
+                ))}
+              </Input>
             </Col>
-            <Col md={6}>
-              <FormGroup>
-                <Label>Cheque/Reference No</Label>
-                <Input
-                  name="cheque_ref_no"
-                  value={formData.cheque_ref_no}
-                  onChange={handleChange}
-                />
-              </FormGroup>
+            <Col md={2}><Label>Accounts</Label></Col>
+            <Col md={4}>
+              <Input
+                type="select"
+                name="accounts"
+                value={formData.accounts}
+                onChange={handleChange}
+              >
+                <option value="">Select Account</option>
+                {accounts.map(acc => (
+                  <option key={acc.valuelist_id} value={acc.value}>
+                    {acc.value}
+                  </option>
+                ))}
+              </Input>
             </Col>
           </Row>
 
-          <Row>
-            <Col md={6}>
-              <FormGroup>
-                <Label>Cheque/Reference Date</Label>
-                <Input
-                  type="date"
-                  name="cheque_ref_date"
-                  value={formData.cheque_ref_date}
-                  onChange={handleChange}
-                />
-              </FormGroup>
+          {/* Bank / Cheque No */}
+          <Row className="mb-3 align-items-center">
+            <Col md={2}><Label>Bank</Label></Col>
+            <Col md={4}>
+              <Input
+                type="select"
+                name="bank_name"
+                value={formData.bank_name}
+                onChange={handleChange}
+              >
+                <option value="">Select Bank</option>
+                {banks.map(bank => (
+                  <option key={bank.valuelist_id} value={bank.value}>
+                    {bank.value}
+                  </option>
+                ))}
+              </Input>
             </Col>
-            <Col md={6}>
-              {/* Empty column for alignment */}
+            <Col md={2}><Label>Cheque/Reference No</Label></Col>
+            <Col md={4}>
+              <Input
+                type="text"
+                name="cheque_reference_no"
+                value={formData.cheque_reference_no}
+                onChange={handleChange}
+              />
+            </Col>
+          </Row>
+
+          {/* Cheque/Reference Date */}
+          <Row className="mb-3 align-items-center">
+            <Col md={2}><Label>Cheque/Reference Date</Label></Col>
+            <Col md={4}>
+              <Input
+                type="date"
+                name="cheque_reference_date"
+                value={formData.cheque_reference_date}
+                onChange={handleChange}
+              />
             </Col>
           </Row>
         </Form>
       </ModalBody>
+
       <ModalFooter>
-        <Button color="primary" onClick={handleSave}>
+        <Button
+          style={{
+            backgroundColor: '#003366',
+            borderColor: '#003366',
+            padding: '6px 20px',
+          }}
+          onClick={handleSave}
+        >
           Save
         </Button>
-        <Button color="danger" onClick={toggle}>
+        <Button
+          style={{
+            backgroundColor: '#e74c3c',
+            borderColor: '#e74c3c',
+            padding: '6px 20px',
+          }}
+          onClick={toggle}
+        >
           Cancel
         </Button>
       </ModalFooter>
