@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useState,useEffect} from "react";
+import React, { useState,useEffect, useRef} from "react";
 import {
   Container,
   Row,
@@ -39,6 +39,15 @@ const PurchaseOrderEdit = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedSNo, setSelectedSNo] = useState(null);
   const [selectedUOM, setSelectedUOM] = useState('');
+  const cartonPriceRefs = useRef([]);
+  const productCodeRefs = useRef([]); // keeps Select refs
+  const cartonQtyRefs = useRef([]);
+  const looseQtyRefs = useRef([]);
+  const priceRefs = useRef([]);
+  const discountPercentageRefs = useRef([]);
+  const discountAmountRefs = useRef([]);
+  const grossTotalRefs = useRef([]);
+  const tableRef = useRef(null);
 
 
   const handleSNoClick = (sNo, product) => {
@@ -96,6 +105,7 @@ const { id } = useParams();
       total: 0,
       discount: 0,
       total_price: 0,
+      po_product_id: 'new-0'
     },
   ]);
   const handleAddExtraFields = (id) => {
@@ -247,8 +257,18 @@ useEffect(() => {
       updatedRows[index].product_id = selectedProduct.value;
       updatedRows[index].product_code = selectedProduct.product_code;
       updatedRows[index].product_name = selectedProduct.product_name;
+      updatedRows[index].carton_price = selectedProduct.carton_price;
+      updatedRows[index].price = selectedProduct.price;
+      updatedRows[index].uom = selectedProduct.uom;
+      updatedRows[index].carton_qty = selectedProduct.carton_qty;
+      updatedRows[index].qty = selectedProduct.qty;
       console.log('updatedRows[index].product_code:', updatedRows[index].product_code);
       setRows(updatedRows);
+
+      // Autofocus on Carton Price input
+      if (cartonPriceRefs.current[index]) {
+        cartonPriceRefs.current[index].focus();
+      }
     };
   // Handle form submit (example API call structure)
   const handleSubmit = async () => {
@@ -363,29 +383,56 @@ useEffect(() => {
     }
   };
 
-  const addRow = () => {
-    setRows([
-      ...rows,
-      {
-        product_code: "",
-        product_name: "",
-        carton_qty: 0,
-        loose_qty: 0,
-        carton_price: 0,
-        qty: 0,
-        price: 0,
-        discount: 0,
-        total_price: 0,
-      },
-    ]);
+  const addRow = (insertAfterIndex) => {
+    // insertAfterIndex is the index after which the new row will be inserted
+    const newRow = {
+      po_product_id: `new-${rows.length}`,
+      product_code: "",
+      product_name: "",
+      carton_qty: 0,
+      loose_qty: 0,
+      carton_price: 0,
+      qty: 0,
+      price: 0,
+      total: 0,
+      discount: 0,
+      total_price: 0,
+      discount_percentage: 0,
+      discount_amount: 0,
+      grossTotal: 0,
+    };
+    setRows((prevRows) => {
+      const updatedRows = [...prevRows];
+      updatedRows.splice(insertAfterIndex + 1, 0, newRow);
+      return updatedRows;
+    });
+
+    // give React a tick to render the new Select, then focus
+    setTimeout(() => {
+      const nextIndex = insertAfterIndex + 1;
+      const ref = productCodeRefs.current[nextIndex];
+      // react-select instances expose focus()
+      try {
+        if (ref && typeof ref.focus === 'function') {
+          ref.focus();
+          return;
+        }
+        // fallback: try to find underlying input by id
+        const input = document.querySelector(`#product-select-${nextIndex} input`);
+        if (input) input.focus();
+      } catch (err) {
+        console.warn('could not focus new product select', err);
+      }
+    }, 80);
+  };
+  const handleDelete = (id) => {
+    const updatedRows = rows.filter((row) => row.po_product_id !== id);
+    setRows(updatedRows);
   };
   return (
     <div style={{ fontSize: "12px" }}>
       <ToastContainer/>
       <Container fluid className="p-1 mb-5">
-        {/* <Card className="shadow-sm">
-          <CardBody className="p-3"> */}
-            {/* Header */}
             <h6 className="mb-2">Add/Edit Purchase Order</h6>
 
             <Form>
@@ -438,7 +485,6 @@ useEffect(() => {
 
               <TabContent activeTab={activeTab} style={{ maxHeight: 'calc(100vh - 400px)'}}>
                 {/* Supplier Tab */}
-               {/* Supplier Tab */}
 <TabPane tabId="1">
   <Row>
     {/* Supplier Code & Contact Address1 */}
@@ -655,7 +701,7 @@ useEffect(() => {
               </TabContent>
 
               {/* Table */}
-               <Table bordered responsive size="sm" className="mt-3 mb-1" style={{ fontSize: '0.75rem' }}>
+    <Table id="example" className="display border border-secondary rounded" ref={tableRef}>
          <colgroup>
             <col style={{ width: "1rem" }} /> 
     <col style={{ width: "6rem" }} /> {/* Product Code */}
@@ -689,7 +735,7 @@ useEffect(() => {
         <tbody>
           {rows.map((p, idx) => (
             <React.Fragment key={p.po_product_id}>
-              <tr key={p.po_product_id}>
+              <tr key={p.po_product_id} style={{ fontSize: '13px', height: '20px', background:  '#fff' }}>
                 <td
                   style={{
                     padding: '0.3rem',
@@ -700,8 +746,6 @@ useEffect(() => {
                 >
                   {idx + 1}
                 </td>
-                {/* <td style={{ padding: '0.3rem' }}>{p.product_code}</td>
-                <td style={{ padding: '0.3rem' }}>{p.product_name}</td> */}
                      <td style={{ padding: "0.3rem", minWidth: "200px" }}>
   <Select
     options={products.map((pr) => ({
@@ -718,9 +762,31 @@ useEffect(() => {
           }
         : null
     }
-    onChange={(selectedOption) => handleProductSelect(idx, selectedOption)}
+    onChange={(selectedOption) => {
+      handleProductSelect(idx, selectedOption);
+      if (cartonQtyRefs.current[idx]) {
+        cartonQtyRefs.current[idx].focus();
+      }
+    }}
+      styles={{
+    control: (base) => ({
+      ...base,
+      fontSize: "12px",
+      minHeight: "30px"
+     
+    }),
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 9999,
+      fontSize: "12px", 
+      width: '300px'  // keep it above modal, table, etc.
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999   // just in case
+    })
+  }}
     placeholder="Select Product"
-    onKeyDown={(e) => handleKeyDown(e, idx, 'product_code')}
     filterOption={(candidate, input) => {
       if (!input) return true;
       const lowerInput = input.toLowerCase();
@@ -729,6 +795,9 @@ useEffect(() => {
         candidate.data.product_name.toLowerCase().includes(lowerInput)
       );
     }}
+    // assign ref so we can call focus() on the react-select instance
+    ref={(el) => (productCodeRefs.current[idx] = el)}
+    inputId={`product-select-${idx}`}
   />
 </td>
 
@@ -742,8 +811,42 @@ useEffect(() => {
                 readOnly
               />
             </td>
-                <td style={{ padding: '0.3rem' }}>{p.carton_qty}</td>
-                <td style={{ padding: '0.3rem' }}>{p.loose_qty}</td>
+                <td style={{ padding: '0.3rem' }}>
+                  <Input
+                    type="number"
+                    bsSize="sm"
+                    value={p.carton_qty}
+                    onChange={(e) => handleRowChange(p.po_product_id, 'carton_qty', e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (looseQtyRefs.current[idx]) {
+                          looseQtyRefs.current[idx].focus();
+                        }
+                      }
+                    }}
+                    innerRef={(el) => (cartonQtyRefs.current[idx] = el)}
+                    style={{ width: '100%', fontSize: '12px' }}
+                  />
+                </td>
+                <td style={{ padding: '0.3rem' }}>
+                  <Input
+                    type="number"
+                    bsSize="sm"
+                    value={p.loose_qty}
+                    onChange={(e) => handleRowChange(p.po_product_id, 'loose_qty', e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (cartonPriceRefs.current[idx]) {
+                          cartonPriceRefs.current[idx].focus();
+                        }
+                      }
+                    }}
+                    innerRef={(el) => (looseQtyRefs.current[idx] = el)}
+                    style={{ width: '100%', fontSize: '12px' }}
+                  />
+                </td>
                 <td style={{ padding: '0.3rem' }}>{p.qty}</td>
                 <td style={{ padding: '0.3rem' }}>
                   <Input
@@ -752,6 +855,15 @@ useEffect(() => {
                     value={Number(p?.carton_price).toFixed(2)}
                     onChange={(e) => handleRowChange(p.po_product_id, 'carton_price', e.target.value)}
                     style={{ width: '80px' }}
+                    innerRef={(el) => (cartonPriceRefs.current[idx] = el)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (priceRefs.current[idx]) {
+                          priceRefs.current[idx].focus();
+                        }
+                      }
+                    }}
                   />
                 </td>
                 <td style={{ padding: '0.3rem' }}>
@@ -761,6 +873,15 @@ useEffect(() => {
                     value={Number(p?.price).toFixed(2)}
                     onChange={(e) => handleRowChange(p.po_product_id, 'price', e.target.value)}
                     style={{ width: '80px' }}
+                    innerRef={(el) => (priceRefs.current[idx] = el)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (discountPercentageRefs.current[idx]) {
+                          discountPercentageRefs.current[idx].focus();
+                        }
+                      }
+                    }}
                   />
                 </td>
                 <td style={{ padding: '0.3rem' }}>
@@ -781,6 +902,15 @@ useEffect(() => {
                       value={Number(p?.discount_percentage).toFixed(2)}
                       onChange={(e) => handleRowChange(p.po_product_id, 'discount_percentage', e.target.value)}
                       style={{ width: '50%', marginRight: '2px' }}
+                      innerRef={(el) => (discountPercentageRefs.current[idx] = el)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (discountAmountRefs.current[idx]) {
+                            discountAmountRefs.current[idx].focus();
+                          }
+                        }
+                      }}
                     />
                     <Input
                       type="number"
@@ -788,6 +918,15 @@ useEffect(() => {
                       value={Number(p?.discount_amount).toFixed(2)}
                       onChange={(e) => handleRowChange(p.po_product_id, 'discount_amount', e.target.value)}
                       style={{ width: '50%' }}
+                      innerRef={(el) => (discountAmountRefs.current[idx] = el)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (grossTotalRefs.current[idx]) {
+                            grossTotalRefs.current[idx].focus();
+                          }
+                        }
+                      }}
                     />
                   </div>
                 </td>
@@ -797,8 +936,15 @@ useEffect(() => {
                     bsSize="sm"
                     value={Number(p.grossTotal).toFixed(2)}
                     onChange={(e) => handleRowChange(p.po_product_id, 'grossTotal',e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        // insert a new row *after* current index and focus its product select
+                        addRow(idx);
+                      }
+                    }}
                     style={{ width: '80px' }}
-                    readOnly
+                    innerRef={(el) => (grossTotalRefs.current[idx] = el)}
                   />
                 </td>
                 <td style={{ padding: '0.3rem', whiteSpace: 'nowrap' }}>
@@ -899,7 +1045,7 @@ useEffect(() => {
                 </tr>
               )}
             </React.Fragment>
-            ))})
+            ))}
           {/* Summary Row */}
           <tr style={{ fontWeight: "bold", color: "#007bff", fontSize: '0.75rem' }}>
             <td style={{ padding: '0.3rem' }}></td> {/* Empty for S No */}
@@ -920,8 +1066,6 @@ useEffect(() => {
         </tbody>
       </Table>
             </Form>
-          {/* </CardBody>
-        </Card> */}
       </Container>
 
       {/* Fixed Footer */}
@@ -962,15 +1106,6 @@ useEffect(() => {
 
       {/* Center column (center aligned) */}
       <Col md="6" className="text-center">
-        {/* <div className="text-muted small">
-          Additional Charges <span className="text-primary">0.00</span>
-        </div>
-        <div className="text-muted small">
-          Additional Discount <span className="text-primary">0.00</span>
-        </div>
-        <div className="fw-bold mt-1">
-          Final Total : <span>{Number(finalTotal)?.toFixed(2)}</span>
-        </div> */}
       </Col>
 
       {/* Right column */}
@@ -1032,103 +1167,7 @@ useEffect(() => {
         selectedProduct={selectedProduct}
       />}
 
-    {/* <Modal isOpen={productInfoModal} toggle={toggleProductInfoModal} size="xl">
-      <ModalHeader toggle={toggleProductInfoModal}>Product Information Details</ModalHeader>
-      <ModalBody>
-        {selectedProduct && (
-          <div>
-            <Row className="mb-3">
-              <Col md="6" className="d-flex align-items-center">
-                <strong className="me-2" style={{ width: '120px' }}>Product Code</strong> : {selectedProduct.code}
-              </Col>
-              <Col md="6" className="d-flex align-items-center">
-                <strong className="me-2" style={{ width: '120px' }}>Product Name</strong> : {selectedProduct.name}
-              </Col>
-            </Row>
-            <Row className="mb-3">
-              <Col md="6" className="d-flex align-items-center">
-                <strong className="me-2" style={{ width: '120px' }}>Product UOM</strong> : {selectedProduct.UOM}
-              </Col>
-              <Col md="6" className="d-flex align-items-center">
-                <strong className="me-2" style={{ width: '120px' }}>Product Price</strong> : {selectedProduct['Product Price']}
-              </Col>
-            </Row>
-            <Row className="mb-3">
-              <Col md="6" className="d-flex align-items-center">
-                <strong className="me-2" style={{ width: '120px' }}>Retail Price</strong> : {selectedProduct['Retail Price']}
-              </Col>
-              <Col md="6" className="d-flex align-items-center">
-                <strong className="me-2" style={{ width: '120px' }}>Wholesale Price</strong> : {selectedProduct['Wholesale Price']}
-              </Col>
-            </Row>
-            <Row className="mb-3">
-              <Col md="6" className="d-flex align-items-center">
-                <strong className="me-2" style={{ width: '120px' }}>Stock Qty</strong> : {selectedProduct['Stock Qty']}
-              </Col>
-              <Col md="6" className="d-flex align-items-center">
-                <strong className="me-2" style={{ width: '120px' }}>Product Weight</strong> : {selectedProduct['Product Weight']}
-              </Col>
-            </Row>
-            <Row className="mb-3">
-              <Col md="6" className="d-flex align-items-center">
-                <strong className="me-2" style={{ width: '120px' }}>Stock WQty</strong> : {selectedProduct['Stock WQty']}
-              </Col>
-            </Row>
-
-            <Row className="mb-3 align-items-center">
-              <Col md="3">
-                <strong className="me-2">From Date</strong>
-                <Input type="date" />
-              </Col>
-              <Col md="3">
-                <strong className="me-2">To Date</strong>
-                <Input type="date" />
-              </Col>
-              <Col md="2">
-                <Button color="primary" className="mt-4">Search</Button>
-              </Col>
-            </Row>
-
-            <h6>Purchase History</h6>
-            <Table bordered size="sm">
-              <thead>
-                <tr>
-                  <th>Invoice No</th>
-                  <th>Invoice Date</th>
-                  <th>Description</th>
-                  <th>Supplier</th>
-                  <th>UOM</th>
-                  <th>Qty</th>
-                  <th>NetPrice</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>PI202509-000136</td>
-                  <td>20/09/2025</td>
-                  <td>AMPRO TRADITIONAL TRIANGLE PATIS COOKIES 1147G</td>
-                  <td>INNOVA FOODS SDN BHD</td>
-                  <td>1X6</td>
-                  <td>30</td>
-                  <td>3.70</td>
-                </tr>
-                <tr>
-                  <td>PI202509-000136</td>
-                  <td>20/09/2025</td>
-                  <td>AMPRO TRADITIONAL TRIANGLE PATIS COOKIES 1147G</td>
-                  <td>INNOVA FOODS SDN BHD</td>
-                  <td>1X6</td>
-                  <td>30</td>
-                  <td>3.70</td>
-                  <td>5</td>
-                  <td>5.20</td>
-                </tr>
-              </tbody>
-            </Table>
-          </div>
-        )}
-      </ModalBody>
-    </Modal> */}
+   
     </div>
   );
 };
