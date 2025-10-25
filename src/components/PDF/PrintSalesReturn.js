@@ -137,6 +137,20 @@ console.log(id,"wsed")
       ]);
     });
 
+     for (let i = 0; i < 10; i++) {
+      productItems.push([
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+      ]);
+    }
+
     const dd = {
       pageSize: 'A4',
       pageMargins: [40, 150, 40, 80], // Adjust margins as needed
@@ -189,11 +203,12 @@ console.log(id,"wsed")
                       {
                         text: [
                           salesOrder.company_name || '', '\n',
-                          salesOrder.address_street || '', '\n',
-                          salesOrder.address_down || '', '\n',
-                          salesOrder.address_country || '', '\n',
+                          salesOrder.address1 || '', '\n',
+                          salesOrder.address2 || '', '\n',
+                           salesOrder.address_street || '', '\n',
+                          salesOrder.address_country || '', ' - ',
                           salesOrder.address_po_code || '', '\n',
-                          'TEL: 6789098765', '\n', '\n','\n',
+                          `TEL:${salesOrder.phone || 'NULL'}`, '\n', '\n','\n',
                         ],
                         margin: [8, 4, 0, 4],
                         layout: {

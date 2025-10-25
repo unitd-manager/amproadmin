@@ -133,6 +133,19 @@ const PrintPerfomaInvList = ({ id }) => {
         ]);
       });
 
+       for (let i = 0; i < 10; i++) {
+      productItems.push([
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+      ]);
+    }
+
       if (index > 0) {
         allContent.push({ text: '', pageBreak: 'before' });
       }
@@ -142,7 +155,8 @@ const PrintPerfomaInvList = ({ id }) => {
   columns: [
     {
       width: '50%',
-      text: `${currentSalesOrder.company_name || ''}\n${currentSalesOrder.address_street || ''}\n${currentSalesOrder.address_down || ''}\n${currentSalesOrder.address_country || ''}\n${currentSalesOrder.address_po_code || ''}\nTEL: 6789098765\n\n`,
+      text: `${currentSalesOrder.company_name || ''}\n${currentSalesOrder.address1 || ''}\n${currentSalesOrder.address2 || ''}\n${currentSalesOrder.address_street || ''}\n${currentSalesOrder.address_country || ''} - ${currentSalesOrder.address_po_code || ''}\nTEL: ${currentSalesOrder.phone || 'NULL'}\n\n`,
+
       style: 'textSize',
     },
     {

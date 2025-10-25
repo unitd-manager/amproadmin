@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+//import * as Icon from 'react-feather';
 import pdfMake from 'pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 //import { Button } from 'reactstrap';
@@ -9,11 +10,11 @@ import message from '../Message';
 import PdfFooter from './PdfFooter'; // Assuming you have a footer component
 import PdfHeader from './PdfHeader'; // Assuming you have a header component
 
-const PrintPerfoma = ({ id }) => {
-    PrintPerfoma.propTypes = {
-    id: PropTypes.any,
+const PrintPerfomaList = ({ id }) => {
+    PrintPerfomaList.propTypes = {
+    id: PropTypes.arrayOf(PropTypes.any).isRequired,
   };
-
+console.log(id,"wsed")
   const [salesOrder, setSalesOrder] = useState({});
   const [lineItems, setLineItems] = useState();
   const [hfdata, setHeaderFooterData] = useState();
@@ -30,29 +31,33 @@ const PrintPerfoma = ({ id }) => {
     return filteredResult?.value || '';
   };
  
-  const fetchSalesOrderData = () => {
-    api
-      .post('/salesorder/getSalesorderById', { sales_order_id: id })
-      .then((res) => {
-        setSalesOrder(res.data.data[0] || {});
-      })
-      .catch(() => {
-        message('Sales Order Data Not Found', 'info');
-      });
+  const fetchSalesOrderData = async () => {
+    try {
+      // Fetch sales order data for all IDs
+      const salesOrderPromises = id.map(orderId =>
+        api.post('/salesorder/getSalesorderById', { sales_order_id: orderId })
+      );
+      const lineItemPromises = id.map(orderId =>
+        api.post('/salesOrder/getQuoteLineItemsById', { sales_order_id: orderId })
+      );
 
-    api
-      .post('/salesOrder/getQuoteLineItemsById', { sales_order_id: id })
-      .then((res) => {
-        setLineItems(res.data.data);
-        let grandTotal = 0;
-        res.data.data.forEach((elem) => {
-          grandTotal += elem.total;
-        });
-        setGtotal(grandTotal);
-      })
-      .catch(() => {
-        message('Sales Order Line Items Not Found', 'info');
+      const salesOrderResponses = await Promise.all(salesOrderPromises);
+      const lineItemResponses = await Promise.all(lineItemPromises);
+
+      const allSalesOrders = salesOrderResponses.map(res => res.data.data[0] || {});
+      const allLineItems = lineItemResponses.map(res => res.data.data).flat();
+
+      setSalesOrder(allSalesOrders[0]); // Keep the first one for header info
+      setLineItems(allLineItems);
+
+      let grandTotal = 0;
+      allLineItems.forEach((elem) => {
+        grandTotal += elem.total || 0;
       });
+      setGtotal(grandTotal);
+    } catch (error) {
+      //message('Error fetching sales order data', 'error');
+    }
   };
 
 
@@ -99,6 +104,11 @@ const PrintPerfoma = ({ id }) => {
   }, [id]);
 
   const GetPdf = () => {
+    if (!lineItems || lineItems.length === 0) {
+      message('No line items found', 'warning');
+      return;
+    }
+
     const productItems = [
       [
         { text: 'No', style: 'tableHead' },
@@ -117,7 +127,7 @@ const PrintPerfoma = ({ id }) => {
       productItems.push([
         { text: `${index + 1}`, style: 'tableBody' },
         { text: `${item.product_name || ''}`, style: 'tableBody' },
-        { text: `${item.quantity || ''}`, style: 'tableBody' },
+        { text: `${item.unit || ''}`, style: 'tableBody' },
         { text: `${item.carton_qty || ''}`, style: 'tableBody' },
         { text: `${item.loose_qty || ''}`, style: 'tableBody' },
         { text: `${item.foc || ''}`, style: 'tableBody' },
@@ -126,6 +136,22 @@ const PrintPerfoma = ({ id }) => {
         { text: `${item.total || ''}`, style: 'tableBody' },
       ]);
     });
+
+
+    // Add 3 empty rows
+    for (let i = 0; i < 10; i++) {
+      productItems.push([
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+        { text: '', style: 'tableBody' },
+      ]);
+    }
 
     const dd = {
       pageSize: 'A4',
@@ -166,39 +192,25 @@ const PrintPerfoma = ({ id }) => {
         
         {
             columns: [
-              // {
-              //   width: '50%',
-              //   stack: [
-              //     { text: 'Customer Address:', bold: true },
-              //     { text: '', margin: [8, 0, 0, 0] },
-              //     { text: salesOrder.company_name || '', margin: [8, 0, 0, 0] },
-              //     { text: salesOrder.address_street || '', margin: [8, 0, 0, 0] },
-              //     { text: salesOrder.address_down || '', margin: [8, 0, 0, 0] },
-              //     { text: salesOrder.address_country || '', margin: [8, 0, 0, 0] },
-              //     { text: salesOrder.address_po_code || '', margin: [8, 0, 0, 0] },
-              //     { text: '', margin: [8, 0, 0, 0] },
-              //     { text: 'TEL: 6789098765', margin: [8, 5, 0, 0] },
-              //   ],
-              //   layout: 'Borders',
-              // style: 'textSize',
-              // },
+         
               {
                 width: '50%',
                 table: {
                   widths: ['*'],
                   body: [
                     [
-                      { text: 'Customer Address:', bold: true }
+                      { text: 'Customer:', bold: true }
                     ],
                     [
                       {
                         text: [
                           salesOrder.company_name || '', '\n',
-                          salesOrder.address_street || '', '\n',
-                          salesOrder.address_down || '', '\n',
-                          salesOrder.address_country || '', '\n',
+                          salesOrder.address1 || '', '\n',
+                          salesOrder.address2 || '', '\n',
+                           salesOrder.address_street || '', '\n',
+                          salesOrder.address_country || '', ' - ',
                           salesOrder.address_po_code || '', '\n',
-                          'TEL: 6789098765', '\n', '\n','\n',
+                          `TEL:${salesOrder.phone || 'NULL'}`, '\n', '\n','\n',
                         ],
                         margin: [8, 4, 0, 4],
                         layout: {
@@ -214,7 +226,7 @@ const PrintPerfoma = ({ id }) => {
                 },
                 layout: {
                   // Outside borders for other rows
-                  hLineWidth: (i, node) => (i === 0 || i === node.table.body.length ? 0.5 : 0), // Top and bottom borders
+                  hLineWidth: (i, node) => (i === 0 || i === node.table.body.length ? 0.5 : 1), // Top and bottom borders
                   vLineWidth: (i, node) => (i === 0 || i === node.table.widths.length ? 0.5 : 0), // Left and right borders
                   hLineColor: () => '#000000',
                   vLineColor: () => '#000000'
@@ -256,7 +268,7 @@ const PrintPerfoma = ({ id }) => {
                         return i === 0 || i === node.table.body.length ? 0.5 : 0;
                       },
                       vLineWidth(i, node) {
-                        return i === 0 || i === node.table.widths.length ? 0.5 : 0;
+                        return i === 0 || i === node.table.widths.length ? 0.5 : 1;
                       },
                       hLineColor() {
                         return '#000000';
@@ -279,7 +291,7 @@ const PrintPerfoma = ({ id }) => {
           
         {
           layout: {
-            hLineWidth: () => 1,
+            hLineWidth: (i) => (i === 0 || i === 1) ? 1 : 0,
             vLineWidth: () => 1,
             hLineColor: () => '#000',
             vLineColor: () => '#000',
@@ -397,4 +409,4 @@ const PrintPerfoma = ({ id }) => {
   );
 };
 
-export default PrintPerfoma;
+export default PrintPerfomaList;
