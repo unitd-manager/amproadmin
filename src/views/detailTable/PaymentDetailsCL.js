@@ -90,20 +90,38 @@ const PaymentManagement = () => {
     if (activeTab !== tab) setActiveTab(tab);
   };
 
-  const handleSupplierChange = (e) => {
-    const { name, value } = e.target;
-    if (name === 'supplierCode') {
-      const selectedSupplier = suppliers.find((s) => s.supplier_code === value);
-      setSupplierDetails((prev) => ({
-        ...prev,
-        supplierCode: value,
-        supplierName: selectedSupplier ? selectedSupplier.company_name : '',
-        supplierId: selectedSupplier ? selectedSupplier.supplier_id : '',
-      }));
+  const handleSupplierChange = async (e) => {
+  const { name, value } = e.target;
+  if (name === 'supplierCode') {
+    const selectedSupplier = suppliers.find((s) => s.supplier_code === value);
+    const updatedSupplier = {
+      ...supplierDetails,
+      supplierCode: value,
+      supplierName: selectedSupplier ? selectedSupplier.company_name : '',
+      supplierId: selectedSupplier ? selectedSupplier.supplier_id : '',
+    };
+    setSupplierDetails(updatedSupplier);
+
+    // 🔥 Fetch invoices automatically when supplier selected
+    if (selectedSupplier && selectedSupplier.supplier_id) {
+      try {
+        const res = await api.get(`/payments/getInvoices/${selectedSupplier.supplier_id}`, {
+          params: { fromDate, toDate },
+        });
+        const invoiceData = res.data?.data || [];
+        setInvoices(Array.isArray(invoiceData) ? invoiceData : []);
+      } catch (err) {
+        console.error('Error fetching supplier invoices:', err);
+        message('Failed to fetch invoices for selected supplier', 'error');
+      }
     } else {
-      setSupplierDetails((prev) => ({ ...prev, [name]: value }));
+      setInvoices([]); // clear if no supplier
     }
-  };
+  } else {
+    setSupplierDetails((prev) => ({ ...prev, [name]: value }));
+  }
+};
+
 
   const handleCurrencyChange = (e) => {
     const { name, value } = e.target;
