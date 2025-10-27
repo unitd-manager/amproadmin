@@ -19,6 +19,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import classnames from 'classnames';
 import { FaTrash } from 'react-icons/fa';
+import Swal from 'sweetalert2';
 import message from '../../components/Message';
 import api from '../../constants/api';
 import AppContext from '../../context/AppContext';
@@ -212,12 +213,26 @@ const PaymentManagement = () => {
 
   const totalPaidAmount = invoices.reduce((sum, inv) => sum + (inv.paid || 0), 0);
 
+  const getInvoices = (supplierId) => {
+  api
+    .post('/purchaseinvoice/getInvoicesBySupplier', { supplier_id: supplierId })
+    .then((res) => {
+      const invoiceData = res.data.data.map((inv) => ({
+        ...inv,
+        payable_amount: parseFloat(inv.balance || 0),
+      }));
+      setInvoices(invoiceData);
+    })
+    .catch(() => message('Error fetching invoices', 'error'));
+};
+
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
     setSupplierDetails((prev) => ({ ...prev, paymentDate: today }));
     fetchSuppliers();
     fetchPayModes();
     fetchAccounts();
+    getInvoices();
   }, []);
 
   const handleCancel = () => {
@@ -226,7 +241,72 @@ const PaymentManagement = () => {
 
   const handleDeleteInvoice = (id) => {
     setInvoices((prev) => prev.filter((inv) => inv.purchase_invoice_id !== id));
-  };
+  }
+
+// ✅ Logic to distribute the entered amount
+const splitAmountAcrossInvoices = (enteredAmount) => {
+  let remaining = enteredAmount;
+
+  const updatedInvoices = invoices.map((inv) => {
+    const balance = parseFloat(inv.balance || 0);
+    let allocated = 0;
+
+    if (remaining > 0) {
+      if (remaining >= balance) {
+        allocated = balance;
+        remaining -= balance;
+      } else {
+        allocated = remaining;
+        remaining = 0;
+      }
+    }
+
+    return {
+      ...inv,
+      payable_amount: allocated, // update payable amount automatically
+    };
+  });
+
+  setInvoices(updatedInvoices);
+  message('Amount successfully split across invoices', 'success');
+};
+
+// ✅ When user clicks "Split"
+const handleSplitAmount = () => {
+  const enteredAmount = parseFloat(supplierDetails.paidAmountToSupplier || 0);
+  const totalBalance = invoices.reduce(
+    (sum, inv) => sum + parseFloat(inv.balance || 0),
+    0
+  );
+
+  if (enteredAmount <= 0) {
+    message('Please enter a valid amount to split', 'warning');
+    return;
+  }
+
+  // ✅ Show popup if entered amount exceeds total balance
+  if (enteredAmount > totalBalance) {
+    Swal.fire({
+      title: 'Supplier Paid Amount must be less than or equal to Total Balance Amount',
+      html: '<p>Are you sure to continue?</p>',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'OK',
+      cancelButtonText: 'CLOSE',
+      confirmButtonColor: '#28a745', // green
+      cancelButtonColor: '#6c757d', // gray
+    }).then((result) => {
+      if (result.isConfirmed) {
+        splitAmountAcrossInvoices(enteredAmount);
+      }
+    });
+  } else {
+    splitAmountAcrossInvoices(enteredAmount);
+  }
+};
+
+
+
 
   return (
     <Container fluid className="p-4">
@@ -336,9 +416,10 @@ const PaymentManagement = () => {
                           value={supplierDetails.paidAmountToSupplier}
                           onChange={handleSupplierChange}
                         />
-                        <Button color="info" className="ms-2">
-                          Split
-                        </Button>
+                       <Button color="info" className="ms-2" onClick={handleSplitAmount}>
+  Split
+</Button>
+
                       </div>
                     </Col>
                   </FormGroup>
