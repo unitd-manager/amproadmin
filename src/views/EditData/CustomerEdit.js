@@ -13,6 +13,7 @@ import {
   NavLink,
 } from 'reactstrap';
 import classnames from 'classnames';
+import Select from 'react-select';
 import { useNavigate, useParams } from 'react-router-dom';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import '../form-editor/editor.scss';
@@ -33,6 +34,12 @@ const ContentUpdate = () => {
   const [contentDetails, setContentDetails] = useState({});
   const { loggedInuser } = useContext(AppContext);
   const [activeTab, setActiveTab] = useState('1');
+  const [taxTypes, setTaxTypes] = useState([]);
+  const [currencyTypes, setCurrencyTypes] = useState([]);
+  const [areaTypes, setAreaTypes] = useState([]);
+  const [priceGroups, setPriceGroups] = useState([]);
+  const [contactTypes, setContactTypes] = useState([]);
+  const [terms, setTerms] = useState([]);
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -97,6 +104,171 @@ const ContentUpdate = () => {
       getContentById();
     }
   }, [id]);
+
+  // Fetch tax types for the Tax dropdown
+  useEffect(() => {
+    api
+      .get('/valuelist/getTaxType')
+      .then((res) => {
+        const data = res.data && res.data.data ? res.data.data : [];
+        setTaxTypes(data);
+
+        // If contentDetails already has tax_type populated, normalize it to use valuelist_id
+        if (contentDetails && contentDetails.tax_type) {
+          const match = data.find(
+            (t) =>
+              String(t.valuelist_id) === String(contentDetails.tax_type) ||
+              String(t.value) === String(contentDetails.tax_type) ||
+              String(t.code) === String(contentDetails.tax_type)
+          );
+          if (match) {
+            setContentDetails((prev) => ({ ...prev, tax_type: String(match.valuelist_id) }));
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch tax types', err);
+      });
+  }, []);
+
+  // Fetch currency types for the Currency dropdown
+  useEffect(() => {
+    api
+      .get('/valuelist/getCurrency')
+      .then((res) => {
+        const data = res.data && res.data.data ? res.data.data : [];
+        setCurrencyTypes(data);
+
+   // If contentDetails already has tax_type populated, normalize it to use valuelist_id
+        if (contentDetails && contentDetails.currency) {
+          const match = data.find(
+            (t) =>
+              String(t.valuelist_id) === String(contentDetails.currency) ||
+              String(t.value) === String(contentDetails.currency) ||
+              String(t.code) === String(contentDetails.currency)
+          );
+          if (match) {
+            setContentDetails((prev) => ({ ...prev, currency: String(match.valuelist_id) }));
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch contact types', err);
+      });
+  }, []);
+
+  // Prepare options for react-select for Area
+  const areaOptions = (areaTypes || []).map((t) => ({
+    value: String(t.valuelist_id),
+    label: t.value || t.code || t.key_text || String(t.valuelist_id),
+  }));
+
+  const selectedArea = areaOptions.find((o) => o.value === String(contentDetails.area)) || null;
+
+  // Fetch area types for the Area dropdown
+  useEffect(() => {
+    api
+      .get('/valuelist/getArea')
+      .then((res) => {
+        const data = res.data && res.data.data ? res.data.data : [];
+        setAreaTypes(data);
+
+        // If contentDetails already has tax_type populated, normalize it to use valuelist_id
+        if (contentDetails && contentDetails.area) {
+          const match = data.find(
+              (t) =>
+              String(t.valuelist_id) === String(contentDetails.area) ||
+              String(t.value) === String(contentDetails.area) ||
+              String(t.code) === String(contentDetails.area)
+          );
+          if (match) {
+            setContentDetails((prev) => ({ ...prev, area: String(match.valuelist_id) }));
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch contact types', err);
+      });
+  }, []);
+
+   useEffect(() => {
+    api
+      .get('/valuelist/getSupplierTerms')
+      .then((res) => {
+        const data = res.data && res.data.data ? res.data.data : [];
+        setTerms(data);
+
+        // If contentDetails already has tax_type populated, normalize it to use valuelist_id
+        if (contentDetails && contentDetails.terms) {
+          const match = data.find(
+            (t) =>
+              String(t.valuelist_id) === String(contentDetails.terms) ||
+              String(t.value) === String(contentDetails.terms) ||
+              String(t.code) === String(contentDetails.terms)
+          );
+          if (match) {
+            setContentDetails((prev) => ({ ...prev, terms: String(match.valuelist_id) }));
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch terms', err);
+      });
+  }, []);
+
+
+
+    useEffect(() => {
+    api
+      .get('/valuelist/getContactType')
+      .then((res) => {
+        const data = res.data && res.data.data ? res.data.data : [];
+        setContactTypes(data);
+
+        // If contentDetails already has tax_type populated, normalize it to use valuelist_id
+        if (contentDetails && contentDetails.contact_type) {
+          const match = data.find(
+            (t) =>
+              String(t.valuelist_id) === String(contentDetails.contact_type) ||
+              String(t.value) === String(contentDetails.contact_type) ||
+              String(t.code) === String(contentDetails.contact_type)
+          );
+          if (match) {
+            setContentDetails((prev) => ({ ...prev, contact_type: String(match.valuelist_id) }));
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch contact types', err);
+      });
+  }, []);
+
+  // Fetch price groups (use supplier valuelist dropdown endpoint used elsewhere in the app)
+  useEffect(() => {
+    api
+      .get('/valuelist/getPriceGroup')
+     .then((res) => {
+        const data = res.data && res.data.data ? res.data.data : [];
+        setPriceGroups(data);
+
+        // If contentDetails already has tax_type populated, normalize it to use valuelist_id
+        if (contentDetails && contentDetails.price_group) {
+          const match = data.find(
+            (t) =>
+              String(t.valuelist_id) === String(contentDetails.price_group) ||
+              String(t.value) === String(contentDetails.price_group) ||
+              String(t.code) === String(contentDetails.price_group)
+          );
+          if (match) {
+            setContentDetails((prev) => ({ ...prev, price_group: String(match.valuelist_id) }));
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch tax types', err);
+      });
+  }, []);
+
 
   const toggle = (tab) => {
     if (activeTab !== tab) setActiveTab(tab);
@@ -223,24 +395,144 @@ const ContentUpdate = () => {
               {/* Left Column */}
               <Col md="6">
                 <FormGroup row><Label sm="3">Address 1</Label><Col sm="7"><Input type="text" name="address1" value={contentDetails.address1 || ''} onChange={handleInputs} /></Col></FormGroup>
-                <FormGroup row><Label sm="3">City</Label><Col sm="7"><Input type="text" name="city" value={contentDetails.city || ''} onChange={handleInputs} /></Col></FormGroup>
-                <FormGroup row><Label sm="3">State</Label><Col sm="7"><Input type="text" name="state" value={contentDetails.state || ''} onChange={handleInputs} /></Col></FormGroup>
+                <FormGroup row><Label sm="3">Address 2</Label><Col sm="7"><Input type="text" name="address2" value={contentDetails.address2 || ''} onChange={handleInputs} /></Col></FormGroup>
+                <FormGroup row><Label sm="3">Address 3</Label><Col sm="7"><Input type="text" name="address_street" value={contentDetails.address_street || ''} onChange={handleInputs} /></Col></FormGroup>
+                <FormGroup row><Label sm="3">Country</Label><Col sm="7"><Input type="text" name="address_country" value={contentDetails.address_country || ''} onChange={handleInputs} /></Col></FormGroup>
                 <FormGroup row><Label sm="3">Postal Code</Label><Col sm="7"><Input type="text" name="address_po_code" value={contentDetails.address_po_code || ''} onChange={handleInputs} /></Col></FormGroup>
                 <FormGroup row><Label sm="3">Phone</Label><Col sm="7"><Input type="text" name="phone" value={contentDetails.phone || ''} onChange={handleInputs} /></Col></FormGroup>
                 <FormGroup row><Label sm="3">Mobile</Label><Col sm="7"><Input type="text" name="mobile" value={contentDetails.mobile || ''} onChange={handleInputs} /></Col></FormGroup>
                 <FormGroup row><Label sm="3">Email</Label><Col sm="7"><Input type="email" name="email" value={contentDetails.email || ''} onChange={handleInputs} /></Col></FormGroup>
-                <FormGroup row><Label sm="3">Website</Label><Col sm="7"><Input type="text" name="website" value={contentDetails.website || ''} onChange={handleInputs} /></Col></FormGroup>
+                <FormGroup row><Label sm="3">Website</Label><Col sm="7"><Input type="text" name="web_site" value={contentDetails.web_site || ''} onChange={handleInputs} /></Col></FormGroup>
                 <FormGroup row><Label sm="3">Fax</Label><Col sm="7"><Input type="text" name="fax" value={contentDetails.fax || ''} onChange={handleInputs} /></Col></FormGroup>
               </Col>
 
               {/* Right Column */}
               <Col md="6">
+                <FormGroup row>
+                  <Label sm="3">Tax</Label>
+                  <Col sm="7">
+                    <Input
+                      type="select"
+                      name="tax_type"
+                      value={contentDetails.tax_type || ''}
+                      onChange={handleInputs}
+                    >
+                      <option value="">Select Tax</option>
+                      {taxTypes &&
+                        taxTypes.map((t) => (
+                          <option
+                            key={t.valuelist_id || t.code || t.value}
+                            value={String(t.valuelist_id)}
+                          >
+                            {t.value || t.code || t.key_text}
+                          </option>
+                        ))}
+                    </Input>
+                  </Col>
+                </FormGroup>
+                <FormGroup row>
+                  <Label sm="3">Price Group</Label>
+                  <Col sm="7">
+                    <Input
+                      type="select"
+                      name="price_group"
+                      value={contentDetails.price_group || ''}
+                      onChange={handleInputs}
+                    >
+                      <option value="">Select Price Group</option>
+                      {priceGroups &&
+                        priceGroups.map((p) => (
+                          <option     key={p.valuelist_id || p.code || p.value}
+                            value={String(p.valuelist_id)}
+                          >
+                            {p.value || p.code || p.key_text}
+                          </option>
+                        ))}
+                    </Input>
+                  </Col>
+                </FormGroup>
+                 <FormGroup row>
+                  <Label sm="3">Contact Type</Label>
+                  <Col sm="7">
+                    <Input
+                      type="select"
+                      name="contact_type"
+                      value={contentDetails.contact_type || ''}
+                      onChange={handleInputs}
+                    >
+                      <option value="">Select Contact Type</option>
+                      {contactTypes &&
+                        contactTypes.map((t) => (
+                          <option
+                            key={t.valuelist_id || t.code || t.value}
+                            value={String(t.valuelist_id)}
+                          >
+                            {t.value || t.code || t.key_text}
+                          </option>
+                        ))}
+                    </Input>
+                  </Col>
+                </FormGroup>
+                <FormGroup row>
+                  <Label sm="3">Area</Label>
+                  <Col sm="7">
+                    <Select
+                      isClearable
+                      name="area"
+                      options={areaOptions}
+                      value={selectedArea}
+                      onChange={(opt) =>
+                        setContentDetails({ ...contentDetails, area: opt ? opt.value : '' })
+                      }
+                      placeholder="Select Area"
+                    />
+                  </Col>
+                </FormGroup>
+ <FormGroup row>
+                  <Label sm="3">Currency</Label>
+                  <Col sm="7">
+                    <Input
+                      type="select"
+                      name="currency"
+                      value={contentDetails.currency || ''}
+                      onChange={handleInputs}
+                    >
+                      <option value="">Select Currency</option>
+                      {currencyTypes &&
+                        currencyTypes.map((t) => (
+                          <option
+                            key={t.valuelist_id || t.code || t.value}
+                            value={String(t.valuelist_id)}
+                          >
+                            {t.value || t.code || t.key_text}
+                          </option>
+                        ))}
+                    </Input>
+                  </Col>
+                </FormGroup>
                 <FormGroup row><Label sm="3">Company Reg. No</Label><Col sm="7"><Input type="text" name="company_reg_no" value={contentDetails.company_reg_no || ''} onChange={handleInputs} /></Col></FormGroup>
-                <FormGroup row><Label sm="3">Terms</Label><Col sm="7"><Input type="select" name="terms" value={contentDetails.terms || ''} onChange={handleInputs}><option value="">Select Terms</option></Input></Col></FormGroup>
+                   <FormGroup row>
+                  <Label sm="3">Terms</Label>
+                  <Col sm="7">
+                    <Input
+                      type="select"
+                      name="terms"
+                      value={contentDetails.terms || ''}
+                      onChange={handleInputs}
+                    >
+                      <option value="">Select Terms</option>
+                      {terms &&
+                        terms.map((p) => (
+                          <option     key={p.valuelist_id || p.code || p.value}
+                            value={String(p.valuelist_id)}
+                          >
+                            {p.value || p.code || p.key_text}
+                          </option>
+                        ))}
+                    </Input>
+                  </Col>
+                </FormGroup>
                 <FormGroup row><Label sm="3">Credit Limit</Label><Col sm="7"><Input type="text" name="credit_limit" value={contentDetails.credit_limit || ''} onChange={handleInputs} /></Col></FormGroup>
-                <FormGroup row><Label sm="3">Address 2</Label><Col sm="7"><Input type="text" name="address2" value={contentDetails.address2 || ''} onChange={handleInputs} /></Col></FormGroup>
-                <FormGroup row><Label sm="3">Address 3</Label><Col sm="7"><Input type="text" name="address_street" value={contentDetails.address_street || ''} onChange={handleInputs} /></Col></FormGroup>
-                <FormGroup row><Label sm="3">Country</Label><Col sm="7"><Input type="text" name="address_country" value={contentDetails.address_country || ''} onChange={handleInputs} /></Col></FormGroup>
                 <FormGroup row><Label sm="3">Remarks</Label><Col sm="7"><Input type="textarea" name="remarks" value={contentDetails.remarks || ''} onChange={handleInputs} rows="3" /></Col></FormGroup>
                 <FormGroup row><Label sm="3">Cheque Print Name</Label><Col sm="7"><Input type="text" name="cheque_print_name" value={contentDetails.cheque_print_name || ''} onChange={handleInputs} /></Col></FormGroup>
                 <FormGroup row>

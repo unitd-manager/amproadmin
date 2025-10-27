@@ -7,19 +7,29 @@ import {
   Button,
   Table,
 } from 'reactstrap';
-// import PropTypes from 'prop-types';
+ import PropTypes from 'prop-types';
 
-export default function SalesMan() {
+import api from '../../constants/api';
+
+export default function SalesMan({ customerId }) {
   // State for the selected salesman from the dropdown
   const [selectedSalesman, setSelectedSalesman] = useState('');
 
-  // Dummy list of available salesmen (replace with API call in real app)
-  const availableSalesmen = [
-    { id: 'S1', name: 'John Doe' },
-    { id: 'S2', name: 'Jane Smith' },
-    { id: 'S3', name: 'Peter Jones' },
-    { id: 'S4', name: 'Alice Brown' },
-  ];
+  // State for available salesmen fetched from API
+  const [availableSalesmen, setAvailableSalesmen] = useState([]);
+
+  // Fetch salesmen from API endpoint on mount
+  React.useEffect(() => {
+    api.get('/valuelist/getTeam')
+      .then((res) => {
+        const data = res.data && res.data.data ? res.data.data : [];
+        setAvailableSalesmen(data);
+      })
+      .catch((err) => {
+        console.error('Failed to fetch salesmen:', err);
+        setAvailableSalesmen([]);
+      });
+  }, []);
   
   // State to hold the list of salesmen associated with this customer
   const [customerSalesmenList, setCustomerSalesmenList] = useState([]);
@@ -31,18 +41,42 @@ export default function SalesMan() {
   const addSalesman = () => {
     if (selectedSalesman) {
       const salesmanToAdd = availableSalesmen.find(
-        (salesman) => salesman.id === selectedSalesman
+        (salesman) => String(salesman.valuelist_id) === selectedSalesman
       );
 
       // Check if salesman is already added to prevent duplicates
       if (
         salesmanToAdd &&
-        !customerSalesmenList.some((s) => s.id === salesmanToAdd.id)
+        !customerSalesmenList.some((s) => String(s.valuelist_id) === selectedSalesman)
       ) {
-        setCustomerSalesmenList([...customerSalesmenList, salesmanToAdd]);
-        setSelectedSalesman(''); // Clear selection after adding
-        // IMPORTANT: You'll need to pass this updated list to the parent (ContentUpdate)
-        // For example, via a prop like onSalesmenChange(updatedList)
+        // Derive a human-readable title for the salesman
+        const salesmanTitle = salesmanToAdd.value || salesmanToAdd.code || salesmanToAdd.key_text || salesmanToAdd.name || '';
+
+        // Prepare data for API call (include salesman_title and valuelist_id)
+        const data = {
+          company_id: customerId,
+          valuelist_id: salesmanToAdd.valuelist_id,
+          salesman_title: salesmanTitle,
+          creation_date: new Date().toISOString(),
+          modification_date: new Date().toISOString(),
+        };
+
+        // Make API call to save to database
+        api.post('/contact/insertToSalesman', data)
+          .then((res) => {
+            if (res.data && res.data.msg === 'Success') {
+              // Add the salesman to local state and include the salesman_title for display
+              const entry = { ...salesmanToAdd, salesman_title: salesmanTitle };
+              setCustomerSalesmenList([...customerSalesmenList, entry]);
+              setSelectedSalesman(''); // Clear selection after adding
+            } else {
+              alert('Failed to add salesman. Please try again.');
+            }
+          })
+          .catch((err) => {
+            console.error('Error adding salesman:', err);
+            alert('Failed to add salesman. Please try again.');
+          });
       } else if (salesmanToAdd) {
         alert('This salesman is already added.');
       } else {
@@ -53,10 +87,57 @@ export default function SalesMan() {
     }
   };
 
+
+  React.useEffect(() => {
+  if (customerId) {
+    
+         api
+              .post('/contact/getSalesmanByCustomerId', { company_id: customerId })
+              .then((res) => {
+        const data = res.data && res.data.data ? res.data.data : [];
+        setCustomerSalesmenList(data);
+      })
+      .catch((err) => {
+        console.error('Failed to fetch customer salesmen:', err);
+        setCustomerSalesmenList([]);
+      });
+  }
+}, [customerId]);
+
+
+  // const deleteSalesman = (id) => {
+  //   setCustomerSalesmenList(customerSalesmenList.filter((salesman) => String(salesman.valuelist_id) !== String(id)));
+  //   // IMPORTANT: Pass updated list to parent if you want changes to persist on save
+  // };
+
+
   const deleteSalesman = (id) => {
-    setCustomerSalesmenList(customerSalesmenList.filter((salesman) => salesman.id !== id));
-    // IMPORTANT: Pass updated list to parent if you want changes to persist on save
-  };
+  if (!window.confirm('Are you sure you want to delete this salesman?')) {
+    return;
+  }
+
+  // Make API call to delete from backend
+  api
+    .post('/contact/deleteSalesMan', { customer_salesmen_id: id})
+    .then((res) => {
+      if (res.data && res.data.msg === 'Success') {
+        // Remove from local state after successful deletion
+        setCustomerSalesmenList((prevList) =>
+          prevList.filter((salesman) => String(salesman.valuelist_id) !== String(id))
+        );
+          setTimeout(() => {
+            window.location.reload();
+          }, 400);
+      } else {
+        alert('Failed to delete salesman. Please try again.');
+      }
+    })
+    .catch((err) => {
+      console.error('Error deleting salesman:', err);
+      alert('Failed to delete salesman. Please try again.');
+    });
+};
+
 
   return (
     <div className="container-fluid">
@@ -79,10 +160,13 @@ export default function SalesMan() {
                     onChange={handleSelectSalesman}
                   >
                     <option value="">Please Select</option>
-                    {availableSalesmen.map((salesman) => (
-                      <option key={salesman.id} value={salesman.id}>
-                        {salesman.name}
-                      </option>
+                    {availableSalesmen && availableSalesmen.map((t) => (
+                      <option
+                            key={t.valuelist_id || t.code || t.value}
+                            value={String(t.valuelist_id)}
+                          >
+                            {t.value || t.code || t.key_text}
+                          </option>
                     ))}
                   </Input>
                 </Col>
@@ -113,14 +197,14 @@ export default function SalesMan() {
               </thead>
               <tbody>
                 {customerSalesmenList.map((salesman, index) => (
-                  <tr key={salesman.id}>
+                  <tr key={salesman.valuelist_id}>
                     <td>{index + 1}</td>
-                    <td>{salesman.name}</td>
+                    <td>{salesman.salesman_title || salesman.value || salesman.code || salesman.key_text}</td>
                     <td>
                       <Button 
                         color="danger" 
                         size="sm" 
-                        onClick={() => deleteSalesman(salesman.id)}
+                        onClick={() => deleteSalesman(salesman.customer_salesmen_id)}
                       >
                         Delete
                       </Button>
@@ -138,6 +222,7 @@ export default function SalesMan() {
   );
 }
 
-// SalesMan.propTypes = {
-//   contentDetails: PropTypes.object,
-// };
+SalesMan.propTypes = {
+
+  customerId: PropTypes.any,
+};
