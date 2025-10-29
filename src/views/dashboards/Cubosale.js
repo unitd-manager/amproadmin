@@ -18,6 +18,8 @@ import {
 import { FaChartBar, FaMoneyBillWave } from 'react-icons/fa';
 import api from "../../constants/api";
 import PopularProducts from '../../components/dashboard/PopularProducts';
+import FinanceDashboard from "./FinanceDashboard";
+
 
 const Classic = () => {
   const [activeTab, setActiveTab] = useState("1");
@@ -392,6 +394,7 @@ const Classic = () => {
         </TabPane>
         <TabPane tabId="4">
           <h5>Finance Tab Content</h5>
+          <FinanceDashboard/>
         </TabPane>
       </TabContent>
     </div>

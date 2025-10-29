@@ -19,6 +19,7 @@ import { FaChartBar, FaMoneyBillWave } from 'react-icons/fa';
 import api from "../../constants/api";
 import RecentSalesOrders from "../../components/dashboard/generalDashboard/RecentSalesOrder";
 import RecentSalesInvoices from "../../components/dashboard/generalDashboard/RecentSalesInvoices";
+import FinanceDashboard from "../dashboards/FinanceDashboard";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("1");
@@ -288,100 +289,13 @@ const Dashboard = () => {
         <TabPane tabId="2">
         <RecentSalesOrders />
           <RecentSalesInvoices />
-          {/* <Row className="mt-3">
-            <Col md="6">
-              <Card className="shadow-sm mb-4">
-                <CardBody className="d-flex align-items-center">
-                  <div className="p-3 rounded-circle bg-success-light me-3">
-                    <FaChartBar size={30} className="text-success" />
-                  </div>
-                  <div>
-                    <h6 className="text-muted mb-0">Total Sales</h6>
-                    <h4 className="mb-0">$ {salestotalvalue.total_sales}</h4>
-                  </div>
-                </CardBody>
-              </Card>
-            </Col>
-            <Col md="6">
-              <Card className="shadow-sm mb-4">
-                <CardBody className="d-flex align-items-center">
-                  <div className="p-3 rounded-circle bg-info-light me-3">
-                    <FaMoneyBillWave size={30} className="text-info" />
-                  </div>
-                  <div>
-                    <h6 className="text-muted mb-0">Total Outstanding</h6>
-                    <h4 className="mb-0">$ {salestotalvalue.total_outstanding}</h4>
-                  </div>
-                </CardBody>
-              </Card>
-            </Col>
-          </Row>
-          <Row>
-            <Col md="6">
-              <Card className="shadow-sm mb-4">
-                <CardHeader className="bg-white">
-                  <h5 className="mb-0">Recent Sales Invoices</h5>
-                </CardHeader>
-                <CardBody>
-                  <Table responsive className="table-hover">
-                    <thead>
-                      <tr>
-                        <th>Date</th>
-                        <th>InvoiceNo</th>
-                        <th>Customer</th>
-                        <th>Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentInvoices.map((invoice) => (
-                        <tr key={invoice.invoice_id}>
-                          <td>{invoice.invoice_date ? invoice.invoice_date.substring(0, 10) : ''}</td>
-                          <td><a href="#!">{invoice.invoice_code}</a></td>
-                          <td>{invoice.company_name}</td>
-                          <td>{invoice.invoice_amount}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </CardBody>
-              </Card>
-            </Col>
-            <Col md="6">
-              <Card className="shadow-sm mb-4">
-                <CardHeader className="bg-white">
-                  <h5 className="mb-0">Recent Sales Orders</h5>
-                </CardHeader>
-                <CardBody>
-                  <Table responsive className="table-hover">
-                    <thead>
-                      <tr>
-                        <th>Date</th>
-                        <th>InvoiceNo</th>
-                        <th>Customer</th>
-                        <th>Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentOrders.map((order) => (
-                        <tr key={order.sales_order_id}>
-                          <td>{order.tran_date ? order.tran_date.substring(0, 10) : ''}</td>
-                          <td><a href="#!">{order.tran_no}</a></td>
-                          <td>{order.company_name}</td>
-                          <td>{order.net_total}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </CardBody>
-              </Card>
-            </Col>
-          </Row> */}
         </TabPane>
         <TabPane tabId="3">
           <h5>Purchase Tab Content</h5>
         </TabPane>
         <TabPane tabId="4">
           <h5>Finance Tab Content</h5>
+        <FinanceDashboard/>
         </TabPane>
       </TabContent>
     </div>
