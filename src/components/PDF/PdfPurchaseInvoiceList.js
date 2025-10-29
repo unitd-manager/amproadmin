@@ -1,48 +1,130 @@
 import React, { useState, useEffect } from 'react';
+import * as Icon from 'react-feather';
 import pdfMake from 'pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
+//import { Button } from 'reactstrap';
 import PropTypes from 'prop-types';
 import moment from 'moment';
 import api from '../../constants/api';
 import message from '../Message';
-import PdfFooter from './PdfFooter';
+import PdfFooter from './PdfFooter'; // Assuming you have a footer component
+import PdfHeader from './PdfHeader'; // Assuming you have a header component
 
-const PdfPurchaseInvoiceList = ({ ids }) => {
-     PdfPurchaseInvoiceList.propTypes = {
-    ids: PropTypes.array,
+const PdfPurchaseInvoiceList = ({ id }) => {
+  PdfPurchaseInvoiceList.propTypes = {
+    id: PropTypes.arrayOf(PropTypes.any).isRequired,
   };
-  // ✅ Change: receive multiple invoice IDs
-  const [invoices, setInvoices] = useState([]);
-
-  const fetchInvoicesData = () => {
-    // Assuming your backend API can accept multiple IDs
-    api
-      .post('/purchaseorder/getPurchaseInvoicesByIds', { purchase_invoice_ids: ids })
-      .then((res) => {
-        setInvoices(res.data.data || []); // Each invoice object includes supplier + lineItems
-    console.log('res.data',res.data);
-    })
-      .catch(() => {
-        message('Invoices Not Found', 'info');
-      });
-  };
+  console.log(id, "wsed");
+  const [salesOrders, setSalesOrders] = useState([]);
+  const [lineItems, setLineItems] = useState([]);
+  const [hfdata, setHeaderFooterData] = useState();
+  const [ setGtotal] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (ids && ids.length) {
-      fetchInvoicesData();
+    api.get('/setting/getSettingsForCompany').then((res) => {
+      setHeaderFooterData(res.data.data);
+    });
+  }, []);
+
+  const findCompany = (key) => {
+    const filteredResult = hfdata?.find((e) => e.key_text === key);
+    return filteredResult?.value || '';
+  };
+ 
+  const fetchSalesOrderData = async () => {
+    try {
+      setLoading(true);
+      // Fetch sales order data for all IDs
+      const salesOrderPromises = id.map(orderId =>
+        api.post('/purchaseorder/getPurchaseInvoiceById', { purchase_invoice_id: orderId })
+      );
+      const lineItemPromises = id.map(orderId =>
+        api.post('/purchaseorder/getPiProductsByPurchaseInvoiceId', { purchase_invoice_id: orderId })
+      );
+
+      const salesOrderResponses = await Promise.all(salesOrderPromises);
+      const lineItemResponses = await Promise.all(lineItemPromises);
+
+      const allSalesOrders = salesOrderResponses.flatMap(res => res.data.data.map(item => ({ ...item, purchase_invoice_id: String(item.purchase_invoice_id) })) || []);
+      const allLineItems = lineItemResponses.map((res, index) => {
+        // Add the invoice information to each line item for grouping
+        const items = res.data.data || [];
+        return items.map(item => ({
+          ...item,
+          purchase_invoice_id: id[index],
+          invoice_code: allSalesOrders[index]?.invoice_code || '',
+          invoice_date: allSalesOrders[index]?.invoice_date || ''
+        }));
+      }).flat();
+
+      setSalesOrders(allSalesOrders);
+      setLineItems(allLineItems);
+
+      let grandTotal = 0;
+      allLineItems.forEach((elem) => {
+        grandTotal += elem.total || 0;
+      });
+      setGtotal(grandTotal);
+      setLoading(false);
+    } catch (error) {
+      message('Error fetching sales order data', 'error');
+      setLoading(false);
     }
-  }, [ids]);
+  };
+
+  const [taxRate] = React.useState(0.09); // Set default tax rate to 9%
+
+  useEffect(() => {
+    if (id) {
+      fetchSalesOrderData();
+    }
+  }, [id]);
 
   const GetPdf = () => {
-    const allContent = [];
+    if (!lineItems || lineItems.length === 0) {
+      message('No line items found', 'warning');
+      return;
+    }
 
-    invoices?.forEach((inv, idx) => {
-      // Prepare lineItems
+    // Group line items by invoice
+    const invoiceGroups = {};
+    lineItems.forEach(item => {
+      if (!invoiceGroups[item.purchase_invoice_id]) {
+        invoiceGroups[item.purchase_invoice_id] = {
+          items: [],
+          invoice_code: item.invoice_code,
+          invoice_date: item.invoice_date
+        };
+      }
+      invoiceGroups[item.purchase_invoice_id].items.push(item);
+    });
+
+    // Create content for each invoice
+    const allContent = [];
+    const invoiceIds = Object.keys(invoiceGroups);
+
+    // For each invoice, create a separate section in the PDF
+    invoiceIds.forEach((invoiceId, index) => {
+      const invoiceData = invoiceGroups[invoiceId];
+      const invoiceItems = invoiceData.items;
+      const currentSalesOrder = salesOrders.find(order => String(order.purchase_invoice_id) === invoiceId) || salesOrders[0] || {};
+      
+      // Calculate subtotal for this invoice
+      let invoiceSubtotal = 0;
+      invoiceItems.forEach(item => {
+        invoiceSubtotal += item.total || 0;
+      });
+      
+      const invoiceGst = invoiceSubtotal * taxRate;
+      const invoiceTotalWithGst = invoiceSubtotal + invoiceGst;
+
+      // Create table rows for this invoice's items
       const productItems = [
         [
           { text: 'No', style: 'tableHead' },
           { text: 'Description', style: 'tableHead' },
-          { text: 'U.O.M', style: 'tableHead' },
+          { text: 'Uom', style: 'tableHead' },
           { text: 'CTN', style: 'tableHead' },
           { text: 'PCS', style: 'tableHead' },
           { text: 'F.O.C', style: 'tableHead' },
@@ -52,120 +134,274 @@ const PdfPurchaseInvoiceList = ({ ids }) => {
         ],
       ];
 
-      inv.lineItems?.forEach((item, index) => {
-        productItems?.push([
-          { text: `${index + 1}`, style: 'tableBody', alignment: 'center' },
-          { text: item.product_name || '', style: 'tableBody' },
-          { text: item.uom || '', style: 'tableBody', alignment: 'center' },
-          { text: item.ctn || '', style: 'tableBody', alignment: 'center' },
-          { text: item.pcs || '', style: 'tableBody', alignment: 'center' },
-          { text: item.foc || '', style: 'tableBody', alignment: 'center' },
-          { text: item.cpri || '', style: 'tableBody', alignment: 'right' },
-          { text: item.upri || '', style: 'tableBody', alignment: 'right' },
-          { text: item.amount || '', style: 'tableBody', alignment: 'right' },
+      invoiceItems.forEach((item, itemIndex) => {
+        productItems.push([
+          { text: `${itemIndex + 1}`, style: 'tableBody' },
+          { text: `${item.product_name || ''}`, style: 'tableBody' },
+          { text: `${item.unit || ''}`, style: 'tableBody' },
+          { text: `${item.carton_qty || ''}`, style: 'tableBody' },
+          { text: `${item.loose_qty || ''}`, style: 'tableBody' },
+          { text: `${item.foc || ''}`, style: 'tableBody' },
+          { text: `${item.carton_price || ''}`, style: 'tableBody' },
+          { text: `${item.wholesale_price || ''}`, style: 'tableBody' },
+          { text: `${item.total || ''}`, style: 'tableBody' },
         ]);
       });
 
-      // Push this invoice’s content
+      // Add page break between invoices, except for the first one
+      if (index > 0) {
+        allContent.push({ text: '', pageBreak: 'before' });
+      }
+
+      // Add invoice header and content
       allContent.push(
-        // Header
         {
           columns: [
-            { text: 'AMPRO PTE LTD', style: 'header' },
-            { text: 'PURCHASE INVOICE', style: 'headerRight', alignment: 'right' },
+            { width: '*', text: '' }, // left spacer
+            {
+              width: 'auto',
+              table: {
+                widths: ['auto'],
+                body: [
+                  [
+                    {
+                      text: 'Sole Distributors : Danish Food, Dekko Food, Pran Food',
+                      style: 'textSize',
+                      alignment: 'center',
+                      margin: [5, 5, 5, 5],
+                      bold: true,
+                    },
+                  ],
+                ],
+              },
+              layout: {
+                hLineWidth: () => 0.5,
+                vLineWidth: () => 0.5,
+                hLineColor: () => '#000000',
+                vLineColor: () => '#000000',
+              },
+            },
+            { width: '*', text: '' } // right spacer
           ],
+          margin: [0, 0, 0, 15]
         },
-        {
-          text:
-            'WHOLESALER • IMPORTER • EXPORTER • GENERAL MERCHANTS\n' +
-            'BLOCK B #02-01, 31 PENJURU LANE, SINGAPORE 609198\n' +
-            'Tel : 93280444   Email : amprop127@gmail.com   Website : www.ampro.sg',
-          style: 'smallText',
-          alignment: 'center',
-          margin: [0, 10, 0, 10],
-        },
+        
         {
           columns: [
             {
-              stack: [
-                { text: 'SUPPLIER :', bold: true },
-                { text: inv?.supplier?.company_name || '', style: 'boldText' },
-                { text: inv?.supplier?.address || '' },
-                { text: `Tel : ${inv?.supplier?.phone || ''}` },
-              ],
-              style: 'box',
+              width: '50%',
+              table: {
+                widths: ['*'],
+                body: [
+                  [
+                    { text: 'Customer Address:', bold: true }
+                  ],
+                  [
+                    {
+                      text: [
+                        currentSalesOrder.company_name || '', '\n',
+                        currentSalesOrder.address_street || '', '\n',
+                        currentSalesOrder.address_down || '', '\n',
+                        currentSalesOrder.address_country || '', '\n',
+                        currentSalesOrder.address_po_code || '', '\n',
+                        'TEL: 6789098765', '\n', '\n','\n',
+                      ],
+                      margin: [8, 4, 0, 4],
+                    }
+                  ]
+                ]
+              },
+              layout: {
+                hLineWidth: (i, node) => (i === 0 || i === node.table.body.length ? 1 : 1),
+                vLineWidth: (i, node) => (i === 0 || i === node.table.widths.length ? 0.5 : 0),
+                hLineColor: () => '#000000',
+                vLineColor: () => '#000000'
+              },
+              style: 'textSize'
             },
+            
             {
+              width: '50%',
               stack: [
-                { text: `TRAN NO : ${inv?.tran_no || ''}` },
-                { text: `TRAN DATE : ${moment(inv?.tran_date).format('DD/MM/YYYY')}` },
-                { text: `TERMS : ${inv?.carry_days || ''}` },
-                { text: `PAGE : 1/1` },
-                { text: `AGENT NAME : ${inv?.created_by || ''}` },
-              ],
-              style: 'box',
+                {
+                  table: {
+                    widths: ['30%', '65%'],
+                    body: [
+                      [
+                        { text: 'TRAN NO', margin: [5, 3, 5, 3] },
+                        { text: invoiceData.invoice_code || '', margin: [5, 3, 5, 3] }
+                      ],
+                      [
+                        { text: 'TRAN DATE', margin: [5, 3, 5, 3] },
+                        { text: invoiceData.invoice_date ? moment(invoiceData.invoice_date).format('DD-MM-YYYY') : '', margin: [5, 3, 5, 3] }
+                      ],
+                      [
+                        { text: 'TERMS', margin: [5, 3, 5, 3] },
+                        { text: currentSalesOrder.terms || '', margin: [5, 3, 5, 3] }
+                      ],
+                      [
+                        { text: 'PAGE', margin: [5, 3, 5, 3] },
+                        { text: currentSalesOrder.order_no || '', margin: [5, 3, 5, 3] }
+                      ],
+                      [
+                        { text: 'AGENT NAME', margin: [5, 3, 5, 3] },
+                        { text: currentSalesOrder.gst_reg_no || '', margin: [5, 3, 5, 3] }
+                      ],
+                    ]
+                  },
+                  layout: {
+                    hLineWidth(i, node) {
+                      return i === 0 || i === node.table.body.length ? 0.5 : 0;
+                    },
+                    vLineWidth(i, node) {
+                      return i === 0 || i === node.table.widths.length ? 0.5 : 1;
+                    },
+                    hLineColor() {
+                      return '#000000';
+                    },
+                    vLineColor() {
+                      return '#000000';
+                    }
+                  },
+                  style: 'textSize',
+                }
+              ]
             },
           ],
+          columnGap: 10,
+          margin: [0, 0, 0, 15],
+        },
+        
+        {
+          layout: {
+            hLineWidth: (i) => (i === 0 || i === 1) ? 1 : 0,
+            vLineWidth: () => 1,
+            hLineColor: () => '#000',
+            vLineColor: () => '#000',
+            fillColor: (rowIndex) => {
+              return rowIndex === 0 ? '#f2f2f2' : null; // light gray header
+            },
+          },
+          table: {
+            headerRows: 1,
+            widths: ['auto', '*', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto'], // Adjust column widths
+            body: productItems,
+          },
         },
         {
           table: {
-            headerRows: 1,
-            widths: ['auto', '*', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto'],
-            body: productItems,
+            widths: ['60%', '20%', '20%'],
+            body: [
+              [
+                {
+                  text: 'Remarks:\n',
+                  bold: true,
+                  colSpan: 1,
+                  rowSpan: 3,
+                  margin: [5, 5, 5, 5],
+                },
+                { text: 'Subtotal   :', bold: true, alignment: 'center', margin: [5, 5, 5, 5] },
+                { text: invoiceSubtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right', margin: [5, 5, 5, 5] }
+              ],
+              [
+                {}, // empty cell due to rowspan
+                { text: 'GST  :', bold: true, alignment: 'center', margin: [5, 5, 5, 5] },
+                { text: invoiceGst.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right', margin: [5, 5, 5, 5] }
+              ],
+              [
+                {}, // empty cell due to rowspan
+                { text: 'Net Total  :', bold: true, alignment: 'center', margin: [5, 5, 5, 5] },
+                { text: invoiceTotalWithGst.toLocaleString('en-IN', { minimumFractionDigits: 2 }), alignment: 'right', margin: [5, 5, 5, 5] }
+              ]
+            ]
           },
-          layout: 'lightHorizontalLines',
-          margin: [0, 10, 0, 10],
+          layout: {
+            hLineWidth: (i, node) => (i === 0 || i === node.table.body.length ? 0.5 : 0),
+            vLineWidth: (i, node) => (i === 0 || i === node.table.widths.length ? 0.5 : 0),
+            hLineColor: () => '#000000',
+            vLineColor: () => '#000000',
+          },
+          style: 'textSize',
+          margin: [0, 0, 0, 10],
         },
         {
+          text: 'E. & O. E.',
+          alignment: 'center', // or 'right' or 'center' as needed
+          margin: [0, 5, 0, 0],
+          style: 'textSize'
+        },
+        {
+          margin: [0, 80, 0, 0], // space from totals
           columns: [
-            { text: 'Remarks :', bold: true },
             {
+              width: '50%',
               stack: [
-                { text: `Sub Total : ${inv?.sub_total || ''}`, alignment: 'right' },
-                { text: `GST : ${inv?.gst || ''}`, alignment: 'right' },
-                { text: `Net Total : ${inv?.net_total || ''}`, alignment: 'right', bold: true },
-                { text: `Paid Amount : ${inv?.paid_amount || ''}`, alignment: 'right' },
-                { text: `Balance Amount : ${inv?.balance_amount || ''}`, alignment: 'right' },
+                { text: '________________________________________________', margin: [0, 0, 0, 10]},
+                { text: 'Good Received in Good condition', italics: true, alignment: 'center',fontSize: 8 },
+                { text: 'Customer Authorised Signature and' , italics: true, alignment: 'center', fontSize: 8},
+                { text: 'company stamp', italics: true, alignment: 'center', fontSize: 8 },
               ],
-              width: 'auto',
+              style: 'textSize',
+            },
+            {
+              width: '50%',
+              alignment: 'left',
+              stack: [
+                { text: '________________________________________________', margin: [0, 0, 0, 10]},
+                { text: 'for AMPRO PTE LTD', alignment: 'center', fontSize: 8  },
+              ],
+              style: 'textSize',
             },
           ],
-        },
-        // Page break between invoices
-        idx < invoices.length - 1 ? { text: '', pageBreak: 'after' } : {}
+        }
       );
     });
 
     const dd = {
       pageSize: 'A4',
-      pageMargins: [20, 160, 20, 60],
-      footer: PdfFooter,
+      pageMargins: [40, 150, 40, 80], // Adjust margins as needed
+      header: PdfHeader({ findCompany }), // Assuming your header needs company info
+      footer: PdfFooter, // Assuming you have a standard footer
       content: allContent,
       styles: {
-        header: { fontSize: 16, bold: true },
-        headerRight: { fontSize: 14, bold: true },
-        smallText: { fontSize: 9 },
-        box: { fontSize: 10, margin: [0, 5, 0, 5] },
+        header: {
+          fontSize: 18,
+          bold: true,
+        },
+        subheader: {
+          fontSize: 14,
+          bold: true,
+        },
         tableHead: {
           bold: true,
-          fontSize: 9,
-          color: 'white',
-          fillColor: 'black',
-          alignment: 'center',
+          fontSize: 10,
+          color: 'black',
+          
         },
-        tableBody: { fontSize: 9, margin: [0, 2, 0, 2] },
-        boldText: { fontSize: 10, bold: true },
+        tableBody: {
+          fontSize: 9,
+        },
+        textSize: {
+          fontSize: 10,
+        },
       },
     };
-
-    pdfMake.vfs = pdfFonts.pdfMake.vfs;
-    pdfMake.createPdf(dd).open();
+    
+    // Create the PDF document
+   pdfMake.vfs = pdfFonts.pdfMake.vfs;
+    pdfMake.createPdf(dd, null, null, pdfFonts.pdfMake.vfs).open();
   };
-
+  
   return (
-    <>
-      <a onClick={GetPdf}>Print</a>
-    </>
+    <div>
+      {loading ? (
+        <div>Loading...</div>
+      ) : (
+        <div>
+          <button type="button" onClick={GetPdf}><Icon.Printer size={16} /></button>
+        </div>
+      )}
+    </div>
   );
 };
 

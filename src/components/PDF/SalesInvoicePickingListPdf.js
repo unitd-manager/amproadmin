@@ -79,8 +79,8 @@ const PdfPickingList = ({ selectedOrderIds }) => {
       } else {
         aggregatedItems[item.product_id] = {
           product_name: item.product_name,
-          quantity: parseFloat(item.quantity || 0),
-          carton_qty: parseFloat(item.carton_qty || 0),
+          quantity: parseFloat(item.quantity || ''),
+          carton_qty: parseFloat(item.carton_qty || ''),
           unit: item.unit, // Assuming unit is consistent for the same product
         };
       }

@@ -14,6 +14,8 @@ import message from '../../components/Message';
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
+import PrintPerfomaList from '../../components/PDF/PrintPerfomaInvList';
+
 import SalesInvoicePickingListPdf from '../../components/PDF/SalesInvoicePickingListPdf';
 import PrintLetterPdf from '../../components/PDF/PrintLetterPdf';
 import PrintPackingPdf from '../../components/PDF/PrintPackingPdf';
@@ -305,11 +307,12 @@ const handleConvertToDelivryVerification = async () => {
             className="ms-2"
             disabled={selectedInvoiceIds.length === 0}
           >
-            <PrintLetterPdf
-              id={selectedOrder?.invoice_id}
-              settingdetails={null}
-              lineItem={null}
-            />
+         
+             <PrintPerfomaList
+                                 id={selectedInvoiceIds}
+      settingdetails={null}
+      lineItem={null}
+    />
           </Button>
         </div>
 <div className="sales-order-table">
@@ -327,7 +330,7 @@ const handleConvertToDelivryVerification = async () => {
               <DropdownMenu>
                 <DropdownItem onClick={generateReceipt}>Receive Payment</DropdownItem>
                 <DropdownItem>
-    <PrintLetterPdf id={id} settingdetails={settingdetails} lineItem={lineItem} />
+    <PrintLetterPdf id={selectedInvoiceIds} settingdetails={settingdetails} lineItem={lineItem} />
 
   </DropdownItem>
   <DropdownItem>

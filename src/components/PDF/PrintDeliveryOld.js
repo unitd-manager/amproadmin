@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import * as Icon from 'react-feather';
 import pdfMake from 'pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 //import { Button } from 'reactstrap';
@@ -33,7 +32,7 @@ const PrintPerfoma = ({ id }) => {
  
   const fetchSalesOrderData = () => {
     api
-      .post('/salesorder/getSalesorderById', { sales_order_id: id })
+      .post('/salesorder/getDeliveryorderById', { delivery_order_id: id })
       .then((res) => {
         setSalesOrder(res.data.data[0] || {});
       })
@@ -42,7 +41,7 @@ const PrintPerfoma = ({ id }) => {
       });
 
     api
-      .post('/salesOrder/getQuoteLineItemsById', { sales_order_id: id })
+      .post('/invoice/getDeliveryLineItemsById', { delivery_order_id: id })
       .then((res) => {
         setLineItems(res.data.data);
         let grandTotal = 0;
@@ -57,37 +56,37 @@ const PrintPerfoma = ({ id }) => {
   };
 
 
-   const [taxType, setTaxType] = React.useState('');
-   const [taxRate, setTaxRate] = React.useState(0);
-   console.log(taxType)
-   React.useEffect(() => {
-    const fetchBillDiscountAndTax = async () => {
-      try {
-        const response = await api.post('/salesOrder/getSalesorderById', {
-          sales_order_id: id,
-        });
+  //  const [taxType, setTaxType] = React.useState('');
+ const [taxRate] = React.useState(0.09); // Set default tax rate to 9%
+  //  console.log(taxType)
+  //  React.useEffect(() => {
+  //   const fetchBillDiscountAndTax = async () => {
+  //     try {
+  //       const response = await api.post('/salesOrder/getDeliveryorderById', {
+  //         delivery_order_id: id,
+  //       });
   
-        const data = response.data.data[0];
+  //       const data = response.data.data[0];
        
   
-        const type = data?.tax_type || '';
-        setTaxType(type);
+  //       const type = data?.tax_type || '';
+  //       setTaxType(type);
   
-        const taxResponse = await api.post('/valuelist/getValueListByKeyText', {
-          value: type, // use this instead of taxType
-        });
+  //       const taxResponse = await api.post('/valuelist/getValueListByKeyText', {
+  //         value: type, // use this instead of taxType
+  //       });
   
-        const taxCode = parseFloat(taxResponse.data.data[0]?.code) || 0;
-        setTaxRate(taxCode / 100);
-      } catch (error) {
-        console.error('Failed to fetch bill discount or tax info:', error);
-      }
-    };
+  //       const taxCode = parseFloat(taxResponse.data.data[0]?.code) || 0;
+  //       setTaxRate(taxCode / 100);
+  //     } catch (error) {
+  //       console.error('Failed to fetch bill discount or tax info:', error);
+  //     }
+  //   };
   
-    if (id) {
-      fetchBillDiscountAndTax();
-    }
-  }, [id]);
+  //   if (id) {
+  //     fetchBillDiscountAndTax();
+  //   }
+  // }, [id]);
   
 
   const gst = gTotal * taxRate;
@@ -127,20 +126,6 @@ const PrintPerfoma = ({ id }) => {
         { text: `${item.total || ''}`, style: 'tableBody' },
       ]);
     });
-
-     for (let i = 0; i < 10; i++) {
-      productItems.push([
-        { text: '', style: 'tableBody' },
-        { text: '', style: 'tableBody' },
-        { text: '', style: 'tableBody' },
-        { text: '', style: 'tableBody' },
-        { text: '', style: 'tableBody' },
-        { text: '', style: 'tableBody' },
-        { text: '', style: 'tableBody' },
-        { text: '', style: 'tableBody' },
-        { text: '', style: 'tableBody' },
-      ]);
-    }
 
     const dd = {
       pageSize: 'A4',
@@ -207,14 +192,13 @@ const PrintPerfoma = ({ id }) => {
                     ],
                     [
                       {
-                         text: [
+                        text: [
                           salesOrder.company_name || '', '\n',
-                          salesOrder.address1 || '', '\n',
-                          salesOrder.address2 || '', '\n',
-                           salesOrder.address_street || '', '\n',
-                          salesOrder.address_country || '', ' - ',
+                          salesOrder.address_street || '', '\n',
+                          salesOrder.address_down || '', '\n',
+                          salesOrder.address_country || '', '\n',
                           salesOrder.address_po_code || '', '\n',
-                          `TEL:${salesOrder.phone || 'NULL'}`, '\n', '\n','\n',
+                          'TEL: 6789098765', '\n', '\n','\n',
                         ],
                         margin: [8, 4, 0, 4],
                         layout: {
@@ -247,11 +231,11 @@ const PrintPerfoma = ({ id }) => {
                       body: [
                         [
                           { text: 'TRAN NO', margin: [5, 3, 5, 3] },
-                          { text: salesOrder.tran_no || '', margin: [5, 3, 5, 3] }
+                          { text: salesOrder.delivery_code || '', margin: [5, 3, 5, 3] }
                         ],
                         [
                           { text: 'TRAN DATE', margin: [5, 3, 5, 3] },
-                          { text: salesOrder.tran_date ? moment(salesOrder.tran_date).format('DD-MM-YYYY') : '', margin: [5, 3, 5, 3] }
+                          { text: salesOrder.date ? moment(salesOrder.tran_date).format('DD-MM-YYYY') : '', margin: [5, 3, 5, 3] }
                         ],
                         [
                           { text: 'TERMS', margin: [5, 3, 5, 3] },
@@ -407,7 +391,7 @@ const PrintPerfoma = ({ id }) => {
   return (
     <>
       <a   onClick={GetPdf}>
-       <Icon.Printer size={16} />
+        Print Performa
       </a>
     </>
   );

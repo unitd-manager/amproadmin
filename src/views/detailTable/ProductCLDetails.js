@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { Row, Col, Form, FormGroup, Label, Input, Button } from 'reactstrap';
+import { Row, Col, Form, FormGroup, Label, Input } from 'reactstrap';
 import { ToastContainer } from 'react-toastify';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useNavigate } from 'react-router-dom';
@@ -96,58 +96,51 @@ const ProductCLDetails = () => {
   useEffect(() => {}, []);
 
   return (
-    <div>
+    <div style={{ background: '#f5f7fa', minHeight: '100vh', padding: '32px 0' }}>
       <BreadCrumbs />
-      <ToastContainer></ToastContainer>
-      <Row>
-        <Col md="6">
-          <ComponentCard title="Key Details">
-            <Form>
-              <FormGroup>
-                <Row>
-                  <Col md="12">
-                    <Label>
-                      Product Name <span className="required"> *</span>{' '}
-                    </Label>
-                    <Input
-                      type="text"
-                      onChange={handleInputs}
-                      value={productDetails && productDetails.title}
-                      name="title"
-                    />
-                  </Col>
-                </Row>
-              </FormGroup>
-              <FormGroup>
-                <Row>
-                  <div className="pt-3 mt-3 d-flex align-items-center gap-2">
-                    <Button
-                      className="shadow-none"
-                      color="primary"
-                      onClick={() => {
-                        generateCode();
-                      }}
-                    >
-                      Save & Continue
-                    </Button>
-                    <Button
-                      type="submit"
-                      className="btn btn-dark shadow-none"
-                      onClick={(e) => {
-                        if (window.confirm('Are you sure you want to cancel? ')) {
-                          navigate('/ProductCL');
-                        } else {
-                          e.preventDefault();
-                        }
-                      }}
+      <ToastContainer />
+      <Row className="justify-content-center">
+        <Col md="8">
+          <div style={{ background: '#fff', borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32, border: '1px solid #e0e0e0' }}>
+            <ComponentCard title="New/Edit Product">
+              <Form>
+                <FormGroup>
+                  <Row>
+                    <Col md="12">
+                      <Label>
+                        Product Name <span className="required"> *</span>{' '}
+                      </Label>
+                      <Input
+                        type="text"
+                        onChange={handleInputs}
+                        value={productDetails && productDetails.title}
+                        name="title"
+                      />
+                    </Col>
+                  </Row>
+                </FormGroup>
+                <FormGroup>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 16, marginTop: 32, background: '#f5f7fa', padding: '18px 24px', borderRadius: 8 }}>
+                    <button
+                      type="button"
+                      style={{ background: '#fff', color: '#1a355e', border: '1px solid #bfc8d6', borderRadius: 6, padding: '8px 32px', fontWeight: 500, fontSize: 18, minWidth: 100, marginRight: 8 }}
+                      onClick={() => navigate('/ProductCL')}
                     >
                       Cancel
-                    </Button>
+                    </button>
+                    <button
+                      type="button"
+                      style={{ background: '#fff', color: '#1a355e', border: '1px solid #bfc8d6', borderRadius: 6, padding: '8px 32px', fontWeight: 500, fontSize: 18, minWidth: 100, marginRight: 8 }}
+                      onClick={() => setProductDetails({ title: '', creation_date: moment() })}
+                    >
+                      Clear
+                    </button>
+                    <button type="button" style={{ background: '#1a355e', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 32px', fontWeight: 500, fontSize: 18, minWidth: 100 }} onClick={generateCode}>Save</button>
                   </div>
-                </Row>
-              </FormGroup>
-            </Form>
-          </ComponentCard>
+                </FormGroup>
+              </Form>
+            </ComponentCard>
+          </div>
         </Col>
       </Row>
     </div>

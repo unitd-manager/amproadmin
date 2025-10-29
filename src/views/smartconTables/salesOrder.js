@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import * as Icon from 'react-feather';
-import { Button, Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
+import { Button, Dropdown, DropdownToggle, DropdownMenu, DropdownItem} from 'reactstrap';
 import { Trash2 } from 'react-feather';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'datatables.net-dt/js/dataTables.dataTables';
@@ -12,7 +12,9 @@ import 'datatables.net-buttons/js/buttons.html5';
 import 'datatables.net-buttons/js/buttons.print';
  import moment from 'moment';
 import { Link } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
 import message from '../../components/Message';
+
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
@@ -23,7 +25,7 @@ import SalesOrderPrintWithCost from '../../components/PDF/SalesOrderPrintWithCos
 import PdfPackingList from '../../components/PDF/PdfPack';
 import PdfSalesQuote from '../../components/PDF/PdfSalesOrderQuote';
 import './salesOrderTable.css';
- 
+  
 const Test = () => {
   const [supplier, setSupplier] = useState(null);
   // const [selectedOrder, setSelectedOrder] = useState(null);
@@ -101,9 +103,14 @@ const Test = () => {
         }}
         onChange={() => {
           if (selectAll) {
-            setSelectedSalesOrderIds([]); // deselect all
+            setSelectedSalesOrderIds([]);
+            setSelectedOrder(null);
           } else {
-            setSelectedSalesOrderIds(supplier.map((s) => s.sales_order_id)); // select all
+            const allIds = supplier.map((s) => s.sales_order_id);
+            setSelectedSalesOrderIds(allIds);
+            if (supplier.length > 0) {
+              setSelectedOrder(supplier[0]); // Set the first selected order as the current selected order
+            }
           }
           setSelectAll(!selectAll);
         }}
@@ -289,11 +296,14 @@ const Test = () => {
   <Button
     color="secondary"
     className="ms-2"
-  
+    onClick={() => {
+      if (selectedSalesOrderIds.length !== 1) {
+        message('Please Select Only One Transaction to Print', 'warning');
+      }
+    }}
   >
-    
     <PrintPerfomaList
-                    id={selectedOrder?.sales_order_id || ''}
+      id={selectedSalesOrderIds.length === 1 ? selectedSalesOrderIds : []}
       settingdetails={null}
       lineItem={null}
     />
@@ -318,13 +328,13 @@ const Test = () => {
                 <DropdownItem onClick={repeatSalesOrder}>Repeat Sales Order</DropdownItem>
                 <DropdownItem>
                   <PdfPickingList
-                    salesOrderIds={selectedSalesOrderIds}
+                    salesOrderIds={selectedSalesOrderIds.length > 0 ? selectedSalesOrderIds : selectedOrder ? [selectedOrder.sales_order_id] : []}
                   />
                  
                 </DropdownItem>
                 <DropdownItem>
                   <PdfPackingList
-                    selectedOrderIds={selectedSalesOrderIds}
+                    selectedOrderIds={selectedSalesOrderIds.length > 0 ? selectedSalesOrderIds : selectedOrder ? [selectedOrder.sales_order_id] : []}
                     settingdetails={null}
                     lineItem={null}
                   />
@@ -332,7 +342,7 @@ const Test = () => {
                 </DropdownItem>
                 <DropdownItem>
                   <PdfSalesQuote
-                    id={selectedOrder?.sales_order_id || ''}
+                    id={selectedSalesOrderIds.length === 1 ? selectedSalesOrderIds[0] : selectedOrder?.sales_order_id || ''}
                     settingdetails={null}
                     lineItem={null}
                   />
@@ -341,7 +351,7 @@ const Test = () => {
                 <DropdownItem onClick={() => { /* TODO: Add tracking images logic */ }}>Tracking Images</DropdownItem>
                 <DropdownItem>
                   <SalesOrderPrintWithCost
-                    id={selectedOrder?.sales_order_id || ''}
+                    id={selectedSalesOrderIds.length === 1 ? selectedSalesOrderIds[0] : selectedOrder?.sales_order_id || ''}
                     settingdetails={null}
                     lineItem={null}
                   />
@@ -350,10 +360,11 @@ const Test = () => {
                 <DropdownItem onClick={() => { /* TODO: Add updated weight info logic */ }}>Updated Weight Info</DropdownItem>
                 <DropdownItem>
                   <PrintPerfoma
-                    id={selectedOrder?.sales_order_id || ''}
+      id={selectedSalesOrderIds.length === 1 ? selectedSalesOrderIds : []}
                     settingdetails={null}
                     lineItem={null}
                   />
+                  
                 
                 </DropdownItem>
               </DropdownMenu>
@@ -377,11 +388,22 @@ const Test = () => {
   type="checkbox"
   checked={selectedSalesOrderIds.includes(element.sales_order_id)}
   onChange={() => {
-    setSelectedSalesOrderIds((prev) =>
-      prev.includes(element.sales_order_id)
+    setSelectedSalesOrderIds((prev) => {
+      const newSelection = prev.includes(element.sales_order_id)
         ? prev.filter((id) => id !== element.sales_order_id)
-        : [...prev, element.sales_order_id]
-    );
+        : [...prev, element.sales_order_id];
+      
+      // Update selectedOrder based on the last selected item
+      if (newSelection.length > 0) {
+        const lastSelectedId = newSelection[newSelection.length - 1];
+        const lastSelectedOrder = supplier.find(s => s.sales_order_id === lastSelectedId);
+        setSelectedOrder(lastSelectedOrder);
+      } else {
+        setSelectedOrder(null);
+      }
+      
+      return newSelection;
+    });
   }}
 />
 
@@ -413,6 +435,7 @@ const Test = () => {
         </CommonTable>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 };

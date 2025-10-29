@@ -10,8 +10,8 @@ import message from '../Message';
 import PdfFooter from './PdfFooter'; // Assuming you have a footer component
 import PdfHeader from './PdfHeader'; // Assuming you have a header component
 
-const PrintPerfomaInvList = ({ id }) => {
-  PrintPerfomaInvList.propTypes = {
+const PdfGoodsReturnList = ({ id }) => {
+  PdfGoodsReturnList.propTypes = {
     id: PropTypes.arrayOf(PropTypes.any).isRequired,
   };
   console.log(id, "wsed");
@@ -37,27 +37,24 @@ const PrintPerfomaInvList = ({ id }) => {
       setLoading(true);
       // Fetch sales order data for all IDs
       const salesOrderPromises = id.map(orderId =>
-        api.post('/salesorder/getDeliveryorderById', { delivery_order_id: orderId })
+        api.post('/purchaseorder/getGoodsReturnById', { goods_return_id: orderId })
       );
       const lineItemPromises = id.map(orderId =>
-        api.post('/invoice/getDeliveryLineItemsById', { delivery_order_id: orderId })
+        api.post('/purchaseorder/getGoodsReturnProductsByGoodsReturnId', { goods_return_id: orderId })
       );
 
       const salesOrderResponses = await Promise.all(salesOrderPromises);
       const lineItemResponses = await Promise.all(lineItemPromises);
 
-      const allSalesOrders = salesOrderResponses.map(res => {
-        const salesOrder = res.data.data[0] || {};
-        return { ...salesOrder, delivery_order_id: String(salesOrder.delivery_order_id) };
-      });
+      const allSalesOrders = salesOrderResponses.flatMap(res => res.data.data.map(item => ({ ...item, goods_return_id: String(item.goods_return_id) })) || []);
       const allLineItems = lineItemResponses.map((res, index) => {
         // Add the invoice information to each line item for grouping
         const items = res.data.data || [];
         return items.map(item => ({
           ...item,
-          delivery_order_id: id[index],
-          delivery_code: allSalesOrders[index]?.delivery_code || '',
-          date: allSalesOrders[index]?.date || ''
+          goods_return_id: id[index],
+          invoice_code: allSalesOrders[index]?.invoice_code || '',
+          invoice_date: allSalesOrders[index]?.invoice_date || ''
         }));
       }).flat();
 
@@ -93,14 +90,14 @@ const PrintPerfomaInvList = ({ id }) => {
     // Group line items by invoice
     const invoiceGroups = {};
     lineItems.forEach(item => {
-      if (!invoiceGroups[item.delivery_order_id]) {
-        invoiceGroups[item.delivery_order_id] = {
+      if (!invoiceGroups[item.goods_return_id]) {
+        invoiceGroups[item.goods_return_id] = {
           items: [],
-          delivery_code: item.delivery_code,
-          date: item.date
+          invoice_code: item.invoice_code,
+          invoice_date: item.invoice_date
         };
       }
-      invoiceGroups[item.delivery_order_id].items.push(item);
+      invoiceGroups[item.goods_return_id].items.push(item);
     });
 
     // Create content for each invoice
@@ -111,7 +108,7 @@ const PrintPerfomaInvList = ({ id }) => {
     invoiceIds.forEach((invoiceId, index) => {
       const invoiceData = invoiceGroups[invoiceId];
       const invoiceItems = invoiceData.items;
-      const currentSalesOrder = salesOrders.find(order => order.delivery_order_id === invoiceId) || salesOrders[0] || {};
+      const currentSalesOrder = salesOrders.find(order => String(order.goods_return_id) === invoiceId) || salesOrders[0] || {};
       
       // Calculate subtotal for this invoice
       let invoiceSubtotal = 0;
@@ -150,20 +147,6 @@ const PrintPerfomaInvList = ({ id }) => {
           { text: `${item.total || ''}`, style: 'tableBody' },
         ]);
       });
-
-       for (let i = 0; i < 10; i++) {
-      productItems.push([
-        { text: '', style: 'tableBody' },
-        { text: '', style: 'tableBody' },
-        { text: '', style: 'tableBody' },
-        { text: '', style: 'tableBody' },
-        { text: '', style: 'tableBody' },
-        { text: '', style: 'tableBody' },
-        { text: '', style: 'tableBody' },
-        { text: '', style: 'tableBody' },
-        { text: '', style: 'tableBody' },
-      ]);
-    }
 
       // Add page break between invoices, except for the first one
       if (index > 0) {
@@ -215,15 +198,14 @@ const PrintPerfomaInvList = ({ id }) => {
                   ],
                   [
                     {
-                        text: [
-                          currentSalesOrder.company_name || '', '\n',
-                          currentSalesOrder.address1 || '', '\n',
-                          currentSalesOrder.address2 || '', '\n',
-                           currentSalesOrder.address_street || '', '\n',
-                          currentSalesOrder.address_country || '', ' - ',
-                          currentSalesOrder.address_po_code || '', '\n',
-                          `TEL:${currentSalesOrder.phone || 'NULL'}`, '\n', '\n','\n',
-                        ],
+                      text: [
+                        currentSalesOrder.company_name || '', '\n',
+                        currentSalesOrder.address_street || '', '\n',
+                        currentSalesOrder.address_down || '', '\n',
+                        currentSalesOrder.address_country || '', '\n',
+                        currentSalesOrder.address_po_code || '', '\n',
+                        'TEL: 6789098765', '\n', '\n','\n',
+                      ],
                       margin: [8, 4, 0, 4],
                     }
                   ]
@@ -247,11 +229,11 @@ const PrintPerfomaInvList = ({ id }) => {
                     body: [
                       [
                         { text: 'TRAN NO', margin: [5, 3, 5, 3] },
-                        { text: invoiceData.delivery_code || '', margin: [5, 3, 5, 3] }
+                        { text: invoiceData.invoice_code || '', margin: [5, 3, 5, 3] }
                       ],
                       [
                         { text: 'TRAN DATE', margin: [5, 3, 5, 3] },
-                        { text: invoiceData.date ? moment(invoiceData.date).format('DD-MM-YYYY') : '', margin: [5, 3, 5, 3] }
+                        { text: invoiceData.invoice_date ? moment(invoiceData.invoice_date).format('DD-MM-YYYY') : '', margin: [5, 3, 5, 3] }
                       ],
                       [
                         { text: 'TERMS', margin: [5, 3, 5, 3] },
@@ -423,4 +405,4 @@ const PrintPerfomaInvList = ({ id }) => {
   );
 };
 
-export default PrintPerfomaInvList;
+export default PdfGoodsReturnList;

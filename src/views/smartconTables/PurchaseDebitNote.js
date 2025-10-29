@@ -7,6 +7,7 @@ import {
 import moment from 'moment';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../constants/api';
+import PdfPurchaseDebitNoteList from '../../components/PDF/PdfPurchaseDebitNoteList';
 
 const PurchaseDebitNote = () => {
   const [filters, setFilters] = useState({
@@ -68,7 +69,25 @@ const PurchaseDebitNote = () => {
   const handleNewTransactionClick = () => {
     navigate('/PurchaseDebitNoteDetails'); // Example
   };
-
+const handleDeleteSelected = async () => {
+    if (selectedIds.length === 0) {
+      alert('Please select at least one record to delete.');
+      return;
+    }
+    if (window.confirm('Are you sure you want to delete the selected records?')) {
+      try {
+        await Promise.all(selectedIds.map(purchaseInvoiceId =>
+          api.post('/purchaseorder/deletePurchaseDebitNote', { purchase_debit_note_id: purchaseInvoiceId })
+        ));
+        message('Purchase Debit Note deleted successfully!','success');
+        setSelectedIds([]);
+        fetchData();
+      } catch (err) {
+        console.error(err);
+        alert('Failed to delete selected records.');
+      }
+    }
+  };
   const handlePrintwithoutPrice = async () => {
     if (selectedTranNos.length !== 1) {
       alert('Select a single Purchase Order to print.');
@@ -215,8 +234,8 @@ const PurchaseDebitNote = () => {
       <Row className="mb-3">
         <Col md={10}>
           <Button color="primary" onClick={handleSearch}><i className="fa fa-search" /></Button>{' '}
-          {/* <Button color="secondary"><i className="fa fa-print" /></Button>{' '}
-          <Button color="danger"><i className="fa fa-trash" /></Button> */}
+      <Button color="secondary"><PdfPurchaseDebitNoteList id={selectedIds}/></Button>{' '}
+          <Button color="danger" onClick={handleDeleteSelected}><i className="fa fa-trash" /></Button>
         </Col>
         <Col md={2} className="text-right">
           <ButtonDropdown isOpen={dropdownOpen} toggle={toggleDropdown}>

@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useState,useEffect} from "react";
+import React, { useState,useEffect, useRef} from "react";
 import {
   Container,
   Row,
@@ -39,6 +39,15 @@ const PurchaseOrderEdit = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedSNo, setSelectedSNo] = useState(null);
   const [selectedUOM, setSelectedUOM] = useState('');
+  const cartonPriceRefs = useRef([]);
+  const productCodeRefs = useRef([]); // keeps Select refs
+  const cartonQtyRefs = useRef([]);
+  const looseQtyRefs = useRef([]);
+  const priceRefs = useRef([]);
+  const discountPercentageRefs = useRef([]);
+  const discountAmountRefs = useRef([]);
+  const grossTotalRefs = useRef([]);
+  const tableRef = useRef(null);
 
 
   const handleSNoClick = (sNo, product) => {
@@ -96,6 +105,7 @@ const { id } = useParams();
       total: 0,
       discount: 0,
       total_price: 0,
+      po_product_id: 'new-0'
     },
   ]);
   const handleAddExtraFields = (id) => {
@@ -132,7 +142,14 @@ const { id } = useParams();
       grossTotal: 0,
     }
   );
-
+const handleKeyDown = (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault(); // prevent form submission
+    const form = e.target.form;
+    const index = Array.prototype.indexOf.call(form, e.target);
+    form.elements[index + 1]?.focus(); // focus next element if exists
+  }
+};
 
 const navigate=useNavigate();
   useEffect(() => {
@@ -156,7 +173,7 @@ const navigate=useNavigate();
     });
     
     // Fetch table data
-    api.post("/purchaseorder/getPoProductByPurchaseOrderId",{purchase_order_id:id}).then((response) => { 
+    api.post("/purchaseorder/TabPurchaseOrderLineItemById",{purchase_order_id:id}).then((response) => { 
       const updatedRows = response.data.data.map(product => ({
         ...product,
         total: Number(product.total) || 0,
@@ -242,11 +259,23 @@ useEffect(() => {
   
     // Handle product selection
     const handleProductSelect = (index, selectedProduct) => {
+      console.log('selectedProduct:', selectedProduct);
       const updatedRows = [...rows];
-      updatedRows[index].product_id = selectedProduct.product_id;
+      updatedRows[index].product_id = selectedProduct.value;
       updatedRows[index].product_code = selectedProduct.product_code;
       updatedRows[index].product_name = selectedProduct.product_name;
+      updatedRows[index].carton_price = selectedProduct.carton_price;
+      updatedRows[index].price = selectedProduct.price;
+      updatedRows[index].uom = selectedProduct.uom;
+      updatedRows[index].carton_qty = selectedProduct.carton_qty;
+      updatedRows[index].qty = selectedProduct.qty;
+      console.log('updatedRows[index].product_code:', updatedRows[index].product_code);
       setRows(updatedRows);
+
+      // Autofocus on Carton Price input
+      if (cartonPriceRefs.current[index]) {
+        cartonPriceRefs.current[index].focus();
+      }
     };
   // Handle form submit (example API call structure)
   const handleSubmit = async () => {
@@ -281,6 +310,7 @@ useEffect(() => {
       message('Network connection error.', 'error');
     });
   };
+  
   const handleRowChange = (id, field, value) => {
     setRows(prevRows =>
       prevRows.map(row => {
@@ -290,7 +320,9 @@ useEffect(() => {
           if (field === "product_code") {
             const product = tableData.find(item => item.product_code === value);
             if (product) {
+              
               updatedRow.product_name = product.product_name;
+              updatedRow.product_id = product.product_id;
               updatedRow.carton_price = product.carton_price;
               updatedRow.qty = 0;
               updatedRow.loose_qty = 0;
@@ -358,30 +390,59 @@ useEffect(() => {
     }
   };
 
-  const addRow = () => {
-    setRows([
-      ...rows,
-      {
-        product_code: "",
-        product_name: "",
-        carton_qty: 0,
-        loose_qty: 0,
-        carton_price: 0,
-        qty: 0,
-        price: 0,
-        discount: 0,
-        total_price: 0,
-      },
-    ]);
+  const addRow = (insertAfterIndex) => {
+    // insertAfterIndex is the index after which the new row will be inserted
+    const newRow = {
+      po_product_id: `new-${rows.length}`,
+      product_code: "",
+      product_name: "",
+      carton_qty: 0,
+      loose_qty: 0,
+      carton_price: 0,
+      qty: 0,
+      price: 0,
+      total: 0,
+      discount: 0,
+      total_price: 0,
+      discount_percentage: 0,
+      discount_amount: 0,
+      grossTotal: 0,
+    };
+    setRows((prevRows) => {
+      const updatedRows = [...prevRows];
+      updatedRows.splice(insertAfterIndex + 1, 0, newRow);
+      return updatedRows;
+    });
+
+    // give React a tick to render the new Select, then focus
+    setTimeout(() => {
+      const nextIndex = insertAfterIndex + 1;
+      const ref = productCodeRefs.current[nextIndex];
+      // react-select instances expose focus()
+      try {
+        if (ref && typeof ref.focus === 'function') {
+          ref.focus();
+          return;
+        }
+        // fallback: try to find underlying input by id
+        const input = document.querySelector(`#product-select-${nextIndex} input`);
+        if (input) input.focus();
+      } catch (err) {
+        console.warn('could not focus new product select', err);
+      }
+    }, 80);
   };
+  const handleDelete = (index,id) => {
+    const updatedRows = rows.filter((row) => row.po_product_id !== id);
+    setRows(updatedRows);
+    deleteRow(index,id);
+  };
+  
   return (
     <div style={{ fontSize: "12px" }}>
       <ToastContainer/>
       <Container fluid className="p-1 mb-5">
-        {/* <Card className="shadow-sm">
-          <CardBody className="p-3"> */}
-            {/* Header */}
-            <h6 className="mb-2">Add/Edit Purchase Invoice</h6>
+            <h6 className="mb-2">Add/Edit Purchase Order</h6>
 
             <Form>
               {/* Tran No & Date */}
@@ -394,7 +455,7 @@ useEffect(() => {
         </Col>
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1" name="tran_no" value={formData?.tran_no}  
-              onChange={handleChange} />
+              onChange={handleChange} onKeyDown={handleKeyDown}/>
         </Col>
       </Row>
     </Col>
@@ -405,7 +466,7 @@ useEffect(() => {
         </Col>
         <Col md="8">
           <Input bsSize="sm" type='date' className="py-0 px-1" name="tran_date" value={formData?.tran_date}  
-              onChange={handleChange} />
+              onChange={handleChange} onKeyDown={handleKeyDown}/>
         </Col>
       </Row>
     </Col>
@@ -433,7 +494,6 @@ useEffect(() => {
 
               <TabContent activeTab={activeTab} style={{ maxHeight: 'calc(100vh - 400px)'}}>
                 {/* Supplier Tab */}
-               {/* Supplier Tab */}
 <TabPane tabId="1">
   <Row>
     {/* Supplier Code & Contact Address1 */}
@@ -449,6 +509,7 @@ useEffect(() => {
               name="supplier_id"
               value={formData?.supplier_id}
               onChange={handleChange}
+               onKeyDown={handleKeyDown}
             >
               <option value="">Select Supplier</option>
               {supplierOptions.map((supplier, index) => (
@@ -469,7 +530,7 @@ useEffect(() => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1"  name="contact_address1"
               value={formData?.contact_address1}
-              onChange={handleChange} />
+              onChange={handleChange}  onKeyDown={handleKeyDown} />
         </Col>
       </Row>
     </Col>
@@ -486,7 +547,7 @@ useEffect(() => {
           <FormGroup>
              <Input bsSize="sm" className="py-0 px-1"  name="company_name"
               value={formData?.company_name}
-              onChange={handleChange} />
+              onChange={handleChange}  onKeyDown={handleKeyDown} />
             
           </FormGroup>
         </Col>
@@ -500,7 +561,7 @@ useEffect(() => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1"  name="contact_address2"
               value={formData?.contact_address2}
-              onChange={handleChange} />
+              onChange={handleChange}  onKeyDown={handleKeyDown} />
         </Col>
       </Row>
     </Col>
@@ -518,6 +579,7 @@ useEffect(() => {
            name="contact_person"
               value={formData.contact_person}
               onChange={handleChange}
+               onKeyDown={handleKeyDown}
           />
         </Col>
       </Row>
@@ -530,7 +592,7 @@ useEffect(() => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1"  name="contact_address3"
               value={formData?.contact_address3}
-              onChange={handleChange} />
+              onChange={handleChange}  onKeyDown={handleKeyDown}/>
         </Col>
       </Row>
     </Col>
@@ -546,7 +608,7 @@ useEffect(() => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1"  name="remarks"
               value={formData?.remarks}
-              onChange={handleChange} />
+              onChange={handleChange}  onKeyDown={handleKeyDown} />
         </Col>
       </Row>
     </Col>
@@ -558,12 +620,12 @@ useEffect(() => {
         <Col md="5">
           <Input bsSize="sm" className="py-0 px-1"  name="country"
               value={formData?.country}
-              onChange={handleChange} />
+              onChange={handleChange}  onKeyDown={handleKeyDown}/>
         </Col>
         <Col md="3">
           <Input bsSize="sm" className="py-0 px-1"  name="postal_code"
               value={formData?.postal_code}
-              onChange={handleChange} />
+              onChange={handleChange}  onKeyDown={handleKeyDown}/>
         </Col>
       </Row>
     </Col>
@@ -574,16 +636,29 @@ useEffect(() => {
     <Col md="6">
       <Row className="mb-1">
         <Col md="4">
-          <Label className="small mb-1">Invoice Date</Label>
+          <Label className="small mb-1">Request DeliveryDate</Label>
         </Col>
         <Col md="8">
-          <Input bsSize="sm" className="py-0 px-1" type="date"  name="invoice_date"
-              value={formData?.invoice_date}
-              onChange={handleChange} />
+          <Input bsSize="sm" className="py-0 px-1" type="date"  name="request_delivery_date"
+              value={formData?.request_delivery_date}
+              onChange={handleChange}  
+               onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                // Focus the first product code Select in the table
+                const firstProductSelect = document.querySelector(
+                  'tbody tr:first-child td:nth-child(2) [class*="css-"] input'
+                );
+                if (firstProductSelect) firstProductSelect.focus();
+              } else {
+                handleKeyDown(e);
+              }
+            }}
+              />
         </Col>
       </Row>
     </Col>
-    <Col md="6">
+    {/* <Col md="6">
       <Row className="mb-1">
         <Col md="4">
           <Label className="small mb-1">Invoice No</Label>
@@ -594,36 +669,10 @@ useEffect(() => {
               onChange={handleChange} />
         </Col>
       </Row>
-    </Col>
+    </Col> */}
   </Row>
 
-  <Row>
-    {/* Delivery Date & DO No */}
-    <Col md="6">
-      <Row className="mb-1">
-        <Col md="4">
-          <Label className="small mb-1">Delivery Date</Label>
-        </Col>
-        <Col md="8">
-          <Input bsSize="sm" className="py-0 px-1" type="date" name="delivery_date"
-              value={formData?.delivery_date}
-              onChange={handleChange} />
-        </Col>
-      </Row>
-    </Col>
-    <Col md="6">
-      <Row className="mb-1">
-        <Col md="4">
-          <Label className="small mb-1">DO No</Label>
-        </Col>
-        <Col md="8">
-          <Input bsSize="sm" className="py-0 px-1" name="do_no"
-              value={formData?.do_no}
-              onChange={handleChange} />
-        </Col>
-      </Row>
-    </Col>
-  </Row>
+ 
 </TabPane>
                 {/* Currency Tab */}
                 <TabPane tabId="2">
@@ -640,7 +689,7 @@ useEffect(() => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1" name="currency_code"
               value={currency?.currency_code}
-              onChange={handleCurrency}/>
+              onChange={handleCurrency}  onKeyDown={handleKeyDown}/>
         </Col>
       </Row>
     </Col>
@@ -652,7 +701,7 @@ useEffect(() => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1" name="currency_name"
               value={currency?.currency_name} 
-              onChange={handleCurrency} />
+              onChange={handleCurrency}  onKeyDown={handleKeyDown}/>
         </Col>
       </Row>
     </Col>
@@ -664,7 +713,7 @@ useEffect(() => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1" name="currency_rate"
               value={currency?.currency_rate}
-              onChange={handleCurrency} />
+              onChange={handleCurrency}  onKeyDown={handleKeyDown}/>
         </Col>
       </Row>
     </Col>
@@ -676,7 +725,7 @@ useEffect(() => {
               </TabContent>
 
               {/* Table */}
-               <Table bordered responsive size="sm" className="mt-3 mb-1" style={{ fontSize: '0.75rem' }}>
+    <Table id="example" className="display border border-secondary rounded" ref={tableRef}>
          <colgroup>
             <col style={{ width: "1rem" }} /> 
     <col style={{ width: "6rem" }} /> {/* Product Code */}
@@ -710,7 +759,7 @@ useEffect(() => {
         <tbody>
           {rows.map((p, idx) => (
             <React.Fragment key={p.po_product_id}>
-              <tr key={p.po_product_id}>
+              <tr key={p.po_product_id} style={{ fontSize: '13px', height: '20px', background:  '#fff' }}>
                 <td
                   style={{
                     padding: '0.3rem',
@@ -721,10 +770,107 @@ useEffect(() => {
                 >
                   {idx + 1}
                 </td>
-                <td style={{ padding: '0.3rem' }}>{p.product_code}</td>
-                <td style={{ padding: '0.3rem' }}>{p.product_name}</td>
-                <td style={{ padding: '0.3rem' }}>{p.carton_qty}</td>
-                <td style={{ padding: '0.3rem' }}>{p.loose_qty}</td>
+                     <td style={{ padding: "0.3rem", minWidth: "200px" }}>
+  <Select
+    options={products.map((pr) => ({
+      value: pr.product_id,
+      label: `${pr.product_code} - ${pr.product_name}`,
+      product_code: pr.product_code,
+      product_name: pr.product_name,
+    }))}
+    value={
+      p.product_id
+        ? {
+            value: p.product_id,
+            label: `${p.product_code} - ${p.product_name}`,
+          }
+        : null
+    }
+    onChange={(selectedOption) => {
+      handleProductSelect(idx, selectedOption);
+      if (cartonQtyRefs.current[idx]) {
+        cartonQtyRefs.current[idx].focus();
+      }
+    }}
+      styles={{
+    control: (base) => ({
+      ...base,
+      fontSize: "12px",
+      minHeight: "30px"
+     
+    }),
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 9999,
+      fontSize: "12px", 
+      width: '300px'  // keep it above modal, table, etc.
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999   // just in case
+    })
+  }}
+    placeholder="Select Product"
+    filterOption={(candidate, input) => {
+      if (!input) return true;
+      const lowerInput = input.toLowerCase();
+      return (
+        candidate.data.product_code.toLowerCase().includes(lowerInput) ||
+        candidate.data.product_name.toLowerCase().includes(lowerInput)
+      );
+    }}
+    // assign ref so we can call focus() on the react-select instance
+    ref={(el) => (productCodeRefs.current[idx] = el)}
+    inputId={`product-select-${idx}`}
+  />
+</td>
+
+
+            {/* Product Name (auto updated) */}
+            <td style={{ padding: "0.3rem" }}>
+              <input
+                type="text"
+                className="form-control form-control-sm"
+                value={p.product_name || ""}
+                readOnly
+              />
+            </td>
+                <td style={{ padding: '0.3rem' }}>
+                  <Input
+                    type="number"
+                    bsSize="sm"
+                    value={p.carton_qty}
+                    onChange={(e) => handleRowChange(p.po_product_id, 'carton_qty', e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (looseQtyRefs.current[idx]) {
+                          looseQtyRefs.current[idx].focus();
+                        }
+                      }
+                    }}
+                    innerRef={(el) => (cartonQtyRefs.current[idx] = el)}
+                    style={{ width: '100%', fontSize: '12px' }}
+                  />
+                </td>
+                <td style={{ padding: '0.3rem' }}>
+                  <Input
+                    type="number"
+                    bsSize="sm"
+                    value={p.loose_qty}
+                    onChange={(e) => handleRowChange(p.po_product_id, 'loose_qty', e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (cartonPriceRefs.current[idx]) {
+                          cartonPriceRefs.current[idx].focus();
+                        }
+                      }
+                    }}
+                    innerRef={(el) => (looseQtyRefs.current[idx] = el)}
+                    style={{ width: '100%', fontSize: '12px' }}
+                  />
+                </td>
                 <td style={{ padding: '0.3rem' }}>{p.qty}</td>
                 <td style={{ padding: '0.3rem' }}>
                   <Input
@@ -733,6 +879,15 @@ useEffect(() => {
                     value={Number(p?.carton_price).toFixed(2)}
                     onChange={(e) => handleRowChange(p.po_product_id, 'carton_price', e.target.value)}
                     style={{ width: '80px' }}
+                    innerRef={(el) => (cartonPriceRefs.current[idx] = el)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (priceRefs.current[idx]) {
+                          priceRefs.current[idx].focus();
+                        }
+                      }
+                    }}
                   />
                 </td>
                 <td style={{ padding: '0.3rem' }}>
@@ -742,6 +897,15 @@ useEffect(() => {
                     value={Number(p?.price).toFixed(2)}
                     onChange={(e) => handleRowChange(p.po_product_id, 'price', e.target.value)}
                     style={{ width: '80px' }}
+                    innerRef={(el) => (priceRefs.current[idx] = el)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (discountPercentageRefs.current[idx]) {
+                          discountPercentageRefs.current[idx].focus();
+                        }
+                      }
+                    }}
                   />
                 </td>
                 <td style={{ padding: '0.3rem' }}>
@@ -762,6 +926,15 @@ useEffect(() => {
                       value={Number(p?.discount_percentage).toFixed(2)}
                       onChange={(e) => handleRowChange(p.po_product_id, 'discount_percentage', e.target.value)}
                       style={{ width: '50%', marginRight: '2px' }}
+                      innerRef={(el) => (discountPercentageRefs.current[idx] = el)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (discountAmountRefs.current[idx]) {
+                            discountAmountRefs.current[idx].focus();
+                          }
+                        }
+                      }}
                     />
                     <Input
                       type="number"
@@ -769,6 +942,15 @@ useEffect(() => {
                       value={Number(p?.discount_amount).toFixed(2)}
                       onChange={(e) => handleRowChange(p.po_product_id, 'discount_amount', e.target.value)}
                       style={{ width: '50%' }}
+                      innerRef={(el) => (discountAmountRefs.current[idx] = el)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (grossTotalRefs.current[idx]) {
+                            grossTotalRefs.current[idx].focus();
+                          }
+                        }
+                      }}
                     />
                   </div>
                 </td>
@@ -778,8 +960,15 @@ useEffect(() => {
                     bsSize="sm"
                     value={Number(p.grossTotal).toFixed(2)}
                     onChange={(e) => handleRowChange(p.po_product_id, 'grossTotal',e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        // insert a new row *after* current index and focus its product select
+                        addRow(idx);
+                      }
+                    }}
                     style={{ width: '80px' }}
-                    readOnly
+                    innerRef={(el) => (grossTotalRefs.current[idx] = el)}
                   />
                 </td>
                 <td style={{ padding: '0.3rem', whiteSpace: 'nowrap' }}>
@@ -787,7 +976,7 @@ useEffect(() => {
                     size="sm"
                     color="danger"
                     className="me-1"
-                    onClick={() => handleDelete(p.po_product_id)}
+                    onClick={() => handleDelete(idx,p.po_product_id)}
                     style={{ padding: '0.1rem 0.3rem', fontSize: '0.7rem' }}
                   >
                     🗑
@@ -880,7 +1069,7 @@ useEffect(() => {
                 </tr>
               )}
             </React.Fragment>
-            ))})
+            ))}
           {/* Summary Row */}
           <tr style={{ fontWeight: "bold", color: "#007bff", fontSize: '0.75rem' }}>
             <td style={{ padding: '0.3rem' }}></td> {/* Empty for S No */}
@@ -901,8 +1090,6 @@ useEffect(() => {
         </tbody>
       </Table>
             </Form>
-          {/* </CardBody>
-        </Card> */}
       </Container>
 
       {/* Fixed Footer */}
@@ -943,15 +1130,6 @@ useEffect(() => {
 
       {/* Center column (center aligned) */}
       <Col md="6" className="text-center">
-        <div className="text-muted small">
-          Additional Charges <span className="text-primary">0.00</span>
-        </div>
-        <div className="text-muted small">
-          Additional Discount <span className="text-primary">0.00</span>
-        </div>
-        <div className="fw-bold mt-1">
-          Final Total : <span>{Number(finalTotal)?.toFixed(2)}</span>
-        </div>
       </Col>
 
       {/* Right column */}
@@ -975,7 +1153,7 @@ useEffect(() => {
   <Row className="mt-2" style={{ backgroundColor: '#212529', padding: '8px' }}>
   {/* Cancel on left */}
   <Col className="d-flex justify-content-start">
-    <Button size="sm" style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#fff' }} className="me-2"  onClick={()=>navigate('/PurchaseInvoice')}>
+    <Button size="sm" style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#fff' }} className="me-2"  onClick={()=>navigate('/PurchaseOrder')}>
       Cancel
     </Button>
   </Col>
@@ -1013,103 +1191,7 @@ useEffect(() => {
         selectedProduct={selectedProduct}
       />}
 
-    {/* <Modal isOpen={productInfoModal} toggle={toggleProductInfoModal} size="xl">
-      <ModalHeader toggle={toggleProductInfoModal}>Product Information Details</ModalHeader>
-      <ModalBody>
-        {selectedProduct && (
-          <div>
-            <Row className="mb-3">
-              <Col md="6" className="d-flex align-items-center">
-                <strong className="me-2" style={{ width: '120px' }}>Product Code</strong> : {selectedProduct.code}
-              </Col>
-              <Col md="6" className="d-flex align-items-center">
-                <strong className="me-2" style={{ width: '120px' }}>Product Name</strong> : {selectedProduct.name}
-              </Col>
-            </Row>
-            <Row className="mb-3">
-              <Col md="6" className="d-flex align-items-center">
-                <strong className="me-2" style={{ width: '120px' }}>Product UOM</strong> : {selectedProduct.UOM}
-              </Col>
-              <Col md="6" className="d-flex align-items-center">
-                <strong className="me-2" style={{ width: '120px' }}>Product Price</strong> : {selectedProduct['Product Price']}
-              </Col>
-            </Row>
-            <Row className="mb-3">
-              <Col md="6" className="d-flex align-items-center">
-                <strong className="me-2" style={{ width: '120px' }}>Retail Price</strong> : {selectedProduct['Retail Price']}
-              </Col>
-              <Col md="6" className="d-flex align-items-center">
-                <strong className="me-2" style={{ width: '120px' }}>Wholesale Price</strong> : {selectedProduct['Wholesale Price']}
-              </Col>
-            </Row>
-            <Row className="mb-3">
-              <Col md="6" className="d-flex align-items-center">
-                <strong className="me-2" style={{ width: '120px' }}>Stock Qty</strong> : {selectedProduct['Stock Qty']}
-              </Col>
-              <Col md="6" className="d-flex align-items-center">
-                <strong className="me-2" style={{ width: '120px' }}>Product Weight</strong> : {selectedProduct['Product Weight']}
-              </Col>
-            </Row>
-            <Row className="mb-3">
-              <Col md="6" className="d-flex align-items-center">
-                <strong className="me-2" style={{ width: '120px' }}>Stock WQty</strong> : {selectedProduct['Stock WQty']}
-              </Col>
-            </Row>
-
-            <Row className="mb-3 align-items-center">
-              <Col md="3">
-                <strong className="me-2">From Date</strong>
-                <Input type="date" />
-              </Col>
-              <Col md="3">
-                <strong className="me-2">To Date</strong>
-                <Input type="date" />
-              </Col>
-              <Col md="2">
-                <Button color="primary" className="mt-4">Search</Button>
-              </Col>
-            </Row>
-
-            <h6>Purchase History</h6>
-            <Table bordered size="sm">
-              <thead>
-                <tr>
-                  <th>Invoice No</th>
-                  <th>Invoice Date</th>
-                  <th>Description</th>
-                  <th>Supplier</th>
-                  <th>UOM</th>
-                  <th>Qty</th>
-                  <th>NetPrice</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>PI202509-000136</td>
-                  <td>20/09/2025</td>
-                  <td>AMPRO TRADITIONAL TRIANGLE PATIS COOKIES 1147G</td>
-                  <td>INNOVA FOODS SDN BHD</td>
-                  <td>1X6</td>
-                  <td>30</td>
-                  <td>3.70</td>
-                </tr>
-                <tr>
-                  <td>PI202509-000136</td>
-                  <td>20/09/2025</td>
-                  <td>AMPRO TRADITIONAL TRIANGLE PATIS COOKIES 1147G</td>
-                  <td>INNOVA FOODS SDN BHD</td>
-                  <td>1X6</td>
-                  <td>30</td>
-                  <td>3.70</td>
-                  <td>5</td>
-                  <td>5.20</td>
-                </tr>
-              </tbody>
-            </Table>
-          </div>
-        )}
-      </ModalBody>
-    </Modal> */}
+   
     </div>
   );
 };

@@ -37,27 +37,24 @@ const PrintPerfomaInvList = ({ id }) => {
       setLoading(true);
       // Fetch sales order data for all IDs
       const salesOrderPromises = id.map(orderId =>
-        api.post('/salesorder/getDeliveryorderById', { delivery_order_id: orderId })
+        api.post('/salesreturn/getCreditNoteById', { credit_note_id: orderId })
       );
       const lineItemPromises = id.map(orderId =>
-        api.post('/invoice/getDeliveryLineItemsById', { delivery_order_id: orderId })
+        api.post('/salesreturn/getCreditLineItemsById', { credit_note_id: orderId })
       );
 
       const salesOrderResponses = await Promise.all(salesOrderPromises);
       const lineItemResponses = await Promise.all(lineItemPromises);
 
-      const allSalesOrders = salesOrderResponses.map(res => {
-        const salesOrder = res.data.data[0] || {};
-        return { ...salesOrder, delivery_order_id: String(salesOrder.delivery_order_id) };
-      });
+      const allSalesOrders = salesOrderResponses.flatMap(res => res.data.data.map(item => ({ ...item, credit_note_id: String(item.credit_note_id) })) || []);
       const allLineItems = lineItemResponses.map((res, index) => {
         // Add the invoice information to each line item for grouping
         const items = res.data.data || [];
         return items.map(item => ({
           ...item,
-          delivery_order_id: id[index],
-          delivery_code: allSalesOrders[index]?.delivery_code || '',
-          date: allSalesOrders[index]?.date || ''
+          credit_note_id: id[index],
+          credit_note_code: allSalesOrders[index]?.credit_note_code || '',
+          credit_note_date: allSalesOrders[index]?.credit_note_date || ''
         }));
       }).flat();
 
@@ -71,7 +68,7 @@ const PrintPerfomaInvList = ({ id }) => {
       setGtotal(grandTotal);
       setLoading(false);
     } catch (error) {
-      message('Error fetching sales order data', 'error');
+      // message('Error fetching sales order data', 'error');
       setLoading(false);
     }
   };
@@ -93,14 +90,14 @@ const PrintPerfomaInvList = ({ id }) => {
     // Group line items by invoice
     const invoiceGroups = {};
     lineItems.forEach(item => {
-      if (!invoiceGroups[item.delivery_order_id]) {
-        invoiceGroups[item.delivery_order_id] = {
+      if (!invoiceGroups[item.credit_note_id]) {
+        invoiceGroups[item.credit_note_id] = {
           items: [],
-          delivery_code: item.delivery_code,
-          date: item.date
+          credit_note_code: item.credit_note_code,
+          credit_note_date: item.credit_note_date
         };
       }
-      invoiceGroups[item.delivery_order_id].items.push(item);
+      invoiceGroups[item.credit_note_id].items.push(item);
     });
 
     // Create content for each invoice
@@ -111,7 +108,7 @@ const PrintPerfomaInvList = ({ id }) => {
     invoiceIds.forEach((invoiceId, index) => {
       const invoiceData = invoiceGroups[invoiceId];
       const invoiceItems = invoiceData.items;
-      const currentSalesOrder = salesOrders.find(order => order.delivery_order_id === invoiceId) || salesOrders[0] || {};
+      const currentSalesOrder = salesOrders.find(order => String(order.credit_note_id) === invoiceId) || salesOrders[0] || {};
       
       // Calculate subtotal for this invoice
       let invoiceSubtotal = 0;
@@ -247,11 +244,11 @@ const PrintPerfomaInvList = ({ id }) => {
                     body: [
                       [
                         { text: 'TRAN NO', margin: [5, 3, 5, 3] },
-                        { text: invoiceData.delivery_code || '', margin: [5, 3, 5, 3] }
+                        { text: invoiceData.credit_note_code || '', margin: [5, 3, 5, 3] }
                       ],
                       [
                         { text: 'TRAN DATE', margin: [5, 3, 5, 3] },
-                        { text: invoiceData.date ? moment(invoiceData.date).format('DD-MM-YYYY') : '', margin: [5, 3, 5, 3] }
+                        { text: invoiceData.credit_note_date ? moment(invoiceData.credit_note_date).format('DD-MM-YYYY') : '', margin: [5, 3, 5, 3] }
                       ],
                       [
                         { text: 'TERMS', margin: [5, 3, 5, 3] },

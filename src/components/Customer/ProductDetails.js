@@ -7,6 +7,7 @@ import {
   Button,
   Table,
 } from 'reactstrap';
+import Select from 'react-select';
 import PropTypes from 'prop-types';
 import api from '../../constants/api';
 
@@ -15,9 +16,9 @@ export default function CustomerProductDetails({ customerId }) {
     product_code: '',
     product_name: '',
     wholesale_price: '',
-    fixed_price: '',
-      existing_id: null  // Add this line
-
+    fixed_price: 0.00,
+    existing_id: null,
+    product_id: ''
   });
 
   const [customerProductList, setCustomerProductList] = useState([]);
@@ -48,21 +49,32 @@ export default function CustomerProductDetails({ customerId }) {
 
   const handleNewProductInputs = (e) => {
     const { name, value } = e.target;
-    setNewProduct({
-      ...newProduct,
-      [name]: value,
-    });
 
     if (name === 'product_code') {
       const selectedProduct = allProducts.find(p => p.product_code === value);
       if (selectedProduct) {
         setNewProduct(prev => ({
           ...prev,
+          product_code: selectedProduct.product_code,
           product_id: selectedProduct.product_id,
           product_name: selectedProduct.product_name,
           wholesale_price: selectedProduct.wholesale_price,
         }));
+      } else {
+        // If no product is selected (cleared)
+        setNewProduct(prev => ({
+          ...prev,
+          product_code: '',
+          product_id: '',
+          product_name: '',
+          wholesale_price: '',
+        }));
       }
+    } else {
+      setNewProduct(prev => ({
+        ...prev,
+        [name]: value,
+      }));
     }
   };
 
@@ -123,8 +135,9 @@ export default function CustomerProductDetails({ customerId }) {
           product_code: '',
           product_name: '',
           wholesale_price: '',
-          fixed_price: '',
-          existing_id: null
+          fixed_price: 0.00,
+          existing_id: null,
+          product_id: ''
         });
 
         alert('Product updated successfully');
@@ -181,20 +194,64 @@ const handleDeleteAction = async (id) => {
                   <Label className="mb-0 fw-bold">Product Code</Label>
                 </Col>
                 <Col sm={8}>
-                  <Input
-                    type="select"
-                    className="form-control-sm"
-                    onChange={handleNewProductInputs}
-                    value={newProduct.product_code}
+                  <Select
+                    className="form-control-sm p-0"
                     name="product_code"
-                  >
-                    <option value="">Select Product</option>
-                    {allProducts.map((p) => (
-                      <option key={p.product_id} value={p.product_code}>
-                        {p.product_code}
-                      </option>
-                    ))}
-                  </Input>
+                    options={allProducts.map(p => ({
+                      value: p.product_code,
+                      label: p.product_name,
+                      product_id: p.product_id,
+                      product_name: p.product_name,
+                      product_code: p.product_code,
+                      wholesale_price: p.wholesale_price
+                    }))}
+                    value={newProduct.product_code ? {
+                      value: newProduct.product_code,
+                      label: newProduct.product_name,
+                      product_id: newProduct.product_id,
+                      product_name: newProduct.product_name,
+                      product_code: newProduct.product_code,
+                      wholesale_price: newProduct.wholesale_price
+                    } : null}
+                    onChange={(selectedOption) => {
+                      if (selectedOption) {
+                        setNewProduct({
+                          ...newProduct,
+                          product_code: selectedOption.product_code,
+                          product_id: selectedOption.product_id,
+                          product_name: selectedOption.product_name,
+                          wholesale_price: selectedOption.wholesale_price
+                        });
+                      } else {
+                        setNewProduct({
+                          ...newProduct,
+                          product_code: '',
+                          product_id: '',
+                          product_name: '',
+                          wholesale_price: ''
+                        });
+                      }
+                    }}
+                    formatOptionLabel={(option, { context }) =>
+                      context === "value" 
+                        ? option.value  // selected value → product code
+                        : option.label  // dropdown menu → product name
+                    }
+                    styles={{
+                      control: (base) => ({
+                        ...base,
+                        minHeight: '31px',
+                        height: '31px',
+                        padding: 0
+                      }),
+                      menu: (base) => ({
+                        ...base,
+                        zIndex: 9999
+                      })
+                    }}
+                    menuPortalTarget={document.body}
+                    isClearable
+                  />
                 </Col>
               </Row>
               <Row className="mb-3">
@@ -238,7 +295,7 @@ const handleDeleteAction = async (id) => {
                     type="number"
                     className="form-control-sm"
                     onChange={handleNewProductInputs}
-                    value={newProduct.fixed_price}
+                    value={newProduct.fixed_price || 0.00}
                     name="fixed_price"
                   />
                 </Col>
