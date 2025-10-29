@@ -164,7 +164,7 @@ const PurchaseOrder = () => {
   const submitNewStatus = async () => {
     try {
       await api.post('/purchaseorder/changeStatus', {
-        tran_no: selectedIds[0],
+        purchase_order_ids: selectedIds[0],
         status: newStatus
       });
       alert('Status updated!');

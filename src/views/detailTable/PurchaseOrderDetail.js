@@ -40,6 +40,15 @@ const PurchaseOrderDetails = () => {
   const [selectedSNo, setSelectedSNo] = useState(null);
   const [selectedUOM, setSelectedUOM] = useState('');
 
+ const cartonPriceRefs = useRef([]);
+  const productCodeRefs = useRef([]); // keeps Select refs
+  const cartonQtyRefs = useRef([]);
+  const looseQtyRefs = useRef([]);
+  const priceRefs = useRef([]);
+  const discountPercentageRefs = useRef([]);
+  const discountAmountRefs = useRef([]);
+  const grossTotalRefs = useRef([]);
+  const tableRef = useRef(null);
 
   const handleSNoClick = (sNo, product) => {
     setSelectedSNo(sNo);
@@ -118,7 +127,6 @@ const { id } = useParams();
       grossTotal: 0,
     },
   ]);
-  const productCodeRefs = useRef([]);
 
   useEffect(() => {
     productCodeRefs.current = rows.map(
@@ -132,86 +140,14 @@ const { id } = useParams();
   };
 // Utility function to handle Enter key focus shift
 // Utility function to handle Enter key focus shift
-const handleKeyDown = (e, idx, field) => {
+const handleKeyDown = (e) => {
   if (e.key === "Enter") {
     e.preventDefault(); // prevent form submission
-
-    const fieldOrder = [
-      'product_code',
-      'carton_qty',
-      'loose_qty',
-      'qty', // You don't have a qty input in the code
-      'carton_price',
-      'price',
-      'discount_percentage', // Missing input in provided code
-      'discount_amount',     // Missing input in provided code
-      'gross_total',
-    ];
-
-    const currentPoProductId = rows[idx]?.po_product_id;
-    if (!currentPoProductId) return;
-
-    // --- Helper to focus the Product Select (for React Select) ---
-    const focusProductSelect = (rowIndex) => {
-      // Use setTimeout to ensure the focus happens after the current rendering cycle
-      setTimeout(() => {
-        const selectRef = productCodeRefs.current[rowIndex];
-        
-        // React-Select exposes a .focus() method on its instance
-        if (selectRef && typeof selectRef.focus === "function") {
-          selectRef.focus();
-        } else {
-          // Fallback for complex Select component structure
-          // This targets the inner hidden input wrapper of a standard Select
-          const targetId = rows[rowIndex]?.po_product_id;
-          const inputEl = document.querySelector(
-            `[name="product_code-${targetId}"] input`
-          );
-          if (inputEl) {
-            inputEl.focus();
-          } else {
-            // console.warn("Could not focus product_code for row", rowIndex);
-          }
-        }
-      }, 50); // Small timeout to allow DOM to catch up
-    };
-    // -----------------------------------------------------------
-
-    const currentFieldIndex = fieldOrder.indexOf(field);
-
-    if (currentFieldIndex === fieldOrder.length - 1) {
-      // ---- LAST FIELD (gross_total) -> MOVE TO NEXT ROW ----
-      const nextRowIdx = idx + 1;
-      if (rows[nextRowIdx]) {
-        // Next row exists, focus its product_code
-        focusProductSelect(nextRowIdx);
-      } else {
-        // No next row: add one and focus its product_code
-        // The callback ensures we focus AFTER the new row state is processed
-        addNewRow(() => {
-          focusProductSelect(idx + 1);
-        });
-      }
-    } else if (currentFieldIndex !== -1) {
-      // ---- MOVE TO NEXT FIELD IN CURRENT ROW ----
-      const nextField = fieldOrder[currentFieldIndex + 1];
-      
-      // FIX: Use requestAnimationFrame for immediate focus on the next standard input
-      requestAnimationFrame(() => {
-        const nextInputField = document.querySelector(
-          `[name="${nextField}-${currentPoProductId}"]`
-        );
-        if (nextInputField) nextInputField.focus();
-      });
-    }
+    const form = e.target.form;
+    const index = Array.prototype.indexOf.call(form, e.target);
+    form.elements[index + 1]?.focus(); // focus next element if exists
   }
-  
-  // NOTE: If you are calling handleKeyDown without idx and field (like in your TranNo, TranDate inputs), 
-  // you must update those calls to pass the correct arguments, or remove the call if not needed.
-  // The call in Request Delivery Date is the one that causes an error since it passes an event only.
 };
-
-
 
   const addNewRow = (callback) => {
     let newPoProductId;
@@ -524,21 +460,53 @@ useEffect(() => {
     }
   };
 
-  const addRow = () => {
-    setRows([
-      ...rows,
-      {
-        product_code: "",
-        product_name: "",
-        carton_qty: 0,
-        loose_qty: 0,
-        carton_price: 0,
-        qty: 0,
-        price: 0,
-        discount: 0,
-        total_price: 0,
-      },
-    ]);
+  
+  const addRow = (insertAfterIndex) => {
+    // insertAfterIndex is the index after which the new row will be inserted
+    const newRow = {
+      po_product_id: `new-${rows.length}`,
+      product_code: "",
+      product_name: "",
+      carton_qty: 0,
+      loose_qty: 0,
+      carton_price: 0,
+      qty: 0,
+      price: 0,
+      total: 0,
+      discount: 0,
+      total_price: 0,
+      discount_percentage: 0,
+      discount_amount: 0,
+      grossTotal: 0,
+    };
+    setRows((prevRows) => {
+      const updatedRows = [...prevRows];
+      updatedRows.splice(insertAfterIndex + 1, 0, newRow);
+      return updatedRows;
+    });
+
+    // give React a tick to render the new Select, then focus
+    setTimeout(() => {
+      const nextIndex = insertAfterIndex + 1;
+      const ref = productCodeRefs.current[nextIndex];
+      // react-select instances expose focus()
+      try {
+        if (ref && typeof ref.focus === 'function') {
+          ref.focus();
+          return;
+        }
+        // fallback: try to find underlying input by id
+        const input = document.querySelector(`#product-select-${nextIndex} input`);
+        if (input) input.focus();
+      } catch (err) {
+        console.warn('could not focus new product select', err);
+      }
+    }, 80);
+  };
+  const handleDelete = (index,id) => {
+    const updatedRows = rows.filter((row) => row.po_product_id !== id);
+    setRows(updatedRows);
+    deleteRow(index,id);
   };
   return (
     <div style={{ fontSize: "12px" }}>
@@ -831,11 +799,10 @@ useEffect(() => {
               </TabContent>
 
               {/* Table */}
-               <Table bordered responsive size="sm" className="mt-3 mb-1" style={{ fontSize: '0.75rem' }}>
-        
-        <colgroup>
+   <Table id="example" className="display border border-secondary rounded" ref={tableRef}>
+         <colgroup>
             <col style={{ width: "1rem" }} /> 
-    <col style={{ width: "10rem" }} /> {/* Product Code */}
+    <col style={{ width: "6rem" }} /> {/* Product Code */}
     <col style={{ width: "14rem" }} /> {/* Product Name */}
     <col style={{ width: "4rem" }} />  {/* Qty */}
     <col style={{ width: "4rem" }} />  {/* Price */}
@@ -850,23 +817,23 @@ useEffect(() => {
         <thead style={{ background: "#f5f5f5" }}>
           <tr>
             <th style={{ padding: '0.3rem' }}>S No</th>
-            <th style={{ width: ".1rem" }}>Product Code</th>
-            <th style={{ width: ".2rem" }}>Product Name</th>
+            <th style={{ padding: '0.3rem' }}>Product Code</th>
+            <th style={{ padding: '0.3rem' }}>Product Name</th>
             <th style={{ padding: '0.3rem' }}>Carton Qty</th>
             <th style={{ padding: '0.3rem' }}>Loose Qty</th>
             <th style={{ padding: '0.3rem' }}>Qty</th>
             <th style={{ padding: '0.3rem' }}>Carton Price</th>
             <th style={{ padding: '0.3rem' }}>Price</th>
             <th style={{ padding: '0.3rem' }}>Total</th>
-            <th style={{ padding: '0.3rem', minWidth: "60px", textAlign: "center" }}>% Discount $</th>
+            <th style={{ padding: '0.3rem', textAlign: 'center' }}>% Discount $</th>
             <th style={{ padding: '0.3rem' }}>Gross Total</th>
             <th style={{ padding: '0.3rem' }}>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {rows?.map((p, idx) => (
+          {rows.map((p, idx) => (
             <React.Fragment key={p.po_product_id}>
-              <tr key={p.po_product_id}>
+              <tr key={p.po_product_id} style={{ fontSize: '13px', height: '20px', background:  '#fff' }}>
                 <td
                   style={{
                     padding: '0.3rem',
@@ -877,9 +844,8 @@ useEffect(() => {
                 >
                   {idx + 1}
                 </td>
-         <td style={{ padding: "0.3rem", minWidth: "200px" }}>
+                     <td style={{ padding: "0.3rem", minWidth: "200px" }}>
   <Select
-    name={`product_code-${p.po_product_id}`}
     options={products.map((pr) => ({
       value: pr.product_id,
       label: `${pr.product_code} - ${pr.product_name}`,
@@ -894,10 +860,31 @@ useEffect(() => {
           }
         : null
     }
-    onChange={(selectedOption) => handleProductSelect(idx, selectedOption)}
+    onChange={(selectedOption) => {
+      handleProductSelect(idx, selectedOption);
+      if (cartonQtyRefs.current[idx]) {
+        cartonQtyRefs.current[idx].focus();
+      }
+    }}
+      styles={{
+    control: (base) => ({
+      ...base,
+      fontSize: "12px",
+      minHeight: "30px"
+     
+    }),
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 9999,
+      fontSize: "12px", 
+      width: '300px'  // keep it above modal, table, etc.
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999   // just in case
+    })
+  }}
     placeholder="Select Product"
-    onKeyDown={(e) => handleKeyDown(e, idx, 'product_code')}
-    ref={(el) => (productCodeRefs.current[idx] = el)}
     filterOption={(candidate, input) => {
       if (!input) return true;
       const lowerInput = input.toLowerCase();
@@ -906,6 +893,9 @@ useEffect(() => {
         candidate.data.product_name.toLowerCase().includes(lowerInput)
       );
     }}
+    // assign ref so we can call focus() on the react-select instance
+    ref={(el) => (productCodeRefs.current[idx] = el)}
+    inputId={`product-select-${idx}`}
   />
 </td>
 
@@ -919,211 +909,153 @@ useEffect(() => {
                 readOnly
               />
             </td>
-                {/* <td style={{ padding: '0.3rem' }}>{p.carton_qty}</td>
-                <td style={{ padding: '0.3rem' }}>{p.loose_qty}</td>
-                <td style={{ padding: '0.3rem' }}>{p.qty}</td> */}
-                 <td style={{ padding: '0.3rem' }}>
+                <td style={{ padding: '0.3rem' }}>
                   <Input
-                    type="text"
+                    type="number"
                     bsSize="sm"
-                    name={`carton_qty-${p.po_product_id}`}
-                    value={p?.carton_qty === 0 ? '' : p?.carton_qty}
-                    onBlur={(e) => {
-                      const val = e.target.value;
-                      const num = val === '' ? 0 : parseFloat(val);
-                      handleRowChange(p.po_product_id, 'carton_qty', num);
-                    }}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (/^\d*\.?\d{0,2}$/.test(val)) {
-                        handleRowChange(p.po_product_id, 'carton_qty', val);
+                    value={p.carton_qty}
+                    onChange={(e) => handleRowChange(p.po_product_id, 'carton_qty', e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (looseQtyRefs.current[idx]) {
+                          looseQtyRefs.current[idx].focus();
+                        }
                       }
                     }}
-                    onFocus={(e) => e.target.select()}
-                    style={{ width: '80px', textAlign: 'right' }}
-                  onKeyDown={(e) => handleKeyDown(e, idx, 'carton_qty')} />
-                </td>
-                 <td style={{ padding: '0.3rem' }}>
-                  <Input
-                    type="text"
-                    bsSize="sm"
-                    name={`loose_qty-${p.po_product_id}`}
-                    value={p?.loose_qty === 0 ? '' : p?.loose_qty}
-                    onBlur={(e) => {
-                      const val = e.target.value;
-                      const num = val === '' ? 0 : parseFloat(val);
-                      handleRowChange(p.po_product_id, 'loose_qty', num);
-                    }}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (/^\d*\.?\d{0,2}$/.test(val)) {
-                        handleRowChange(p.po_product_id, 'loose_qty', val);
-                      }
-                    }}
-                    onFocus={(e) => e.target.select()}
-                    style={{ width: '80px', textAlign: 'right' }}
-                   onKeyDown={(e) => handleKeyDown(e, idx, 'loose_qty')}/>
-                </td>
-                 <td style={{ padding: '0.3rem' }}>
-                  <Input
-                    type="text"
-                    bsSize="sm"
-                    name={`qty-${p.po_product_id}`}
-                    value={p?.qty === 0 ? '' : p?.qty}
-                    onBlur={(e) => {
-                      const val = e.target.value;
-                      const num = val === '' ? 0 : parseFloat(val);
-                      handleRowChange(p.po_product_id, 'qty', num);
-                    }}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (/^\d*\.?\d{0,2}$/.test(val)) {
-                        handleRowChange(p.po_product_id, 'qty', val);
-                      }
-                    }}
-                    onFocus={(e) => e.target.select()}
-                    style={{ width: '80px', textAlign: 'right' }}
-                   onKeyDown={(e) => handleKeyDown(e, idx, 'qty')}/>
+                    innerRef={(el) => (cartonQtyRefs.current[idx] = el)}
+                    style={{ width: '100%', fontSize: '12px' }}
+                  />
                 </td>
                 <td style={{ padding: '0.3rem' }}>
                   <Input
-                    type="text"
+                    type="number"
                     bsSize="sm"
-                    name={`carton_price-${p.po_product_id}`}
-                    value={p?.carton_price === 0 ? '' : p?.carton_price}
-                    onBlur={(e) => {
-                      const val = e.target.value;
-                      const num = val === '' ? 0 : parseFloat(val);
-                      handleRowChange(p.po_product_id, 'carton_price', num);
-                    }}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (/^\d*\.?\d{0,2}$/.test(val)) {
-                        handleRowChange(p.po_product_id, 'carton_price', val);
+                    value={p.loose_qty}
+                    onChange={(e) => handleRowChange(p.po_product_id, 'loose_qty', e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (cartonPriceRefs.current[idx]) {
+                          cartonPriceRefs.current[idx].focus();
+                        }
                       }
                     }}
-                    onFocus={(e) => e.target.select()}
-                    style={{ width: '80px', textAlign: 'right' }}
-                  onKeyDown={(e) => handleKeyDown(e, idx, 'carton_price')} />
+                    innerRef={(el) => (looseQtyRefs.current[idx] = el)}
+                    style={{ width: '100%', fontSize: '12px' }}
+                  />
+                </td>
+                <td style={{ padding: '0.3rem' }}>{p.qty}</td>
+                <td style={{ padding: '0.3rem' }}>
+                  <Input
+                    type="number"
+                    bsSize="sm"
+                    value={Number(p?.carton_price).toFixed(2)}
+                    onChange={(e) => handleRowChange(p.po_product_id, 'carton_price', e.target.value)}
+                    style={{ width: '80px' }}
+                    innerRef={(el) => (cartonPriceRefs.current[idx] = el)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (priceRefs.current[idx]) {
+                          priceRefs.current[idx].focus();
+                        }
+                      }
+                    }}
+                  />
                 </td>
                 <td style={{ padding: '0.3rem' }}>
                   <Input
-                    type="text"
+                    type="number"
                     bsSize="sm"
-                    name={`price-${p.po_product_id}`}
-                    value={p?.price === 0 ? '' : p?.price}
-                    onBlur={(e) => {
-                      const val = e.target.value;
-                      const num = val === '' ? 0 : parseFloat(val);
-                      handleRowChange(p.po_product_id, 'price', num);
-                    }}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (/^\d*\.?\d{0,2}$/.test(val)) {
-                        handleRowChange(p.po_product_id, 'price', val);
+                    value={Number(p?.price).toFixed(2)}
+                    onChange={(e) => handleRowChange(p.po_product_id, 'price', e.target.value)}
+                    style={{ width: '80px' }}
+                    innerRef={(el) => (priceRefs.current[idx] = el)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (discountPercentageRefs.current[idx]) {
+                          discountPercentageRefs.current[idx].focus();
+                        }
                       }
                     }}
-                    onFocus={(e) => e.target.select()}
-                    style={{ width: '80px', textAlign: 'right' }}
-                    onKeyDown={(e) => handleKeyDown(e, idx, 'price')}/>
+                  />
                 </td>
                 <td style={{ padding: '0.3rem' }}>
                   <Input
-                    type="text"
+                    type="number"
                     bsSize="sm"
                     value={Number(p.qty * p.price).toFixed(2)}
+                    onChange={(e) => handleRowChange(p.po_product_id, 'total', e.target.value)}
+                    style={{ width: '80px' }}
                     readOnly
-                    style={{ width: '80px', textAlign: 'right' }}
-                    name={`total_${p.po_product_id}`}
                   />
                 </td>
-                <td style={{ padding: '0.3rem', minWidth: "60px", textAlign: "center" }}>
+                <td style={{ padding: '0.3rem' }}>
                   <div className="d-flex" >
                     <Input
-                      type="text"
+                      type="number"
                       bsSize="sm"
-                      value={p?.discount_percentage === 0 ? '' : p?.discount_percentage}
-                      onBlur={(e) => {
-                        const val = e.target.value;
-                        const num = val === '' ? 0 : parseFloat(val);
-                        handleRowChange(p.po_product_id, 'discount_percentage', num);
-                      }}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (/^\d*\.?\d{0,2}$/.test(val)) {
-                          handleRowChange(p.po_product_id, 'discount_percentage', val);
+                      value={Number(p?.discount_percentage).toFixed(2)}
+                      onChange={(e) => handleRowChange(p.po_product_id, 'discount_percentage', e.target.value)}
+                      style={{ width: '50%', marginRight: '2px' }}
+                      innerRef={(el) => (discountPercentageRefs.current[idx] = el)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (discountAmountRefs.current[idx]) {
+                            discountAmountRefs.current[idx].focus();
+                          }
                         }
                       }}
-                      onFocus={(e) => e.target.select()}
-                      style={{ width: '50%', marginRight: '2px', textAlign: 'right' }}
-                      name={`discount_percentage-${p.po_product_id}`}
-                      onKeyDown={(e) => handleKeyDown(e, idx, 'discount_percentage')}
-                  />
+                    />
                     <Input
-                      type="text"
+                      type="number"
                       bsSize="sm"
-                      value={p?.discount_amount === 0 ? '' : p?.discount_amount}
-                      onBlur={(e) => {
-                        const val = e.target.value;
-                        const num = val === '' ? 0 : parseFloat(val);
-                        handleRowChange(p.po_product_id, 'discount_amount', num);
-                      }}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (/^\d*\.?\d{0,2}$/.test(val)) {
-                          handleRowChange(p.po_product_id, 'discount_amount', val);
+                      value={Number(p?.discount_amount).toFixed(2)}
+                      onChange={(e) => handleRowChange(p.po_product_id, 'discount_amount', e.target.value)}
+                      style={{ width: '50%' }}
+                      innerRef={(el) => (discountAmountRefs.current[idx] = el)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (grossTotalRefs.current[idx]) {
+                            grossTotalRefs.current[idx].focus();
+                          }
                         }
                       }}
-                      onFocus={(e) => e.target.select()}
-                      style={{ width: '50%', textAlign: 'right' }}
-                      name={`discount_amount-${p.po_product_id}`}
-                      onKeyDown={(e) => handleKeyDown(e, idx, 'discount_amount')}
                     />
                   </div>
                 </td>
                 <td style={{ padding: '0.3rem' }}>
                   <Input
-                    type="text"
+                    type="number"
                     bsSize="sm"
                     value={Number(p.grossTotal).toFixed(2)}
-                    readOnly
-                    style={{ width: '80px', textAlign: 'right' }}
-                    name={`gross_total-${p.po_product_id}`}
-                 // ... inside Request Delivery Date Input
-onKeyDown={(e) => {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    // Use the reliable focus method for the first product select
-    const firstSelectRef = productCodeRefs.current[0];
-    if (firstSelectRef && typeof firstSelectRef.focus === "function") {
-      firstSelectRef.focus();
-    } else {
-       // Fallback for DOM query if ref is not yet populated
-       const firstProductSelect = document.querySelector(
-         `[name="product_code-${rows[0]?.po_product_id}"] input`
-       );
-       if (firstProductSelect) firstProductSelect.focus();
-    }
-  } 
-  // IMPORTANT: Remove the line below, as it calls handleKeyDown incorrectly and causes errors.
-  // else {
-  //   handleKeyDown(e); 
-  // }
-}}
-
-                   />
+                    onChange={(e) => handleRowChange(p.po_product_id, 'grossTotal',e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        // insert a new row *after* current index and focus its product select
+                        addRow(idx);
+                      }
+                    }}
+                    style={{ width: '80px' }}
+                    innerRef={(el) => (grossTotalRefs.current[idx] = el)}
+                  />
                 </td>
                 <td style={{ padding: '0.3rem', whiteSpace: 'nowrap' }}>
                   <Button
                     size="sm"
                     color="danger"
                     className="me-1"
-                    onClick={() => deleteRow(idx,p.po_product_id)}
+                    onClick={() => handleDelete(idx,p.po_product_id)}
                     style={{ padding: '0.1rem 0.3rem', fontSize: '0.7rem' }}
                   >
                     🗑
                   </Button>
-                   <Button
+                  <Button
                     size="sm"
                     color="success"
                     className="me-1"
@@ -1132,7 +1064,12 @@ onKeyDown={(e) => {
                   >
                     <FontAwesomeIcon icon={faPlus} />
                   </Button>
-                  <Button size="sm" color="info" onClick={() => handleViewProductInfo(p)} style={{ padding: '0.1rem 0.3rem', fontSize: '0.7rem' }}>
+                  <Button
+                    size="sm"
+                    color="info"
+                    onClick={() => handleViewProductInfo(p)}
+                    style={{ padding: '0.1rem 0.3rem', fontSize: '0.7rem' }}
+                  >
                     ℹ
                   </Button>
                 </td>
@@ -1206,19 +1143,10 @@ onKeyDown={(e) => {
                 </tr>
               )}
             </React.Fragment>
-            ))})
+            ))}
           {/* Summary Row */}
           <tr style={{ fontWeight: "bold", color: "#007bff", fontSize: '0.75rem' }}>
-            <td style={{ padding: '0.3rem' }}>
-              <Button
-                size="sm"
-                color="success"
-                onClick={addNewRow}
-                style={{ padding: '0.1rem 0.3rem', fontSize: '0.7rem' }}
-              >
-                <FontAwesomeIcon icon={faPlus} />
-              </Button>
-            </td>
+            <td style={{ padding: '0.3rem' }}></td> {/* Empty for S No */}
             <td colSpan={1} style={{ textAlign: "right", padding: '0.3rem' }}>
               Summary:
             </td>
