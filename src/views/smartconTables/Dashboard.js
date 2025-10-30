@@ -1,6 +1,4 @@
-// ./src/views/smartconTables/Dashboard.js
-
-import React, { useState, useEffect } from "react";
+import  { useState, useEffect } from "react";
 import classnames from "classnames";
 import {
   Nav,
@@ -624,6 +622,7 @@ const Dashboard = () => {
         </TabPane>
         <TabPane tabId="4">
           <h5>Finance Tab Content</h5>
+        <FinanceDashboard/>
         </TabPane>
       </TabContent>
     </div>
