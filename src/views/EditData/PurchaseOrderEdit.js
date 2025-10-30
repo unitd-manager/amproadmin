@@ -241,7 +241,7 @@ useEffect(() => {
           updatedFormData.contact_address1 = selectedSupplier.address_flat;
           updatedFormData.contact_address2 = selectedSupplier.address_street;
           updatedFormData.contact_address3 = selectedSupplier.address_state;
-          // updatedFormData.state = selectedSupplier.address_state;
+        updatedFormData.supplier_name = selectedSupplier.company_name;
           updatedFormData.country = selectedSupplier.address_country;
           updatedFormData.postal_code = selectedSupplier.address_po_code;
         }
@@ -546,7 +546,7 @@ useEffect(() => {
        <Col md="8">
           <FormGroup>
              <Input bsSize="sm" className="py-0 px-1"  name="company_name"
-              value={formData?.company_name}
+              value={formData?.supplier_name}
               onChange={handleChange}  onKeyDown={handleKeyDown} />
             
           </FormGroup>

@@ -1,0 +1,37 @@
+.table.bg-white {
+  border-collapse: separate;
+  border-spacing: 0 10px; /* Adds space between rows */
+
+  thead {
+    tr {
+      th {
+        border-bottom: none; /* Remove border from table header */
+      }
+    }
+  }
+
+  tbody {
+    tr {
+      background-color: #ffffff; /* White background for rows */
+      border-radius: 8px; /* Rounded corners for rows */
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Subtle shadow for depth */
+      margin-bottom: 10px; /* Space between rows */
+
+      td {
+        border-top: none; /* Remove top border from cells */
+        border-bottom: none; /* Remove bottom border from cells */
+        padding: 12px 15px; /* Adjust padding for better spacing */
+
+        &:first-child {
+          border-top-left-radius: 8px;
+          border-bottom-left-radius: 8px;
+        }
+
+        &:last-child {
+          border-top-right-radius: 8px;
+          border-bottom-right-radius: 8px;
+        }
+      }
+    }
+  }
+}
