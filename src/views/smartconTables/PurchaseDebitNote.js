@@ -22,7 +22,7 @@ const PurchaseDebitNote = () => {
   const [goodsReturns, setGoodsReturns] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedTranNos, setSelectedTranNos] = useState([]);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const [statusModal, setStatusModal] = useState(false);
@@ -250,7 +250,7 @@ const handleDeleteSelected = async () => {
         </Col>
       </Row>
 
-      <Table bordered hover size="sm" className="bg-white">
+      <Table hover size="sm" className="bg-white">
         <thead>
           <tr>
             <th><Input type="checkbox" /></th>

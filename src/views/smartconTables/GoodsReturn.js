@@ -193,7 +193,7 @@ const handleRepeatGoodsReturn = async () => {
         </Col>
       </Row>
 
-      <Table bordered hover size="sm" className="bg-white">
+      <Table hover size="sm" className="bg-white">
         <thead>
           <tr>
             <th><Input type="checkbox" /></th>

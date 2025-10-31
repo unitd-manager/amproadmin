@@ -622,7 +622,7 @@ const Dashboard = () => {
         </TabPane>
         <TabPane tabId="4">
           <h5>Finance Tab Content</h5>
-        <FinanceDashboard/>
+        {/* <FinanceDashboard /> */}
         </TabPane>
       </TabContent>
     </div>

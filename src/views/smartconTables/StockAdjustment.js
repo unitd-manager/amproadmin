@@ -452,11 +452,11 @@ const StockAdjustment = () => {
                         />
                       </td>
                       <td>{item.stock_adjustment_no}</td>
-                      <td>{item.stock_adjustment_date}</td>
+                      <td>{item.stock_adjustment_date ? new Date(item.stock_adjustment_date).toLocaleDateString('en-GB'):''}</td>
                       <td>{item.location_code}</td>
                       <td>{item.remarks || '-'}</td>
-                      <td>{item.createUser}</td>
-                      <td>{item.createDate}</td>
+                      <td>{item.created_by}</td>
+                      <td>{item.created_at ? new Date(item.created_at).toLocaleDateString('en-GB'):''}</td>
                     </tr>
                   ))
                 )}
