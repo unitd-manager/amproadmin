@@ -1,166 +1,297 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import * as Icon from 'react-feather';
-import { Button } from 'reactstrap';
-import { Link, useParams } from 'react-router-dom';
+import { Button, Card, CardBody, Input, Row, Col,Label } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'datatables.net-dt/js/dataTables.dataTables';
 import 'datatables.net-dt/css/jquery.dataTables.min.css';
 import $ from 'jquery';
-import 'datatables.net-buttons/js/buttons.colVis';
-import 'datatables.net-buttons/js/buttons.flash';
-import 'datatables.net-buttons/js/buttons.html5';
-import 'datatables.net-buttons/js/buttons.print';
+import { Link } from 'react-router-dom';
+import message from '../../components/Message';
 import api from '../../constants/api';
-import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
+import './Customer.scss';
 
 const Supplier = () => {
-  //Const Variables
-  const [supplier, setSupplier] = useState(null);
+  const [supplier, setSupplier] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [supplierNameFilter, setSupplierNameFilter] = useState('');
+  const [mobileFilter, setMobileFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [showStatusFilter, setShowStatusFilter] = useState(false);
+  const dataTableRef = useRef(null);
+  const filterRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setShowStatusFilter(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const getCustomer = async () => {
+    setLoading(true);
+    try {
+      const params = {
+        company_name: supplierNameFilter,
+        mobile: mobileFilter,
+      };
+      
+      if (statusFilter !== 'all') {
+        params.is_active = statusFilter === 'active' ? 1 : 0;
+      }
+
+      const res = await api.get('/contact/getContactss', { params });
   
+      const formattedCustomers = res.data.data.map(item => ({
+        ...item,
+        formattedStatus: item.is_active === 1 ? 'Active' : 'Inactive',
+      }));
+  
+      setSupplier(formattedCustomers || []);
+    } catch (error) {
+      message('Cannot get Supplier Data', 'error');
+      console.error("Error fetching supplier data:", error);
+      setSupplier([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Navigation and Parameter Constants
-  const { id } = useParams();
-
-  // get supplier
-  const getSupplier = () => {
-    api
-      .get('/supplier/getSupplier')
-      .then((res) => {
-        setSupplier(res.data.data);
-        $('#example').DataTable({
-          pagingType: 'full_numbers',
-          pageLength: 20,
-          processing: true,
-          dom: 'Bfrtip',
-          buttons: [
-            {
-              extend: 'print',
-              text: 'Print',
-              className: 'shadow-none btn btn-primary',
-            },
-          ],
-        });
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-      });
+  const handleDeleteSupplier = async (contactId) => {
+    if (window.confirm('Are you sure you want to delete this supplier?')) {
+      try {
+        await api.post('/contact/deleteContact', { company_id: contactId });
+        message('Supplier deleted successfully', 'success');
+        getCustomer();
+      } catch (error) {
+        message('Error deleting supplier', 'error');
+        console.error('Error deleting supplier:', error);
+      }
+    }
   };
 
   useEffect(() => {
-    getSupplier();
-  }, [id]);
-  //  stucture of Section list view
-  const columns = [
-    {
-      name: '#',
-      grow: 0,
-      wrap: true,
-      width: '4%',
-    },
-    {
-      name: 'Edit',
-      selector: 'edit',
-      cell: () => <Icon.Edit2 />,
-      grow: 0,
-      width: 'auto',
-      button: true,
-      sortable: false,
-    },
+    getCustomer();
+  }, [supplierNameFilter, mobileFilter]);
 
-    {
-      name: 'Supplier Code',
-      selector: 'supplier_code',
-      sortable: true,
-      grow: 0,
-      wrap: true,
-    },
-    {
-      name: 'Supplier name',
-      selector: 'company_name',
-      sortable: true,
-      grow: 2,
-      wrap: true,
-    },
-    {
-      name: 'Address',
-      selector: 'address_street',
-      sortable: true,
-      grow: 0,
-    },
-    {
-      name: 'Phone No',
-      selector: 'phone',
-      sortable: true,
-      width: 'auto',
-      grow: 3,
-    },
-    {
-      name: 'Email',
-      selector: 'email',
-      sortable: true,
-      grow: 2,
-      width: 'auto',
-    },
-  ];
+  useEffect(() => {
+    if (dataTableRef.current && $.fn.DataTable.isDataTable(dataTableRef.current)) {
+      $(dataTableRef.current).DataTable().destroy();
+    }
+
+    if (supplier && supplier.length > 0) {
+      setTimeout(() => {
+        dataTableRef.current = $('#example').DataTable({
+          pagingType: 'full_numbers',
+          pageLength: 20,
+          processing: true,
+          destroy: true,
+          dom: 'rtip',
+          searching: false,
+          buttons: [],
+          columnDefs: [{ targets: [0, 2, 3], orderable: false }],
+        });
+      }, 100);
+    }
+
+    return () => {
+      if (dataTableRef.current && $.fn.DataTable.isDataTable(dataTableRef.current)) {
+        $(dataTableRef.current).DataTable().destroy();
+      }
+    };
+  }, [supplier]);
+
 
   return (
     <div className="MainDiv">
-      <div className=" pt-xs-25">
-        <BreadCrumbs />
-        {/* Supplier Add new button */}
-
-        <CommonTable
-          loading={loading}
-          title="Supplier List"
-          Button={
+      <Card className="mb-4">
+        <CardBody className="p-4">
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <h5 className="mb-0">Supplier List</h5>
             <Link to="/SupplierDetails">
-              <Button color="primary" className="shadow-none">
-                Add New
+              <Button color="primary" size="sm" className="d-flex align-items-center">
+                <Icon.Plus size={14} className="me-1" /> Add New
               </Button>
             </Link>
-          }
-        >
-          <thead>
-            <tr>
-              {columns.map((cell) => {
-                return <td key={cell.name}>{cell.name}</td>;
-              })}
-            </tr>
-          </thead>
-          <tbody>
-            {supplier &&
-              supplier.map((element, index) => {
-                return (
-                  <tr key={element.supplier_id}>
-                    <td>{index + 1}</td>
+          </div>
+          
+          <Row className="mb-3">
+            <Col md={4}>
+              <div className="form-group mb-3 mb-md-0">
+                <Input
+                  type="text"
+                  className="form-control-sm"
+                  placeholder="Search Supplier.."
+                  value={supplierNameFilter}
+                  onChange={(e) => setSupplierNameFilter(e.target.value)}
+                />
+              </div>
+            </Col>
+            <Col md={4}>
+              <div className="form-group mb-3 mb-md-0">
+                <Input
+                  type="text"
+                  className="form-control-sm"
+                  placeholder="Search Phone No"
+                  value={mobileFilter}
+                  onChange={(e) => setMobileFilter(e.target.value)}
+                />
+              </div>
+            </Col>
+            <Col md={4} className="d-flex align-items-center gap-2">
+              <div className="position-relative d-flex align-items-center" ref={filterRef}>
+                <Button 
+                  color="light" 
+                  size="sm" 
+                  className="d-flex align-items-center"
+                  onClick={() => setShowStatusFilter(!showStatusFilter)}
+                >
+                  <Icon.Filter size={14} className="me-1" />
+                </Button>
+                {showStatusFilter && (
+                  <div 
+                    className="bg-white border rounded shadow p-2 position-absolute" 
+                    style={{
+                      width: '160px',
+                      top: '100%',
+                      left: 0,
+                      zIndex: 1000,
+                      marginTop: '5px'
+                    }}
+                  >
+                    <div className="form-check">
+                      <input
+                        type="radio"
+                        className="form-check-input"
+                        id="allStatus"
+                        name="statusFilter"
+                        checked={statusFilter === 'all'}
+                        onChange={() => {
+                          setStatusFilter('all');
+                          setShowStatusFilter(false);
+                          getCustomer();
+                        }}
+                      />
+                      <Label className="form-check-label" htmlFor="allStatus">
+                        All Status
+                      </Label>
+                    </div>
+                    <div className="form-check">
+                      <input
+                        type="radio"
+                        className="form-check-input"
+                        id="activeStatus"
+                        name="statusFilter"
+                        checked={statusFilter === 'active'}
+                        onChange={() => {
+                          setStatusFilter('active');
+                          setShowStatusFilter(false);
+                          getCustomer();
+                        }}
+                      />
+                      <Label className="form-check-label" htmlFor="activeStatus">
+                        Active
+                      </Label>
+                    </div>
+                    <div className="form-check">
+                      <input
+                        type="radio"
+                        className="form-check-input"
+                        id="inactiveStatus"
+                        name="statusFilter"
+                        checked={statusFilter === 'inactive'}
+                        onChange={() => {
+                          setStatusFilter('inactive');
+                          setShowStatusFilter(false);
+                          getCustomer();
+                        }}
+                      />
+                      <Label className="form-check-label" htmlFor="inactiveStatus">
+                        Inactive
+                      </Label>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <Button 
+                color="primary" 
+                size="sm" 
+                className="d-flex align-items-center"
+                onClick={getCustomer}
+              >
+                <Icon.Search size={14} className="me-1" /> Search
+              </Button>
+            </Col>
+          </Row>
+
+          <div className="table-responsive">
+            <CommonTable loading={loading}>
+              <thead>
+                <tr>
+                  <th style={{ width: '50px' }}></th>
+                  <th style={{ width: '50px' }}></th>
+                  <th>Supplier Code</th>
+                  <th>Supplier Name</th>
+                  <th>Address</th>
+                  <th>Phone No</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {supplier.map((element) => (
+                  <tr key={element.company_id}>
                     <td>
-                      <Link to={`/SupplierEdit/${element.supplier_id}/?tab=1`}>
-                        <Icon.Edit2 />
+                      <button 
+                        type="button"
+                        className="btn btn-sm btn-icon p-0"
+                        onClick={() => handleDeleteSupplier(element.company_id)}
+                        title="Delete"
+                      >
+                        <Icon.Trash2 size={16} className="text-danger" />
+                      </button>
+                    </td>
+                    <td>
+                      <input 
+                        type="checkbox" 
+                        className="form-check-input"
+                        onChange={() => {}}
+                      />
+                    </td>
+                    <td>
+                      <Link to={`/SupplierEdit/${element.company_id}`} className="text-primary text-decoration-none">
+                        {element.supplier_code || 'N/A'}
                       </Link>
                     </td>
                     <td>
-  <Link to={`/SupplierEdit/${element.supplier_id}/?tab=1`}>
-    {element.supplier_code}
-  </Link>
-</td>
-<td>
-  <Link to={`/SupplierEdit/${element.supplier_id}/?tab=1`}>
-    {element.company_name}
-  </Link>
-</td>
-                    <td>{element.address_flat}{element.address_street}{element.address_state}</td>
-                    <td>{element.phone}</td>
-                    <td>{element.email}</td>
+                      <Link to={`/SupplierEdit/${element.company_id}`} className="text-primary text-decoration-none">
+                        {element.company_name || 'N/A'}
+                      </Link>
+                    </td>
+                    <td className="text-truncate" style={{ maxWidth: '200px' }}>
+                      {element.address || 'N/A'}
+                    </td>
+                    <td>{element.phone || 'N/A'}</td>
+                    <td>{element.email || 'N/A'}</td>
+                    <td>
+                      <span className={`badge ${element.is_active ? 'bg-success' : 'bg-danger'}`}>
+                        {element.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
                   </tr>
-                );
-              })}
-          </tbody>
-        </CommonTable>
-        {/* setion table */}
-      </div>
+                ))}
+              </tbody>
+            </CommonTable>
+          </div>
+        </CardBody>
+      </Card>
     </div>
   );
 };
