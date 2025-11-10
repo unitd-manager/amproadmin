@@ -8,7 +8,7 @@ import 'datatables.net-buttons/js/buttons.colVis';
 import 'datatables.net-buttons/js/buttons.flash';
 import 'datatables.net-buttons/js/buttons.html5';
 import 'datatables.net-buttons/js/buttons.print';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom'; 
 import message from '../../components/Message';
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
@@ -82,10 +82,7 @@ const Test = () => {
 
   // ✅ Confirm Delivery for selected orders
 const generateDeliveryOrder = async () => {
-  if (selectedOrders.length === 0) {
-    message('Please select at least one order', 'warning');
-    return;
-  }
+
 
   try {
     // filter selected orders
