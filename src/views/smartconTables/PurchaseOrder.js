@@ -8,6 +8,7 @@ import moment from 'moment';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../constants/api';
 import PdfPurchaseOrderList from '../../components/PDF/PdfPurchaseOrderList';
+import { ToastContainer } from 'react-toastify';
 
 const PurchaseOrder = () => {
   const [filters, setFilters] = useState({
@@ -22,6 +23,7 @@ const PurchaseOrder = () => {
   const [goodsReturns, setGoodsReturns] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState(20); // Added limit state
   const [selectedIds, setSelectedIds] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -31,7 +33,7 @@ const PurchaseOrder = () => {
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
   const navigate = useNavigate();
 
-  const fetchData = async () => {
+  const fetchData = async (page = currentPage, pageSize = limit) => {
     try {
       const res = await api.get('/purchaseorder/getFilteredPurchaseOrder', {
         params: {
@@ -40,6 +42,8 @@ const PurchaseOrder = () => {
           to_date: filters.to_date || '',
           status: filters.status || '',
           supplier_id: filters.supplier || '',
+          page,
+          limit:pageSize,
         }
       });
 
@@ -52,7 +56,7 @@ const PurchaseOrder = () => {
 
   useEffect(() => {
     fetchData();
-  }, [currentPage]);
+  }, [currentPage, limit]);
 
   const handleFilterChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
@@ -196,7 +200,7 @@ const PurchaseOrder = () => {
   return (
     <div className="p-4 bg-light">
       <h4 className="mb-4">Purchase Order Management</h4>
-
+<ToastContainer></ToastContainer>
       <Row className="mb-3">
         <Col md={2}><Input name="tran_no" placeholder="Tran No" value={filters.tran_no} onChange={handleFilterChange} /></Col>
         <Col md={2}><Input type="date" name="from_date" value={filters.from_date} onChange={handleFilterChange} /></Col>
@@ -279,8 +283,27 @@ const PurchaseOrder = () => {
         <span>Total Records : {totalRecords}</span>
         <div>
           <Button size="sm" disabled={currentPage === 1} onClick={handlePrev}>Previous</Button>{' '}
-          <Button size="sm" onClick={handleNext}>Next</Button>
+          {Array.from({ length: Math.ceil(totalRecords / limit) }, (_, i) => i + 1).map((page) => {
+            if (page === 1 || page === Math.ceil(totalRecords / limit) || (page >= currentPage - 2 && page <= currentPage + 2)) {
+              return (
+                <Button
+                  key={page}
+                  size="sm"
+                  color={currentPage === page ? 'primary' : 'secondary'}
+                  onClick={() => setCurrentPage(page)}
+                  className="mx-1"
+                >
+                  {page}
+                </Button>
+              );
+            } else if (page === currentPage - 3 || page === currentPage + 3) {
+              return <span key={page} className="mx-1">...</span>;
+            }
+            return null;
+          })}
+          <Button size="sm" disabled={currentPage * limit >= totalRecords} onClick={handleNext}>Next</Button>
         </div>
+      
       </div>
 
       {/* Change Status Modal */}
