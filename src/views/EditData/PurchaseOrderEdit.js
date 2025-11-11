@@ -30,8 +30,9 @@ import { FaTrashAlt, FaPlusCircle } from "react-icons/fa";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarAlt, faPlus, faPrint } from '@fortawesome/free-solid-svg-icons';
 import api from "../../constants/api";
-import ProductInfoModal from "../../components/PurchaseOrder/ProductInfoModal";
-import PdfPurchaseInvoice from "../../components/PDF/PdfPurchaseInvoice";
+// import PurchaseOrderProductInfoModal from "../../components/PurchaseOrder/PurchaseOrderProductInfoModal";
+import PurchaseOrderProductInfoModal from "../../components/PurchaseOrder/PurchaseOrderProductInfoModal";
+// import PdfPurchaseInvoice from "../../components/PDF/PdfPurchaseInvoice";
 
 const PurchaseOrderEdit = () => {
 
@@ -1160,32 +1161,32 @@ useEffect(() => {
 
   {/* Print + Save on right */}
   <Col className="d-flex justify-content-end">
-    <Button size="sm" style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#fff' }} className="me-2">
+    {/* <Button size="sm" style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#fff' }} className="me-2">
       <FontAwesomeIcon icon={faPrint} className="me-1" />
     <PdfPurchaseInvoice id={id} />
-    </Button>
+    </Button> */}
     <div className="btn-group">
       <Button size="sm" style={{ backgroundColor: '#213042', borderColor: '#213042', color: '#fff' }} onClick={()=>handleSubmit()}>
         Save
       </Button>
-      <Button
+      {/* <Button
         size="sm"
         style={{ backgroundColor: '#213042', borderColor: '#213042', color: '#fff' }}
         className="dropdown-toggle dropdown-toggle-split"
         data-bs-toggle="dropdown"
       >
         <span className="visually-hidden">Toggle Dropdown</span>
-      </Button>
-      <div className="dropdown-menu dropdown-menu-end">
+      </Button> */}
+      {/* <div className="dropdown-menu dropdown-menu-end">
         <button className="dropdown-item">Save & New</button>
         <button className="dropdown-item">Save & Close</button>
-      </div>
+      </div> */}
     </div>
   </Col>
 </Row>
   </Container>
 </div>
- {productInfoModal && <ProductInfoModal
+ {productInfoModal && <PurchaseOrderProductInfoModal
         isOpen={productInfoModal}
         toggle={toggleProductInfoModal}
         selectedProduct={selectedProduct}
