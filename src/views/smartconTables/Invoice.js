@@ -199,7 +199,7 @@ const handleRepeatInvoice = async () => {
       invoice_id: selectedOrder.invoice_id,
       invoice_code: deliveryCode,
     });
-    message(response.data.msg, 'success');
+    message(response.data.message || 'Repeated invoice successfully', 'success');
     setTimeout(() => {
       window.location.reload();
     }, 400);
@@ -223,9 +223,9 @@ const handleConvertToSalesReturn = async () => {
 
     });
     message(response.data.msg || 'Converted to Sales Return successfully', 'success');
-    // setTimeout(() => {
-    //   window.location.reload();
-    // }, 400);
+    setTimeout(() => {
+      window.location.reload();
+    }, 400);
   } catch (error) {
     message(error.response?.data?.msg || 'Failed to convert to Sales Return', 'error');
   }
@@ -241,10 +241,8 @@ const handleConvertToDelivryVerification = async () => {
     const response = await api.post('/invoice/convertToDelivryVerification', {
       invoice_id: selectedOrder.invoice_id,
     });
-    message(response.data.msg || 'Converted to Sales Return successfully', 'success');
-    // setTimeout(() => {
-    //   window.location.reload();
-    // }, 400);
+      message(response.data.message || 'Delivery Verified successfully', 'success');
+      
   } catch (error) {
     message(error.response?.data?.msg || 'Failed to convert to Sales Return', 'error');
   }
