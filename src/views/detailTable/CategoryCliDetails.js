@@ -58,15 +58,21 @@ navigate(`/CategoriesEdit/${id}`)
     const { loggedInuser } = useContext(AppContext);
 
   const [file, setFile] = useState([]);
-        const [ handleValue, setHandleValue ] = useState();
+        const [imagePreviews, setImagePreviews] = useState([]);
 
-        const handleFileChange = (fiels) => {
+        const handleFileChange = (selectedFiles) => {
           
-            const arrayOfObj = Object.entries(fiels).map((e) => ( e[1]  ));
+            // const arrayOfObj = Object.entries(selectedFiles).map((e) => ( e[1]  ));
 
-            setFile(fiels);
-            setHandleValue(arrayOfObj);
-            console.log(fiels)
+            setFile(selectedFiles);
+            console.log(selectedFiles)
+
+            const newImagePreviews = [];
+            for (let i = 0; i < selectedFiles.length; i++) {
+              const f = selectedFiles[i];
+              newImagePreviews.push(URL.createObjectURL(f));
+            }
+            setImagePreviews(newImagePreviews);
         };
 
 const handleChange = (e) => {
@@ -97,7 +103,7 @@ formData.append('created_by', loggedInuser.first_name);
 
     if(file){
 
-          
+           
                 const data = new FormData() 
                 const arrayOfObj = Object.entries(file).map((el) => (  el[1] ));
 
@@ -206,7 +212,10 @@ formData.append('created_by', loggedInuser.first_name);
       
  useEffect(() => {
     fetchDepartments();
-  }, []);
+    return () => {
+      imagePreviews.forEach((preview) => URL.revokeObjectURL(preview));
+    };
+  }, [imagePreviews]);
   return (
     <Form onSubmit={handleSubmit} style={{ maxWidth: 700, margin: 'auto' }}>
       <h4 className="mb-4">Add Category</h4>
@@ -251,73 +260,85 @@ formData.append('created_by', loggedInuser.first_name);
       </FormGroup>
       <FormGroup row>
         <Label for="category_image" sm={4}>
-          Category Image (80x80)
+          Category Image
         </Label>
         <Col sm={8}>
-          {/* <Input type="file" name="category_image" accept="image/*" onChange={handleChange} />
-          <FormText color="muted">Upload image (80x80)</FormText> */}
-       
-        <FormGroup>
-                  
-                <FileUploader
-                        multiple
-                        handleChange={handleFileChange}
-                        name="file"
-                       // types={fileTypes}
-                    />
-                    
-
-                    {handleValue ? (
-                        handleValue.map((e) => (
-                        <div>
-                            <span> Name: {e.name} </span>
-                        </div>
-                        ))
-                    ) : (
-                        <span>No file selected</span>
-                    )}
-
-                </FormGroup>
-                 </Col>
+          <FileUploader handleChange={handleFileChange} name="file" types={["JPG", "PNG", "GIF"]} multiple />
+          <div className="d-flex flex-wrap mt-2">
+            {imagePreviews.map((preview) => (
+              <img key={preview} src={preview} alt="Preview" style={{ width: '100px', height: '100px', objectFit: 'cover', margin: '5px' }} />
+            ))}
+          </div>
+        </Col>
       </FormGroup>
-      <Row className="mb-3">
-        <Col sm={{ size: 8, offset: 4 }}>
+      <FormGroup row>
+        <Label for="show_on_ecommerce" sm={4}>
+          Show on E-commerce
+        </Label>
+        <Col sm={8}>
           <FormGroup check>
             <Label check>
-              <Input type="checkbox" name="show_on_ecommerce" checked={form.show_on_ecommerce === 1}
- onChange={handleChange} /> Show On ECommerce
+              <Input type="checkbox" name="show_on_ecommerce" checked={form.show_on_ecommerce === 1} onChange={handleChange} /> Show On ECommerce
             </Label>
           </FormGroup>
+        </Col>
+      </FormGroup>
+      <FormGroup row>
+        <Label for="show_on_eprocurement" sm={4}>
+          Show On EProcurement
+        </Label>
+        <Col sm={8}>
           <FormGroup check>
             <Label check>
               <Input type="checkbox" name="show_on_eprocurement" checked={form.show_on_eprocurement === 1} onChange={handleChange} /> Show On EProcurement
             </Label>
           </FormGroup>
+        </Col>
+      </FormGroup>
+      <FormGroup row>
+        <Label for="show_on_pos" sm={4}>
+          Show On POS
+        </Label>
+        <Col sm={8}>
           <FormGroup check>
             <Label check>
               <Input type="checkbox" name="show_on_pos" checked={form.show_on_pos === 1} onChange={handleChange} /> Show On POS
             </Label>
           </FormGroup>
+        </Col>
+      </FormGroup>
+      <FormGroup row>
+        <Label for="read_weight_from_scale" sm={4}>
+          Read Weight From Scale
+        </Label>
+        <Col sm={8}>
           <FormGroup check>
             <Label check>
               <Input type="checkbox" name="read_weight_from_scale" checked={form.read_weight_from_scale === 1} onChange={handleChange} /> Read Weight From Scale
             </Label>
           </FormGroup>
+        </Col>
+      </FormGroup>
+      <FormGroup row>
+        <Label for="is_active" sm={4}>
+          IsActive
+        </Label>
+        <Col sm={8}>
           <FormGroup check>
             <Label check>
               <Input type="checkbox" name="is_active" checked={form.is_active === 1} onChange={handleChange} /> IsActive
             </Label>
           </FormGroup>
         </Col>
-      </Row>
-      <Row className="mt-4">
-        <Col sm={{ size: 8, offset: 4 }}>
-          <Button color="primary" type="submit">Save</Button>{' '}
-          <Button color="danger" type="button" onClick={onCancel}>Cancel</Button>
-        </Col>
-      </Row>
-    </Form>
-  );
+      </FormGroup>
+  <Row className="mt-4">
+    <Col sm={{ size: 8, offset: 4 }}>
+      <Button color="primary" type="submit">Save</Button>{' '}
+      <Button color="danger" type="button" onClick={onCancel}>Cancel</Button>
+    </Col>
+  </Row>
+</Form>
+);
 };
 
 export default AddCategory;

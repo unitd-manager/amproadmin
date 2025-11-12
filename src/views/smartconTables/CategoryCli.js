@@ -8,7 +8,8 @@ import {
   InputGroupText,
   Pagination,
   PaginationItem,
-  PaginationLink
+  PaginationLink,
+  Dropdown, DropdownToggle, DropdownMenu, DropdownItem
 } from 'reactstrap';
 import { useNavigate,Link } from 'react-router-dom';
 import { FaTrash, FaPlus, FaFilter, FaSearch } from 'react-icons/fa';
@@ -21,13 +22,17 @@ const CategoryManagement = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [totalRecords, setTotalRecords] = useState(0);
+  const [filterStatus, setFilterStatus] = useState('Active'); // Default to Active
+  const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
 const navigate=useNavigate();
   const fetchCategories = async () => {
     try {
+      console.log('Fetching categories with status:', filterStatus); // Add this line
       const response = await api.get('categorycli/get_all_category_cli', {
         params: {
           page: currentPage,
-          search: searchTerm
+          search: searchTerm,
+          status: filterStatus // Pass status to API
         }
       });
       setCategories(response.data.data);
@@ -43,6 +48,15 @@ const navigate=useNavigate();
     fetchCategories();
   };
 
+  const toggleFilterDropdown = () => setIsFilterDropdownOpen(prevState => !prevState);
+
+  const handleFilterStatusChange = (status) => {
+    setFilterStatus(status);
+    setCurrentPage(1);
+    setIsFilterDropdownOpen(false);
+    // fetchCategories will be called by useEffect due to filterStatus change
+  };
+
   const handleDelete = async (id) => {
     try {
       await api.delete(`categorycli/delete_category_cli/${id}`);
@@ -54,7 +68,7 @@ const navigate=useNavigate();
   
   useEffect(() => {
     fetchCategories();
-  }, [currentPage, searchTerm]);
+  }, [currentPage, searchTerm, filterStatus]);
 
 
   return (
@@ -75,9 +89,20 @@ const navigate=useNavigate();
         <InputGroupText onClick={handleSearch} style={{ cursor: 'pointer' }}>
           <FaSearch />
         </InputGroupText>
-        <InputGroupText style={{ cursor: 'pointer' }}>
-          <FaFilter />
-        </InputGroupText>
+        <Dropdown isOpen={isFilterDropdownOpen} toggle={toggleFilterDropdown} direction="right">
+          <DropdownToggle tag="span" data-toggle="dropdown" aria-expanded={isFilterDropdownOpen}>
+            <InputGroupText style={{ cursor: 'pointer', fontSize: '1.5rem', display: 'flex', alignItems: 'center' }}>
+              <FaFilter />
+            </InputGroupText>
+          </DropdownToggle>
+          <DropdownMenu>
+            <DropdownItem header>Filter(Active/Inactive):</DropdownItem>
+            <DropdownItem onClick={() => handleFilterStatusChange('Active')}>Active</DropdownItem>
+            <DropdownItem onClick={() => handleFilterStatusChange('Inactive')}>Inactive</DropdownItem>
+            <DropdownItem onClick={() => handleFilterStatusChange('All')}>All</DropdownItem>
+          </DropdownMenu>
+        </Dropdown>
+        {/* <Input value={filterStatus} readOnly style={{ width: '80px', textAlign: 'center' }} /> */}
       </InputGroup>
 
       <Table bordered hover responsive>
@@ -104,7 +129,7 @@ const navigate=useNavigate();
                 </td>
               <td>{cat.department_name}</td>
               <td>{cat.sort_order}</td>
-              <td>{cat.is_active?'active':'inactive'}</td>
+              <td>{cat.is_active?'Active':'Inactive'}</td>
               <td>{cat.updated_by}</td>
               <td>{moment(cat.updatet_at).format('DD/MM/YYYY')}</td>
             </tr>
