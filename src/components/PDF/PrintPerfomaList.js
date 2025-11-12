@@ -370,6 +370,16 @@ console.log(id,"wsed")
                     },
                   ],
                 },
+                 {
+ text: [
+                        'All cheques should be crossed and made payable to ',
+                        { text: 'AMPRO PTE LTD', bold: true },
+                        '. Goods sold cannot return not exchangeable AMPRO PTE LTD Reserves the right to change 5% interest per month for all overdue invoices.'
+                      ],
+                                alignment: 'left',
+          margin: [0, 40, 0, 0],
+          style: 'textSize'
+        },
       ],
       styles: {
         header: {

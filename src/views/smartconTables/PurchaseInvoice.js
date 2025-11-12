@@ -390,7 +390,7 @@ const PurchaseInvoice = () => {
 </Row>
 
 
-      <Table bordered hover size="sm" className="bg-white">
+      <Table className="bg-white">
         <thead>
           <tr>
             <th>

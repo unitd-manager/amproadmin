@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useRef } from "react";
 import {
   Button,
   Form,
@@ -14,6 +14,7 @@ import {
   CardBody
 } from "reactstrap";
 import { FaTrash, FaPlus } from "react-icons/fa";
+import Select from "react-select";
 import { useNavigate } from "react-router-dom";
 import api from "../../constants/api";
 import message from "../../components/Message";
@@ -32,7 +33,8 @@ const StockAdjustmentDetails = () => {
   const [locations, setLocations] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
-  
+     const productCodeRefs = useRef([]); // keeps Select refs
+      const cartonQtyRefs = useRef([]);
   // Items state
   const [rows, setRows] = useState([
     {
@@ -131,7 +133,18 @@ const StockAdjustmentDetails = () => {
       }
     ]);
   };
-
+  const handleProductSelect = (index, selectedProduct) => {
+      console.log("Selected Product:", selectedProduct);
+      const updatedRows = [...rows];
+      updatedRows[index].product_id = selectedProduct.value;
+      updatedRows[index].product_code = selectedProduct.label;
+      updatedRows[index].product_name = selectedProduct.product_name;
+      updatedRows[index].stock_in_hand_carton = selectedProduct.carton_qty;
+      updatedRows[index].stock_in_hand_loose = selectedProduct.loose_qty;
+      updatedRows[index].stock_in_hand_qty = selectedProduct.qty_in_stock;
+      setRows(updatedRows);
+      console.log("Updated Rows:", updatedRows);
+    };
   // Delete row
   const deleteRow = (index) => {
     const updated = [...rows];
@@ -312,42 +325,72 @@ const StockAdjustmentDetails = () => {
                         placeholder="Product ID"
                       />
                     </td>
-                    <td>
-                      <Input
-                        value={row.product_code}
-                        onChange={(e) =>
-                          handleChange(i, "product_code", e.target.value)
-                        }
-                        onBlur={(e) => handleProductSearch(i, e.target.value)}
-                        placeholder="Search by Product Code"
-                        list={`products-${i}`}
-                      />
-                      <datalist id={`products-${i}`}>
-                        {products.map(product => (
-                          <option key={product.product_id} value={product.product_code}>
-                            {product.product_name}
-                          </option>
-                        ))}
-                      </datalist>
-                    </td>
-                    <td>
-                      <Input
-                        value={row.product_name}
-                        onChange={(e) =>
-                          handleChange(i, "product_name", e.target.value)
-                        }
-                        onBlur={(e) => handleProductSearch(i, e.target.value)}
-                        placeholder="Search by Product Name"
-                        list={`product-names-${i}`}
-                      />
-                      <datalist id={`product-names-${i}`}>
-                        {products.map(product => (
-                          <option key={product.product_id} value={product.product_name}>
-                            {product.product_code}
-                          </option>
-                        ))}
-                      </datalist>
-                    </td>
+                      <td style={{ padding: "0.3rem", minWidth: "200px" }}>
+  <Select
+    options={products.map((pr) => ({
+      value: pr.product_id,
+      label: `${pr.product_code} - ${pr.product_name}`,
+      product_code: pr.product_code,
+      product_name: pr.product_name,
+      qty_in_stock:pr.qty_in_stock
+    }))}
+    value={
+      row.product_id
+        ? {
+            value: row.product_id,
+            label: `${row.product_code} - ${row.product_name}`,
+          }
+        : null
+    }
+    onChange={(selectedOption) => {
+      handleProductSelect(i, selectedOption);
+      if (cartonQtyRefs.current[i]) {
+        cartonQtyRefs.current[i].focus();
+      }
+    }}
+      styles={{
+    control: (base) => ({
+      ...base,
+      fontSize: "12px",
+      minHeight: "30px"
+     
+    }),
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 9999,
+      fontSize: "12px", 
+      width: '300px'  // keep it above modal, table, etc.
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999   // just in case
+    })
+  }}
+    placeholder="Select Product"
+    filterOption={(candidate, input) => {
+      if (!input) return true;
+      const lowerInput = input.toLowerCase();
+      return (
+        candidate.data.product_code.toLowerCase().includes(lowerInput) ||
+        candidate.data.product_name.toLowerCase().includes(lowerInput)
+      );
+    }}
+    // assign ref so we can call focus() on the react-select instance
+    ref={(el) => (productCodeRefs.current[i] = el)}
+    inputId={`product-select-${i}`}
+  />
+</td>
+
+
+            {/* Product Name (auto updated) */}
+            <td style={{ padding: "0.3rem" }}>
+              <input
+                type="text"
+                className="form-control form-control-sm"
+                value={row.product_name || ""}
+                readOnly
+              />
+            </td>
                     <td>
                       <Input
                         type="number"

@@ -11,7 +11,7 @@ import Select from 'react-select';
 import PropTypes from 'prop-types';
 import api from '../../constants/api';
 
-export default function CustomerProductDetails({ customerId }) {
+export default function SupplierProductDetails({ customerId }) {
   const [newProduct, setNewProduct] = useState({
     product_code: '',
     product_name: '',
@@ -366,6 +366,6 @@ const handleDeleteAction = async (id) => {
   );
 }
 
-CustomerProductDetails.propTypes = {
+SupplierProductDetails.propTypes = {
   customerId: PropTypes.any,
 };

@@ -1,323 +1,568 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { Row, Col, Form, FormGroup, Button, TabContent, TabPane } from 'reactstrap';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'datatables.net-dt/js/dataTables.dataTables';
-import 'datatables.net-dt/css/jquery.dataTables.min.css';
-import 'datatables.net-buttons/js/buttons.colVis';
-import 'datatables.net-buttons/js/buttons.flash';
-import 'datatables.net-buttons/js/buttons.html5';
-import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
+import React, { useContext, useEffect, useState } from 'react';
+import {
+  Row,
+  Col,
+  FormGroup,
+  Button,
+  Label,
+  Input,
+  TabContent,
+  TabPane,
+  Nav,
+  NavItem,
+  NavLink,
+} from 'reactstrap';
+import classnames from 'classnames';
+import Select from 'react-select';
 import { useNavigate, useParams } from 'react-router-dom';
+import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import '../form-editor/editor.scss';
-import { ToastContainer } from 'react-toastify'; // Make sure this is imported
-import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
-import Tab from '../../components/ProjectTabs/Tab';
-import ComponentCard from '../../components/ComponentCard';
-import ComponentCardV2 from '../../components/ComponentCardV2';
+import { ToastContainer } from 'react-toastify';
 import message from '../../components/Message';
 import api from '../../constants/api';
-import SupplierDetails from '../../components/SupplierModal/SupplierDetails';
-import Loginformation from '../../components/SupplierModal/Loginformation';
-import ContactDetails from '../../components/SupplierModal/ContactDetails';
-import Transaction from '../../components/SupplierModal/Transaction';
+// import ComponentCard from '../../components/ComponentCard';
 import creationdatetime from '../../constants/creationdatetime';
 import AppContext from '../../context/AppContext';
+import SupplierLogin from '../../components/Supplier/SupplierLogin';
+import ContactPerson from '../../components/Supplier/ContactPerson';
+import SupplierShippingDetail from '../../components/Supplier/ShippingDetail';
+//import SupplierSalesmen from '../../components/Supplier/SalesMan';
+import SupplierTransactions from '../../components/Supplier/Module';
+import SupplierProductDetails from '../../components/Supplier/ProductDetails';
 
-
-const SupplierEdit = () => {
-  //all state variables
-  const [supplier, setSupplier] = useState();
-  // const [purchaseOrder, setPurchaseOrder] = useState();
-  const [allCountries, setAllCountries] = useState();
-  const [editPurchaseOrderLinked, setEditPurchaseOrderLinked] = useState(false);
-  const [supplierStatus, setSupplierStatus] = useState();
-  const [status, setStatus] = useState();
-  const [taxfromvaluelist, setTaxFromValuelist] = useState();
-  const [pricegroupfromvaluelist, setPriceGroupFromValuelist] = useState();
-  const [contacttypefromvaluelist, setContactTypeFromValuelist] = useState();
-  const [currencyfromvaluelist, setCurrencyFromValuelist] = useState();
-  const [areafromvaluelist, setAreaFromValuelist] = useState();
-  const [termsfromvaluelist, setTermsFromValuelist] = useState();
+const ContentUpdate = () => {
+  const [contentDetails, setContentDetails] = useState({});
+  const { loggedInuser } = useContext(AppContext);
   const [activeTab, setActiveTab] = useState('1');
+  const [taxTypes, setTaxTypes] = useState([]);
+  const [currencyTypes, setCurrencyTypes] = useState([]);
+  const [areaTypes, setAreaTypes] = useState([]);
+  const [priceGroups, setPriceGroups] = useState([]);
+  const [contactTypes, setContactTypes] = useState([]);
+  const [terms, setTerms] = useState([]);
 
-
-  //navigation and params
   const { id } = useParams();
   const navigate = useNavigate();
-  const { loggedInuser } = useContext(AppContext);
-  const applyChanges = () => {
+
+  const handleInputs = (e) => {
+    const { name, value, type, checked } = e.target;
+    setContentDetails({
+      ...contentDetails,
+      [name]: type === 'checkbox' || type === 'switch' ? (checked ? 1 : 0) : value,
+    });
+  };
+
+  const getContentById = () => {
+    api
+      .post('/contact/getContactssById', { company_id: id })
+      .then((res) => {
+        const fetchedData = res.data.data[0];
+        if (fetchedData) {
+          setContentDetails({
+            ...fetchedData,
+            is_active: (fetchedData.is_active === 1 || fetchedData.is_active === true) ? 1 : 0,
+          });
+        } else {
+          message('No content data found for this ID.', 'info');
+          setContentDetails({});
+        }
+      })
+      .catch((error) => {
+        message('Content Data Not Found', 'info');
+        console.error("Error fetching content data:", error);
+      });
+  };
+
+  const editContentData = () => {
+    if (
+      contentDetails.first_name !== '' &&
+      contentDetails.mobile !== '' &&
+      contentDetails.email !== ''
+    ) {
+      const updatedDetails = {
+        ...contentDetails,
+        modification_date: creationdatetime,
+        modified_by: loggedInuser.first_name,
+      };
+
+      api
+        .post('/contact/editContact', updatedDetails)
+        .then(() => {
+          message('Record edited successfully', 'success');
+        })
+        .catch((error) => {
+          message('Unable to edit record.', 'error');
+          console.error('Edit error:', error);
+        });
+    } else {
+      message('Please fill all required fields (Name, Mobile, Email)', 'warning');
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      getContentById();
+    }
+  }, [id]);
+
+  // Fetch tax types for the Tax dropdown
+  useEffect(() => {
+    api
+      .get('/valuelist/getTaxType')
+      .then((res) => {
+        const data = res.data && res.data.data ? res.data.data : [];
+        setTaxTypes(data);
+
+        // If contentDetails already has tax_type populated, normalize it to use valuelist_id
+        if (contentDetails && contentDetails.tax_type) {
+          const match = data.find(
+            (t) =>
+              String(t.valuelist_id) === String(contentDetails.tax_type) ||
+              String(t.value) === String(contentDetails.tax_type) ||
+              String(t.code) === String(contentDetails.tax_type)
+          );
+          if (match) {
+            setContentDetails((prev) => ({ ...prev, tax_type: String(match.valuelist_id) }));
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch tax types', err);
+      });
+  }, []);
+
+  // Fetch currency types for the Currency dropdown
+  useEffect(() => {
+    api
+      .get('/valuelist/getCurrency')
+      .then((res) => {
+        const data = res.data && res.data.data ? res.data.data : [];
+        setCurrencyTypes(data);
+
+   // If contentDetails already has tax_type populated, normalize it to use valuelist_id
+        if (contentDetails && contentDetails.currency) {
+          const match = data.find(
+            (t) =>
+              String(t.valuelist_id) === String(contentDetails.currency) ||
+              String(t.value) === String(contentDetails.currency) ||
+              String(t.code) === String(contentDetails.currency)
+          );
+          if (match) {
+            setContentDetails((prev) => ({ ...prev, currency: String(match.valuelist_id) }));
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch contact types', err);
+      });
+  }, []);
+
+  // Prepare options for react-select for Area
+  const areaOptions = (areaTypes || []).map((t) => ({
+    value: String(t.valuelist_id),
+    label: t.value || t.code || t.key_text || String(t.valuelist_id),
+  }));
+
+  const selectedArea = areaOptions.find((o) => o.value === String(contentDetails.area)) || null;
+
+  // Fetch area types for the Area dropdown
+  useEffect(() => {
+    api
+      .get('/valuelist/getArea')
+      .then((res) => {
+        const data = res.data && res.data.data ? res.data.data : [];
+        setAreaTypes(data);
+
+        // If contentDetails already has tax_type populated, normalize it to use valuelist_id
+        if (contentDetails && contentDetails.area) {
+          const match = data.find(
+              (t) =>
+              String(t.valuelist_id) === String(contentDetails.area) ||
+              String(t.value) === String(contentDetails.area) ||
+              String(t.code) === String(contentDetails.area)
+          );
+          if (match) {
+            setContentDetails((prev) => ({ ...prev, area: String(match.valuelist_id) }));
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch contact types', err);
+      });
+  }, []);
+
+   useEffect(() => {
+    api
+      .get('/valuelist/getSupplierTerms')
+      .then((res) => {
+        const data = res.data && res.data.data ? res.data.data : [];
+        setTerms(data);
+
+        // If contentDetails already has tax_type populated, normalize it to use valuelist_id
+        if (contentDetails && contentDetails.terms) {
+          const match = data.find(
+            (t) =>
+              String(t.valuelist_id) === String(contentDetails.terms) ||
+              String(t.value) === String(contentDetails.terms) ||
+              String(t.code) === String(contentDetails.terms)
+          );
+          if (match) {
+            setContentDetails((prev) => ({ ...prev, terms: String(match.valuelist_id) }));
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch terms', err);
+      });
+  }, []);
+
+
+
+    useEffect(() => {
+    api
+      .get('/valuelist/getContactType')
+      .then((res) => {
+        const data = res.data && res.data.data ? res.data.data : [];
+        setContactTypes(data);
+
+        // If contentDetails already has tax_type populated, normalize it to use valuelist_id
+        if (contentDetails && contentDetails.contact_type) {
+          const match = data.find(
+            (t) =>
+              String(t.valuelist_id) === String(contentDetails.contact_type) ||
+              String(t.value) === String(contentDetails.contact_type) ||
+              String(t.code) === String(contentDetails.contact_type)
+          );
+          if (match) {
+            setContentDetails((prev) => ({ ...prev, contact_type: String(match.valuelist_id) }));
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch contact types', err);
+      });
+  }, []);
+
+  // Fetch price groups (use supplier valuelist dropdown endpoint used elsewhere in the app)
+  useEffect(() => {
+    api
+      .get('/valuelist/getPriceGroup')
+     .then((res) => {
+        const data = res.data && res.data.data ? res.data.data : [];
+        setPriceGroups(data);
+
+        // If contentDetails already has tax_type populated, normalize it to use valuelist_id
+        if (contentDetails && contentDetails.price_group) {
+          const match = data.find(
+            (t) =>
+              String(t.valuelist_id) === String(contentDetails.price_group) ||
+              String(t.value) === String(contentDetails.price_group) ||
+              String(t.code) === String(contentDetails.price_group)
+          );
+          if (match) {
+            setContentDetails((prev) => ({ ...prev, price_group: String(match.valuelist_id) }));
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch tax types', err);
+      });
+  }, []);
+
+
+  const toggle = (tab) => {
+    if (activeTab !== tab) setActiveTab(tab);
+  };
+
+  // ✅ Fixed style: no zoom, no 125% width
+  const formStyle = {
+    minHeight: '100vh',
+    padding: '5px',
+    width: '100%',
+    overflowX: 'hidden',
+    overflowY: 'auto',
+  };
+
+  const handleCancel = () => {
+    // Navigate back to customer list without saving
     navigate('/Supplier');
   };
 
-  const tabs = [
-    { id: '1', name: 'Supplier Login Info' },
-    { id: '2', name: 'Contact' },
-    { id: '3', name: 'Transaction' },
-  ];
-  const toggle = (tab) => {
-    setActiveTab(tab);
-  };
-  // Get Supplier By Id
-  const editSupplierById = () => {
-    api
-      .post('/supplier/get-SupplierById', { supplier_id: id })
-      .then((res) => {
-        setSupplier(res.data.data[0]);
-      })
-      .catch(() => {
-        message('Supplier Data Not Found', 'info');
-      });
-  };
-
-  const handleInputs = (e) => {
-    setSupplier({ ...supplier, [e.target.name]: e.target.value });
-  };
-  //Logic for edit data in db
-  const editSupplierData = () => {
-      if (supplier.company_name !== '') {
-        supplier.modification_date = creationdatetime;
-        supplier.modified_by = loggedInuser.first_name;
-        api
-          .post('/supplier/edit-Supplier', supplier)
-          .then(() => {
-            message('Record edited successfully', 'success');
-            setTimeout(() => {
-              window.location.reload();
-            }, 700);
-          })
-          .catch(() => {
-            message('Unable to edit record.', 'error');
-          });
-      } else {
-        message('Please fill all required fields', 'warning');
-      }
-    };
-  //Logic for edit data in db
-  const Status = () => {
-    api
-      .post('/supplier/getStatus', { supplier_id: id })
-      .then((res) => {
-        setStatus(res.data.data[0]);
-      })
-      .catch(() => {
-        message('Unable to edit record.', 'error');
-      });
-  };
-//Api call for getting Tax From Valuelist
-const getTaxDrodownFromValuelist = () => {
-  api
-    .get('/supplier/getTaxDrodownFromValuelist')
-    .then((res) => {
-      setTaxFromValuelist(res.data.data);
-    })
-    .catch(() => {
-      message('Staff Data Not Found', 'info');
-    });
-};
-//Api call for getting Price Group From Valuelist
-const getPriceGroupDrodownFromValuelist = () => {
-  api
-    .get('/supplier/getPriceGroupDrodownFromValuelist')
-    .then((res) => {
-      setPriceGroupFromValuelist(res.data.data);
-    })
-    .catch(() => {
-      message('Staff Data Not Found', 'info');
-    });
-};
-//Api call for getting Contact Type From Valuelist
-const getContactTypeDrodownFromValuelist = () => {
-  api
-    .get('/supplier/getContactTypeDrodownFromValuelist')
-    .then((res) => {
-      setContactTypeFromValuelist(res.data.data);
-    })
-    .catch(() => {
-      message('Staff Data Not Found', 'info');
-    });
-};
-//Api call for getting Tax From Valuelist
-const getAreaDrodownFromValuelist = () => {
-  api
-    .get('/supplier/getAreaDrodownFromValuelist')
-    .then((res) => {
-      setAreaFromValuelist(res.data.data);
-    })
-    .catch(() => {
-      message('Staff Data Not Found', 'info');
-    });
-};
-//Api call for getting Currency From Valuelist
-const getCurrencyDrodownFromValuelist = () => {
-  api
-    .get('/supplier/getCurrencyDrodownFromValuelist')
-    .then((res) => {
-      setCurrencyFromValuelist(res.data.data);
-    })
-    .catch(() => {
-      message('Staff Data Not Found', 'info');
-    });
-};
-
-//Api call for getting Tax From Valuelist
-const getTermsDrodownFromValuelist = () => {
-  api
-    .get('/supplier/getTermsDrodownFromValuelist')
-    .then((res) => {
-      setTermsFromValuelist(res.data.data);
-    })
-    .catch(() => {
-      message('Staff Data Not Found', 'info');
-    });
-};
-  useEffect(() => {
-    editSupplierById();
-  }, [id]);
-  // Get purchaseOrder By Id
-  // const getpurchaseOrder = () => {
-  //   api
-  //     .post('/supplier/getPurchaseOrderLinkedss', { supplier_id: id })
-  //     .then((res) => {
-  //       setPurchaseOrder(res.data.data);
-  //     })
-  //     .catch(() => {
-  //       message('Supplier not found', 'info');
-  //     });
-  // };
-  const suppliereditdetails = () => {
-    api
-      .get('/geocountry/getCountry')
-      .then((res) => {
-        setAllCountries(res.data.data);
-      })
-      .catch(() => {
-        message('Supplier Data Not Found', 'info');
-      });
-  };
-  //Api call for getting Staff Type From Valuelist
-  const getSupplierStatus = () => {
-    api
-      .get('/supplier/getValueList')
-      .then((res) => {
-        setSupplierStatus(res.data.data);
-      })
-      .catch(() => {
-        message('Status Data Not Found', 'info');
-      });
-  };
-  useEffect(() => {
-    // getpurchaseOrder();
-    suppliereditdetails();
-    getSupplierStatus();
-    Status();
-    getTaxDrodownFromValuelist();
-    getPriceGroupDrodownFromValuelist();
-    getContactTypeDrodownFromValuelist();
-    getAreaDrodownFromValuelist();
-    getTermsDrodownFromValuelist();
-    getCurrencyDrodownFromValuelist();
-  }, []);
-
   return (
-    <>
-     <ToastContainer />
-      <BreadCrumbs heading={supplier && supplier.company_name} />
-      <Form>
-        <FormGroup>
-          <ComponentCardV2>
+    <div style={formStyle}>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h4 className="m-0">New/Edit Supplier</h4>
+      </div>
+
+      {/* Fixed Action Buttons */}
+      <div style={{
+        position: 'fixed',
+        bottom: '20px',
+        left: '20px',
+        zIndex: 1000
+      }}>
+        <Button
+          color="secondary"
+          onClick={handleCancel}
+          className="shadow"
+          style={{
+            padding: '10px 30px',
+            fontSize: '16px',
+            borderRadius: '4px',
+            backgroundColor: '#6c757d',
+            borderColor: '#6c757d',
+            marginRight: '10px'
+          }}
+        >
+          Cancel
+        </Button>
+      </div>
+      <div style={{
+        position: 'fixed',
+        bottom: '20px',
+        right: '20px',
+        zIndex: 1000
+      }}>
+        <Button
+          color="primary"
+          onClick={() => {
+            editContentData();
+            setTimeout(() => {
+              navigate('/Supplier');
+            }, 1100);
+          }}
+          className="shadow"
+          style={{
+            padding: '10px 30px',
+            fontSize: '16px',
+            borderRadius: '4px'
+          }}
+        >
+          Save
+        </Button>
+      </div>
+
+      {/* First Panel - Basic Info */}
+        <Row>
+          <Col md="6">
+            <FormGroup row>
+              <Label sm="3">Supplier Code</Label>
+              <Col sm="7">
+                <Input
+                  type="text"
+                  name="supplier_code"
+                  value={contentDetails.supplier_code || ''}
+                  disabled
+                />
+              </Col>
+            </FormGroup>
+          </Col>
+          <Col md="6">
+            <FormGroup row>
+              <Label sm="3">
+                Supplier Name <span className="text-danger">*</span>
+              </Label>
+              <Col sm="7">
+                <Input
+                  type="text"
+                  name="company_name"
+                  value={contentDetails.company_name || ''}
+                  onChange={handleInputs}
+                />
+              </Col>
+            </FormGroup>
+          </Col>
+        </Row>
+      {/* </ComponentCard>
+
+      {/* Second Panel - Tabs */}
+      {/* <ComponentCard style={{ marginBottom: '5px' }}>  */}
+        <ToastContainer />
+        <Nav tabs>
+          <NavItem><NavLink className={classnames({ active: activeTab === '1' })} onClick={() => toggle('1')}>Additional</NavLink></NavItem>
+          <NavItem><NavLink className={classnames({ active: activeTab === '2' })} onClick={() => toggle('2')}>Supplier Login Info</NavLink></NavItem>
+          <NavItem><NavLink className={classnames({ active: activeTab === '3' })} onClick={() => toggle('3')}>Contact</NavLink></NavItem>
+          {/* <NavItem><NavLink className={classnames({ active: activeTab === '4' })} onClick={() => toggle('4')}>ShippingDetail</NavLink></NavItem> */}
+          {/* <NavItem><NavLink className={classnames({ active: activeTab === '5' })} onClick={() => toggle('5')}>SalesMan</NavLink></NavItem> */}
+          <NavItem><NavLink className={classnames({ active: activeTab === '6' })} onClick={() => toggle('6')}>Transaction</NavLink></NavItem>
+          {/* <NavItem><NavLink className={classnames({ active: activeTab === '7' })} onClick={() => toggle('7')}>ProductDetails</NavLink></NavItem> */}
+        </Nav>
+
+        <TabContent activeTab={activeTab} style={{ overflow: 'visible' }}>
+          {/* Tab 1: Additional/More Details */}
+          <TabPane tabId="1">
             <Row>
-              <Col>
-                <Button
-                  className="shadow-none"
-                  color="primary"
-                  onClick={() => {
-                    editSupplierData();
-                    setTimeout(() => {
-                      navigate('/Supplier');
-                    }, 1100);
-                  }}
-                >
-                  Save
-                </Button>
+              {/* Left Column */}
+              <Col md="6">
+                <FormGroup row><Label sm="3">Address 1</Label><Col sm="7"><Input type="text" name="address1" value={contentDetails.address1 || ''} onChange={handleInputs} /></Col></FormGroup>
+                <FormGroup row><Label sm="3">Address 2</Label><Col sm="7"><Input type="text" name="address2" value={contentDetails.address2 || ''} onChange={handleInputs} /></Col></FormGroup>
+                <FormGroup row><Label sm="3">Address 3</Label><Col sm="7"><Input type="text" name="address_street" value={contentDetails.address_street || ''} onChange={handleInputs} /></Col></FormGroup>
+                <FormGroup row><Label sm="3">Country</Label><Col sm="7"><Input type="text" name="address_country" value={contentDetails.address_country || ''} onChange={handleInputs} /></Col></FormGroup>
+                <FormGroup row><Label sm="3">Postal Code</Label><Col sm="7"><Input type="text" name="address_po_code" value={contentDetails.address_po_code || ''} onChange={handleInputs} /></Col></FormGroup>
+                <FormGroup row><Label sm="3">Phone</Label><Col sm="7"><Input type="text" name="phone" value={contentDetails.phone || ''} onChange={handleInputs} /></Col></FormGroup>
+                <FormGroup row><Label sm="3">Mobile</Label><Col sm="7"><Input type="text" name="mobile" value={contentDetails.mobile || ''} onChange={handleInputs} /></Col></FormGroup>
+                <FormGroup row><Label sm="3">Email</Label><Col sm="7"><Input type="email" name="email" value={contentDetails.email || ''} onChange={handleInputs} /></Col></FormGroup>
+                <FormGroup row><Label sm="3">Website</Label><Col sm="7"><Input type="text" name="web_site" value={contentDetails.web_site || ''} onChange={handleInputs} /></Col></FormGroup>
+                <FormGroup row><Label sm="3">Fax</Label><Col sm="7"><Input type="text" name="fax" value={contentDetails.fax || ''} onChange={handleInputs} /></Col></FormGroup>
               </Col>
-              <Col>
-                <Button
-                  color="primary"
-                  className="shadow-none"
-                  onClick={() => {
-                    editSupplierData();
-                  }}
-                >
-                  Apply
-                </Button>
-              </Col>
-              <Col>
-                <Button
-                  color="dark"
-                  className="shadow-none"
-                  onClick={() => {
-                    applyChanges();
-                  }}
-                >
-                  Back to List
-                </Button>
+
+              {/* Right Column */}
+              <Col md="6">
+                <FormGroup row>
+                  <Label sm="3">Tax</Label>
+                  <Col sm="7">
+                    <Input
+                      type="select"
+                      name="tax_type"
+                      value={contentDetails.tax_type || ''}
+                      onChange={handleInputs}
+                    >
+                      <option value="">Select Tax</option>
+                      {taxTypes &&
+                        taxTypes.map((t) => (
+                          <option
+                            key={t.valuelist_id || t.code || t.value}
+                            value={String(t.valuelist_id)}
+                          >
+                            {t.value || t.code || t.key_text}
+                          </option>
+                        ))}
+                    </Input>
+                  </Col>
+                </FormGroup>
+                <FormGroup row>
+                  <Label sm="3">Price Group</Label>
+                  <Col sm="7">
+                    <Input
+                      type="select"
+                      name="price_group"
+                      value={contentDetails.price_group || ''}
+                      onChange={handleInputs}
+                    >
+                      <option value="">Select Price Group</option>
+                      {priceGroups &&
+                        priceGroups.map((p) => (
+                          <option     key={p.valuelist_id || p.code || p.value}
+                            value={String(p.valuelist_id)}
+                          >
+                            {p.value || p.code || p.key_text}
+                          </option>
+                        ))}
+                    </Input>
+                  </Col>
+                </FormGroup>
+                 <FormGroup row>
+                  <Label sm="3">Contact Type</Label>
+                  <Col sm="7">
+                    <Input
+                      type="select"
+                      name="contact_type"
+                      value={contentDetails.contact_type || ''}
+                      onChange={handleInputs}
+                    >
+                      <option value="">Select Contact Type</option>
+                      {contactTypes &&
+                        contactTypes.map((t) => (
+                          <option
+                            key={t.valuelist_id || t.code || t.value}
+                            value={String(t.valuelist_id)}
+                          >
+                            {t.value || t.code || t.key_text}
+                          </option>
+                        ))}
+                    </Input>
+                  </Col>
+                </FormGroup>
+                <FormGroup row>
+                  <Label sm="3">Area</Label>
+                  <Col sm="7">
+                    <Select
+                      isClearable
+                      name="area"
+                      options={areaOptions}
+                      value={selectedArea}
+                      onChange={(opt) =>
+                        setContentDetails({ ...contentDetails, area: opt ? opt.value : '' })
+                      }
+                      placeholder="Select Area"
+                    />
+                  </Col>
+                </FormGroup>
+ <FormGroup row>
+                  <Label sm="3">Currency</Label>
+                  <Col sm="7">
+                    <Input
+                      type="select"
+                      name="currency"
+                      value={contentDetails.currency || ''}
+                      onChange={handleInputs}
+                    >
+                      <option value="">Select Currency</option>
+                      {currencyTypes &&
+                        currencyTypes.map((t) => (
+                          <option
+                            key={t.valuelist_id || t.code || t.value}
+                            value={String(t.valuelist_id)}
+                          >
+                            {t.value || t.code || t.key_text}
+                          </option>
+                        ))}
+                    </Input>
+                  </Col>
+                </FormGroup>
+                <FormGroup row><Label sm="3">Company Reg. No</Label><Col sm="7"><Input type="text" name="company_reg_no" value={contentDetails.company_reg_no || ''} onChange={handleInputs} /></Col></FormGroup>
+                   <FormGroup row>
+                  <Label sm="3">Terms</Label>
+                  <Col sm="7">
+                    <Input
+                      type="select"
+                      name="terms"
+                      value={contentDetails.terms || ''}
+                      onChange={handleInputs}
+                    >
+                      <option value="">Select Terms</option>
+                      {terms &&
+                        terms.map((p) => (
+                          <option     key={p.valuelist_id || p.code || p.value}
+                            value={String(p.valuelist_id)}
+                          >
+                            {p.value || p.code || p.key_text}
+                          </option>
+                        ))}
+                    </Input>
+                  </Col>
+                </FormGroup>
+                <FormGroup row><Label sm="3">Credit Limit</Label><Col sm="7"><Input type="text" name="credit_limit" value={contentDetails.credit_limit || ''} onChange={handleInputs} /></Col></FormGroup>
+                <FormGroup row><Label sm="3">Remarks</Label><Col sm="7"><Input type="textarea" name="remarks" value={contentDetails.remarks || ''} onChange={handleInputs} rows="3" /></Col></FormGroup>
+                <FormGroup row><Label sm="3">Cheque Print Name</Label><Col sm="7"><Input type="text" name="cheque_print_name" value={contentDetails.cheque_print_name || ''} onChange={handleInputs} /></Col></FormGroup>
+                <FormGroup row>
+                  <Label sm="3">Status</Label>
+                  <Col sm="7" className="d-flex align-items-center">
+                    <div className="form-check form-switch">
+                      <Input
+                        type="switch"
+                        name="is_active"
+                        checked={contentDetails.is_active === 1}
+                        onChange={handleInputs}
+                        className="form-check-input"
+                      />
+                    </div>
+                  </Col>
+                </FormGroup>
               </Col>
             </Row>
-          </ComponentCardV2>
-        </FormGroup>
-      </Form>
-      <SupplierDetails
-        handleInputs={handleInputs}
-        supplier={supplier}
-        allCountries={allCountries}
-        supplierStatus={supplierStatus}
-        status={status}
-        setEditPurchaseOrderLinked={setEditPurchaseOrderLinked}
-        taxfromvaluelist={taxfromvaluelist}
-        pricegroupfromvaluelist={pricegroupfromvaluelist}
-        contacttypefromvaluelist={contacttypefromvaluelist}
-        areafromvaluelist={areafromvaluelist}
-        currencyfromvaluelist={currencyfromvaluelist}
-        termsfromvaluelist={termsfromvaluelist}
-        editPurchaseOrderLinked={editPurchaseOrderLinked}
-      ></SupplierDetails>
+          </TabPane>
 
-      {/* <PurchaseOrderLinked
-        editPurchaseOrderLinked={editPurchaseOrderLinked}
-        setEditPurchaseOrderLinked={setEditPurchaseOrderLinked}
-      ></PurchaseOrderLinked> */}
-
-      {/* <ComponentCard>
-        <ToastContainer></ToastContainer>
-        <SupplierTable purchaseOrder={purchaseOrder}></SupplierTable>
-      </ComponentCard> */}
-
-       <ComponentCard title="More Details">
-              {/* Replace toggle and tabs with your implementation */}
-              <Tab toggle={toggle} tabs={tabs} />
-                  <TabContent className="p-4" activeTab={activeTab}>
-                <TabPane tabId="1">
-                  <Loginformation
-                  id={id}
-                  logInfo={supplier}
-                  handleInputs={handleInputs}
-                  >
-                  </Loginformation>
-                  
-                </TabPane>
-                <TabPane tabId="2">
-                  <ContactDetails
-                ></ContactDetails>
-                 
-                </TabPane>
-                <TabPane tabId="3">
-                <Transaction></Transaction>
-                </TabPane>
-               
-              </TabContent>
-            </ComponentCard>
-    </>
+          {/* Other Tabs */}
+          <TabPane tabId="2"><SupplierLogin handleInputs={handleInputs} contentDetails={contentDetails} /></TabPane>
+          <TabPane tabId="3"><ContactPerson contactId={id} contentDetails={contentDetails} /></TabPane>
+          <TabPane tabId="4"><SupplierShippingDetail contactId={id} contentDetails={contentDetails} /></TabPane>
+          {/* <TabPane tabId="5"><SupplierSalesmen supplierId={id} contentDetails={contentDetails} /></TabPane> */}
+          <TabPane tabId="6"><SupplierTransactions supplierId={id} /></TabPane>
+          <TabPane tabId="7"><SupplierProductDetails supplierId={id} contentDetails={contentDetails} /></TabPane>
+        </TabContent>
+    </div>
   );
 };
 
-export default SupplierEdit;
+export default ContentUpdate;

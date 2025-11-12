@@ -30,8 +30,9 @@ import { FaTrashAlt, FaPlusCircle } from "react-icons/fa";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarAlt, faPlus, faPrint } from '@fortawesome/free-solid-svg-icons';
 import api from "../../constants/api";
-import ProductInfoModal from "../../components/PurchaseOrder/ProductInfoModal";
-import PdfPurchaseInvoice from "../../components/PDF/PdfPurchaseInvoice";
+// import PurchaseOrderProductInfoModal from "../../components/PurchaseOrder/PurchaseOrderProductInfoModal";
+import PurchaseOrderProductInfoModal from "../../components/PurchaseOrder/PurchaseOrderProductInfoModal";
+// import PdfPurchaseInvoice from "../../components/PDF/PdfPurchaseInvoice";
 
 const PurchaseOrderEdit = () => {
 
@@ -142,7 +143,14 @@ const { id } = useParams();
       grossTotal: 0,
     }
   );
-
+const handleKeyDown = (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault(); // prevent form submission
+    const form = e.target.form;
+    const index = Array.prototype.indexOf.call(form, e.target);
+    form.elements[index + 1]?.focus(); // focus next element if exists
+  }
+};
 
 const navigate=useNavigate();
   useEffect(() => {
@@ -234,7 +242,7 @@ useEffect(() => {
           updatedFormData.contact_address1 = selectedSupplier.address_flat;
           updatedFormData.contact_address2 = selectedSupplier.address_street;
           updatedFormData.contact_address3 = selectedSupplier.address_state;
-          // updatedFormData.state = selectedSupplier.address_state;
+        updatedFormData.supplier_name = selectedSupplier.company_name;
           updatedFormData.country = selectedSupplier.address_country;
           updatedFormData.postal_code = selectedSupplier.address_po_code;
         }
@@ -425,10 +433,12 @@ useEffect(() => {
       }
     }, 80);
   };
-  const handleDelete = (id) => {
+  const handleDelete = (index,id) => {
     const updatedRows = rows.filter((row) => row.po_product_id !== id);
     setRows(updatedRows);
+    deleteRow(index,id);
   };
+  
   return (
     <div style={{ fontSize: "12px" }}>
       <ToastContainer/>
@@ -446,7 +456,7 @@ useEffect(() => {
         </Col>
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1" name="tran_no" value={formData?.tran_no}  
-              onChange={handleChange} />
+              onChange={handleChange} onKeyDown={handleKeyDown}/>
         </Col>
       </Row>
     </Col>
@@ -457,7 +467,7 @@ useEffect(() => {
         </Col>
         <Col md="8">
           <Input bsSize="sm" type='date' className="py-0 px-1" name="tran_date" value={formData?.tran_date}  
-              onChange={handleChange} />
+              onChange={handleChange} onKeyDown={handleKeyDown}/>
         </Col>
       </Row>
     </Col>
@@ -500,6 +510,7 @@ useEffect(() => {
               name="supplier_id"
               value={formData?.supplier_id}
               onChange={handleChange}
+               onKeyDown={handleKeyDown}
             >
               <option value="">Select Supplier</option>
               {supplierOptions.map((supplier, index) => (
@@ -520,7 +531,7 @@ useEffect(() => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1"  name="contact_address1"
               value={formData?.contact_address1}
-              onChange={handleChange} />
+              onChange={handleChange}  onKeyDown={handleKeyDown} />
         </Col>
       </Row>
     </Col>
@@ -536,8 +547,8 @@ useEffect(() => {
        <Col md="8">
           <FormGroup>
              <Input bsSize="sm" className="py-0 px-1"  name="company_name"
-              value={formData?.company_name}
-              onChange={handleChange} />
+              value={formData?.supplier_name}
+              onChange={handleChange}  onKeyDown={handleKeyDown} />
             
           </FormGroup>
         </Col>
@@ -551,7 +562,7 @@ useEffect(() => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1"  name="contact_address2"
               value={formData?.contact_address2}
-              onChange={handleChange} />
+              onChange={handleChange}  onKeyDown={handleKeyDown} />
         </Col>
       </Row>
     </Col>
@@ -569,6 +580,7 @@ useEffect(() => {
            name="contact_person"
               value={formData.contact_person}
               onChange={handleChange}
+               onKeyDown={handleKeyDown}
           />
         </Col>
       </Row>
@@ -581,7 +593,7 @@ useEffect(() => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1"  name="contact_address3"
               value={formData?.contact_address3}
-              onChange={handleChange} />
+              onChange={handleChange}  onKeyDown={handleKeyDown}/>
         </Col>
       </Row>
     </Col>
@@ -597,7 +609,7 @@ useEffect(() => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1"  name="remarks"
               value={formData?.remarks}
-              onChange={handleChange} />
+              onChange={handleChange}  onKeyDown={handleKeyDown} />
         </Col>
       </Row>
     </Col>
@@ -609,12 +621,12 @@ useEffect(() => {
         <Col md="5">
           <Input bsSize="sm" className="py-0 px-1"  name="country"
               value={formData?.country}
-              onChange={handleChange} />
+              onChange={handleChange}  onKeyDown={handleKeyDown}/>
         </Col>
         <Col md="3">
           <Input bsSize="sm" className="py-0 px-1"  name="postal_code"
               value={formData?.postal_code}
-              onChange={handleChange} />
+              onChange={handleChange}  onKeyDown={handleKeyDown}/>
         </Col>
       </Row>
     </Col>
@@ -630,7 +642,20 @@ useEffect(() => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1" type="date"  name="request_delivery_date"
               value={formData?.request_delivery_date}
-              onChange={handleChange} />
+              onChange={handleChange}  
+               onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                // Focus the first product code Select in the table
+                const firstProductSelect = document.querySelector(
+                  'tbody tr:first-child td:nth-child(2) [class*="css-"] input'
+                );
+                if (firstProductSelect) firstProductSelect.focus();
+              } else {
+                handleKeyDown(e);
+              }
+            }}
+              />
         </Col>
       </Row>
     </Col>
@@ -665,7 +690,7 @@ useEffect(() => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1" name="currency_code"
               value={currency?.currency_code}
-              onChange={handleCurrency}/>
+              onChange={handleCurrency}  onKeyDown={handleKeyDown}/>
         </Col>
       </Row>
     </Col>
@@ -677,7 +702,7 @@ useEffect(() => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1" name="currency_name"
               value={currency?.currency_name} 
-              onChange={handleCurrency} />
+              onChange={handleCurrency}  onKeyDown={handleKeyDown}/>
         </Col>
       </Row>
     </Col>
@@ -689,7 +714,7 @@ useEffect(() => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1" name="currency_rate"
               value={currency?.currency_rate}
-              onChange={handleCurrency} />
+              onChange={handleCurrency}  onKeyDown={handleKeyDown}/>
         </Col>
       </Row>
     </Col>
@@ -952,7 +977,7 @@ useEffect(() => {
                     size="sm"
                     color="danger"
                     className="me-1"
-                    onClick={() => handleDelete(p.po_product_id)}
+                    onClick={() => handleDelete(idx,p.po_product_id)}
                     style={{ padding: '0.1rem 0.3rem', fontSize: '0.7rem' }}
                   >
                     🗑
@@ -1136,32 +1161,32 @@ useEffect(() => {
 
   {/* Print + Save on right */}
   <Col className="d-flex justify-content-end">
-    <Button size="sm" style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#fff' }} className="me-2">
+    {/* <Button size="sm" style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#fff' }} className="me-2">
       <FontAwesomeIcon icon={faPrint} className="me-1" />
     <PdfPurchaseInvoice id={id} />
-    </Button>
+    </Button> */}
     <div className="btn-group">
       <Button size="sm" style={{ backgroundColor: '#213042', borderColor: '#213042', color: '#fff' }} onClick={()=>handleSubmit()}>
         Save
       </Button>
-      <Button
+      {/* <Button
         size="sm"
         style={{ backgroundColor: '#213042', borderColor: '#213042', color: '#fff' }}
         className="dropdown-toggle dropdown-toggle-split"
         data-bs-toggle="dropdown"
       >
         <span className="visually-hidden">Toggle Dropdown</span>
-      </Button>
-      <div className="dropdown-menu dropdown-menu-end">
+      </Button> */}
+      {/* <div className="dropdown-menu dropdown-menu-end">
         <button className="dropdown-item">Save & New</button>
         <button className="dropdown-item">Save & Close</button>
-      </div>
+      </div> */}
     </div>
   </Col>
 </Row>
   </Container>
 </div>
- {productInfoModal && <ProductInfoModal
+ {productInfoModal && <PurchaseOrderProductInfoModal
         isOpen={productInfoModal}
         toggle={toggleProductInfoModal}
         selectedProduct={selectedProduct}
