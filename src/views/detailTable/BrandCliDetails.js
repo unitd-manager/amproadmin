@@ -142,14 +142,14 @@ formData.append('created_by', loggedInuser.first_name);
           <Input type="number" name="sort_order" value={form.sort_order} onChange={handleChange} />
         </Col>
       </FormGroup>
-      <FormGroup row>
+      {/* <FormGroup row>
         <Label for="product_prefix" sm={4}>
           Product Prefix
         </Label>
         <Col sm={8}>
           <Input type="text" name="product_prefix" value={form.product_prefix} onChange={handleChange} />
         </Col>
-      </FormGroup>
+      </FormGroup> */}
       <FormGroup row>
         <Label for="brand_image" sm={4}>
           Brand Image (80x80)
@@ -193,7 +193,7 @@ formData.append('created_by', loggedInuser.first_name);
               <Input type="checkbox" name="show_on_eprocurement" checked={form.show_on_eprocurement === 1} onChange={handleChange} /> Show On EProcurement
             </Label>
           </FormGroup>
-          <FormGroup check>
+          {/* <FormGroup check>
             <Label check>
               <Input type="checkbox" name="show_on_pos" checked={form.show_on_pos === 1} onChange={handleChange} /> Show On POS
             </Label>
@@ -202,7 +202,7 @@ formData.append('created_by', loggedInuser.first_name);
             <Label check>
               <Input type="checkbox" name="read_weight_from_scale" checked={form.read_weight_from_scale === 1} onChange={handleChange} /> Read Weight From Scale
             </Label>
-          </FormGroup>
+          </FormGroup> */}
           <FormGroup check>
             <Label check>
               <Input type="checkbox" name="is_active" checked={form.is_active === 1} onChange={handleChange} /> IsActive

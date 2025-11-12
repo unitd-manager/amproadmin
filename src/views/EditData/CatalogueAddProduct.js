@@ -18,7 +18,7 @@ const CatalogueAddProduct = () => {
     subcategory: '',
     brand: '',
     supplier: '',
-    status: 'Active',
+    status: '',
   });
 
   const [departments, setDepartments] = useState([]);
@@ -54,29 +54,48 @@ const CatalogueAddProduct = () => {
     }
     return '';
   };
+const handleProductSelect = async (selected, index) => {
+  if (!selected) return;
 
-  const handleProductSelect = async (selected, index) => {
-    if (!selected) return;
+  const currentRow = addRows[index];
 
-    const isDuplicate = addRows.some(
-      (row, i) => row.product_id === selected.value && i !== index
-    );
-    if (isDuplicate) {
-      message('Product already selected in another row', 'warning');
-      return;
-    }
+  // 🔁 Same product reselected in same row
+  if (currentRow.product_id === selected.value) {
+    message('This product is already selected in this row', 'info');
+    return;
+  }
 
+  // 🚫 Duplicate check in other rows
+  const isDuplicate = addRows.some(
+    (row, i) => row.product_id === selected.value && i !== index
+  );
+
+  if (isDuplicate) {
+    // 🔔 Popup warning for duplicate selection
+    message('This product is already selected in another row', 'warning');
+    return;
+  }
+
+  try {
+    // 📸 Optional: Fetch image or extra details if needed
     const imageUrl = await fetchProductImage(selected.value);
+
+    // ✅ Update selected row
     const updatedRows = [...addRows];
     updatedRows[index] = {
       ...updatedRows[index],
       product_id: selected.value,
-      product_code: selected.product_code,
-      title: selected.title,
-      image_url: imageUrl,
+      product_code: selected.code || selected.product_code || '',
+      title: selected.title || selected.label || '',
+      image_url: imageUrl || '',
     };
+
     setAddRows(updatedRows);
-  };
+  } catch (error) {
+    console.error('Error fetching product image:', error);
+    message('Failed to load product image', 'error');
+  }
+};
 
   const handleSortOrderChange = (index, value) => {
     const updatedRows = [...addRows];
@@ -234,8 +253,8 @@ const CatalogueAddProduct = () => {
               </Col>
               <Col md="3">
                 <Input type="select" name="status" onChange={handleFilterChange} value={filters.status}>
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
+                  <option value="1">Active</option>
+                  <option value="0">Inactive</option>
                 </Input>
               </Col>
               <Col md="3">
@@ -246,8 +265,8 @@ const CatalogueAddProduct = () => {
             <Table bordered className="mt-3">
               <thead>
                 <tr>
-                  <th>Product Title</th>
                   <th>Product Code</th>
+                  <th>Product Title</th>
                   <th>Sort Order</th>
                   <th>Image</th>
                 </tr>
@@ -256,16 +275,31 @@ const CatalogueAddProduct = () => {
                 {addRows.map((row, index) => (
                   <tr key={row.product_id || index}>
                     <td>
-                      <Select
-                        options={productOptions}
-                        value={productOptions.find(p => p.value === row.product_id) || null}
-                        onChange={(selected) => handleProductSelect(selected, index)}
-                        placeholder="Select Product"
-                      />
-                    </td>
-                    <td>
-                      <Input value={row.product_code} disabled />
-                    </td>
+  {row.product_id ? (
+    // ✅ Show product code once product title is selected
+    <Input value={row.product_code || ""} readOnly />
+  ) : (
+    // ✅ Show dropdown initially to select product
+    <Select
+      options={productOptions}
+      value={productOptions.find(p => p.value === row.product_id) || null}
+      onChange={(selected) => handleProductSelect(selected, index)}
+      getOptionLabel={(option) => option.title}  // show product title in dropdown
+      getOptionValue={(option) => option.value}  // value = product_id
+      placeholder="Select Product"
+    />
+  )}
+</td>
+
+
+{/* Product Code field (auto-filled when product selected) */}
+<td>
+  <Input
+    type="text"
+    value={row.title || ""}
+    readOnly
+  />
+</td>
                     <td>
                       <Input
                         type="number"
