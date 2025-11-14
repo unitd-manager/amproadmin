@@ -90,8 +90,8 @@ const StockRequest = () => {
     { name: "From Location", selector: (row) => row.from_location, sortable: true },
     { name: "To Location", selector: (row) => row.to_location, sortable: true },
     { name: "Status", selector: (row) => row.status, sortable: true },
-    { name: "Stock Req Date", selector: (row) => row.stock_req_date, sortable: true },
-    { name: "Creation Date", selector: (row) => row.creation_date, sortable: true },
+    { name: "Stock Req Date", selector: (row) => row.stock_req_date, format: (row) => (row.stock_req_date ? new Date(row.stock_req_date).toLocaleDateString() : ''), sortable: true },
+    { name: "Creation Date", selector: (row) => row.creation_date, format: (row) => (row.creation_date ? new Date(row.creation_date).toLocaleDateString() : ''), sortable: true },
     { name: "Remarks", selector: (row) => row.remarks, sortable: true },
   ];
 

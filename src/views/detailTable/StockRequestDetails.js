@@ -31,7 +31,7 @@ const StockRequestDetails = () => {
       stockRequest.creation_date = creationdatetime;
       stockRequest.created_by = loggedInuser.first_name;
       stockRequest.status = 'Pending';
-
+ 
       api.post('/stockRequest/insertStockRequest', stockRequest)
         .then((res) => {
           const insertedId = res.data.data.insertId;

@@ -7,6 +7,7 @@ import { Form, Row, Col, FormGroup, Label, Input, Button,  TabContent,
   import classnames from 'classnames';
 import { ToastContainer } from 'react-toastify';
 import Swal from 'sweetalert2';
+import moment from 'moment';
 import { useNavigate, useParams } from 'react-router-dom';
 import ComponentCard from '../../components/ComponentCard';
 import ComponentCardV2 from '../../components/ComponentCardV2';
@@ -67,7 +68,7 @@ const StockRequestEdit = () => {
       confirmButtonText: 'Yes, delete it!',
     }).then((result) => {
       if (result.isConfirmed) {
-        api.post('/salesOrder/deleteProjectQuote', { sales_order_item_id: deleteID }).then(() => {
+        api.post('/stockRequest/deleteStockRequestProduct', { stock_request_item_id: deleteID }).then(() => {
           Swal.fire('Deleted!', 'Your Line Items has been deleted.', 'success');
           window.location.reload();
         });
@@ -262,6 +263,7 @@ const StockRequestEdit = () => {
                     onChange={handleInputs}
                   >
                     <option value="">Select</option>
+                    <option value="Pending">Pending</option>
                     <option value="Draft">Draft</option>
                     <option value="Submitted">Submitted</option>
                     <option value="Completed">Completed</option>
@@ -274,7 +276,9 @@ const StockRequestEdit = () => {
                   <Input
                     type="date"
                     name="stock_req_date"
-                    value={stockRequestDetails.stock_req_date || ''}
+                      value={
+                    stockRequestDetails && moment(stockRequestDetails.stock_req_date).format('YYYY-MM-DD')
+                  }
                     onChange={handleInputs}
                   />
                 </FormGroup>

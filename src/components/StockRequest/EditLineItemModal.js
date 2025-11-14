@@ -17,12 +17,12 @@ import api from '../../constants/api';
 import message from '../Message';
 import creationdatetime from '../../constants/creationdatetime';
 
-const EditLineItemModal = ({ editLineModal, setEditLineModal, FetchLineItemData, refreshStockRequest }) => {
+const EditLineItemModal = ({ editLineModal, setEditLineModal, FetchLineItemData, getLineItem }) => {
   EditLineItemModal.propTypes = {
     editLineModal: PropTypes.bool,
     setEditLineModal: PropTypes.func,
     FetchLineItemData: PropTypes.object,
-    refreshStockRequest: PropTypes.func,
+    getLineItem: PropTypes.any,
   };
 
   const { id } = useParams();
@@ -87,14 +87,14 @@ const EditLineItemModal = ({ editLineModal, setEditLineModal, FetchLineItemData,
     };
 
     api
-      .post('/stockRequest/edit-StockRequestLine', updatedData)
+      .post('/stockRequest/edit-TabQuoteLine', updatedData)
       .then(() => {
         message('Stock Request Line Item Updated Successfully.', 'success');
         setEditLineModal(false);
-        refreshStockRequest();
+        getLineItem();
       })
       .catch(() => {
-        message('Update Failed', 'error');
+       
       });
   };
 
