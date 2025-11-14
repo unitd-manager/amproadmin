@@ -17,6 +17,8 @@ import {
   Label,
   FormFeedback,
 } from 'reactstrap';
+// import { useNavigate } from 'react-router-dom';
+
 import * as Icon from 'react-feather';
 import api from '../../constants/api';
 import message from '../Message';
@@ -48,21 +50,22 @@ const normaliseRecordType = (record) => {
 };
 
 const normaliseRow = (record, fallbackType = 'customer') => {
+  
   const derivedType = normaliseRecordType(record) || fallbackType;
   const contactIdCandidate =
-    record?.contact_id ?? record?.contact_cli_id ?? record?.company_id ?? record?.company_cli_id ?? null;
+    record?.contact_id ?? record?.supplier_id ?? record?.company_id ?? record?.company_cli_id ?? null;
 
   return {
-    key: record?.cs_product_id
+    key: (record?.cs_product_id || record?.sup_product_id)
       ? `persist-${record.cs_product_id}`
       : `temp-${derivedType}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    cs_product_id: record?.cs_product_id || null,
+    cs_product_id: record?.cs_product_id || record?.sup_product_id || null,
     customer_supplier_price_id:
       record?.customer_supplier_price_id || record?.contact_price_id || record?.parent_id || null,
     contact_id: contactIdCandidate ? String(contactIdCandidate) : '',
-    contact_code:
-      record?.contact_code || record?.customer_code || record?.company_code || record?.code || '',
-    contact_name: record?.contact_name || record?.company_name || record?.name || '',
+    supplier_code:
+      record?.supplier_code || record?.customer_code || record?.company_code || record?.code || '',
+    supplier_name: record?.supplier_name || record?.company_name || record?.name || '',
     wholesale_price: record?.wholesale_price ?? '',
     carton_price: record?.carton_price ?? '',
     fixed_price: record?.fixed_price ?? '',
@@ -86,7 +89,7 @@ const ContactPriceButton = ({ productId, isOpen, onClose, productName }) => {
   const [bulkValues, setBulkValues] = useState({ wholesale_price: '', carton_price: '' });
   const [contactsLoaded, setContactsLoaded] = useState(false);
   const [companiesLoaded, setCompaniesLoaded] = useState(false);
-
+// const navigate = useNavigate();
   const filteredContactOptions = useMemo(() => {
     const supplierOptions = contactOptions.filter((item) => Number(item.supplier) === 1);
     const priceGroupOptions = contactOptions.filter(
@@ -105,7 +108,7 @@ const ContactPriceButton = ({ productId, isOpen, onClose, productName }) => {
   const companyLookupByCode = useMemo(() => {
     const map = new Map();
     companyOptions.forEach((company) => {
-      const codeCandidates = [company?.customer_code, company?.company_code, company?.contact_code];
+      const codeCandidates = [company?.customer_code, company?.company_code, company?.supplier_code];
       codeCandidates
         .filter((candidate) => candidate)
         .forEach((candidate) => map.set(String(candidate).toLowerCase(), company));
@@ -158,12 +161,28 @@ const ContactPriceButton = ({ productId, isOpen, onClose, productName }) => {
         throw new Error('Empty product contact price data');
       }
       applyResponseData(responseData);
+      try {
+        const supRes = await api.post('/product/getSupProduct', { product_id: productId });
+        const supData = supRes.data?.data || [];
+        setRows((prev) => ({
+          ...prev,
+          supplier: normaliseCollection(supData, 'supplier'),
+        }));
+      } catch (supErr) { console.error(supErr); }
     } catch (err) {
       try {
         const legacyRes = await api.post('/customersupplierprice/getContactPricesByProduct', {
           product_id: productId,
         });
         applyResponseData(legacyRes.data?.data);
+        try {
+          const supRes = await api.post('/product/getSupProduct', { product_id: productId });
+          const supData = supRes.data?.data || [];
+          setRows((prev) => ({
+            ...prev,
+            supplier: normaliseCollection(supData, 'supplier'),
+          }));
+        } catch (supErr2) { console.error(supErr2); }
       } catch (legacyErr) {
         setRows(createEmptyRowState());
         message('Unable to load contact prices for this product', 'error');
@@ -189,7 +208,7 @@ const ContactPriceButton = ({ productId, isOpen, onClose, productName }) => {
 
     if (!contactsLoaded) {
       api
-        .get('/customersupplierprice/getContactclis')
+        .get('/supplier/getSupplier')
         .then((res) => {
           setContactOptions(res.data?.data || []);
           setContactsLoaded(true);
@@ -231,8 +250,8 @@ const ContactPriceButton = ({ productId, isOpen, onClose, productName }) => {
         cs_product_id: null,
         customer_supplier_price_id: null,
         contact_id: '',
-        contact_code: '',
-        contact_name: '',
+        supplier_code: '',
+        supplier_name: '',
         wholesale_price: '',
         carton_price: '',
         fixed_price: '',
@@ -242,42 +261,26 @@ const ContactPriceButton = ({ productId, isOpen, onClose, productName }) => {
     ]);
   };
 
-  const handleContactChange = (tabKey, rowIndex, contactId) => {
-    if (tabKey === 'customer') {
-      const matchedCompany = companyOptions.find(
-        (company) => String(company?.company_id) === String(contactId),
-      );
-      updateTabRows(tabKey, (current) => {
-        const nextRows = [...current];
-        const existingRow = nextRows[rowIndex] || {};
-        nextRows[rowIndex] = {
-          ...existingRow,
-          contact_id: matchedCompany ? String(matchedCompany.company_id) : contactId,
-          contact_code:
-            matchedCompany?.customer_code ||
-            matchedCompany?.company_code ||
-            matchedCompany?.contact_code ||
-            existingRow.contact_code ||
-            '',
-          contact_name: matchedCompany?.company_name || existingRow.contact_name || '',
-          type: tabKey,
-          error: null,
-        };
-        return nextRows;
-      });
-      return;
-    }
+  
 
-    const selected = contactOptions.find((option) => String(option.contact_cli_id) === String(contactId));
+  const handleSupplierCodeInput = (tabKey, rowIndex, rawValue) => {
+    const value = rawValue ?? '';
+    const trimmedValue = value.trim();
+    const lowerCaseValue = trimmedValue.toLowerCase();
+
+    const options = filteredContactOptions[tabKey] || contactOptions;
+    const selected = options.find(
+      (option) => String(option?.supplier_code || '').toLowerCase() === lowerCaseValue,
+    );
 
     updateTabRows(tabKey, (current) => {
       const nextRows = [...current];
       const existingRow = nextRows[rowIndex] || {};
       nextRows[rowIndex] = {
         ...existingRow,
-        contact_id: contactId,
-        contact_code: selected?.contact_code || '',
-        contact_name: selected?.contact_name || '',
+        supplier_code: trimmedValue,
+        supplier_name: selected?.supplier_name || (trimmedValue === '' ? '' : existingRow.supplier_name || ''),
+        contact_id: selected ? String(selected.supplier_id) : existingRow.contact_id || null,
         type: tabKey,
         error: null,
       };
@@ -296,14 +299,14 @@ const ContactPriceButton = ({ productId, isOpen, onClose, productName }) => {
 
       // check duplicates by code OR name (case-insensitive)
       const duplicateCode = nextRows.some(
-        (r, i) => i !== rowIndex && r.contact_code?.toLowerCase() === lowerCaseValue && lowerCaseValue !== '',
+        (r, i) => i !== rowIndex && r.supplier_code?.toLowerCase() === lowerCaseValue && lowerCaseValue !== '',
       );
       const duplicateName = nextRows.some(
-        (r, i) => i !== rowIndex && r.contact_name?.toLowerCase() === lowerCaseValue && lowerCaseValue !== '',
+        (r, i) => i !== rowIndex && r.supplier_name?.toLowerCase() === lowerCaseValue && lowerCaseValue !== '',
       );
 
       if (duplicateCode || duplicateName) {
-        nextRows[rowIndex] = { ...existingRow, contact_code: trimmedValue, error: 'duplicate' };
+        nextRows[rowIndex] = { ...existingRow, supplier_code: trimmedValue, error: 'duplicate' };
         message('Duplicate customer code or name not allowed', 'warning');
         return nextRows;
       }
@@ -314,13 +317,13 @@ const ContactPriceButton = ({ productId, isOpen, onClose, productName }) => {
           (company) =>
             String(company?.customer_code || '').toLowerCase() === lowerCaseValue ||
             String(company?.company_code || '').toLowerCase() === lowerCaseValue ||
-            String(company?.contact_code || '').toLowerCase() === lowerCaseValue,
+            String(company?.supplier_code || '').toLowerCase() === lowerCaseValue,
         );
 
       nextRows[rowIndex] = {
         ...existingRow,
-        contact_code: trimmedValue,
-        contact_name: matchedCompany?.company_name || (trimmedValue === '' ? '' : existingRow.contact_name || ''),
+        supplier_code: trimmedValue,
+        supplier_name: matchedCompany?.company_name || (trimmedValue === '' ? '' : existingRow.supplier_name || ''),
         contact_id: matchedCompany ? String(matchedCompany.company_id) : existingRow.contact_id || null,
         type: 'customer',
         error: null,
@@ -339,14 +342,14 @@ const ContactPriceButton = ({ productId, isOpen, onClose, productName }) => {
       const nextRows = [...current];
       const existingRow = nextRows[rowIndex] || {};
 
-      const duplicate = nextRows.some((r, i) => i !== rowIndex && r.contact_name?.toLowerCase() === lower && lower !== '');
+      const duplicate = nextRows.some((r, i) => i !== rowIndex && r.supplier_name?.toLowerCase() === lower && lower !== '');
       if (duplicate) {
-        nextRows[rowIndex] = { ...existingRow, contact_name: trimmed, error: 'duplicate' };
+        nextRows[rowIndex] = { ...existingRow, supplier_name: trimmed, error: 'duplicate' };
         message('Duplicate customer code or name not allowed', 'warning');
         return nextRows;
       }
 
-      nextRows[rowIndex] = { ...existingRow, contact_name: trimmed, error: null };
+      nextRows[rowIndex] = { ...existingRow, supplier_name: trimmed, error: null };
       return nextRows;
     });
   };
@@ -360,17 +363,38 @@ const ContactPriceButton = ({ productId, isOpen, onClose, productName }) => {
     });
   };
 
-  const handleDeleteRow = (tabKey, rowIndex) => {
-    updateTabRows(tabKey, (current) => {
-      const nextRows = [...current];
-      const removed = nextRows.splice(rowIndex, 1);
-      const removedRow = removed[0];
-      if (removedRow?.cs_product_id) {
-        setDeletedRowIds((prev) => [...prev, removedRow.cs_product_id]);
-      }
-      return nextRows;
-    });
-  };
+const deleteRowFromDB = async (tabKey, row) => {
+  try {
+    if (tabKey === 'supplier') {
+      await api.post('/product/deleteSUPProductComp', {
+        sup_product_id: row.cs_product_id,
+      });
+    } else {
+      await api.post('/product/deleteCSProductComp', {
+        cs_product_id: row.cs_product_id,
+      });
+    }
+  } catch (err) {
+    console.error('Delete failed:', err);
+  }
+};
+
+ const handleDeleteRow = async (tabKey, rowIndex) => {
+  updateTabRows(tabKey, (current) => {
+    const nextRows = [...current];
+    const removed = nextRows.splice(rowIndex, 1);
+    const removedRow = removed[0];
+
+    // If the row had a product ID, delete it from DB
+    if (removedRow?.cs_product_id) {
+      deleteRowFromDB(tabKey, removedRow);
+    }
+
+    return nextRows;
+  });
+};
+
+
 
   const handleApplyAll = (tabKey, field) => {
     const valueToApply = bulkValues[field];
@@ -386,7 +410,7 @@ const ContactPriceButton = ({ productId, isOpen, onClose, productName }) => {
 
   const buildPayload = (targetRows) =>
     targetRows
-      .filter((row) => row.contact_id || (row.contact_code && row.type === 'customer'))
+      .filter((row) => row.contact_id || (row.supplier_code && row.type === 'customer'))
       .map((row) => ({
         cs_product_id: row.cs_product_id || null,
         contact_id: Number(row.contact_id) || null,
@@ -396,7 +420,7 @@ const ContactPriceButton = ({ productId, isOpen, onClose, productName }) => {
         type: row.type,
       }));
 
-  const handleSave = async () => {
+ const handleSave = async () => {
     if (!productId) {
       message('Missing product information', 'warning');
       return;
@@ -408,146 +432,159 @@ const ContactPriceButton = ({ productId, isOpen, onClose, productName }) => {
       ...getTabRows('priceGroup'),
     ];
 
-    if (allRows.length === 0 && deletedRowIds.length === 0) {
-      message('There are no contact prices to save', 'warning');
+    // Removed the initial check for no changes here, as it was too broad.
+
+    const customerRows = allRows.filter((row) => row.type === 'customer');
+    const supplierRows = allRows.filter((row) => row.type === 'supplier');
+    const otherRows = allRows.filter((row) => row.type !== 'customer' && row.type !== 'supplier');
+    setSaving(true);
+
+    // Resolve supplier_id from typed supplier_code if missing
+    const supplierRowsResolved = supplierRows.map((row) => {
+      if (!row.contact_id && row.supplier_code) {
+        const opt = (filteredContactOptions.supplier || contactOptions).find(
+          (o) => String(o?.supplier_code || '').toLowerCase() === String(row.supplier_code || '').toLowerCase(),
+        );
+        if (opt?.supplier_id) {
+          return { ...row, contact_id: String(opt.supplier_id), supplier_name: opt.supplier_name || row.supplier_name };
+        }
+      }
+      return row;
+    });
+
+    // validation: ensure every customer row has code/name
+    const invalidCustomerRows = customerRows.filter((row) => !row.supplier_code && !row.contact_id);
+    if (invalidCustomerRows.length > 0) {
+      message('Each customer row must have a valid code or selected company', 'warning');
+      setSaving(false);
       return;
     }
 
-    const customerRows = allRows.filter((row) => row.type === 'customer');
-    const otherRows = allRows.filter((row) => row.type !== 'customer');
-
-    // validation: ensure every customer row has code/name
-    const invalidCustomerRows = customerRows.filter((row) => !row.contact_code && !row.contact_id);
-    if (invalidCustomerRows.length > 0) {
-      message('Each customer row must have a valid code or selected company', 'warning');
+    // validation: ensure every supplier row has a selected supplier (contact_id)
+    const invalidSupplierRows = supplierRowsResolved.filter((row) => !row.contact_id);
+    if (invalidSupplierRows.length > 0) {
+      message('Each supplier row must select a valid supplier', 'warning');
+      setSaving(false);
       return;
     }
 
     // check duplicate in final payload
-const seenCodes = new Set();
-const hasDuplicate = customerRows.some((r) => {
-  const code = String(r.contact_code || '').toLowerCase();
-  const name = String(r.contact_name || '').toLowerCase();
+    const seenCodes = new Set();
+    const hasDuplicate = customerRows.some((r) => {
+      const code = String(r.supplier_code || '').toLowerCase();
+      const name = String(r.supplier_name || '').toLowerCase();
 
-  if (code && seenCodes.has(code)) {
-    message('Duplicate customer code found - resolve before saving', 'warning');
-    return true;
-  }
-  if (name && seenCodes.has(name)) {
-    message('Duplicate customer name found - resolve before saving', 'warning');
-    return true;
-  }
+      if (code && seenCodes.has(code)) {
+        message('Duplicate customer code found - resolve before saving', 'warning');
+        return true;
+      }
+      if (name && seenCodes.has(name)) {
+        message('Duplicate customer name found - resolve before saving', 'warning');
+        return true;
+      }
 
-  if (code) seenCodes.add(code);
-  if (name) seenCodes.add(name);
-  return false;
-});
+      if (code) seenCodes.add(code);
+      if (name) seenCodes.add(name);
+      return false;
+    });
 
-if (hasDuplicate) return;
-
-
-    const newCustomerRows = customerRows.filter((row) => !row.cs_product_id);
-    const existingCustomerRows = customerRows.filter((row) => row.cs_product_id);
-
-    if (
-      newCustomerRows.length === 0 &&
-      existingCustomerRows.length === 0 &&
-      buildPayload(otherRows).length === 0 &&
-      deletedRowIds.length === 0
-    ) {
-      message('No changes detected to save', 'warning');
+    if (hasDuplicate) {
+      setSaving(false);
       return;
     }
 
-    setSaving(true);
+    const newCustomerRows = customerRows.filter((row) => !row.cs_product_id);
+    const existingCustomerRows = customerRows.filter((row) => row.cs_product_id);
+    const newSupplierRows = supplierRowsResolved.filter((row) => !row.cs_product_id);
+    const existingSupplierRows = supplierRowsResolved.filter((row) => row.cs_product_id);
+
+    const operations = [];
+
+    newCustomerRows.forEach((row) => {
+      operations.push(
+        api.post('/product/insertProductComp', {
+          product_id: Number(productId),
+          company_id: Number(row.contact_id) || null,
+          wholesale_price: toNumberOrNull(row.wholesale_price),
+          carton_price: toNumberOrNull(row.carton_price),
+          fixed_price: toNumberOrNull(row.fixed_price),
+        }),
+      );
+    });
+
+    existingCustomerRows.forEach((row) => {
+      // Only push an operation if there's a change (price update)
+      // This check might be redundant if the API handles no-op updates gracefully,
+      // but it can prevent unnecessary API calls.
+      // You might need to compare current row values with fetched values if you want to be precise.
+      // For simplicity, we'll assume any existing row with a price might have been updated.
+      operations.push(
+        postWithFallback('/product/EditCSProductLineItems', '/EditCSProductLineItems', {
+          cs_product_id: Number(row.cs_product_id),
+          company_id: Number(row.contact_id) || null,
+          wholesale_price: toNumberOrNull(row.wholesale_price),
+          carton_price: toNumberOrNull(row.carton_price),
+          fixed_price: toNumberOrNull(row.fixed_price),
+        }),
+      );
+    });
+
+    newSupplierRows.forEach((row) => {
+      operations.push(
+        api.post('/product/insertProductSup', {
+          product_id: Number(productId),
+          supplier_id: Number(row.contact_id) || null,
+          wholesale_price: toNumberOrNull(row.wholesale_price),
+          carton_price: toNumberOrNull(row.carton_price),
+          fixed_price: toNumberOrNull(row.fixed_price),
+        }),
+      );
+    });
+
+    existingSupplierRows.forEach((row) => {
+      // Similar to existingCustomerRows, assume price updates might have occurred.
+      operations.push(
+        api.post('/product/EditSUPProductLineItems', {
+          sup_product_id: Number(row.cs_product_id),
+          supplier_id: Number(row.contact_id) || null,
+          wholesale_price: toNumberOrNull(row.wholesale_price),
+          carton_price: toNumberOrNull(row.carton_price),
+          fixed_price: toNumberOrNull(row.fixed_price),
+        }),
+      );
+    });
+
+    const legacyRows = buildPayload(otherRows);
+    if (legacyRows.length > 0 || deletedRowIds.length > 0) {
+      operations.push(
+        api.post('/customersupplierprice/saveContactPricesByProduct', {
+          product_id: productId,
+          rows: legacyRows,
+          deleted: deletedRowIds,
+        }),
+      );
+    }
+
+    // This is the crucial check: if there are no operations to perform, then exit.
+    if (operations.length === 0) {
+      message('No changes detected to save', 'warning');
+      setSaving(false);
+      return;
+    }
 
     try {
-      const operations = [];
-
-      newCustomerRows.forEach((row) => {
-        operations.push(
-          api.post('/product/insertProductComp', {
-            product_id: Number(productId),
-            company_id: Number(row.contact_id) || null,
-            wholesale_price: toNumberOrNull(row.wholesale_price),
-            carton_price: toNumberOrNull(row.carton_price),
-            fixed_price: toNumberOrNull(row.fixed_price),
-          }),
-        );
-      });
-
-      existingCustomerRows.forEach((row) => {
-        operations.push(
-          postWithFallback('/product/EditCSProductLineItems', '/EditCSProductLineItems', {
-            cs_product_id: Number(row.cs_product_id),
-            company_id: Number(row.contact_id) || null,
-            wholesale_price: toNumberOrNull(row.wholesale_price),
-            carton_price: toNumberOrNull(row.carton_price),
-            fixed_price: toNumberOrNull(row.fixed_price),
-          }),
-        );
-      });
-
-      const legacyRows = buildPayload(otherRows);
-      if (legacyRows.length > 0 || deletedRowIds.length > 0) {
-        operations.push(
-          api.post('/customersupplierprice/saveContactPricesByProduct', {
-            product_id: productId,
-            rows: legacyRows,
-            deleted: deletedRowIds,
-          }),
-        );
-      }
-
-      if (operations.length === 0) {
-        message('No changes detected to save', 'warning');
-        setSaving(false);
-        return;
-      }
-
       await Promise.all(operations);
       message('Contact prices saved successfully', 'success');
       setDeletedRowIds([]);
-      await fetchContactPrices();
+      await fetchContactPrices(); // Refresh data after saving
     } catch (error) {
+      console.error("Save error:", error); // Log the error for debugging
       message('Unable to save contact prices', 'error');
     } finally {
       setSaving(false);
     }
   };
-
-  const handleDeleteAll = () => {
-    const rowsInTab = getTabRows(activeTab);
-    const persistedIds = rowsInTab.map((row) => row.cs_product_id).filter(Boolean);
-    if (!productId) {
-      message('Missing product information', 'warning');
-      return;
-    }
-
-    if (persistedIds.length === 0 && rowsInTab.length === 0) {
-      message('There are no contact prices to delete', 'warning');
-      return;
-    }
-
-    setSaving(true);
-    api
-      .post('/customersupplierprice/deleteContactPricesByIds', {
-        product_id: productId,
-        cs_product_ids: persistedIds,
-        type: activeTab,
-      })
-      .then(() => {
-        message('Contact prices deleted successfully', 'success');
-        updateTabRows(activeTab, () => []);
-      })
-      .catch(() => {
-        message('Unable to delete contact prices', 'error');
-      })
-      .finally(() => {
-        setSaving(false);
-      });
-  };
-
+  
   const renderRows = (tabKey) => {
     const tabRows = getTabRows(tabKey);
     const options = tabKey === 'customer' ? companyOptions : filteredContactOptions[tabKey] || [];
@@ -570,7 +607,7 @@ if (hasDuplicate) return;
             {tabKey === 'customer' ? (
               <>
                 <Input
-                  value={row.contact_code}
+                  value={row.supplier_code}
                   list={datalistId}
                   onChange={(e) => handleCustomerCodeInput(index, e.target.value)}
                   placeholder="Enter customer code"
@@ -578,7 +615,7 @@ if (hasDuplicate) return;
                 />
                 <datalist id={datalistId}>
                   {options.map((option) => {
-                    const optionCode = option?.customer_code || option?.company_code || option?.contact_code || '';
+                    const optionCode = option?.customer_code || option?.company_code || option?.supplier_code || '';
                     const optionLabel = optionCode
                       ? `${optionCode}${option?.company_name ? ` - ${option.company_name}` : ''}`
                       : option?.company_name || '';
@@ -591,18 +628,24 @@ if (hasDuplicate) return;
                 </datalist>
               </>
             ) : (
+              <>
               <Input
-                type="select"
-                value={row.contact_id || ''}
-                onChange={(e) => handleContactChange(tabKey, index, e.target.value)}
-              >
-                <option value="">Select Code</option>
+                value={row.supplier_code}
+                list={`supplier-code-options-${index}`}
+                onChange={(e) => handleSupplierCodeInput(tabKey, index, e.target.value)}
+                placeholder="Enter supplier code"
+              />
+              <datalist id={`supplier-code-options-${index}`}>
                 {options.map((option) => (
-                  <option key={option.contact_cli_id} value={option.contact_cli_id}>
-                    {option.contact_code}
+                  <option
+                    key={option.supplier_id}
+                    value={option.supplier_code}
+                  >
+                    {option.supplier_code} - {option.supplier_name}
                   </option>
                 ))}
-              </Input>
+              </datalist>
+            </>
             )}
             {row.error ? <FormFeedback>{row.error === 'duplicate' ? 'Duplicate code or name' : row.error}</FormFeedback> : null}
           </td>
@@ -611,7 +654,7 @@ if (hasDuplicate) return;
             {tabKey === 'customer' ? (
               <>
                 <Input
-                  value={row.contact_name}
+                  value={row.supplier_name}
                   onChange={(e) => handleCustomerNameChange(index, e.target.value)}
                   placeholder="Enter company name"
                   invalid={!!row.error}
@@ -619,7 +662,7 @@ if (hasDuplicate) return;
                 {row.error ? <FormFeedback>{row.error === 'duplicate' ? 'Duplicate code or name' : row.error}</FormFeedback> : null}
               </>
             ) : (
-              <Input value={row.contact_name} disabled />
+              <Input value={row.supplier_name} disabled />
             )}
           </td>
 
@@ -732,8 +775,8 @@ if (hasDuplicate) return;
           {saving ? <Spinner size="sm" className="me-2" /> : null}
           Save
         </Button>
-        <Button color="danger" onClick={handleDeleteAll} disabled={saving}>
-          Delete
+        <Button color="danger" onClick={onClose} disabled={saving}>
+          Cancel
         </Button>
       </ModalFooter>
     </Modal>
