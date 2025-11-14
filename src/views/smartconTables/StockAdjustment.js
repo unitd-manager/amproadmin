@@ -53,7 +53,14 @@ const StockAdjustment = () => {
   const fetchStockAdjustments = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/stockRequest/getFilteredStockAdjustment',{params: filters});
+const response = await api.get('/stockRequest/getFilteredStockAdjustment', {
+  params: {
+    stock_adjustment_no: filters.stock_adjustment_no,
+    from_date: filters.fromDate,
+    to_date: filters.toDate,
+    location_id: filters.location_id,
+  },
+});
       if (response.data.msg ==="Success") {
         setStockAdjustmentData(response.data.data);
         setTotalRecords(response.data.total);

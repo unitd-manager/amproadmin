@@ -492,21 +492,37 @@ useEffect(() => {
           <Label className="small mb-1">Supplier Code</Label>
         </Col>
         <Col md="8">
-        <Input
-            bsSize="sm" className="py-0 px-1"  
-              type="select"
-              name="supplier_id"
-              value={formData?.supplier_id}
-              onChange={handleChange}
-              onKeyDown={handleKeyDown}
-            >
-              <option value="">Select Supplier</option>
-              {supplierOptions.map((supplier, index) => (
-                <option key={index} value={supplier.supplier_id}>
-                  {supplier.supplier_code}
-                </option>
-              ))}
-            </Input>
+        <Select
+          bsSize="sm"
+          className="py-0 px-1"
+          name="supplier_id"
+          value={
+            formData?.supplier_id
+              ? {
+                  value: formData.supplier_id,
+                  label: supplierOptions.find(
+                    (s) => String(s.supplier_id) === String(formData.supplier_id)
+                  )?.supplier_code,
+                }
+              : null
+          }
+          onChange={(selected) =>
+            handleChange({
+              target: { name: "supplier_id", value: selected?.value || "" },
+            })
+          }
+          onKeyDown={handleKeyDown}
+          options={supplierOptions.map((s) => ({
+            value: s.supplier_id,
+            label: s.supplier_code,
+          }))}
+          placeholder="Select Supplier"
+          isClearable
+          styles={{
+            control: (base) => ({ ...base, minHeight: "30px", fontSize: "12px" }),
+            menu: (base) => ({ ...base, fontSize: "12px" }),
+          }}
+        />
         
         </Col>
       </Row>

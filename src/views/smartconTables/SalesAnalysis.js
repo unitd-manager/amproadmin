@@ -1,6 +1,6 @@
 // src/pages/SalesAnalysis.js
 /*eslint-disable*/
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Container,
   Row,
@@ -19,6 +19,7 @@ import {
 } from "reactstrap";
 import axios from "axios";
 import api from "../../constants/api";
+import * as XLSX from "xlsx";
 
 // Simple InputRowPoQty component
 const InputRowPoQty = ({ current, productCode, onSave }) => {
@@ -58,9 +59,9 @@ const InputRowPoQty = ({ current, productCode, onSave }) => {
   return (
     <div className="d-flex align-items-center">
       <span className="mr-2">{current}</span>
-      <Button size="sm" color="primary" onClick={() => setIsEditing(true)}>
+      {/* <Button size="sm" color="primary" onClick={() => setIsEditing(true)}>
         Edit
-      </Button>
+      </Button> */}
     </div>
   );
 };
@@ -84,6 +85,28 @@ const SalesAnalysis = () => {
   const [salesData, setSalesData] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  const totals = useMemo(() => {
+    const t = {
+      quantity: 0,
+      sale_subtotal: 0,
+      sale_totalcost: 0,
+      balance_qty: 0,
+      balance_cost: 0,
+      profit: 0,
+      po_qty: 0,
+    };
+    (salesData || []).forEach((row) => {
+      t.quantity += Number(row.quantity || 0);
+      t.sale_subtotal += Number(row.sale_subtotal || 0);
+      t.sale_totalcost += Number(row.sale_totalcost || 0);
+      t.balance_qty += Number(row.balance_qty || 0);
+      t.balance_cost += Number(row.balance_cost || 0);
+      t.profit += Number(row.profit || 0);
+      t.po_qty += Number(row.po_qty || 0);
+    });
+    return t;
+  }, [salesData]);
 
   useEffect(() => {
     fetchSales();
@@ -118,7 +141,39 @@ const SalesAnalysis = () => {
   };
 
   const handlePrint = () => {
-    window.print();
+    if (!salesData || salesData.length === 0) {
+      alert("No data to export");
+      return;
+    }
+    const headers = [
+      "Product Code",
+      "Product Name",
+      "Sales Qty",
+      "Sales SubTotal",
+      "Sales TotalCost",
+      "Balance Qty",
+      "Balance Cost",
+      "Profit",
+      "PO Qty",
+      "Supplier",
+    ];
+    const data = salesData.map((row) => ({
+      "Product Code": row.product_code || "",
+      "Product Name": row.product_name || "",
+      "Sales Qty": Number(row.quantity || 0).toFixed(2),
+      "Sales SubTotal": Number(row.sale_subtotal || 0).toFixed(2),
+      "Sales TotalCost": Number(row.sale_totalcost || 0).toFixed(2),
+      "Balance Qty": Number(row.balance_qty || 0).toFixed(2),
+      "Balance Cost": Number(row.balance_cost || 0).toFixed(2),
+      Profit: Number(row.profit || 0).toFixed(2),
+      "PO Qty": row.po_qty || 0,
+      Supplier: row.supplier || "",
+    }));
+    const ws = XLSX.utils.json_to_sheet(data, { header: headers });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "SalesAnalysis");
+    const filename = `SalesAnalysis_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSX.writeFile(wb, filename);
   };
   return (
     <Container fluid>
@@ -373,6 +428,19 @@ const SalesAnalysis = () => {
                       ))
                     )}
                   </tbody>
+                  <tfoot>
+                    <tr style={{ backgroundColor: '#f8f9fa' }}>
+                      <td colSpan="2" style={{ borderColor: '#dee2e6', fontWeight: '600', padding: '12px 8px', textAlign: 'right' }}>Total</td>
+                      <td style={{ padding: '10px 8px', textAlign: 'right' }}>{Number(totals.quantity || 0).toFixed(2)}</td>
+                      <td style={{ padding: '10px 8px', textAlign: 'right' }}>{Number(totals.sale_subtotal || 0).toFixed(2)}</td>
+                      <td style={{ padding: '10px 8px', textAlign: 'right' }}>{Number(totals.sale_totalcost || 0).toFixed(2)}</td>
+                      <td style={{ padding: '10px 8px', textAlign: 'right' }}>{Number(totals.balance_qty || 0).toFixed(2)}</td>
+                      <td style={{ padding: '10px 8px', textAlign: 'right' }}>{Number(totals.balance_cost || 0).toFixed(2)}</td>
+                      <td style={{ padding: '10px 8px', textAlign: 'right' }}>{Number(totals.profit || 0).toFixed(2)}</td>
+                      <td style={{ padding: '10px 8px', textAlign: 'right' }}>{Number(totals.po_qty || 0).toFixed(2)}</td>
+                      <td style={{ padding: '10px 8px' }}></td>
+                    </tr>
+                  </tfoot>
                 </Table>
               </div>
             </Col>

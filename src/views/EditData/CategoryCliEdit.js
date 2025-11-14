@@ -36,21 +36,22 @@ const EditCategory = () => {
 
   const [departments, setDepartments] = useState([]);
   const [getFile, setGetFile] = useState(null);
+  const [imagePreviews, setImagePreviews] = useState([]);
 
   const fetchDepartments = async () => {
     const res = await api.get('/departmentcli/getalldepartments');
     setDepartments(res.data.data);
   };
-const [file, setFile] = useState([]);
-         const [ handleValue, setHandleValue ] = useState();
- 
-         const handleFileChange = (fiels) => {
-           
-             const arrayOfObj = Object.entries(fiels).map((e) => ( e[1]  ));
- 
-             setFile(fiels);
-             setHandleValue(arrayOfObj);
-             console.log(fiels)
+  const [file, setFile] = useState([]);
+         const [handleValue, setHandleValue] = useState();
+
+         const handleFileChange = (selectedFiles) => {
+           const newFiles = Array.from(selectedFiles);
+           setFile(newFiles);
+           setHandleValue(newFiles);
+   
+           const previews = newFiles.map(f => URL.createObjectURL(f));
+           setImagePreviews(previews);
          };
   const fetchCategoryDetails = async () => {
     try {
@@ -100,7 +101,11 @@ const [file, setFile] = useState([]);
     fetchDepartments();
     fetchCategoryDetails();
     getFiles();
-  }, [id]);
+
+    return () => {
+      imagePreviews.forEach(preview => URL.revokeObjectURL(preview));
+    };
+  }, [id, imagePreviews]);
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
@@ -132,9 +137,9 @@ form.updated_by=loggedInuser.first_name;
                   });
                 //data.append('file', file)
                 data.append('record_id', id)
-                data.append('room_name', 'brandcli')
-                data.append('alt_tag_data', 'brandcli')
-                data.append('description', 'brandcli')
+                data.append('room_name', 'categorycli')
+                data.append('alt_tag_data', 'categorycli')
+                data.append('description', 'categorycli')
 
                 api.post('/file/uploadFiles',data).then(()=>{
      
@@ -225,10 +230,21 @@ form.updated_by=loggedInuser.first_name;
                        // types={fileTypes}
                     />
                     
+                    {imagePreviews.length > 0 && (
+                      imagePreviews.map((preview) => (
+                        <div key={preview} style={{ display: 'flex', alignItems: 'center', marginTop: '10px' }}>
+                          <img
+                            src={preview}
+                            alt="Preview"
+                            style={{ height: 80, width: 80, marginRight: 10, border: '1px solid #ccc' }}
+                          />
+                        </div>
+                      ))
+                    )}
 
-                    {handleValue ? (
+                     {handleValue && handleValue.length > 0 ? (
                         handleValue.map((e) => (
-                        <div>
+                        <div key={e.name + e.lastModified}>
                             <span> Name: {e.name} </span>
                         </div>
                         ))
