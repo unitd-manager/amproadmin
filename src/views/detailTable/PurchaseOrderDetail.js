@@ -69,9 +69,10 @@ const { id } = useParams();
   const [supplierData, setSupplierData] = useState({});
   const [products, setProducts] = useState([]);
   const [tableData, setTableData] = useState([]);
+  const today = new Date().toISOString().slice(0, 10);
   const [formData, setFormData] = useState({
     tran_no: "",
-    tran_date: "",
+    tran_date: today,
     supplier_code: "",
     supplier_id: "",
     contact_person: "",
@@ -80,7 +81,7 @@ const { id } = useParams();
     contact_address3: "",
     country: "",
     remarks: "",
-    req_delivery_date: "",
+    request_delivery_date: today,
     postal_code: "",
     sub_total:"",
     net_total:"",
@@ -278,7 +279,7 @@ useEffect(() => {
         );
         console.log('handleChange - selectedSupplier:', selectedSupplier);
         if (selectedSupplier) {
-          updatedFormData.company_name = selectedSupplier.company_name;
+          updatedFormData.company_name = selectedSupplier.supplier_name;
           updatedFormData.contact_person = selectedSupplier.contact_person;
           updatedFormData.contact_address1 = selectedSupplier.address_flat;
           updatedFormData.contact_address2 = selectedSupplier.address_street;
@@ -971,7 +972,7 @@ useEffect(() => {
                   <Input
                     type="number"
                     bsSize="sm"
-                    value={Number(p?.carton_price).toFixed(2)}
+                    value={p?.carton_price}
                     onChange={(e) => handleRowChange(p.po_product_id, 'carton_price', e.target.value)}
                     style={{ width: '80px' }}
                     innerRef={(el) => (cartonPriceRefs.current[idx] = el)}
@@ -989,7 +990,7 @@ useEffect(() => {
                   <Input
                     type="number"
                     bsSize="sm"
-                    value={Number(p?.price).toFixed(2)}
+                    value={p?.price}
                     onChange={(e) => handleRowChange(p.po_product_id, 'price', e.target.value)}
                     style={{ width: '80px' }}
                     innerRef={(el) => (priceRefs.current[idx] = el)}
@@ -1007,7 +1008,7 @@ useEffect(() => {
                   <Input
                     type="number"
                     bsSize="sm"
-                    value={Number(p.qty * p.price).toFixed(2)}
+                    value={Number(p?.qty * p?.price).toFixed(2)}
                     onChange={(e) => handleRowChange(p.po_product_id, 'total', e.target.value)}
                     style={{ width: '80px' }}
                     readOnly
@@ -1018,7 +1019,7 @@ useEffect(() => {
                     <Input
                       type="number"
                       bsSize="sm"
-                      value={Number(p?.discount_percentage).toFixed(2)}
+                      value={Number(p?.discount_percentage)}
                       onChange={(e) => handleRowChange(p.po_product_id, 'discount_percentage', e.target.value)}
                       style={{ width: '50%', marginRight: '2px' }}
                       innerRef={(el) => (discountPercentageRefs.current[idx] = el)}
@@ -1034,7 +1035,7 @@ useEffect(() => {
                     <Input
                       type="number"
                       bsSize="sm"
-                      value={Number(p?.discount_amount).toFixed(2)}
+                      value={Number(p?.discount_amount)}
                       onChange={(e) => handleRowChange(p.po_product_id, 'discount_amount', e.target.value)}
                       style={{ width: '50%' }}
                       innerRef={(el) => (discountAmountRefs.current[idx] = el)}
