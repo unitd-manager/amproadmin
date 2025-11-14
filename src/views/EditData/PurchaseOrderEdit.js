@@ -237,12 +237,12 @@ useEffect(() => {
         );
         console.log('handleChange - selectedSupplier:', selectedSupplier);
         if (selectedSupplier) {
-          updatedFormData.company_name = selectedSupplier.company_name;
+          updatedFormData.company_name = selectedSupplier.supplier_name;
           updatedFormData.contact_person = selectedSupplier.contact_person;
           updatedFormData.contact_address1 = selectedSupplier.address_flat;
           updatedFormData.contact_address2 = selectedSupplier.address_street;
           updatedFormData.contact_address3 = selectedSupplier.address_state;
-        updatedFormData.supplier_name = selectedSupplier.company_name;
+        updatedFormData.supplier_name = selectedSupplier.supplier_name;
           updatedFormData.country = selectedSupplier.address_country;
           updatedFormData.postal_code = selectedSupplier.address_po_code;
         }
@@ -304,7 +304,7 @@ useEffect(() => {
      
       message('Record edited successfully.', 'success');
       setTimeout(() => {
-        window.location.reload();
+        navigate('/PurchaseOrder')
       }, 300);
     })
     .catch(() => {
