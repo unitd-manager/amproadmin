@@ -108,6 +108,7 @@
     "styled-components": "^5.3.11",
     "sweetalert2": "^11.4.24",
     "web-vitals": "^1.1.2",
+    "xlsx": "^0.18.5",
     "yup": "^0.32.11"
   },
   "devDependencies": {
