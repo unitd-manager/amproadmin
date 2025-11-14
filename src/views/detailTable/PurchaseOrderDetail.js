@@ -309,24 +309,28 @@ useEffect(() => {
       console.log("Updated Rows:", updatedRows);
     };
   // Handle form submit (example API call structure)
-  const handleSubmit = async () => {
-    formData.sub_total = rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2);
-    formData.tax_amount = parseFloat((formData.sub_total * 0.09).toFixed(2));
-    formData.net_total = (
-      Number(formData.sub_total) + Number(formData.tax_amount)
-    ).toFixed(2);
-    formData.sub_total = Number(formData.sub_total);
-    formData.tax_amount = Number(formData.tax_amount);
-    formData.net_total = Number(formData.net_total);
-    formData.grand_total = Number(formData.net_total);
+  const handleSubmit = async (code) => {
+    const subTotalNum = rows.reduce((sum, row) => sum + Number(row.total_price || 0), 0);
+    const taxAmountNum = Number((subTotalNum * 0.09).toFixed(2));
+    const netTotalNum = Number((subTotalNum + taxAmountNum).toFixed(2));
 
+    const payloadForm = {
+      ...formData,
+      tran_no: code,
+      sub_total: Number(subTotalNum.toFixed(2)),
+      tax_amount: taxAmountNum,
+      net_total: netTotalNum,
+      grand_total: netTotalNum,
+      status: 'open'
+    };
+console.log('formData', payloadForm);
     if (!currency.currency_code) {
       message('Please Enter currency code.', 'error');
       return;
     }
 
     try {
-      const res = await api.post('/purchaseorder/insertPurchaseOrder', formData);
+      const res = await api.post('/purchaseorder/insertPurchaseOrder', payloadForm);
       const insertedDataId = res.data.data.insertId;
       currency.purchase_order_id = insertedDataId;
 
@@ -349,6 +353,16 @@ useEffect(() => {
       message('Network connection error.', 'error');
     }
   };
+  const generateCode = () => {
+      return api
+        .post('/commonApi/getCodeValues', { type: 'purchaseOrder' })
+        .then((res) => {
+          return handleSubmit(res.data.data);
+        })
+        .catch(() => {
+          return handleSubmit('');
+        });
+    };
 
   const handleRowChange = (id, field, value) => {
     setRows(prevRows => {
@@ -529,7 +543,7 @@ useEffect(() => {
         </Col>
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1" name="tran_no" value={formData?.tran_no}  
-              onChange={handleChange}  onKeyDown={handleKeyDown}/>
+              onChange={handleChange}  onKeyDown={handleKeyDown} readOnly/>
         </Col>
       </Row>
     </Col>
@@ -1272,7 +1286,7 @@ useEffect(() => {
     <PdfPurchaseInvoice id={id} />
     </Button> */}
     <div className="btn-group">
-      <Button size="sm" style={{ backgroundColor: '#213042', borderColor: '#213042', color: '#fff' }} onClick={()=>handleSubmit()}>
+      <Button size="sm" style={{ backgroundColor: '#213042', borderColor: '#213042', color: '#fff' }} onClick={()=>generateCode()}>
         Save
       </Button>
       {/* <Button

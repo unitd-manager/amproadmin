@@ -280,16 +280,32 @@ useEffect(() => {
     };
   // Handle form submit (example API call structure)
   const handleSubmit = async () => {
-    const calculatedSubTotal = rows.reduce((sum, row) => sum + Number(row.total_price), 0);
-    const calculatedTaxAmount = calculatedSubTotal * 0.09;
-    const calculatedNetTotal = calculatedSubTotal + calculatedTaxAmount;
+    // const calculatedSubTotal = rows.reduce((sum, row) => sum + Number(row.total_price), 0);
+    // const calculatedTaxAmount = calculatedSubTotal * 0.09;
+    // const calculatedNetTotal = calculatedSubTotal + calculatedTaxAmount;
 
-    formData.sub_total = calculatedSubTotal;
-    formData.tax_amount = calculatedTaxAmount;
-    formData.net_total = calculatedNetTotal;
-
+    // formData.sub_total = calculatedSubTotal;
+    // formData.tax_amount = calculatedTaxAmount;
+    // formData.net_total = calculatedNetTotal;
+        const subTotalNum = rows.reduce((sum, row) => sum + Number(row.total_price || 0), 0);
+          const taxAmountNum = Number((subTotalNum * 0.09).toFixed(2));
+          const netTotalNum = Number((subTotalNum + taxAmountNum).toFixed(2));
+      
+          const payloadForm = {
+            ...formData,
+             sub_total: Number(subtotal).toFixed(2),
+            tax_amount: Number(tax).toFixed(2),
+            net_total: Number(finalTotal).toFixed(2),
+            grand_total: netTotalNum,
+          };
+      console.log('formData', payloadForm);
+          if (!currency.currency_code) {
+            message('Please Enter currency code.', 'error');
+            return;
+          }
+console.log('formdata',payloadForm);
     api
-    .post('/purchaseorder/editPurchaseOrder', formData)
+    .post('/purchaseorder/editPurchaseOrder', payloadForm)
     .then(() => {
       api
       .post('/currency/editCurrency', currency) 
@@ -456,7 +472,7 @@ useEffect(() => {
         </Col>
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1" name="tran_no" value={formData?.tran_no}  
-              onChange={handleChange} onKeyDown={handleKeyDown}/>
+              onChange={handleChange} onKeyDown={handleKeyDown} readOnly />
         </Col>
       </Row>
     </Col>
@@ -874,7 +890,7 @@ useEffect(() => {
                   <Input
                     type="number"
                     bsSize="sm"
-                    value={p.loose_qty}
+                    value={p?.loose_qty}
                     onChange={(e) => handleRowChange(p.po_product_id, 'loose_qty', e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
@@ -893,7 +909,7 @@ useEffect(() => {
                   <Input
                     type="number"
                     bsSize="sm"
-                    value={Number(p?.carton_price).toFixed(2)}
+                    value={Number(p?.carton_price)}
                     onChange={(e) => handleRowChange(p.po_product_id, 'carton_price', e.target.value)}
                     style={{ width: '80px' }}
                     innerRef={(el) => (cartonPriceRefs.current[idx] = el)}
@@ -911,7 +927,7 @@ useEffect(() => {
                   <Input
                     type="number"
                     bsSize="sm"
-                    value={Number(p?.price).toFixed(2)}
+                    value={Number(p?.price)}
                     onChange={(e) => handleRowChange(p.po_product_id, 'price', e.target.value)}
                     style={{ width: '80px' }}
                     innerRef={(el) => (priceRefs.current[idx] = el)}
@@ -929,7 +945,7 @@ useEffect(() => {
                   <Input
                     type="number"
                     bsSize="sm"
-                    value={Number(p.qty * p.price).toFixed(2)}
+                    value={Number(p.qty * p.price)}
                     onChange={(e) => handleRowChange(p.po_product_id, 'total', e.target.value)}
                     style={{ width: '80px' }}
                     readOnly
@@ -940,7 +956,7 @@ useEffect(() => {
                     <Input
                       type="number"
                       bsSize="sm"
-                      value={Number(p?.discount_percentage).toFixed(2)}
+                      value={Number(p?.discount_percentage)}
                       onChange={(e) => handleRowChange(p.po_product_id, 'discount_percentage', e.target.value)}
                       style={{ width: '50%', marginRight: '2px' }}
                       innerRef={(el) => (discountPercentageRefs.current[idx] = el)}
@@ -956,7 +972,7 @@ useEffect(() => {
                     <Input
                       type="number"
                       bsSize="sm"
-                      value={Number(p?.discount_amount).toFixed(2)}
+                      value={Number(p?.discount_amount)}
                       onChange={(e) => handleRowChange(p.po_product_id, 'discount_amount', e.target.value)}
                       style={{ width: '50%' }}
                       innerRef={(el) => (discountAmountRefs.current[idx] = el)}
@@ -1101,7 +1117,7 @@ useEffect(() => {
             <td style={{ padding: '0.3rem' }}>{summary.price}</td>
             <td style={{ padding: '0.3rem' }}>{summary.total}</td>
             <td style={{ padding: '0.3rem' }}></td>
-            <td style={{ padding: '0.3rem' }}>{summary.grossTotal}</td>
+            <td style={{ padding: '0.3rem' }}>{Number(summary?.grossTotal).toFixed(2)}</td>
             <td style={{ padding: '0.3rem' }}></td>
           </tr>
         </tbody>
