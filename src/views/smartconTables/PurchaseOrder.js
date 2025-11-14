@@ -268,7 +268,7 @@ const PurchaseOrder = () => {
               <td>{item.company_name}</td>
               <td>{item.status}</td>
               <td>{item.sub_total}</td>
-              <td>{item.gst}</td>
+              <td>{item.tax_amount}</td>
               <td>{item.net_total}</td>
             </tr>
           )) : (
