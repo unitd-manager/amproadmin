@@ -159,10 +159,10 @@ const PaymodeEdit = () => {
           </>
         )}
 
-        {renderCheckbox('Show On Back Office', 'show_back_office')}
-        {renderCheckbox('Show On POS', 'show_pos')}
-        {renderCheckbox('Show On eCommerce', 'show_ecommerce')}
-        {renderCheckbox('Open Cash Drawer On POS', 'open_cash_drawer')}
+        {renderCheckbox('Show On Back Office', 'show_on_back_office')}
+        {renderCheckbox('Show On POS', 'show_on_pos')}
+        {renderCheckbox('Show On eCommerce', 'show_on_ecommerce')}
+        {renderCheckbox('Open Cash Drawer On POS', 'open_cash_drawer_on_pos')}
         {renderCheckbox('Need Reference No', 'need_reference_no')}
         {renderCheckbox('Is Active', 'is_active')}
 

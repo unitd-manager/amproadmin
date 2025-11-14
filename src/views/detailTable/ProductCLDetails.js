@@ -1,5 +1,18 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { Row, Col, Form, FormGroup, Label, Input } from 'reactstrap';
+import {
+  Row,
+  Col,
+  Form,
+  FormGroup,
+  Label,
+  Input,
+  Button,
+  TabContent,
+  TabPane,
+  Nav,
+  NavItem,
+  NavLink,
+} from 'reactstrap';
 import { ToastContainer } from 'react-toastify';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useNavigate } from 'react-router-dom';
@@ -11,139 +24,468 @@ import api from '../../constants/api';
 import creationdatetime from '../../constants/creationdatetime';
 import AppContext from '../../context/AppContext';
 
-const ProductCLDetails = () => {
-  //All const variables
+const ProductDetails = () => {
   const navigate = useNavigate();
+  const { loggedInuser } = useContext(AppContext);
+  const [activeTab, setActiveTab] = useState('1');
+
+  // Form data
   const [productDetails, setProductDetails] = useState({
+    product_code: '',
     title: '',
+    department_id: '',
+    category_id: '',
+    sub_category_id: '',
+    brand_id: '',
+    supplier_id: '',
+    product_type: '',
+    tax_percentage: '',
+    display_order: '',
+    purchase_uom: '',
+    sales_uom: '',
+    pcs_per_carton: '',
+    weight: '',
+    purchase_unit_cost: '',
+    operation_cost: '',
+    retail_price: '',
+    min_retail_price: '',
+    wholesale_price: '',
+    min_wholesale_price: '',
+    carton_price: '',
+    min_car_price: '',
+    style_fabric: '',
+    model_no: '',
+    carton_weight: '',
+    m3_per_carton: '',
+    bin: '',
+    remarks: '',
+    show_on_purchase: true,
+    show_on_sales: true,
+    is_active: true,
+    eprocurement: false,
+    ecommerce: false,
+    show_on_pos: false,
     creation_date: moment(),
   });
-  //setting data in ProductDetails
+
+  const [dropdownData, setDropdownData] = useState({
+    departments: [],
+    categories: [],
+    subCategories: [],
+    brands: [],
+    suppliers: [],
+    uoms: [],
+    productTypes: [],
+  });
+
+  // Handle change
   const handleInputs = (e) => {
-    setProductDetails({ ...productDetails, [e.target.name]: e.target.value });
+    const { name, value, type, checked } = e.target;
+    setProductDetails({
+      ...productDetails,
+      [name]: type === 'checkbox' ? checked : value,
+    });
   };
-  //get staff details
-  const { loggedInuser } = useContext(AppContext);
-  //Insert Product Data
-  const insertProductData = (ProductCode) => {
-    if (productDetails.title.trim() !== '') {
-      productDetails.product_code = ProductCode;
-      productDetails.creation_date = creationdatetime;
-      productDetails.created_by = loggedInuser.first_name;
-      
-      // Insert product
-      api.post('/product/insertProduct', productDetails)
-        .then((res) => {
-          const insertedDataId = res.data.data.insertId;
-          message('Product inserted successfully.', 'success');
-  
-          // Fetch inventory code and insert inventory
 
-          api
-          .post('/commonApi/getCodeValues', { type: 'inventory' })
-          .then((resp) => {
-              const InventoryCode = resp.data.data;
-              message('Fetched Inventory code successfully.', 'success');
-              api.post('/inventory/insertinventory', {
-                product_id: insertedDataId,
-                inventory_code: InventoryCode,
-                created_by: loggedInuser.first_name, 
-                creation_date: creationdatetime, 
-              })
-              .then(() => {
-                message('Inventory created successfully.', 'success');
-              })
-              .catch((inventoryError) => {
-                console.error('Error creating inventory:', inventoryError);
-                message('Unable to create inventory.', 'error');
-              });
-  
-            })
-            .catch((codeError) => {
-              console.error('Error fetching Inventory code:', codeError);
-              message('Unable to fetch Inventory code.', 'error');
-            });
-  
-          setTimeout(() => {
-            navigate(`/ProductCLEdit/${insertedDataId}?tab=1`);
-          }, 300);
-        })
-        .catch((productError) => {
-          console.error('Error inserting product:', productError);
-          message('Unable to insert product.', 'error');
+  // Fetch dropdown data
+  useEffect(() => {
+    const fetchDropdowns = async () => {
+      try {
+        const [dept, cat, subCat, brand, supplier, uom, prodType] = await Promise.all([
+          api.get('/common/getDepartments'),
+          api.get('/common/getCategories'),
+          api.get('/common/getSubCategories'),
+          api.get('/common/getBrands'),
+          api.get('/common/getSuppliers'),
+          api.get('/common/getUOMs'),
+          api.get('/common/getProductTypes'),
+        ]);
+
+        setDropdownData({
+          departments: dept.data.data || [],
+          categories: cat.data.data || [],
+          subCategories: subCat.data.data || [],
+          brands: brand.data.data || [],
+          suppliers: supplier.data.data || [],
+          uoms: uom.data.data || [],
+          productTypes: prodType.data.data || [],
         });
-    } else {
-      message('Please fill all required fields.', 'warning');
-    }
-  };
-  
+      } catch (err) {
+        console.error('Error fetching dropdown data:', err);
+      }
+    };
 
-  //Auto generation code
-  const generateCode = () => {
+    fetchDropdowns();
+  }, []);
+
+  // Auto-generate product code
+  useEffect(() => {
     api
       .post('/commonApi/getCodeValues', { type: 'product' })
       .then((res) => {
-        const ProductCode = res.data.data;
-       console.log('ProductCode',ProductCode)
-          insertProductData(ProductCode);
+        const code = res.data.data;
+        setProductDetails((prev) => ({ ...prev, product_code: code }));
       })
-      .catch(() => {
-        insertProductData('');
+      .catch(() => setProductDetails((prev) => ({ ...prev, product_code: '' })));
+  }, []);
+
+  // Save data
+  const insertProductData = async () => {
+    try {
+      if (!productDetails.title || !productDetails.department_id || !productDetails.category_id) {
+        message('Please fill all required fields', 'warning');
+        return;
+      }
+
+      const payload = {
+        ...productDetails,
+        created_by: loggedInuser.first_name,
+        creation_date: creationdatetime,
+      };
+
+      const res = await api.post('/product/insertProduct', payload);
+      const { insertId } = res.data.data;
+
+      message('Product inserted successfully.', 'success');
+
+      // Create inventory record
+      const inv = await api.post('/commonApi/getCodeValues', { type: 'inventory' });
+      const inventoryCode = inv.data.data;
+
+      await api.post('/inventory/insertinventory', {
+        product_id: insertId,
+        inventory_code: inventoryCode,
+        created_by: loggedInuser.first_name,
+        creation_date: creationdatetime,
       });
+
+      message('Inventory created successfully.', 'success');
+      navigate(`/ProductEdit/${insertId}?tab=1`);
+    } catch (err) {
+      console.error('Error inserting product:', err);
+      message('Unable to insert product.', 'error');
+    }
   };
 
-  //useeffect
-  useEffect(() => {}, []);
+  const toggle = (tab) => {
+    if (activeTab !== tab) setActiveTab(tab);
+  };
 
   return (
-    <div style={{ background: '#f5f7fa', minHeight: '100vh', padding: '32px 0' }}>
+    <div>
       <BreadCrumbs />
       <ToastContainer />
-      <Row className="justify-content-center">
-        <Col md="8">
-          <div style={{ background: '#fff', borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 32, border: '1px solid #e0e0e0' }}>
-            <ComponentCard title="New/Edit Product">
-              <Form>
-                <FormGroup>
-                  <Row>
-                    <Col md="12">
-                      <Label>
-                        Product Name <span className="required"> *</span>{' '}
-                      </Label>
+      <ComponentCard>
+        <Form>
+          <Row>
+            <Col md="6">
+              <FormGroup row>
+                <Label sm="4">Product Code</Label>
+                <Col sm="8">
+                  <Input value={productDetails.product_code} readOnly />
+                </Col>
+              </FormGroup>
+            </Col>
+            <Col md="6">
+              <FormGroup row>
+                <Label sm="4">
+                  Product Name <span className="required">*</span>
+                </Label>
+                <Col sm="8">
+                  <Input name="title" value={productDetails.title} onChange={handleInputs} />
+                </Col>
+              </FormGroup>
+            </Col>
+          </Row>
+          <Nav tabs>
+            <NavItem>
+              <NavLink
+                className={activeTab === '1' ? 'active' : ''}
+                onClick={() => {
+                  toggle('1');
+                }}
+              >
+                Details
+              </NavLink>
+            </NavItem>
+          </Nav>
+          <TabContent activeTab={activeTab}>
+            <TabPane tabId="1">
+              <Row className="mt-3">
+                {/* Dynamic Dropdowns */}
+                <Col md="6">
+                  <FormGroup row>
+                    <Label sm="4">Department *</Label>
+                    <Col sm="8">
                       <Input
-                        type="text"
+                        type="select"
+                        name="department_id"
+                        value={productDetails.department_id}
                         onChange={handleInputs}
-                        value={productDetails && productDetails.title}
-                        name="title"
-                      />
+                      >
+                        <option value="">Select...</option>
+                        {dropdownData.departments.map((d) => (
+                          <option key={d.department_id} value={d.department_id}>
+                            {d.department_name}
+                          </option>
+                        ))}
+                      </Input>
                     </Col>
+                  </FormGroup>
+                </Col>
+                <Col md="6">
+                  <FormGroup row>
+                    <Label sm="4">Category *</Label>
+                    <Col sm="8">
+                      <Input
+                        type="select"
+                        name="category_id"
+                        value={productDetails.category_id}
+                        onChange={handleInputs}
+                      >
+                        <option value="">Select...</option>
+                        {dropdownData.categories.map((c) => (
+                          <option key={c.category_id} value={c.category_id}>
+                            {c.category_name}
+                          </option>
+                        ))}
+                      </Input>
+                    </Col>
+                  </FormGroup>
+                </Col>
+
+                <Col md="6">
+                  <FormGroup row>
+                    <Label sm="4">Sub Category</Label>
+                    <Col sm="8">
+                      <Input
+                        type="select"
+                        name="sub_category_id"
+                        value={productDetails.sub_category_id}
+                        onChange={handleInputs}
+                      >
+                        <option value="">Select...</option>
+                        {dropdownData.subCategories.map((s) => (
+                          <option key={s.sub_category_id} value={s.sub_category_id}>
+                            {s.sub_category_name}
+                          </option>
+                        ))}
+                      </Input>
+                    </Col>
+                  </FormGroup>
+                </Col>
+
+                <Col md="6">
+                  <FormGroup row>
+                    <Label sm="4">Brand *</Label>
+                    <Col sm="8">
+                      <Input
+                        type="select"
+                        name="brand_id"
+                        value={productDetails.brand_id}
+                        onChange={handleInputs}
+                      >
+                        <option value="">Select...</option>
+                        {dropdownData.brands.map((b) => (
+                          <option key={b.brand_id} value={b.brand_id}>
+                            {b.brand_name}
+                          </option>
+                        ))}
+                      </Input>
+                    </Col>
+                  </FormGroup>
+                </Col>
+
+                <Col md="6">
+                  <FormGroup row>
+                    <Label sm="4">Supplier *</Label>
+                    <Col sm="8">
+                      <Input
+                        type="select"
+                        name="supplier_id"
+                        value={productDetails.supplier_id}
+                        onChange={handleInputs}
+                      >
+                        <option value="">Select...</option>
+                        {dropdownData.suppliers.map((s) => (
+                          <option key={s.contact_id} value={s.contact_id}>
+                            {s.company_name}
+                          </option>
+                        ))}
+                      </Input>
+                    </Col>
+                  </FormGroup>
+                </Col>
+
+                <Col md="6">
+                  <FormGroup row>
+                    <Label sm="4">Product Type</Label>
+                    <Col sm="8">
+                      <Input
+                        type="select"
+                        name="product_type"
+                        value={productDetails.product_type}
+                        onChange={handleInputs}
+                      >
+                        <option value="">Select...</option>
+                        {dropdownData.productTypes.map((t) => (
+                          <option key={t.id} value={t.type_name}>
+                            {t.type_name}
+                          </option>
+                        ))}
+                      </Input>
+                    </Col>
+                  </FormGroup>
+                </Col>
+                <Col md="6">
+                  <FormGroup row>
+                    <Label sm="4">Purchase UOM</Label>
+                    <Col sm="8">
+                      <Input
+                        type="select"
+                        name="purchase_uom"
+                        value={productDetails.purchase_uom}
+                        onChange={handleInputs}
+                      >
+                        <option value="">Select...</option>
+                        {(dropdownData.uoms || []).map((u) => (
+                          <option key={u.uom_id} value={u.uom_name}>
+                            {u.uom_name}
+                          </option>
+                        ))}
+                      </Input>
+                    </Col>
+                  </FormGroup>
+                </Col>
+                <Col md="6">
+                  <FormGroup row>
+                    <Label sm="4">Sales UOM</Label>
+                    <Col sm="8">
+                      <Input
+                        type="select"
+                        name="sales_uom"
+                        value={productDetails.sales_uom}
+                        onChange={handleInputs}
+                      >
+                        <option value="">Select...</option>
+                        {(dropdownData.uoms || []).map((u) => (
+                          <option key={u.uom_id} value={u.uom_name}>
+                            {u.uom_name}
+                          </option>
+                        ))}
+                      </Input>
+                    </Col>
+                  </FormGroup>
+                </Col>
+
+                {/* Numeric Fields */}
+                {[
+                  ['tax_percentage', 'Tax Percentage'],
+                  ['display_order', 'Display Order'],
+                  ['pcs_per_carton', 'Pcs Per Carton'],
+                  ['weight', 'Weight'],
+                  ['purchase_unit_cost', 'Purchase Unit Cost'],
+                  ['operation_cost', 'Operation Cost'],
+                  ['retail_price', 'Retail Price'],
+                  ['min_retail_price', 'Min Retail Price'],
+                  ['wholesale_price', 'Wholesale Price'],
+                  ['min_wholesale_price', 'Min Wholesale Price'],
+                  ['carton_price', 'Carton Price'],
+                  ['min_car_price', 'Min Car Price'],
+                ].map(([key, label]) => (
+                  <Col md="6" key={key}>
+                    <FormGroup row>
+                      <Label sm="4">{label}</Label>
+                      <Col sm="8">
+                        <Input
+                          type="number"
+                          name={key}
+                          value={productDetails[key]}
+                          onChange={handleInputs}
+                        />
+                      </Col>
+                    </FormGroup>
+                  </Col>
+                ))}
+
+                {/* Text fields */}
+                {[
+                  ['style_fabric', 'Style/Fabric'],
+                  ['model_no', 'Model No'],
+                  ['bin', 'Bin'],
+                  ['remarks', 'Remarks / Other Name'],
+                ].map(([key, label]) => (
+                  <Col md="6" key={key}>
+                    <FormGroup row>
+                      <Label sm="4">{label}</Label>
+                      <Col sm="8">
+                        <Input name={key} value={productDetails[key]} onChange={handleInputs} />
+                      </Col>
+                    </FormGroup>
+                  </Col>
+                ))}
+
+                {/* Toggles */}
+                <Col md="12">
+                  <Row>
+                    {[
+                      ['show_on_purchase', 'Show On Purchase'],
+                      ['show_on_sales', 'Show On Sales'],
+                      ['is_active', 'Is Active'],
+                      ['eprocurement', 'EProcurement'],
+                      ['ecommerce', 'ECommerce'],
+                      ['show_on_pos', 'Show On POS'],
+                    ].map(([key, label]) => (
+                      <Col md="4" key={key}>
+                        <FormGroup>
+                          <Row>
+                            <Label sm="8">{label}</Label>
+                            <Col sm="4">
+                              <Input
+                                type="checkbox"
+                                name={key}
+                                checked={productDetails[key]}
+                                onChange={handleInputs}
+                              />
+                            </Col>
+                          </Row>
+                        </FormGroup>
+                      </Col>
+                    ))}
                   </Row>
-                </FormGroup>
-                <FormGroup>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 16, marginTop: 32, background: '#f5f7fa', padding: '18px 24px', borderRadius: 8 }}>
-                    <button
-                      type="button"
-                      style={{ background: '#fff', color: '#1a355e', border: '1px solid #bfc8d6', borderRadius: 6, padding: '8px 32px', fontWeight: 500, fontSize: 18, minWidth: 100, marginRight: 8 }}
-                      onClick={() => navigate('/ProductCL')}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      style={{ background: '#fff', color: '#1a355e', border: '1px solid #bfc8d6', borderRadius: 6, padding: '8px 32px', fontWeight: 500, fontSize: 18, minWidth: 100, marginRight: 8 }}
-                      onClick={() => setProductDetails({ title: '', creation_date: moment() })}
-                    >
-                      Clear
-                    </button>
-                    <button type="button" style={{ background: '#1a355e', color: '#fff', border: 'none', borderRadius: 6, padding: '8px 32px', fontWeight: 500, fontSize: 18, minWidth: 100 }} onClick={generateCode}>Save</button>
-                  </div>
-                </FormGroup>
-              </Form>
-            </ComponentCard>
+                </Col>
+
+                {/* Upload */}
+                <Col md="6">
+                  <FormGroup row>
+                    <Label sm="4">Upload (500x500)</Label>
+                    <Col sm="8">
+                      <Input type="file" name="image" />
+                    </Col>
+                  </FormGroup>
+                </Col>
+              </Row>
+            </TabPane>
+          </TabContent>
+
+          <div className="d-flex gap-2 mt-3">
+            <Button color="primary" onClick={insertProductData}>
+              Save
+            </Button>
+            <Button
+              color="dark"
+              onClick={(e) => {
+                if (window.confirm('Cancel without saving?')) navigate('/Product');
+                else e.preventDefault();
+              }}
+            >
+              Cancel
+            </Button>
           </div>
-        </Col>
-      </Row>
+        </Form>
+      </ComponentCard>
     </div>
   );
 };
-export default ProductCLDetails;
+
+export default ProductDetails;

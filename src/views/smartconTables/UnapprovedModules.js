@@ -92,7 +92,7 @@ const UnapprovedModules = () => {
         <h4>Unapproved Modules Management</h4>
         <Form>
           <Row form className="mb-3">
-            <Col md={3}>
+            <Col md={2}>
               <Input
                 type="text"
                 name="tran_no"
@@ -134,7 +134,7 @@ const UnapprovedModules = () => {
               </Button>
             </Col>
             <Col md={1}>
-              <Button color="danger" type="button" onClick={handleDelete}>
+              <Button color="danger" type="button" onClick={handleDelete} className="d-flex justify-content-center align-items-center">
                 <FaTrash />
               </Button>
             </Col>
@@ -196,4 +196,4 @@ const UnapprovedModules = () => {
   );
 };
 
-export default UnapprovedModules; 
+export default UnapprovedModules;
