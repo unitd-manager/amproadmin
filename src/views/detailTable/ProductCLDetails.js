@@ -17,6 +17,7 @@ import { ToastContainer } from 'react-toastify';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useNavigate } from 'react-router-dom';
 import moment from 'moment';
+import { FileUploader } from 'react-drag-drop-files';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import ComponentCard from '../../components/ComponentCard';
 import message from '../../components/Message';
@@ -92,13 +93,13 @@ const ProductDetails = () => {
     const fetchDropdowns = async () => {
       try {
         const [dept, cat, subCat, brand, supplier, uom, prodType] = await Promise.all([
-          api.get('/common/getDepartments'),
-          api.get('/common/getCategories'),
-          api.get('/common/getSubCategories'),
-          api.get('/common/getBrands'),
-          api.get('/common/getSuppliers'),
-          api.get('/common/getUOMs'),
-          api.get('/common/getProductTypes'),
+          api.get('/product/getDepartmentCli'),
+          api.get('/product/getCategory'),
+          api.get('/product/getSubCategory'),
+          api.get('/product/getBrand'),
+          api.get('/product/getSupplier'),
+          api.get('/product/getUOMfromValuelist'),
+          api.get('/product/getProductTypefromValuelist'),
         ]);
 
         setDropdownData({
@@ -129,6 +130,19 @@ const ProductDetails = () => {
       .catch(() => setProductDetails((prev) => ({ ...prev, product_code: '' })));
   }, []);
 
+  const [file, setFile] = useState([]);
+         const [ handleValue, setHandleValue ] = useState();
+ 
+         const handleFileChange = (fiels) => {
+           
+             const arrayOfObj = Object.entries(fiels).map((e) => ( e[1]  ));
+ 
+             setFile(fiels);
+             setHandleValue(arrayOfObj);
+             console.log(fiels)
+         };
+
+
   // Save data
   const insertProductData = async () => {
     try {
@@ -143,8 +157,31 @@ const ProductDetails = () => {
         creation_date: creationdatetime,
       };
 
-      const res = await api.post('/product/insertProduct', payload);
+      const res = await api.post('/product/insertProducts', payload);
       const { insertId } = res.data.data;
+
+      if (file) {
+        const data = new FormData();
+        const arrayOfObj = Object.entries(file).map((el) => el[1]);
+
+        arrayOfObj.forEach((ele) => {
+          data.append(`files`, ele);
+        });
+        //data.append('file', file)
+        data.append('record_id', insertId);
+        data.append('room_name', 'Product');
+        data.append('alt_tag_data', 'Product');
+        data.append('description', 'Product');
+
+        api
+          .post('/file/uploadFiles', data)
+          .then(() => {
+            message('Files Uploaded Successfully', 'success');
+          })
+          .catch(() => {
+            message('Unable to upload File', 'error');
+          });
+      }
 
       message('Product inserted successfully.', 'success');
 
@@ -160,7 +197,7 @@ const ProductDetails = () => {
       });
 
       message('Inventory created successfully.', 'success');
-      navigate(`/ProductEdit/${insertId}?tab=1`);
+      navigate(`/ProductCLEdit/${insertId}?tab=Details`);
     } catch (err) {
       console.error('Error inserting product:', err);
       message('Unable to insert product.', 'error');
@@ -225,7 +262,7 @@ const ProductDetails = () => {
                       >
                         <option value="">Select...</option>
                         {dropdownData.departments.map((d) => (
-                          <option key={d.department_id} value={d.department_id}>
+                          <option key={d.department_cli_id} value={d.department_cli_id}>
                             {d.department_name}
                           </option>
                         ))}
@@ -246,7 +283,7 @@ const ProductDetails = () => {
                         <option value="">Select...</option>
                         {dropdownData.categories.map((c) => (
                           <option key={c.category_id} value={c.category_id}>
-                            {c.category_name}
+                            {c.category_title}
                           </option>
                         ))}
                       </Input>
@@ -267,7 +304,7 @@ const ProductDetails = () => {
                         <option value="">Select...</option>
                         {dropdownData.subCategories.map((s) => (
                           <option key={s.sub_category_id} value={s.sub_category_id}>
-                            {s.sub_category_name}
+                            {s.sub_category_title}
                           </option>
                         ))}
                       </Input>
@@ -308,7 +345,7 @@ const ProductDetails = () => {
                       >
                         <option value="">Select...</option>
                         {dropdownData.suppliers.map((s) => (
-                          <option key={s.contact_id} value={s.contact_id}>
+                          <option key={s.supplier_id} value={s.supplier_id}>
                             {s.company_name}
                           </option>
                         ))}
@@ -329,8 +366,8 @@ const ProductDetails = () => {
                       >
                         <option value="">Select...</option>
                         {dropdownData.productTypes.map((t) => (
-                          <option key={t.id} value={t.type_name}>
-                            {t.type_name}
+                          <option key={t.valuelist_id} value={t.value}>
+                            {t.value}
                           </option>
                         ))}
                       </Input>
@@ -349,8 +386,8 @@ const ProductDetails = () => {
                       >
                         <option value="">Select...</option>
                         {(dropdownData.uoms || []).map((u) => (
-                          <option key={u.uom_id} value={u.uom_name}>
-                            {u.uom_name}
+                          <option key={u.valuelist_id} value={u.value}>
+                            {u.value}
                           </option>
                         ))}
                       </Input>
@@ -369,8 +406,8 @@ const ProductDetails = () => {
                       >
                         <option value="">Select...</option>
                         {(dropdownData.uoms || []).map((u) => (
-                          <option key={u.uom_id} value={u.uom_name}>
-                            {u.uom_name}
+                          <option key={u.valuelist_id} value={u.value}>
+                            {u.value}
                           </option>
                         ))}
                       </Input>
@@ -459,11 +496,27 @@ const ProductDetails = () => {
                 <Col md="6">
                   <FormGroup row>
                     <Label sm="4">Upload (500x500)</Label>
-                    <Col sm="8">
-                      <Input type="file" name="image" />
-                    </Col>
-                  </FormGroup>
-                </Col>
+                    <FileUploader
+                        multiple
+                        handleChange={handleFileChange}
+                        name="file"
+                       // types={fileTypes}
+                    />
+                    
+
+                    {handleValue ? (
+                        handleValue.map((e) => (
+                        <div>
+                            <span> Name: {e.name} </span>
+                        </div>
+                        ))
+                    ) : (
+                        <span>No file selected</span>
+                    )}
+
+                </FormGroup>
+        </Col>
+         
               </Row>
             </TabPane>
           </TabContent>
