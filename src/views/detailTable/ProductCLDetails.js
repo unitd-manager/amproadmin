@@ -528,7 +528,7 @@ const ProductDetails = () => {
             <Button
               color="dark"
               onClick={(e) => {
-                if (window.confirm('Cancel without saving?')) navigate('/Product');
+                if (window.confirm('Cancel without saving?')) navigate('/ProductCL');
                 else e.preventDefault();
               }}
             >
