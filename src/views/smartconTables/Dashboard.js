@@ -12,6 +12,8 @@ import {
   CardHeader,
   CardBody,
   Table,
+  Input,
+  Button,
 } from "reactstrap";
 import {
   BarChart,
@@ -33,6 +35,7 @@ import SalesReportForLast12Months from "../../components/dashboard/generalDashbo
 import PopularProducts from "../../components/dashboard/PopularProducts";
 import CatagoryWiseProduct from "../../components/dashboard/generalDashboard/CatagoryWiseProduct"
 import DepartmentWiseProduct from "../../components/dashboard/generalDashboard/DepartmentWiseProduct";
+import message from "../../components/Message";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("1");
@@ -43,6 +46,12 @@ const Dashboard = () => {
   const [salestotalvalue, setSalesTotalValue] = useState({});
   const [purchaseTotalValue, setPurchaseTotalValue] = useState({});
   const [recentPurchaseInvoices, setRecentPurchaseInvoices] = useState([]);
+  const [showPurchaseFilter, setShowPurchaseFilter] = useState(false);
+  const [purchaseFilters, setPurchaseFilters] = useState({
+    from_date: "",
+    to_date: "",
+    supplier: "",
+  });
 
   // Toggle tab
   const toggle = (tab) => {
@@ -118,6 +127,30 @@ const Dashboard = () => {
       
   }, []);
 
+  const handlePurchaseFilterChange = (e) => {
+    const { name, value } = e.target;
+    setPurchaseFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const applyPurchaseFilter = () => {
+    // For now we call the purchase invoice dashboard endpoint with invoice_date and supplier (if provided)
+    const payload = {};
+    if (purchaseFilters.from_date) payload.invoice_date = purchaseFilters.from_date;
+    // supplier field may have different param name on backend; using 'supplier' for now
+    if (purchaseFilters.supplier) payload.supplier = purchaseFilters.supplier;
+
+    api
+      .post('/purchaseorder/getPurchaseInvoiceDashboard', payload)
+      .then((res) => {
+        setRecentPurchaseInvoices(res.data.data || []);
+        message('Filter applied', 'info');
+      })
+      .catch((err) => {
+        console.error('Failed to apply purchase filter', err);
+        message('Failed to apply filter', 'error');
+      });
+  };
+
   return (
     <div>
       {/* Tabs and other JSX as before */}
@@ -162,7 +195,7 @@ const Dashboard = () => {
           {/* Sales Analysis and Weekly Sales */}
           <Row className="mt-3">
             <Col md="6">
-              <Card className="shadow-sm mb-4 h-100">
+              <Card className="shadow-sm mb-4 h-100 uniform-card">
                 <CardHeader className="bg-white">
                   <h5 className="mb-0">Sales Analysis Data</h5>
                 </CardHeader>
@@ -204,7 +237,7 @@ const Dashboard = () => {
             </Col>
 
             <Col md="6">
-              <Card className="shadow-sm mb-4 h-100">
+              <Card className="shadow-sm mb-4 h-100 uniform-card">
                 <CardHeader className="bg-white">
                   <h5 className="mb-0">Weekly Sales Data</h5>
                 </CardHeader>
@@ -239,7 +272,7 @@ const Dashboard = () => {
           <Row>
             {/* Recent Sales Invoices */}
             <Col md="6">
-  <Card className="shadow-sm mb-4 h-100">
+  <Card className="shadow-sm mb-4 h-100 uniform-card">
     <CardHeader className="bg-white d-flex flex-column justify-content-between">
       <h5 className="mb-0">Recent Sales Invoices</h5>
       <div className="d-flex align-items-center">
@@ -288,7 +321,7 @@ const Dashboard = () => {
 
             {/* Recent Sales Orders */}
             <Col md="6">
-              <Card className="shadow-sm mb-4 h-100">
+              <Card className="shadow-sm mb-4 h-100 uniform-card">
                 <CardHeader className="bg-white">
                   <h5 className="mb-0">Recent Sales Orders</h5>
                 </CardHeader>
@@ -597,7 +630,58 @@ const Dashboard = () => {
             <Col md="6">
               <Card className="shadow-sm mb-4 h-100">
                 <CardHeader className="bg-white">
-                  <h5 className="mb-0">Recent Purchase Orders</h5>
+                  <div className="d-flex justify-content-between align-items-start">
+                    <h5 className="mb-0">Recent Purchase Orders</h5>
+                    <i
+                      className="fa fa-filter"
+                      style={{ fontSize: 18, cursor: 'pointer' }}
+                      onClick={() => setShowPurchaseFilter((s) => !s)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                          setShowPurchaseFilter((s) => !s);
+                        }
+                      }}
+                      tabIndex={0}
+                      title="Toggle filters"
+                      role="button"
+                      aria-pressed={showPurchaseFilter}
+                      aria-label="Toggle purchase filters"
+                    />
+                  </div>
+
+                  {showPurchaseFilter && (
+                    <div className="mt-2">
+                      <Row className="align-items-center">
+                      <Col xs="5" sm="4">
+                        <Input
+                          type="date"
+                          name="from_date"
+                          value={purchaseFilters.from_date}
+                          onChange={handlePurchaseFilterChange}
+                        />
+                      </Col>
+                      <Col xs="5" sm="4">
+                        <Input
+                          type="date"
+                          name="to_date"
+                          value={purchaseFilters.to_date}
+                          onChange={handlePurchaseFilterChange}
+                        />
+                      </Col>
+                      <Col xs="12" sm="3">
+                        <Input
+                          name="supplier"
+                          placeholder="Supplier"
+                          value={purchaseFilters.supplier}
+                          onChange={handlePurchaseFilterChange}
+                        />
+                      </Col>
+                      <Col xs="2" sm="1" className="text-end">
+                        <Button color="primary" onClick={applyPurchaseFilter}>OK</Button>
+                      </Col>
+                      </Row>
+                    </div>
+                  )}
                 </CardHeader>
                 <CardBody>
                   <Table bordered responsive>
@@ -610,9 +694,20 @@ const Dashboard = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td colSpan="4">No DataAvailable</td>
-                      </tr>
+                      {recentPurchaseInvoices && recentPurchaseInvoices.length > 0 ? (
+                        recentPurchaseInvoices.map((inv) => (
+                          <tr key={inv.purchase_invoice_id || inv.invoice_id || inv.id}>
+                            <td>{inv.invoice_date || inv.date || ''}</td>
+                            <td>{inv.invoice_code || inv.invoiceNo || ''}</td>
+                            <td>{inv.company_name || inv.customer || ''}</td>
+                            <td>{inv.invoice_amount || inv.amount || ''}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="4">No DataAvailable</td>
+                        </tr>
+                      )}
                     </tbody>
                   </Table>
                 </CardBody>

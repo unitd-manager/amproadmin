@@ -9,4 +9,26 @@ input[type="text"], select {
 }
 .sidebarArea .nav-link {
     font-size: 11px !important;
+<<<<<<< HEAD
+}
+
+/* Dashboard uniform card sizing */
+.uniform-card {
+    min-height: 380px; /* base height, adjust as needed */
+    display: flex;
+    flex-direction: column;
+}
+
+.uniform-card .card-body {
+    /* make body scrollable while keeping header visible */
+    overflow: auto;
+    flex: 1 1 auto;
+}
+
+@media (max-width: 767px) {
+    .uniform-card {
+        min-height: auto;
+    }
+=======
+>>>>>>> 0c728bf6df3af20b6b0fb1dffda79934d91cdcf8
 }
