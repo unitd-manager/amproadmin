@@ -108,7 +108,10 @@ const { id } = useParams();
       total_price: 0,
       po_product_id: 'new-0'
     },
+
   ]);
+  
+    const [billDiscount, setBillDiscount] = React.useState(0);
   const handleAddExtraFields = (id) => {
     setRows(rows.map(p =>
       p.po_product_id === id ? { ...p, showExtraFields: !p.showExtraFields, remarks: p.remarks || '', foc_qty: p.foc_qty || 0 } : p
@@ -116,9 +119,9 @@ const { id } = useParams();
   };
 
 
-  const subtotal = rows.reduce((acc, p) => acc + (Number(p.total) || 0), 0);
+  let subtotal = rows.reduce((acc, p) => acc + (Number(p.total) || 0), 0);
   const tax = subtotal * 0.09;
-  const finalTotal = subtotal + tax;
+  let finalTotal = subtotal + tax;
   // Calculate totals
   const summary = rows.reduce(
     (acc, p) => {
@@ -187,6 +190,7 @@ const navigate=useNavigate();
     // Fetch supplier options for dropdown
     api.post("/purchaseorder/getPurchaseOrderById",{purchase_order_id:id}).then((response) => {
       setFormData(response.data.data[0]);
+      setBillDiscount(response?.data.data[0]?.bill_discount || 0);
     });
   
     api.post("/currency/getCuerrencyByPurchaseOrderId",{purchase_order_id:id}).then((response) => {
@@ -206,7 +210,11 @@ const calculateRowTotal = (row) => {
   const total_price = total - (total * (row.discount / 100));
   return { ...row, total, total_price };
 };
-
+const handleDiscountChange=(value)=>{
+setBillDiscount(parseFloat(value) || 0)
+subtotal -= billDiscount;
+finalTotal -= billDiscount;
+}
 // Update totals on initial render and when rows change
 useEffect(() => {
   setRows((prevRows) => prevRows.map(calculateRowTotal));
@@ -293,9 +301,10 @@ useEffect(() => {
       
           const payloadForm = {
             ...formData,
-             sub_total: Number(subtotal).toFixed(2),
+            bill_discount: billDiscount,
+             sub_total: Number(subtotal - billDiscount).toFixed(2),
             tax_amount: Number(tax).toFixed(2),
-            net_total: Number(finalTotal).toFixed(2),
+            net_total: Number(finalTotal - billDiscount).toFixed(2),
             grand_total: netTotalNum,
           };
       console.log('formData', payloadForm);
@@ -1156,7 +1165,14 @@ console.log('formdata',payloadForm);
       <Col md="3">
         <FormGroup className="mb-1">
           <Label className="small mb-1">Bill Discount : $</Label>
-          <Input bsSize="sm" value="0" />
+           <Input
+                               type="number"
+                               name="bill_discount"
+                               value={billDiscount}
+                               onChange={(e) => handleDiscountChange(e.target.value)}
+                              
+                               style={{ width: '100px', height: '28px' }}
+                             />
         </FormGroup>
         <div>Total Product: <strong>{rows?.length}</strong></div>
       </Col>
@@ -1169,7 +1185,7 @@ console.log('formdata',payloadForm);
       <Col md="3">
         <div className="d-flex justify-content-between small">
           <strong>➤ Sub Total:</strong>
-          <span className="text-primary">${Number(subtotal).toFixed(2)}</span>
+          <span className="text-primary">${Number(subtotal - parseFloat(billDiscount)).toFixed(2)}</span>
         </div>
         <div className="d-flex justify-content-between small">
           <strong>➤ Tax:</strong>
@@ -1177,7 +1193,7 @@ console.log('formdata',payloadForm);
         </div>
         <div className="d-flex justify-content-between fw-bold">
           <span>Net Total:</span>
-          <span className="text-primary">${Number(finalTotal).toFixed(2)}</span>
+          <span className="text-primary">${Number(finalTotal - parseFloat(billDiscount)).toFixed(2)}</span>
         </div>
       </Col>
     </Row>

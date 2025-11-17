@@ -63,7 +63,7 @@ const PdfPurchaseOrderList = ({ id }) => {
 
       let grandTotal = 0;
       allLineItems.forEach((elem) => {
-        grandTotal += elem.total || 0;
+        grandTotal += Number(elem.total || 0);
       });
       setGtotal(grandTotal);
       setLoading(false);
@@ -113,7 +113,7 @@ const PdfPurchaseOrderList = ({ id }) => {
       // Calculate subtotal for this invoice
       let invoiceSubtotal = 0;
       invoiceItems.forEach(item => {
-        invoiceSubtotal += item.total || 0;
+        invoiceSubtotal += Number(item.total || 0);
       });
       
       const invoiceGst = invoiceSubtotal * taxRate;
@@ -199,11 +199,12 @@ const PdfPurchaseOrderList = ({ id }) => {
                   [
                     {
                       text: [
-                        currentSalesOrder.company_name || '', '\n',
-                        currentSalesOrder.address_street || '', '\n',
-                        currentSalesOrder.address_down || '', '\n',
-                        currentSalesOrder.address_country || '', '\n',
-                        currentSalesOrder.address_po_code || '', '\n',
+                        currentSalesOrder.supplier_name || '', '\n',
+                        currentSalesOrder.contact_address1 || '', '\n',
+                        currentSalesOrder.contact_address2 || '', '\n',
+                        currentSalesOrder.contact_address3 || '', '\n',
+                        currentSalesOrder.country || '', '\n',
+                        currentSalesOrder.postal_code || '', '\n',
                         'TEL: 6789098765', '\n', '\n','\n',
                       ],
                       margin: [8, 4, 0, 4],
@@ -229,15 +230,15 @@ const PdfPurchaseOrderList = ({ id }) => {
                     body: [
                       [
                         { text: 'TRAN NO', margin: [5, 3, 5, 3] },
-                        { text: invoiceData.invoice_code || '', margin: [5, 3, 5, 3] }
+                        { text: currentSalesOrder.tran_no || '', margin: [5, 3, 5, 3] }
                       ],
                       [
                         { text: 'TRAN DATE', margin: [5, 3, 5, 3] },
-                        { text: invoiceData.invoice_date ? moment(invoiceData.invoice_date).format('DD-MM-YYYY') : '', margin: [5, 3, 5, 3] }
+                        { text: currentSalesOrder.tran_date ? moment(invoiceData.tran_date).format('DD-MM-YYYY') : '', margin: [5, 3, 5, 3] }
                       ],
                       [
                         { text: 'TERMS', margin: [5, 3, 5, 3] },
-                        { text: currentSalesOrder.terms || '', margin: [5, 3, 5, 3] }
+                        { text: currentSalesOrder.terms_purchase || '', margin: [5, 3, 5, 3] }
                       ],
                       [
                         { text: 'PAGE', margin: [5, 3, 5, 3] },

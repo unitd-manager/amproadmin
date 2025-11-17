@@ -9,6 +9,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../../constants/api';
 import PdfPurchaseOrderList from '../../components/PDF/PdfPurchaseOrderList';
 import { ToastContainer } from 'react-toastify';
+import PdfPurchaseOrderWithoutPrice from '../../components/PDF/PdfPurchaseOrderWithoutPrice';
 
 const PurchaseOrder = () => {
   const [filters, setFilters] = useState({
@@ -85,6 +86,9 @@ const PurchaseOrder = () => {
         ));
         message('PurchaseOrders deleted successfully!','success');
         setSelectedIds([]);
+        setTimeout(()=>{
+          window.location.reload();
+        },300)
         fetchData();
       } catch (err) {
         console.error(err);
@@ -98,7 +102,7 @@ const PurchaseOrder = () => {
       return;
     }
     const tranNo = selectedIds;
-    const res = await api.get(`/purchaseorder/getPoByTranNo/${tranNo}`);
+    const res = await api.get(`/purchaseorder/getPoProductsByPurchaseOrderId/${tranNo}`);
     const poData = res.data.data;
 
     const content = `
@@ -139,6 +143,9 @@ const PurchaseOrder = () => {
       .then(() => {
         message("Purchase orders repeated successfully",'success');
         setSelectedIds([]);
+        setTimeout(()=>{
+          window.location.reload();
+        },300)
       })
       .catch(() => message.error("Repeat failed"));
   };
@@ -227,7 +234,7 @@ const PurchaseOrder = () => {
             <Button color="primary" onClick={handleNewTransactionClick}>New Transaction</Button>
             <DropdownToggle caret color="primary" />
             <DropdownMenu end>
-              <DropdownItem onClick={handlePrintwithoutPrice}>Print Without Price</DropdownItem>
+              <DropdownItem onClick={handlePrintwithoutPrice}><PdfPurchaseOrderWithoutPrice id={selectedIds} />  </DropdownItem>
               <DropdownItem onClick={convertToGra}>Convert To GRA</DropdownItem>
               <DropdownItem onClick={handleChangeStatus}>Change Status</DropdownItem>
               <DropdownItem onClick={repeatPurchaseOrder}>Repeat Purchase Order</DropdownItem>

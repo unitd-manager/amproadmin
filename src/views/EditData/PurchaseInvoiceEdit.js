@@ -112,6 +112,7 @@ const { id } = useParams();
     ));
   };
 
+  const [billDiscount, setBillDiscount] = React.useState(0);
 
   const subtotal = rows.reduce((acc, p) => acc + (Number(p.total) || 0), 0);
   const tax = subtotal * 0.09;
@@ -141,7 +142,11 @@ const { id } = useParams();
     }
   );
 
-
+const handleDiscountChange=(value)=>{
+setBillDiscount(parseFloat(value) || 0)
+subtotal -= billDiscount;
+finalTotal -= billDiscount;
+}
 const navigate=useNavigate();
   useEffect(() => {
     // Fetch supplier form data
@@ -177,6 +182,7 @@ const navigate=useNavigate();
     // Fetch supplier options for dropdown
     api.post("/purchaseorder/getPurchaseInvoiceById",{purchase_invoice_id:id}).then((response) => {
       setFormData(response.data.data[0]);
+            setBillDiscount(response.data.data[0]?.bill_discount);
     });
   
     api.post("/currency/getCuerrencyByPurchaseInvoiceId",{purchase_invoice_id:id}).then((response) => {
@@ -1152,7 +1158,14 @@ const handleKeyDown = (e) => {
       <Col md="3">
         <FormGroup className="mb-1">
           <Label className="small mb-1">Bill Discount : $</Label>
-          <Input bsSize="sm" value="0" />
+           <Input
+                                         type="number"
+                                         name="bill_discount"
+                                         value={billDiscount}
+                                         onChange={(e) => handleDiscountChange(e.target.value)}
+                                        
+                                         style={{ width: '100px', height: '28px' }}
+                                       />
         </FormGroup>
         <div>Total Product: <strong>{rows?.length}</strong></div>
       </Col>
@@ -1174,7 +1187,7 @@ const handleKeyDown = (e) => {
       <Col md="3">
         <div className="d-flex justify-content-between small">
           <strong>➤ Sub Total:</strong>
-          <span className="text-primary">${Number(subtotal).toFixed(2)}</span>
+          <span className="text-primary">${Number(subtotal - billDiscount).toFixed(2)}</span>
         </div>
         <div className="d-flex justify-content-between small">
           <strong>➤ Tax:</strong>
@@ -1182,7 +1195,7 @@ const handleKeyDown = (e) => {
         </div>
         <div className="d-flex justify-content-between fw-bold">
           <span>Net Total:</span>
-          <span className="text-primary">${Number(finalTotal).toFixed(2)}</span>
+          <span className="text-primary">${Number(finalTotal - billDiscount).toFixed(2)}</span>
         </div>
       </Col>
     </Row>
