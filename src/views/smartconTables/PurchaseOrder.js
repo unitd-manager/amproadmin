@@ -92,7 +92,7 @@ const PurchaseOrder = () => {
         fetchData();
       } catch (err) {
         console.error(err);
-        alert('Failed to delete selected records.');
+        // alert('Failed to delete selected records.'); 
       }
     }
   };

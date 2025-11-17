@@ -162,7 +162,7 @@ const fetchData = async () => {
       <Row className="mb-3">
         <Col md={10}>
           <Button color="primary" onClick={handleSearch}><i className="fa fa-search" /></Button>{' '}
-        <Button color="secondary"><PdfGoodsReceiptList id={selectedIds}/></Button>{' '}
+        <Button color="secondary">{selectedIds.length>0 &&<PdfGoodsReceiptList id={selectedIds}/>}</Button>{' '}
           <Button color="danger" onClick={handleDeleteSelected}><i className="fa fa-trash" /></Button>
         </Col>
         <Col md={2} className="text-right">
