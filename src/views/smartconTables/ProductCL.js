@@ -26,6 +26,8 @@ const SectionDetails = () => {
   const [filteredSection, setFilteredSection] = useState([]);
   const [qrModalOpen, setQrModalOpen] = useState(false);
 const [qrProduct, setQrProduct] = useState(null);
+  const [entriesPerPage, setEntriesPerPage] = useState(50);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const toggleDropdown = () => setDropdownOpen((prevState) => !prevState);
   const { id } = useParams();
@@ -119,6 +121,29 @@ const [qrProduct, setQrProduct] = useState(null);
       )
     : filteredSection;
     console.log("filter", filteredData)
+
+  const totalItems = filteredData.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / entriesPerPage));
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredData, entriesPerPage]);
+  const startIndex = (currentPage - 1) * entriesPerPage;
+  const endIndex = Math.min(startIndex + entriesPerPage, totalItems);
+  const paginatedData = filteredData.slice(startIndex, endIndex);
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxToShow = 5;
+    if (totalPages <= maxToShow) {
+      for (let i = 1; i <= totalPages; i += 1) pages.push(i);
+    } else {
+      const start = Math.max(1, currentPage - 2);
+      const end = Math.min(totalPages, currentPage + 2);
+      if (start > 1) pages.push(1, '...');
+      for (let i = start; i <= end; i += 1) pages.push(i);
+      if (end < totalPages) pages.push('...', totalPages);
+    }
+    return pages;
+  };
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -235,12 +260,18 @@ const [qrProduct, setQrProduct] = useState(null);
       name: (
         <input
           type="checkbox"
-          checked={selectedRows.length > 0 && filteredSection.length > 0 && selectedRows.length === filteredSection.length}
+          checked={selectedRows.length > 0 && paginatedData.length > 0 && paginatedData.every((r) => selectedRows.some((s) => s.product_id === r.product_id))}
           onChange={() => {
-            if (selectedRows.length === filteredSection.length) {
-              setSelectedRows([]);
+            const allSelectedOnPage = paginatedData.every((r) => selectedRows.some((s) => s.product_id === r.product_id));
+            if (allSelectedOnPage) {
+              const idsOnPage = new Set(paginatedData.map((r) => r.product_id));
+              setSelectedRows(selectedRows.filter((r) => !idsOnPage.has(r.product_id)));
             } else {
-              setSelectedRows([...filteredSection]);
+              const merged = [...selectedRows];
+              paginatedData.forEach((r) => {
+                if (!merged.some((m) => m.product_id === r.product_id)) merged.push(r);
+              });
+              setSelectedRows(merged);
             }
           }}
         />
@@ -268,6 +299,8 @@ const [qrProduct, setQrProduct] = useState(null);
     { name: 'Loose Qty', selector: (row) => row.loose_qty },
     { name: 'Quantity', selector: (row) => row.qty_in_stock },
   ];
+
+  
 
   return (
     <div className="MainDiv">
@@ -329,8 +362,8 @@ const [qrProduct, setQrProduct] = useState(null);
               id="entriesDropdown"
               className="form-select ms-2"
               style={{ width: 100 }}
-              value={filters.entries || 50}
-              onChange={e => setFilters(prev => ({ ...prev, entries: e.target.value }))}
+              value={entriesPerPage}
+              onChange={e => setEntriesPerPage(Number(e.target.value))}
             >
               {[10, 25, 50, 100].map(num => (
                 <option key={num} value={num}>{num}</option>
@@ -464,8 +497,8 @@ const [qrProduct, setQrProduct] = useState(null);
             </tr>
           </thead>
           <tbody>
-            {section && section.length > 0 ? (
-              section.map((row) => (
+            {paginatedData && paginatedData.length > 0 ? (
+              paginatedData.map((row) => (
                 <tr key={row.product_id}>
                   <td>
                     <Button
@@ -508,13 +541,31 @@ const [qrProduct, setQrProduct] = useState(null);
               ))
             ) : (
               <tr>
-                <td colSpan="15" className="text-center">
+                <td colSpan="16" className="text-center">
                   {loading ? 'Loading...' : 'No products found'}
                 </td>
               </tr>
             )}
           </tbody>
         </CommonTable>
+        </div>
+        <div className="d-flex justify-content-between align-items-center mt-2">
+          <div>
+            {totalItems > 0 ? `Showing ${startIndex + 1} to ${endIndex} of ${totalItems} entries` : 'Showing 0 to 0 of 0 entries'}
+          </div>
+          <div className="d-flex align-items-center gap-2">
+            <Button color="light" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(1)}>First</Button>
+            <Button color="light" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}>Prev</Button>
+           {getPageNumbers().map((p) => (
+  typeof p === 'string' ? (
+    <span key={`ellipsis-${p}`} style={{ padding: '0 6px' }}>{p}</span>
+  ) : (
+    <Button key={`page-${p}`} color={p === currentPage ? 'primary' : 'light'} size="sm" onClick={() => setCurrentPage(p)}>{p}</Button>
+  )
+))}
+            <Button color="light" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}>Next</Button>
+            <Button color="light" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(totalPages)}>Last</Button>
+          </div>
         </div>
         <QRCodeModal isOpen={qrModalOpen} toggle={() => setQrModalOpen(false)} qrData={qrProduct} />
       </div>

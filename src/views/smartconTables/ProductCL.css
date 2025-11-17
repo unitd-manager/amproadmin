@@ -10,6 +10,10 @@
   padding: 3px 6px;
 }
 
+.sales-order-table span {
+  display: none;
+}
+
 .sales-order-table table {
   table-layout: fixed;
   width: 100%;
