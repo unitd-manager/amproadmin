@@ -464,10 +464,10 @@ const ContentUpdate = () => {
                       {contactTypes &&
                         contactTypes.map((t) => (
                           <option
-                            key={t.valuelist_id || t.code || t.value}
-                            value={String(t.valuelist_id)}
+                            key={t.value}
+                            value={t.value}
                           >
-                            {t.value || t.code || t.key_text}
+                            {t.value}
                           </option>
                         ))}
                     </Input>

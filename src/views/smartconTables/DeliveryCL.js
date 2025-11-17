@@ -5,6 +5,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'datatables.net-dt/js/dataTables.dataTables';
 import 'datatables.net-dt/css/jquery.dataTables.min.css';
+ import moment from 'moment';
+
 import message from '../../components/Message';
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
@@ -482,7 +484,7 @@ const [newDeliveryDate, setNewDeliveryDate] = useState(() => new Date().toISOStr
                     )}
                   </td>
                   <td>{element.delivery_code}</td>
-                  <td>{element.tran_date}</td>
+                  <td>{element.tran_date? moment(element.tran_date).format('DD-MM-YYYY'):''}</td>
                   <td>{element.company_name}</td>
                   <td>{element.delivery_status}</td>
                   <td>{element.sms_status || 'No'}</td>

@@ -30,7 +30,7 @@ export default function SupplierTransactions({ customerId }) {
 
     console.log('Sending request with payload:', payload);
 
-    api.post('/Transaction/getTransactionsByCustomerId', payload, {
+    api.post('/Transaction/getTransactionsBySupplierId', payload, {
       headers: {
         'Content-Type': 'application/json'
       }

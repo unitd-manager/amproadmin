@@ -69,9 +69,10 @@ const { id } = useParams();
   const [supplierData, setSupplierData] = useState({});
   const [products, setProducts] = useState([]);
   const [tableData, setTableData] = useState([]);
+  const today = new Date().toISOString().slice(0, 10);
   const [formData, setFormData] = useState({
     tran_no: "",
-    tran_date: "",
+    tran_date: today,
     supplier_code: "",
     supplier_id: "",
     contact_person: "",
@@ -80,7 +81,7 @@ const { id } = useParams();
     contact_address3: "",
     country: "",
     remarks: "",
-    req_delivery_date: "",
+    request_delivery_date: today,
     postal_code: "",
     sub_total:"",
     net_total:"",
@@ -278,7 +279,7 @@ useEffect(() => {
         );
         console.log('handleChange - selectedSupplier:', selectedSupplier);
         if (selectedSupplier) {
-          updatedFormData.company_name = selectedSupplier.company_name;
+          updatedFormData.company_name = selectedSupplier.supplier_name;
           updatedFormData.contact_person = selectedSupplier.contact_person;
           updatedFormData.contact_address1 = selectedSupplier.address_flat;
           updatedFormData.contact_address2 = selectedSupplier.address_street;
@@ -308,24 +309,28 @@ useEffect(() => {
       console.log("Updated Rows:", updatedRows);
     };
   // Handle form submit (example API call structure)
-  const handleSubmit = async () => {
-    formData.sub_total = rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2);
-    formData.tax_amount = parseFloat((formData.sub_total * 0.09).toFixed(2));
-    formData.net_total = (
-      Number(formData.sub_total) + Number(formData.tax_amount)
-    ).toFixed(2);
-    formData.sub_total = Number(formData.sub_total);
-    formData.tax_amount = Number(formData.tax_amount);
-    formData.net_total = Number(formData.net_total);
-    formData.grand_total = Number(formData.net_total);
+  const handleSubmit = async (code) => {
+    const subTotalNum = rows.reduce((sum, row) => sum + Number(row.total_price || 0), 0);
+    const taxAmountNum = Number((subTotalNum * 0.09).toFixed(2));
+    const netTotalNum = Number((subTotalNum + taxAmountNum).toFixed(2));
 
+    const payloadForm = {
+      ...formData,
+      tran_no: code,
+      sub_total: Number(subTotalNum.toFixed(2)),
+      tax_amount: taxAmountNum,
+      net_total: netTotalNum,
+      grand_total: netTotalNum,
+      status: 'open'
+    };
+console.log('formData', payloadForm);
     if (!currency.currency_code) {
       message('Please Enter currency code.', 'error');
       return;
     }
 
     try {
-      const res = await api.post('/purchaseorder/insertPurchaseOrder', formData);
+      const res = await api.post('/purchaseorder/insertPurchaseOrder', payloadForm);
       const insertedDataId = res.data.data.insertId;
       currency.purchase_order_id = insertedDataId;
 
@@ -348,6 +353,16 @@ useEffect(() => {
       message('Network connection error.', 'error');
     }
   };
+  const generateCode = () => {
+      return api
+        .post('/commonApi/getCodeValues', { type: 'purchaseOrder' })
+        .then((res) => {
+          return handleSubmit(res.data.data);
+        })
+        .catch(() => {
+          return handleSubmit('');
+        });
+    };
 
   const handleRowChange = (id, field, value) => {
     setRows(prevRows => {
@@ -528,7 +543,7 @@ useEffect(() => {
         </Col>
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1" name="tran_no" value={formData?.tran_no}  
-              onChange={handleChange}  onKeyDown={handleKeyDown}/>
+              onChange={handleChange}  onKeyDown={handleKeyDown} readOnly/>
         </Col>
       </Row>
     </Col>
@@ -580,21 +595,42 @@ useEffect(() => {
        <Col md="8">
           <FormGroup>
            
-            <Input
-            bsSize="sm" className="py-0 px-1"  
-          
-              type="select"
+            <Select
+              bsSize="sm"
+              className="py-0 px-1"
               name="supplier_id"
-              value={formData?.supplier_id}
-              onChange={handleChange}
-             onKeyDown={handleKeyDown}>
-              <option value="">Select Supplier</option>
-              {supplierOptions.map((supplier, index) => (
-                <option key={index} value={supplier.supplier_id}>
-                  {supplier.supplier_code}
-                </option>
-              ))}
-            </Input>
+              value={
+                formData?.supplier_id
+                  ? {
+                      value: formData.supplier_id,
+                      label: supplierOptions.find(
+                        (s) => String(s.supplier_id) === String(formData.supplier_id)
+                      )?.supplier_code || "",
+                    }
+                  : null
+              }
+              onChange={(selected) =>
+                handleChange({
+                  target: { name: "supplier_id", value: selected?.value || "" },
+                })
+              }
+              onKeyDown={handleKeyDown}
+              options={supplierOptions.map((s) => ({
+                value: s.supplier_id,
+                label: s.supplier_code,
+              }))}
+              placeholder="Select Supplier"
+              isClearable
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  minHeight: "30px",
+                  fontSize: "12px",
+                }),
+                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+              }}
+              menuPortalTarget={document.body}
+            />
           </FormGroup>
         </Col>
       </Row>
@@ -950,7 +986,7 @@ useEffect(() => {
                   <Input
                     type="number"
                     bsSize="sm"
-                    value={Number(p?.carton_price).toFixed(2)}
+                    value={p?.carton_price}
                     onChange={(e) => handleRowChange(p.po_product_id, 'carton_price', e.target.value)}
                     style={{ width: '80px' }}
                     innerRef={(el) => (cartonPriceRefs.current[idx] = el)}
@@ -968,7 +1004,7 @@ useEffect(() => {
                   <Input
                     type="number"
                     bsSize="sm"
-                    value={Number(p?.price).toFixed(2)}
+                    value={p?.price}
                     onChange={(e) => handleRowChange(p.po_product_id, 'price', e.target.value)}
                     style={{ width: '80px' }}
                     innerRef={(el) => (priceRefs.current[idx] = el)}
@@ -986,7 +1022,7 @@ useEffect(() => {
                   <Input
                     type="number"
                     bsSize="sm"
-                    value={Number(p.qty * p.price).toFixed(2)}
+                    value={Number(p?.qty * p?.price).toFixed(2)}
                     onChange={(e) => handleRowChange(p.po_product_id, 'total', e.target.value)}
                     style={{ width: '80px' }}
                     readOnly
@@ -997,7 +1033,7 @@ useEffect(() => {
                     <Input
                       type="number"
                       bsSize="sm"
-                      value={Number(p?.discount_percentage).toFixed(2)}
+                      value={Number(p?.discount_percentage)}
                       onChange={(e) => handleRowChange(p.po_product_id, 'discount_percentage', e.target.value)}
                       style={{ width: '50%', marginRight: '2px' }}
                       innerRef={(el) => (discountPercentageRefs.current[idx] = el)}
@@ -1013,7 +1049,7 @@ useEffect(() => {
                     <Input
                       type="number"
                       bsSize="sm"
-                      value={Number(p?.discount_amount).toFixed(2)}
+                      value={Number(p?.discount_amount)}
                       onChange={(e) => handleRowChange(p.po_product_id, 'discount_amount', e.target.value)}
                       style={{ width: '50%' }}
                       innerRef={(el) => (discountAmountRefs.current[idx] = el)}
@@ -1250,10 +1286,10 @@ useEffect(() => {
     <PdfPurchaseInvoice id={id} />
     </Button> */}
     <div className="btn-group">
-      <Button size="sm" style={{ backgroundColor: '#213042', borderColor: '#213042', color: '#fff' }} onClick={()=>handleSubmit()}>
+      <Button size="sm" style={{ backgroundColor: '#213042', borderColor: '#213042', color: '#fff' }} onClick={()=>generateCode()}>
         Save
       </Button>
-      <Button
+      {/* <Button
         size="sm"
         style={{ backgroundColor: '#213042', borderColor: '#213042', color: '#fff' }}
         className="dropdown-toggle dropdown-toggle-split"
@@ -1264,7 +1300,7 @@ useEffect(() => {
       <div className="dropdown-menu dropdown-menu-end">
         <button className="dropdown-item">Save & New</button>
         <button className="dropdown-item">Save & Close</button>
-      </div>
+      </div> */}
     </div>
   </Col>
 </Row>

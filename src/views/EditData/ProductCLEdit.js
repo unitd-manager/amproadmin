@@ -40,7 +40,10 @@ const ProductUpdate = () => {
   const [RoomName, setRoomName] = useState('');
   const [fileTypes, setFileTypes] = useState('');
   const [attachmentModal, setAttachmentModal] = useState(false);
-  const [modal, setModal] = useState(false);
+  const [barcodeModal, setBarcodeModal] = useState(false);
+  const [ecommerceModal, setEcommerceModal] = useState(false);
+  const [contactPriceModal, setContactPriceModal] = useState(false);
+
   const [attachmentData, setDataForAttachment] = useState({
     modelType: '',
   });
@@ -76,10 +79,17 @@ const ProductUpdate = () => {
 
   ];
   const toggle = (tab) => {
+    if (tab === '8') {
+      setContactPriceModal(true);
+      return;
+    }
     if (activeTab !== tab) setActiveTab(tab);
   };
   const toggletype = () => {
-    setModal(!modal);
+    setBarcodeModal(!barcodeModal);
+  };
+  const toggletypess = () => {
+    setEcommerceModal(!ecommerceModal);
   };
   //Description Modal
   const convertHtmlToDraft = (existingQuoteformal) => {
@@ -339,8 +349,8 @@ const getSupplier = () => {
                   </Col>
               <BarCode
                 ProductId={id}
-                addPurchaseOrderModal={modal}
-                setAddPurchaseOrderModal={setModal}
+                addPurchaseOrderModal={barcodeModal}
+                setAddPurchaseOrderModal={setBarcodeModal}
                 productDetails={productDetails}
               ></BarCode> 
         </TabPane> 
@@ -359,42 +369,29 @@ const getSupplier = () => {
  <TabPane tabId="7">
  
      <Col md="3" className="addNew">
-                    <Button color="primary" className="shadow-none" onClick={toggletype.bind(null)}>
+                    <Button color="primary" className="shadow-none" onClick={toggletypess.bind(null)}>
                         Add New
                     </Button>
                   </Col>
               <EcommerceSetting
                 ProductId={id}
-                addPurchaseOrderModal={modal}
-                setAddPurchaseOrderModal={setModal}
+                addPurchaseOrderModal={ecommerceModal}
+                setAddPurchaseOrderModal={setEcommerceModal}
                 productDetails={productDetails}
               ></EcommerceSetting> 
         </TabPane>
-        
-       <TabPane tabId="8">
-        <Col md="3" className="addNew">
-                    <Button color="primary" className="shadow-none" onClick={toggletype.bind(null)}>
-                        Add New
-                    </Button>
-                  </Col>
-              <ContactPriceButton
-                ProductId={id}
-                addPurchaseOrderModal={modal}
-                setAddPurchaseOrderModal={setModal}
-                productDetails={productDetails}
-              ></ContactPriceButton> 
-        </TabPane> 
-
         <TabPane tabId="9">
           
             <ProductStockMovement productId={id} />
         </TabPane>
       </TabContent>
       </ComponentCard>
-      
-     
-    
-    
+      <ContactPriceButton
+        productId={id}
+        isOpen={contactPriceModal}
+        onClose={() => setContactPriceModal(false)}
+        productName={productDetails?.title || ''}
+      />
     </>
 
   );

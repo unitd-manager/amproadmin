@@ -42,6 +42,9 @@ const SalesOrderEdit = () => {
   const navigate = useNavigate();
 
   const [id, setId] = useState(paramId);
+      const [triggerSave, setTriggerSave] = useState(false);
+
+
 
 console.log(navigate);
   const [activeTab, setActiveTab] = useState("1");
@@ -170,13 +173,16 @@ const insertSettingData = (code) => {
       });
   };
 
-const saveSalesOrder = () => {
+const saveSalesOrder = async () => {
   if (id) {
     return editSettingData();
   }
-    return generateCode();
-  
+  const newId = await generateCode();
+  setId(newId);
+  setTriggerSave(true);
+  return newId;
 };
+
 
 console.log(editSettingData);
 useEffect(() => {
@@ -184,9 +190,9 @@ useEffect(() => {
       if (id) {
         getSettingById();
         getLineItem();
-      } else if (settingdetails.company_id !== '') {
-        const newId = await saveSalesOrder();
-        setId(newId);
+      // } else if (settingdetails.company_id !== '') {
+      //   const newId = await saveSalesOrder();
+      //   setId(newId);
       }
     };
     fetchData();
@@ -275,6 +281,8 @@ useEffect(() => {
                 deleteRecord={deleteRecord}
                 id={id}
                 setViewLineModal={setViewLineModal}
+                 onSaveTrigger={triggerSave}
+                setOnSaveTrigger={setTriggerSave}
               />
         
     </div>

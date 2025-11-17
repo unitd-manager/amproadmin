@@ -30,8 +30,9 @@ import { FaTrashAlt, FaPlusCircle } from "react-icons/fa";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarAlt, faPlus, faPrint } from '@fortawesome/free-solid-svg-icons';
 import api from "../../constants/api";
-import ProductInfoModal from "../../components/PurchaseOrder/ProductInfoModal";
-import PdfPurchaseInvoice from "../../components/PDF/PdfPurchaseInvoice";
+// import PurchaseOrderProductInfoModal from "../../components/PurchaseOrder/PurchaseOrderProductInfoModal";
+import PurchaseOrderProductInfoModal from "../../components/PurchaseOrder/PurchaseOrderProductInfoModal";
+// import PdfPurchaseInvoice from "../../components/PDF/PdfPurchaseInvoice";
 
 const PurchaseOrderEdit = () => {
 
@@ -236,12 +237,12 @@ useEffect(() => {
         );
         console.log('handleChange - selectedSupplier:', selectedSupplier);
         if (selectedSupplier) {
-          updatedFormData.company_name = selectedSupplier.company_name;
+          updatedFormData.company_name = selectedSupplier.supplier_name;
           updatedFormData.contact_person = selectedSupplier.contact_person;
           updatedFormData.contact_address1 = selectedSupplier.address_flat;
           updatedFormData.contact_address2 = selectedSupplier.address_street;
           updatedFormData.contact_address3 = selectedSupplier.address_state;
-        updatedFormData.supplier_name = selectedSupplier.company_name;
+        updatedFormData.supplier_name = selectedSupplier.supplier_name;
           updatedFormData.country = selectedSupplier.address_country;
           updatedFormData.postal_code = selectedSupplier.address_po_code;
         }
@@ -279,16 +280,32 @@ useEffect(() => {
     };
   // Handle form submit (example API call structure)
   const handleSubmit = async () => {
-    const calculatedSubTotal = rows.reduce((sum, row) => sum + Number(row.total_price), 0);
-    const calculatedTaxAmount = calculatedSubTotal * 0.09;
-    const calculatedNetTotal = calculatedSubTotal + calculatedTaxAmount;
+    // const calculatedSubTotal = rows.reduce((sum, row) => sum + Number(row.total_price), 0);
+    // const calculatedTaxAmount = calculatedSubTotal * 0.09;
+    // const calculatedNetTotal = calculatedSubTotal + calculatedTaxAmount;
 
-    formData.sub_total = calculatedSubTotal;
-    formData.tax_amount = calculatedTaxAmount;
-    formData.net_total = calculatedNetTotal;
-
+    // formData.sub_total = calculatedSubTotal;
+    // formData.tax_amount = calculatedTaxAmount;
+    // formData.net_total = calculatedNetTotal;
+        const subTotalNum = rows.reduce((sum, row) => sum + Number(row.total_price || 0), 0);
+          const taxAmountNum = Number((subTotalNum * 0.09).toFixed(2));
+          const netTotalNum = Number((subTotalNum + taxAmountNum).toFixed(2));
+      
+          const payloadForm = {
+            ...formData,
+             sub_total: Number(subtotal).toFixed(2),
+            tax_amount: Number(tax).toFixed(2),
+            net_total: Number(finalTotal).toFixed(2),
+            grand_total: netTotalNum,
+          };
+      console.log('formData', payloadForm);
+          if (!currency.currency_code) {
+            message('Please Enter currency code.', 'error');
+            return;
+          }
+console.log('formdata',payloadForm);
     api
-    .post('/purchaseorder/editPurchaseOrder', formData)
+    .post('/purchaseorder/editPurchaseOrder', payloadForm)
     .then(() => {
       api
       .post('/currency/editCurrency', currency) 
@@ -303,7 +320,7 @@ useEffect(() => {
      
       message('Record edited successfully.', 'success');
       setTimeout(() => {
-        window.location.reload();
+        navigate('/PurchaseOrder')
       }, 300);
     })
     .catch(() => {
@@ -455,7 +472,7 @@ useEffect(() => {
         </Col>
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1" name="tran_no" value={formData?.tran_no}  
-              onChange={handleChange} onKeyDown={handleKeyDown}/>
+              onChange={handleChange} onKeyDown={handleKeyDown} readOnly />
         </Col>
       </Row>
     </Col>
@@ -503,21 +520,37 @@ useEffect(() => {
           <Label className="small mb-1">Supplier Code</Label>
         </Col>
         <Col md="8">
-        <Input
-            bsSize="sm" className="py-0 px-1"  
-              type="select"
-              name="supplier_id"
-              value={formData?.supplier_id}
-              onChange={handleChange}
-               onKeyDown={handleKeyDown}
-            >
-              <option value="">Select Supplier</option>
-              {supplierOptions.map((supplier, index) => (
-                <option key={index} value={supplier.supplier_id}>
-                  {supplier.supplier_code}
-                </option>
-              ))}
-            </Input>
+<Select
+  bsSize="sm"
+  className="py-0 px-1"
+  name="supplier_id"
+  value={
+    formData?.supplier_id
+      ? {
+          value: formData.supplier_id,
+          label: supplierOptions.find(
+            (s) => String(s.supplier_id) === String(formData.supplier_id)
+          )?.supplier_code,
+        }
+      : null
+  }
+  onChange={(selected) =>
+    handleChange({
+      target: { name: "supplier_id", value: selected?.value || "" },
+    })
+  }
+  onKeyDown={handleKeyDown}
+  options={supplierOptions.map((s) => ({
+    value: s.supplier_id,
+    label: s.supplier_code,
+  }))}
+  placeholder="Select Supplier"
+  isClearable
+  styles={{
+    control: (base) => ({ ...base, minHeight: "30px", fontSize: "12px" }),
+    menu: (base) => ({ ...base, fontSize: "12px" }),
+  }}
+/>
         
         </Col>
       </Row>
@@ -857,7 +890,7 @@ useEffect(() => {
                   <Input
                     type="number"
                     bsSize="sm"
-                    value={p.loose_qty}
+                    value={p?.loose_qty}
                     onChange={(e) => handleRowChange(p.po_product_id, 'loose_qty', e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
@@ -876,7 +909,7 @@ useEffect(() => {
                   <Input
                     type="number"
                     bsSize="sm"
-                    value={Number(p?.carton_price).toFixed(2)}
+                    value={Number(p?.carton_price)}
                     onChange={(e) => handleRowChange(p.po_product_id, 'carton_price', e.target.value)}
                     style={{ width: '80px' }}
                     innerRef={(el) => (cartonPriceRefs.current[idx] = el)}
@@ -894,7 +927,7 @@ useEffect(() => {
                   <Input
                     type="number"
                     bsSize="sm"
-                    value={Number(p?.price).toFixed(2)}
+                    value={Number(p?.price)}
                     onChange={(e) => handleRowChange(p.po_product_id, 'price', e.target.value)}
                     style={{ width: '80px' }}
                     innerRef={(el) => (priceRefs.current[idx] = el)}
@@ -912,7 +945,7 @@ useEffect(() => {
                   <Input
                     type="number"
                     bsSize="sm"
-                    value={Number(p.qty * p.price).toFixed(2)}
+                    value={Number(p.qty * p.price)}
                     onChange={(e) => handleRowChange(p.po_product_id, 'total', e.target.value)}
                     style={{ width: '80px' }}
                     readOnly
@@ -923,7 +956,7 @@ useEffect(() => {
                     <Input
                       type="number"
                       bsSize="sm"
-                      value={Number(p?.discount_percentage).toFixed(2)}
+                      value={Number(p?.discount_percentage)}
                       onChange={(e) => handleRowChange(p.po_product_id, 'discount_percentage', e.target.value)}
                       style={{ width: '50%', marginRight: '2px' }}
                       innerRef={(el) => (discountPercentageRefs.current[idx] = el)}
@@ -939,7 +972,7 @@ useEffect(() => {
                     <Input
                       type="number"
                       bsSize="sm"
-                      value={Number(p?.discount_amount).toFixed(2)}
+                      value={Number(p?.discount_amount)}
                       onChange={(e) => handleRowChange(p.po_product_id, 'discount_amount', e.target.value)}
                       style={{ width: '50%' }}
                       innerRef={(el) => (discountAmountRefs.current[idx] = el)}
@@ -1084,7 +1117,7 @@ useEffect(() => {
             <td style={{ padding: '0.3rem' }}>{summary.price}</td>
             <td style={{ padding: '0.3rem' }}>{summary.total}</td>
             <td style={{ padding: '0.3rem' }}></td>
-            <td style={{ padding: '0.3rem' }}>{summary.grossTotal}</td>
+            <td style={{ padding: '0.3rem' }}>{Number(summary?.grossTotal).toFixed(2)}</td>
             <td style={{ padding: '0.3rem' }}></td>
           </tr>
         </tbody>
@@ -1160,32 +1193,32 @@ useEffect(() => {
 
   {/* Print + Save on right */}
   <Col className="d-flex justify-content-end">
-    <Button size="sm" style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#fff' }} className="me-2">
+    {/* <Button size="sm" style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#fff' }} className="me-2">
       <FontAwesomeIcon icon={faPrint} className="me-1" />
     <PdfPurchaseInvoice id={id} />
-    </Button>
+    </Button> */}
     <div className="btn-group">
       <Button size="sm" style={{ backgroundColor: '#213042', borderColor: '#213042', color: '#fff' }} onClick={()=>handleSubmit()}>
         Save
       </Button>
-      <Button
+      {/* <Button
         size="sm"
         style={{ backgroundColor: '#213042', borderColor: '#213042', color: '#fff' }}
         className="dropdown-toggle dropdown-toggle-split"
         data-bs-toggle="dropdown"
       >
         <span className="visually-hidden">Toggle Dropdown</span>
-      </Button>
-      <div className="dropdown-menu dropdown-menu-end">
+      </Button> */}
+      {/* <div className="dropdown-menu dropdown-menu-end">
         <button className="dropdown-item">Save & New</button>
         <button className="dropdown-item">Save & Close</button>
-      </div>
+      </div> */}
     </div>
   </Col>
 </Row>
   </Container>
 </div>
- {productInfoModal && <ProductInfoModal
+ {productInfoModal && <PurchaseOrderProductInfoModal
         isOpen={productInfoModal}
         toggle={toggleProductInfoModal}
         selectedProduct={selectedProduct}

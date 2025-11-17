@@ -18,6 +18,8 @@ const SalesOrderProducts = ({
   deleteRecord,
   saveSalesOrder,
   id,
+   onSaveTrigger,
+  setOnSaveTrigger,
 }) => {
   const { loggedInuser } = useContext(AppContext);
   const [lineItems, setLineItems] = useState(() => {
@@ -192,10 +194,18 @@ const SalesOrderProducts = ({
       return api.post('/invoice/insertDeliveryItems', obj);
     }));
     if (getLineItem) getLineItem(id);
-    saveSalesOrder();
+    // saveSalesOrder();
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 3000); // Hide after 3 seconds
   };
+
+
+    useEffect(() => {
+      if (onSaveTrigger) {
+        handleSave();
+        setOnSaveTrigger(false);
+      }
+    }, [onSaveTrigger]);
 
   const summary = {
     carton_qty: 0,

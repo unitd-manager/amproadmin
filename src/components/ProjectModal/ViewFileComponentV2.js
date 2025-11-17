@@ -70,7 +70,7 @@ function ViewFileComponentV2({ moduleId, roomName }) {
                 <tr key={res.media_id}>
                   <td style={tableStyle}>
                       <a
-                        href={`http://ampro.zaitunsoftsolutions.com/storage/uploads/${res.name}`}
+                        href={`https://amproadmin.zaitunsoftsolutions.com/storage/uploads/${res.name}`}
                         target="_blank"
                         rel="noreferrer"
                       >

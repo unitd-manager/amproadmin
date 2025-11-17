@@ -10,6 +10,8 @@ import 'datatables.net-buttons/js/buttons.flash';
 import 'datatables.net-buttons/js/buttons.html5';
 import 'datatables.net-buttons/js/buttons.print';
 import { Link } from 'react-router-dom';
+ import moment from 'moment';
+
 import message from '../../components/Message';
 import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
@@ -110,7 +112,7 @@ const Test = () => {
     },
     { name: '#', selector: 'invoice_id', grow: 0, wrap: true, width: '4%' },
     { name: 'Edit', selector: 'edit', cell: () => <Icon.Edit2 />, grow: 0, width: 'auto', button: true, sortable: false },
-    { name: 'Tran NO', selector: 'invoice_code', sortable: true, grow: 0, wrap: true },
+    { name: 'Tran No', selector: 'invoice_code', sortable: true, grow: 0, wrap: true },
     { name: 'Tran Date', selector: 'invoice_date', sortable: true, grow: 0, wrap: true },
     { name: 'Customer', selector: 'company_name', sortable: true, grow: 0, wrap: true },
     { name: 'Printed', selector: 'printed', sortable: true, grow: 0, wrap: true },
@@ -197,7 +199,7 @@ const handleRepeatInvoice = async () => {
       invoice_id: selectedOrder.invoice_id,
       invoice_code: deliveryCode,
     });
-    message(response.data.msg, 'success');
+    message(response.data.message || 'Repeated invoice successfully', 'success');
     setTimeout(() => {
       window.location.reload();
     }, 400);
@@ -221,9 +223,9 @@ const handleConvertToSalesReturn = async () => {
 
     });
     message(response.data.msg || 'Converted to Sales Return successfully', 'success');
-    // setTimeout(() => {
-    //   window.location.reload();
-    // }, 400);
+    setTimeout(() => {
+      window.location.reload();
+    }, 400);
   } catch (error) {
     message(error.response?.data?.msg || 'Failed to convert to Sales Return', 'error');
   }
@@ -239,10 +241,8 @@ const handleConvertToDelivryVerification = async () => {
     const response = await api.post('/invoice/convertToDelivryVerification', {
       invoice_id: selectedOrder.invoice_id,
     });
-    message(response.data.msg || 'Converted to Sales Return successfully', 'success');
-    // setTimeout(() => {
-    //   window.location.reload();
-    // }, 400);
+      message(response.data.message || 'Delivery Verified successfully', 'success');
+      
   } catch (error) {
     message(error.response?.data?.msg || 'Failed to convert to Sales Return', 'error');
   }
@@ -392,14 +392,15 @@ const handleConvertToDelivryVerification = async () => {
 </td>
 
                   <td>{element.invoice_code}</td>
-                  <td>{element.invoice_date}</td>
+          <td>{element.invoice_date? moment(element.invoice_date).format('DD-MM-YYYY'):''}</td>
+                
                   <td>{element.company_name}</td>
                   <td>{element.printed || 'No'}</td>
                   <td>{element.sub_total || ''}</td>
                   <td>{element.tax || ''}</td>
-                  <td>{element.invoice_amount || ''}</td>
-                  <td>{element.paid_amount}</td>
-                  <td>{element.balance_amount || ''}</td>
+                  <td>{element.invoice_amount || '0.00'}</td>
+                  <td>{element.paid_amount || '0.00'}</td>
+                  <td>{element.balance_amount || '0.00'}</td>
                 </tr>
               ))}
           </tbody>

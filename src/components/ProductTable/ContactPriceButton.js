@@ -1,592 +1,800 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import PropTypes from 'prop-types';
 import {
-  Input,
-  Button,
   Modal,
+  ModalHeader,
+  ModalBody,
   ModalFooter,
+  Button,
+  Table,
+  Input,
+  Row,
+  Col,
+  Nav,
   NavItem,
   NavLink,
-  Nav,
-  TabPane,
-  TabContent
+  Spinner,
+  Label,
+  FormFeedback,
 } from 'reactstrap';
-import PropTypes from 'prop-types';
-import random from 'random';
-import Select from 'react-select';
-import message from '../Message';
+// import { useNavigate } from 'react-router-dom';
+
+import * as Icon from 'react-feather';
 import api from '../../constants/api';
-import ComponentCard from '../ComponentCard';
-import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
-import AppContext from '../../context/AppContext';
-import creationdatetime from '../../constants/creationdatetime';
+import message from '../Message';
 
-export default function ContactPriceButton({
-  addPurchaseOrderModal,
-  setAddPurchaseOrderModal,
-  ProductId,
-  productDetails
-}) {
-  ContactPriceButton.propTypes = {
-    addPurchaseOrderModal: PropTypes.bool,
-    setAddPurchaseOrderModal: PropTypes.func,
-    ProductId: PropTypes.any,
-    productDetails: PropTypes.any
+const TAB_CONFIG = [
+  { key: 'customer', label: 'Customer' },
+  { key: 'supplier', label: 'Supplier' },
+  { key: 'priceGroup', label: 'Price Group' },
+];
+
+const createEmptyRowState = () => ({
+  customer: [],
+  supplier: [],
+  priceGroup: [],
+});
+
+const normaliseRecordType = (record) => {
+  if (record?.type) return record.type;
+  if (record?.contact_type) return record.contact_type;
+  if (record?.customer === 1 || record?.customer === '1') return 'customer';
+  if (record?.supplier === 1 || record?.supplier === '1') return 'supplier';
+  if (
+    record?.price_group === 1 ||
+    record?.price_group === '1' ||
+    record?.contact_group === 1
+  )
+    return 'priceGroup';
+  return 'customer';
+};
+
+const normaliseRow = (record, fallbackType = 'customer') => {
+  
+  const derivedType = normaliseRecordType(record) || fallbackType;
+  const contactIdCandidate =
+    record?.contact_id ?? record?.supplier_id ?? record?.company_id ?? record?.company_cli_id ?? null;
+
+  return {
+    key: (record?.cs_product_id || record?.sup_product_id)
+      ? `persist-${record.cs_product_id}`
+      : `temp-${derivedType}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    cs_product_id: record?.cs_product_id || record?.sup_product_id || null,
+    customer_supplier_price_id:
+      record?.customer_supplier_price_id || record?.contact_price_id || record?.parent_id || null,
+    contact_id: contactIdCandidate ? String(contactIdCandidate) : '',
+    supplier_code:
+      record?.supplier_code || record?.customer_code || record?.company_code || record?.code || '',
+    supplier_name: record?.supplier_name || record?.company_name || record?.name || '',
+    wholesale_price: record?.wholesale_price ?? '',
+    carton_price: record?.carton_price ?? '',
+    fixed_price: record?.fixed_price ?? '',
+    type: derivedType,
+    // UI-only fields
+    error: null,
   };
+};
 
-  const [activeTab, setActiveTab] = useState('1');
-  const [getProductValue, setProductValue] = useState([]); // For customers
-  const [getsupplier, setSupplier] = useState([]); // For suppliers
-  const [addMoreItem, setMoreItem] = useState([]); // For customer pricing line items
-  const [purchaserequesteditdetails, setPurchaseRequestEditDetails] = useState([]); // For supplier pricing line items
-  const { loggedInuser } = useContext(AppContext);
+const normaliseCollection = (collection, fallbackType) =>
+  (Array.isArray(collection) ? collection : []).map((item) => normaliseRow(item, fallbackType));
 
-  const toggle = (tab) => {
-    if (activeTab !== tab) setActiveTab(tab);
-  };
+const ContactPriceButton = ({ productId, isOpen, onClose, productName }) => {
+  const [activeTab, setActiveTab] = useState('customer');
+  const [rows, setRows] = useState(createEmptyRowState);
+  const [deletedRowIds, setDeletedRowIds] = useState([]);
+  const [contactOptions, setContactOptions] = useState([]);
+  const [companyOptions, setCompanyOptions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [bulkValues, setBulkValues] = useState({ wholesale_price: '', carton_price: '' });
+  const [contactsLoaded, setContactsLoaded] = useState(false);
+  const [companiesLoaded, setCompaniesLoaded] = useState(false);
+// const navigate = useNavigate();
+  const filteredContactOptions = useMemo(() => {
+    const supplierOptions = contactOptions.filter((item) => Number(item.supplier) === 1);
+    const priceGroupOptions = contactOptions.filter(
+      (item) =>
+        Number(item.price_group) === 1 ||
+        Number(item.contact_group) === 1 ||
+        Number(item.is_group) === 1,
+    );
 
-  const AddNewLineItem = () => {
-    setMoreItem([
-      ...addMoreItem,
-      {
-        id: random.int(0, 9999).toString(), // Unique ID for React key
-        itemId: '', // contact_id for customer
-        unit: '',
-        qty: '',
-        wholesale_price: '', // wholesale_price
-        carton_price: '', // carton_price
-        fixed_price: '', // fixed_price (renamed from gst for clarity in UI/backend mapping)
-        description: '',
-        code: '', // customer_code
-        title: '', // company_name
-        cs_product_id: null // Initialize cs_product_id for new items
-      }
-    ]);
-    console.log('AddNewLineItem: Current addMoreItem after adding new row:', [...addMoreItem, { id: 'new' }]);
-  };
+    return {
+      supplier: supplierOptions.length > 0 ? supplierOptions : contactOptions,
+      priceGroup: priceGroupOptions.length > 0 ? priceGroupOptions : contactOptions,
+    };
+  }, [contactOptions]);
 
-  const AddNewSupplierLineItem = () => {
-    setPurchaseRequestEditDetails([
-      ...purchaserequesteditdetails,
-      {
-        id: random.int(0, 9999).toString(),
-        contact_id: '',
-        name: '',
-        wholesale_price: '',
-        carton_price: '',
-        fixed_price: '',
-        cs_product_id: null
-      }
-    ]);
-  };
-  // Supplier tab: onChange for supplier select
-  const onSupplierChange = async (selectedOption, index) => {
-    const copy = [...purchaserequesteditdetails];
-    let updatedItem = { ...copy[index] };
+  const companyLookupByCode = useMemo(() => {
+    const map = new Map();
+    companyOptions.forEach((company) => {
+      const codeCandidates = [company?.customer_code, company?.company_code, company?.supplier_code];
+      codeCandidates
+        .filter((candidate) => candidate)
+        .forEach((candidate) => map.set(String(candidate).toLowerCase(), company));
+    });
+    return map;
+  }, [companyOptions]);
 
-    if (!selectedOption) {
-      updatedItem = {
-        ...updatedItem,
-        contact_id: '',
-        name: '',
-        wholesale_price: '',
-        carton_price: '',
-        fixed_price: '',
-        cs_product_id: null
-      };
-      copy[index] = updatedItem;
-      setPurchaseRequestEditDetails(copy);
+  const toNumberOrNull = useCallback((value) => {
+    if (value === '' || value === null || value === undefined) return null;
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }, []);
+
+  const postWithFallback = useCallback(async (primaryUrl, fallbackUrl, payload) => {
+    try {
+      return await api.post(primaryUrl, payload);
+    } catch (error) {
+      if (!fallbackUrl) throw error;
+      return api.post(fallbackUrl, payload);
+    }
+  }, []);
+
+  const applyResponseData = useCallback((responseData) => {
+    if (Array.isArray(responseData)) {
+      const normalised = responseData.map((record) => normaliseRow(record));
+      setRows({
+        customer: normalised.filter((item) => item.type === 'customer'),
+        supplier: normalised.filter((item) => item.type === 'supplier'),
+        priceGroup: normalised.filter((item) => item.type === 'priceGroup'),
+      });
       return;
     }
-
-    updatedItem.contact_id = selectedOption.value;
-    updatedItem.name = selectedOption.label;
-    updatedItem.wholesale_price = '';
-    updatedItem.carton_price = '';
-    updatedItem.fixed_price = '';
-    updatedItem.cs_product_id = null;
-
-    try {
-      const response = await api.post('/product/checkSupplierProductPrice', {
-        contact_id: selectedOption.value,
-        product_id: ProductId,
-        customer: 0,
-        supplier: 1,
+    if (responseData && typeof responseData === 'object') {
+      setRows({
+        customer: normaliseCollection(responseData.customer ?? responseData.customers, 'customer'),
+        supplier: normaliseCollection(responseData.supplier ?? responseData.suppliers, 'supplier'),
+        priceGroup: normaliseCollection(responseData.priceGroup ?? responseData.price_group, 'priceGroup'),
       });
-      if (response.data && response.data.cs_product_exists && response.data.cs_product_data) {
-        const existingData = response.data.cs_product_data;
-        message('Supplier already exists for this product. You can edit the price.', 'warning');
-        updatedItem.wholesale_price = existingData.wholesale_price || '';
-        updatedItem.carton_price = existingData.carton_price || '';
-        updatedItem.fixed_price = existingData.fixed_price || '';
-        updatedItem.cs_product_id = existingData.cs_product_id;
-      }
-    } catch (error) {
-      let errMsg = 'Error checking existing supplier price. Please try again.';
-      if (error.response && error.response.data && error.response.data.error) {
-        errMsg += ` (${error.response.data.error})`;
-      }
-      message(errMsg, 'error');
+      return;
     }
-    copy[index] = updatedItem;
-    setPurchaseRequestEditDetails(copy);
-  };
+    setRows(createEmptyRowState());
+  }, []);
 
-  const getCustomer = () => {
-    api.get('/product/getContact').then((res) => {
-      const items = res.data.data;
-      const formatted = items.map((item) => ({
-        contact_id: item.contact_id,
-        company_name: item.company_name,
-        customer_code: item.customer_code,
-        wholesale_price: item.wholesale_price,
-        carton_price: item.carton_price
-      }));
-      setProductValue(formatted);
-      console.log('getCustomer: Fetched customers:', formatted);
-    }).catch((err) => {
-      console.error('getCustomer: Failed to fetch customers', err);
-      message('Failed to fetch customers', 'error');
-    });
-  };
-
-  const getSupplier = () => {
-    api.get('/product/getSupplier').then((res) => {
-      const items = res.data.data;
-      const formatted = items.map((item) => ({
-        value: item.contact_id,
-        label: item.company_name,
-        company_name: item.company_name,
-        supplier_code: item.supplier_code
-      }));
-      setSupplier(formatted);
-      console.log('getSupplier: Fetched suppliers:', formatted);
-    }).catch((err) => {
-      console.error('getSupplier: Failed to fetch suppliers', err);
-      message('Failed to fetch suppliers', 'error');
-    });
-  };
-
-  const ProductLineItemById = () => {
-    api
-      .post('/product/getCSProductByProductId', { product_id: ProductId })
-      .then((res) => {
-        setMoreItem(res.data.data);
-        console.log('ProductLineItemById: Fetched existing customer product prices:', res.data.data);
-      })
-      .catch((err) => {
-        console.error('ProductLineItemById: Customer Product Data Not Found or Error', err);
-        message('Customer Product Data Not Found', 'info');
-      });
-  };
-
-  const PurchaseRequestLineItemById = () => {
-    api
-      .post('/product/getCSSupplierProductByProductId', { product_id: ProductId })
-      .then((res) => {
-        const dataWithIds = res.data.data.map(item => ({
-          ...item,
-          id: item.cs_product_id ? item.cs_product_id.toString() : random.int(0, 9999).toString()
-        }));
-        setPurchaseRequestEditDetails(dataWithIds);
-        console.log('PurchaseRequestLineItemById: Fetched existing supplier product prices:', dataWithIds);
-      })
-      .catch((err) => {
-        console.error('PurchaseRequestLineItemById: Supplier Product Data Not Found or Error', err);
-        message('Supplier Product Data Not Found', 'info');
-      });
-  };
-  
-  const EditCSProductLineItems = async () => {
-  console.log('🚀 Starting EditCSProductLineItems...');
-
-  const validItems = addMoreItem.filter(
-    (item) =>
-      item.itemId &&
-      !Number.isNaN(Number(item.wholesale_price)) &&
-      Number(item.wholesale_price) > 0
-  );
-
-  if (validItems.length === 0) {
-    message('No valid items to submit.', 'warning');
-    return;
-  }
-
-  await Promise.all(
-    validItems.map(async (item) => {
-      try {
-        console.log(`🔍 Checking: ${item.itemId}, ProductId=${ProductId}`);
-        const checkRes = await api.post('/product/checkCSProductByCustomerAndProduct', {
-          contact_id: item.itemId,
-          product_id: ProductId,
-        });
-
-        const exists = checkRes?.data?.exists;
-        const csProductId = checkRes?.data?.data?.cs_product_id;
-        let customerSupplierPriceId = checkRes?.data?.data?.customer_supplier_price_id;
-
-        if (exists && csProductId) {
-          const confirmUpdate = window.confirm(
-            `Price for "${item.title}" already exists. Do you want to update it?`
-          );
-          if (confirmUpdate) {
-            await api.post('/product/updateCSProductCustomerPrice', {
-              cs_product_id: csProductId,
-              wholesale_price: Number(item.wholesale_price),
-              carton_price: Number(item.carton_price) || 0,
-              fixed_price: Number(item.fixed_price) || 0,
-              modified_by: loggedInuser.first_name,
-              modification_date: creationdatetime,
-            });
-            message(`✔️ Updated price for ${item.title}`, 'success');
-          } else {
-            message(`⚠️ Skipped updating ${item.title}`, 'warning');
-          }
-        } else {
-          // Step 1: Insert customer_supplier_price
-          const addCustomerRes = await api.post('/product/addCustomerSupplierPrice', {
-            contact_id: item.itemId,
-            customer: 1,
-            supplier: 0,
-            created_by: loggedInuser.first_name,
-            creation_date: creationdatetime,
-          });
-
-          customerSupplierPriceId = addCustomerRes.data.customer_supplier_price_id;
-
-          // Step 2: Insert cs_product
-          await api.post('/product/addCSProductHistory', {
-            customer_supplier_price_id: customerSupplierPriceId,
-            product_id: ProductId,
-            contact_id: item.itemId,
-            wholesale_price: Number(item.wholesale_price),
-            carton_price: Number(item.carton_price) || 0,
-            fixed_price: Number(item.fixed_price) || 0,
-            created_by: loggedInuser.first_name,
-            creation_date: creationdatetime,
-          });
-
-          message(`🆕 Added new price for ${item.title}`, 'success');
-        }
-      } catch (error) {
-        console.error(`❌ Error with ${item.title}:`, error);
-        message(`❌ Failed for ${item.title}`, 'error');
+  const fetchContactPrices = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await api.post('/product/getCsProduct', { product_id: productId });
+      const responseData = res.data?.data;
+      if (!responseData || (Array.isArray(responseData) && responseData.length === 0)) {
+        throw new Error('Empty product contact price data');
       }
-    })
-  );
+      applyResponseData(responseData);
+      try {
+        const supRes = await api.post('/product/getSupProduct', { product_id: productId });
+        const supData = supRes.data?.data || [];
+        setRows((prev) => ({
+          ...prev,
+          supplier: normaliseCollection(supData, 'supplier'),
+        }));
+      } catch (supErr) { console.error(supErr); }
+    } catch (err) {
+      try {
+        const legacyRes = await api.post('/customersupplierprice/getContactPricesByProduct', {
+          product_id: productId,
+        });
+        applyResponseData(legacyRes.data?.data);
+        try {
+          const supRes = await api.post('/product/getSupProduct', { product_id: productId });
+          const supData = supRes.data?.data || [];
+          setRows((prev) => ({
+            ...prev,
+            supplier: normaliseCollection(supData, 'supplier'),
+          }));
+        } catch (supErr2) { console.error(supErr2); }
+      } catch (legacyErr) {
+        setRows(createEmptyRowState());
+        message('Unable to load contact prices for this product', 'error');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [applyResponseData, productId]);
 
-  console.log('✅ All items processed.');
+  useEffect(() => {
+    if (!isOpen) {
+      setActiveTab('customer');
+      setRows(createEmptyRowState());
+      setDeletedRowIds([]);
+      setBulkValues({ wholesale_price: '', carton_price: '' });
+      setSaving(false);
+      setLoading(false);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || !productId) return;
+
+    if (!contactsLoaded) {
+      api
+        .get('/supplier/getSupplier')
+        .then((res) => {
+          setContactOptions(res.data?.data || []);
+          setContactsLoaded(true);
+        })
+        .catch(() => {
+          message('Unable to load contact list', 'error');
+        });
+    }
+
+    if (isOpen && !companiesLoaded) {
+      api
+        .get('/company/getCompany')
+        .then((res) => {
+          setCompanyOptions(res.data?.data || []);
+          setCompaniesLoaded(true);
+        })
+        .catch(() => {
+          message('Unable to load company list', 'error');
+        });
+    }
+
+    fetchContactPrices();
+  }, [companiesLoaded, contactsLoaded, fetchContactPrices, isOpen, productId]);
+
+  const getTabRows = (tabKey) => rows[tabKey] || [];
+
+  const updateTabRows = (tabKey, updater) => {
+    setRows((prev) => ({
+      ...prev,
+      [tabKey]: updater(prev[tabKey] || []),
+    }));
+  };
+
+  const handleAddRow = (tabKey) => {
+    updateTabRows(tabKey, (current) => [
+      ...current,
+      {
+        key: `temp-${tabKey}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        cs_product_id: null,
+        customer_supplier_price_id: null,
+        contact_id: '',
+        supplier_code: '',
+        supplier_name: '',
+        wholesale_price: '',
+        carton_price: '',
+        fixed_price: '',
+        type: tabKey,
+        error: null,
+      },
+    ]);
+  };
+
+  
+
+  const handleSupplierCodeInput = (tabKey, rowIndex, rawValue) => {
+    const value = rawValue ?? '';
+    const trimmedValue = value.trim();
+    const lowerCaseValue = trimmedValue.toLowerCase();
+
+    const options = filteredContactOptions[tabKey] || contactOptions;
+    const selected = options.find(
+      (option) => String(option?.supplier_code || '').toLowerCase() === lowerCaseValue,
+    );
+
+    updateTabRows(tabKey, (current) => {
+      const nextRows = [...current];
+      const existingRow = nextRows[rowIndex] || {};
+      nextRows[rowIndex] = {
+        ...existingRow,
+        supplier_code: trimmedValue,
+        supplier_name: selected?.supplier_name || (trimmedValue === '' ? '' : existingRow.supplier_name || ''),
+        contact_id: selected ? String(selected.supplier_id) : existingRow.contact_id || null,
+        type: tabKey,
+        error: null,
+      };
+      return nextRows;
+    });
+  };
+
+  const handleCustomerCodeInput = (rowIndex, rawValue) => {
+    const value = rawValue ?? '';
+    const trimmedValue = value.trim();
+    const lowerCaseValue = trimmedValue.toLowerCase();
+
+    updateTabRows('customer', (current) => {
+      const nextRows = [...current];
+      const existingRow = nextRows[rowIndex] || {};
+
+      // check duplicates by code OR name (case-insensitive)
+      const duplicateCode = nextRows.some(
+        (r, i) => i !== rowIndex && r.supplier_code?.toLowerCase() === lowerCaseValue && lowerCaseValue !== '',
+      );
+      const duplicateName = nextRows.some(
+        (r, i) => i !== rowIndex && r.supplier_name?.toLowerCase() === lowerCaseValue && lowerCaseValue !== '',
+      );
+
+      if (duplicateCode || duplicateName) {
+        nextRows[rowIndex] = { ...existingRow, supplier_code: trimmedValue, error: 'duplicate' };
+        message('Duplicate customer code or name not allowed', 'warning');
+        return nextRows;
+      }
+
+      const matchedCompany =
+        companyLookupByCode.get(lowerCaseValue) ||
+        companyOptions.find(
+          (company) =>
+            String(company?.customer_code || '').toLowerCase() === lowerCaseValue ||
+            String(company?.company_code || '').toLowerCase() === lowerCaseValue ||
+            String(company?.supplier_code || '').toLowerCase() === lowerCaseValue,
+        );
+
+      nextRows[rowIndex] = {
+        ...existingRow,
+        supplier_code: trimmedValue,
+        supplier_name: matchedCompany?.company_name || (trimmedValue === '' ? '' : existingRow.supplier_name || ''),
+        contact_id: matchedCompany ? String(matchedCompany.company_id) : existingRow.contact_id || null,
+        type: 'customer',
+        error: null,
+      };
+
+      return nextRows;
+    });
+  };
+
+  const handleCustomerNameChange = (rowIndex, rawValue) => {
+    const value = rawValue ?? '';
+    const trimmed = value.trim();
+    const lower = trimmed.toLowerCase();
+
+    updateTabRows('customer', (current) => {
+      const nextRows = [...current];
+      const existingRow = nextRows[rowIndex] || {};
+
+      const duplicate = nextRows.some((r, i) => i !== rowIndex && r.supplier_name?.toLowerCase() === lower && lower !== '');
+      if (duplicate) {
+        nextRows[rowIndex] = { ...existingRow, supplier_name: trimmed, error: 'duplicate' };
+        message('Duplicate customer code or name not allowed', 'warning');
+        return nextRows;
+      }
+
+      nextRows[rowIndex] = { ...existingRow, supplier_name: trimmed, error: null };
+      return nextRows;
+    });
+  };
+
+  const handleFieldChange = (tabKey, rowIndex, field, value) => {
+    updateTabRows(tabKey, (current) => {
+      const nextRows = [...current];
+      const existingRow = nextRows[rowIndex] || {};
+      nextRows[rowIndex] = { ...existingRow, [field]: value, error: null };
+      return nextRows;
+    });
+  };
+
+const deleteRowFromDB = async (tabKey, row) => {
+  try {
+    if (tabKey === 'supplier') {
+      await api.post('/product/deleteSUPProductComp', {
+        sup_product_id: row.cs_product_id,
+      });
+    } else {
+      await api.post('/product/deleteCSProductComp', {
+        cs_product_id: row.cs_product_id,
+      });
+    }
+  } catch (err) {
+    console.error('Delete failed:', err);
+  }
+};
+
+ const handleDeleteRow = async (tabKey, rowIndex) => {
+  updateTabRows(tabKey, (current) => {
+    const nextRows = [...current];
+    const removed = nextRows.splice(rowIndex, 1);
+    const removedRow = removed[0];
+
+    // If the row had a product ID, delete it from DB
+    if (removedRow?.cs_product_id) {
+      deleteRowFromDB(tabKey, removedRow);
+    }
+
+    return nextRows;
+  });
 };
 
 
-  const updateState = (index, property, e) => {
-    const copy = [...addMoreItem];
-    copy[index] = { ...copy[index], [property]: e.target.value };
-    setMoreItem(copy);
-    console.log(`updateState: Item ${copy[index].id} updated. Property: ${property}, Value: ${e.target.value}`);
+
+  const handleApplyAll = (tabKey, field) => {
+    const valueToApply = bulkValues[field];
+    if (valueToApply === '') {
+      message('Enter a value before applying to all rows', 'warning');
+      return;
+    }
+
+    updateTabRows(tabKey, (current) =>
+      current.map((row) => ({ ...row, [field]: valueToApply })),
+    );
   };
 
-  const onchangeItem = async (selectedOption, itemId) => {
-    console.log('onchangeItem: Selected Option:', selectedOption, 'for Item ID:', itemId);
+  const buildPayload = (targetRows) =>
+    targetRows
+      .filter((row) => row.contact_id || (row.supplier_code && row.type === 'customer'))
+      .map((row) => ({
+        cs_product_id: row.cs_product_id || null,
+        contact_id: Number(row.contact_id) || null,
+        wholesale_price: toNumberOrNull(row.wholesale_price),
+        carton_price: toNumberOrNull(row.carton_price),
+        fixed_price: toNumberOrNull(row.fixed_price),
+        type: row.type,
+      }));
 
-    const currentItemIndex = addMoreItem.findIndex(el => el.id === itemId);
-    if (currentItemIndex === -1) return;
+ const handleSave = async () => {
+    if (!productId) {
+      message('Missing product information', 'warning');
+      return;
+    }
 
-    let updatedItem = { ...addMoreItem[currentItemIndex] };
+    const allRows = [
+      ...getTabRows('customer'),
+      ...getTabRows('supplier'),
+      ...getTabRows('priceGroup'),
+    ];
 
-    if (!selectedOption) {
-      updatedItem = {
-        ...updatedItem,
-        itemId: '',
-        code: '',
-        title: '',
-        price: '',
-        mrp: '',
-        gst: '',
-        cs_product_id: null
-      };
-      console.log('onchangeItem: Selection cleared. Updated item:', updatedItem);
-    } else {
-      updatedItem.itemId = selectedOption.contact_id;
-      updatedItem.code = selectedOption.customer_code;
-      updatedItem.title = selectedOption.company_name;
-      updatedItem.wholesale_price = '';
-      updatedItem.carton_price = '';
-      updatedItem.fixed_price = '';
-      updatedItem.cs_product_id = 'null';
+    // Removed the initial check for no changes here, as it was too broad.
 
-      console.log('onchangeItem: Basic info updated. Checking for existing price...');
+    const customerRows = allRows.filter((row) => row.type === 'customer');
+    const supplierRows = allRows.filter((row) => row.type === 'supplier');
+    const otherRows = allRows.filter((row) => row.type !== 'customer' && row.type !== 'supplier');
+    setSaving(true);
 
-      try {
-        const response = await api.post('/product/checkCustomerProductPrice', {
-          contact_id: selectedOption.contact_id,
-          product_id: ProductId,
-          customer: 1,
-          supplier: 0,
-        });
-        console.log('onchangeItem: checkCustomerProductPrice API response:', response.data);
-
-        if (response.data.cs_product_exists && response.data.cs_product_data) {
-          const existingData = response.data.cs_product_data;
-          message(`Price for ${selectedOption.company_name} and product ${productDetails?.title} already exists. It will be updated.`, 'warning');
-
-          updatedItem.wholesale_price = existingData.wholesale_price || '';
-          updatedItem.carton_price = existingData.carton_price || '';
-          updatedItem.fixed_price = existingData.fixed_price || '';
-          updatedItem.cs_product_id = existingData.cs_product_id;
-          console.log('onchangeItem: Existing price found. Pre-filling data. cs_product_id:', updatedItem.cs_product_id);
-        } else {
-          console.log('onchangeItem: No existing price found for this customer and product.');
+    // Resolve supplier_id from typed supplier_code if missing
+    const supplierRowsResolved = supplierRows.map((row) => {
+      if (!row.contact_id && row.supplier_code) {
+        const opt = (filteredContactOptions.supplier || contactOptions).find(
+          (o) => String(o?.supplier_code || '').toLowerCase() === String(row.supplier_code || '').toLowerCase(),
+        );
+        if (opt?.supplier_id) {
+          return { ...row, contact_id: String(opt.supplier_id), supplier_name: opt.supplier_name || row.supplier_name };
         }
-      } catch (error) {
-        console.error('onchangeItem: Error checking existing customer product price:', error);
-        message('Error checking existing price. Please try again.', 'error');
       }
+      return row;
+    });
+
+    // validation: ensure every customer row has code/name
+    const invalidCustomerRows = customerRows.filter((row) => !row.supplier_code && !row.contact_id);
+    if (invalidCustomerRows.length > 0) {
+      message('Each customer row must have a valid code or selected company', 'warning');
+      setSaving(false);
+      return;
     }
 
-    const updatedAddMoreItem = addMoreItem.map((el, idx) =>
-      idx === currentItemIndex ? updatedItem : el
-    );
-    setMoreItem(updatedAddMoreItem);
-    console.log('onchangeItem: Final addMoreItem state update:', updatedAddMoreItem);
-  };
-
-  const ClearValue = (item) => {
-    setMoreItem((current) => current.filter((obj) => obj.id !== item.id));
-    console.log('ClearValue: Item removed:', item.id);
-  };
-
-  const updateSupplierState = (index, property, e) => {
-    const copy = [...purchaserequesteditdetails];
-    copy[index] = {
-      ...copy[index],
-      [property]: e.target.value,
-      modification_date: creationdatetime,
-      modified_by: loggedInuser.first_name
-    };
-    setPurchaseRequestEditDetails(copy);
-    console.log(`updateSupplierState: Item ${copy[index].id} updated. Property: ${property}, Value: ${e.target.value}`);
-  };
-
-  const editPurchaseRequestItems = async () => {
-    await Promise.all(
-      purchaserequesteditdetails.map(async (item) => {
-        try {
-          if (item.contact_id && item.cs_product_id) {
-            // Update existing
-            await api.post('/product/EditCSProductLineItemsBYSupplierID', {
-              cs_product_id: item.cs_product_id,
-              wholesale_price: item.wholesale_price,
-              carton_price: item.carton_price,
-              fixed_price: item.fixed_price,
-              modification_date: creationdatetime,
-              modified_by: loggedInuser.first_name
-            });
-            message(`Supplier price for ${item.name} updated successfully`, 'success');
-          } else if (item.contact_id) {
-            // Create new customer_supplier_price
-            const addSupplierRes = await api.post('/product/addCustomerSupplierPrice', {
-              contact_id: item.contact_id,
-              customer: 0,
-              supplier: 1,
-              created_by: loggedInuser.first_name,
-              creation_date: creationdatetime,
-            });
-            const customerSupplierPriceId = addSupplierRes.data.customer_supplier_price_id;
-            // Create new cs_product
-            await api.post('/product/addCSProductHistory', {
-              customer_supplier_price_id: customerSupplierPriceId,
-              product_id: ProductId,
-              contact_id: item.contact_id,
-              wholesale_price: item.wholesale_price,
-              carton_price: item.carton_price,
-              fixed_price: item.fixed_price,
-              created_by: loggedInuser.first_name,
-              creation_date: creationdatetime,
-            });
-            message(`New supplier price for ${item.name} added`, 'success');
-          }
-        } catch (error) {
-          console.error('editPurchaseRequestItems: Error processing supplier item', error);
-          message(`Failed to process supplier price for ${item.name}`, 'error');
-        }
-      })
-    );
-    console.log('editPurchaseRequestItems: All supplier items processed.');
-  };
-
-  useEffect(() => {
-    console.log('useEffect (ProductId change): Fetching initial data...');
-    getCustomer();
-    getSupplier();
-    ProductLineItemById();
-    PurchaseRequestLineItemById();
-  }, [ProductId]);
-
-  useEffect(() => {
-    if (addPurchaseOrderModal) {
-      console.log('useEffect (addPurchaseOrderModal change): Modal opened, resetting customer line items and re-fetching data.');
-      setMoreItem([
-        {
-          id: random.int(1, 99).toString(),
-          itemId: '',
-          unit: '',
-          qty: '',
-          price: '',
-          mrp: '',
-          gst: '',
-          description: '',
-          code: '',
-          title: '',
-          cs_product_id: null
-        }
-      ]);
-      ProductLineItemById();
-      PurchaseRequestLineItemById();
+    // validation: ensure every supplier row has a selected supplier (contact_id)
+    const invalidSupplierRows = supplierRowsResolved.filter((row) => !row.contact_id);
+    if (invalidSupplierRows.length > 0) {
+      message('Each supplier row must select a valid supplier', 'warning');
+      setSaving(false);
+      return;
     }
-  }, [addPurchaseOrderModal]);
 
+    // check duplicate in final payload
+    const seenCodes = new Set();
+    const hasDuplicate = customerRows.some((r) => {
+      const code = String(r.supplier_code || '').toLowerCase();
+      const name = String(r.supplier_name || '').toLowerCase();
+
+      if (code && seenCodes.has(code)) {
+        message('Duplicate customer code found - resolve before saving', 'warning');
+        return true;
+      }
+      if (name && seenCodes.has(name)) {
+        message('Duplicate customer name found - resolve before saving', 'warning');
+        return true;
+      }
+
+      if (code) seenCodes.add(code);
+      if (name) seenCodes.add(name);
+      return false;
+    });
+
+    if (hasDuplicate) {
+      setSaving(false);
+      return;
+    }
+
+    const newCustomerRows = customerRows.filter((row) => !row.cs_product_id);
+    const existingCustomerRows = customerRows.filter((row) => row.cs_product_id);
+    const newSupplierRows = supplierRowsResolved.filter((row) => !row.cs_product_id);
+    const existingSupplierRows = supplierRowsResolved.filter((row) => row.cs_product_id);
+
+    const operations = [];
+
+    newCustomerRows.forEach((row) => {
+      operations.push(
+        api.post('/product/insertProductComp', {
+          product_id: Number(productId),
+          company_id: Number(row.contact_id) || null,
+          wholesale_price: toNumberOrNull(row.wholesale_price),
+          carton_price: toNumberOrNull(row.carton_price),
+          fixed_price: toNumberOrNull(row.fixed_price),
+        }),
+      );
+    });
+
+    existingCustomerRows.forEach((row) => {
+      // Only push an operation if there's a change (price update)
+      // This check might be redundant if the API handles no-op updates gracefully,
+      // but it can prevent unnecessary API calls.
+      // You might need to compare current row values with fetched values if you want to be precise.
+      // For simplicity, we'll assume any existing row with a price might have been updated.
+      operations.push(
+        postWithFallback('/product/EditCSProductLineItems', '/EditCSProductLineItems', {
+          cs_product_id: Number(row.cs_product_id),
+          company_id: Number(row.contact_id) || null,
+          wholesale_price: toNumberOrNull(row.wholesale_price),
+          carton_price: toNumberOrNull(row.carton_price),
+          fixed_price: toNumberOrNull(row.fixed_price),
+        }),
+      );
+    });
+
+    newSupplierRows.forEach((row) => {
+      operations.push(
+        api.post('/product/insertProductSup', {
+          product_id: Number(productId),
+          supplier_id: Number(row.contact_id) || null,
+          wholesale_price: toNumberOrNull(row.wholesale_price),
+          carton_price: toNumberOrNull(row.carton_price),
+          fixed_price: toNumberOrNull(row.fixed_price),
+        }),
+      );
+    });
+
+    existingSupplierRows.forEach((row) => {
+      // Similar to existingCustomerRows, assume price updates might have occurred.
+      operations.push(
+        api.post('/product/EditSUPProductLineItems', {
+          sup_product_id: Number(row.cs_product_id),
+          supplier_id: Number(row.contact_id) || null,
+          wholesale_price: toNumberOrNull(row.wholesale_price),
+          carton_price: toNumberOrNull(row.carton_price),
+          fixed_price: toNumberOrNull(row.fixed_price),
+        }),
+      );
+    });
+
+    const legacyRows = buildPayload(otherRows);
+    if (legacyRows.length > 0 || deletedRowIds.length > 0) {
+      operations.push(
+        api.post('/customersupplierprice/saveContactPricesByProduct', {
+          product_id: productId,
+          rows: legacyRows,
+          deleted: deletedRowIds,
+        }),
+      );
+    }
+
+    // This is the crucial check: if there are no operations to perform, then exit.
+    if (operations.length === 0) {
+      message('No changes detected to save', 'warning');
+      setSaving(false);
+      return;
+    }
+
+    try {
+      await Promise.all(operations);
+      message('Contact prices saved successfully', 'success');
+      setDeletedRowIds([]);
+      await fetchContactPrices(); // Refresh data after saving
+    } catch (error) {
+      console.error("Save error:", error); // Log the error for debugging
+      message('Unable to save contact prices', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+  
+  const renderRows = (tabKey) => {
+    const tabRows = getTabRows(tabKey);
+    const options = tabKey === 'customer' ? companyOptions : filteredContactOptions[tabKey] || [];
+
+    if (tabRows.length === 0) {
+      return (
+        <tr>
+          <td colSpan="6" className="text-center py-5">
+            {loading ? <Spinner size="sm" /> : 'No contact prices found'}
+          </td>
+        </tr>
+      );
+    }
+
+    return tabRows.map((row, index) => {
+      const datalistId = `customer-code-options-${index}`;
+      return (
+        <tr key={row.key}>
+          <td style={{ width: '18%' }}>
+            {tabKey === 'customer' ? (
+              <>
+                <Input
+                  value={row.supplier_code}
+                  list={datalistId}
+                  onChange={(e) => handleCustomerCodeInput(index, e.target.value)}
+                  placeholder="Enter customer code"
+                  invalid={!!row.error}
+                />
+                <datalist id={datalistId}>
+                  {options.map((option) => {
+                    const optionCode = option?.customer_code || option?.company_code || option?.supplier_code || '';
+                    const optionLabel = optionCode
+                      ? `${optionCode}${option?.company_name ? ` - ${option.company_name}` : ''}`
+                      : option?.company_name || '';
+                    return (
+                      <option key={option?.company_id || optionCode} value={optionCode}>
+                        {optionLabel}
+                      </option>
+                    );
+                  })}
+                </datalist>
+              </>
+            ) : (
+              <>
+              <Input
+                value={row.supplier_code}
+                list={`supplier-code-options-${index}`}
+                onChange={(e) => handleSupplierCodeInput(tabKey, index, e.target.value)}
+                placeholder="Enter supplier code"
+              />
+              <datalist id={`supplier-code-options-${index}`}>
+                {options.map((option) => (
+                  <option
+                    key={option.supplier_id}
+                    value={option.supplier_code}
+                  >
+                    {option.supplier_code} - {option.supplier_name}
+                  </option>
+                ))}
+              </datalist>
+            </>
+            )}
+            {row.error ? <FormFeedback>{row.error === 'duplicate' ? 'Duplicate code or name' : row.error}</FormFeedback> : null}
+          </td>
+
+          <td style={{ width: '22%' }}>
+            {tabKey === 'customer' ? (
+              <>
+                <Input
+                  value={row.supplier_name}
+                  onChange={(e) => handleCustomerNameChange(index, e.target.value)}
+                  placeholder="Enter company name"
+                  invalid={!!row.error}
+                />
+                {row.error ? <FormFeedback>{row.error === 'duplicate' ? 'Duplicate code or name' : row.error}</FormFeedback> : null}
+              </>
+            ) : (
+              <Input value={row.supplier_name} disabled />
+            )}
+          </td>
+
+          <td style={{ width: '18%' }}>
+            <Input
+              type="number"
+              value={row.wholesale_price}
+              onChange={(e) => handleFieldChange(tabKey, index, 'wholesale_price', e.target.value)}
+            />
+          </td>
+
+          <td style={{ width: '18%' }}>
+            <Input
+              type="number"
+              value={row.carton_price}
+              onChange={(e) => handleFieldChange(tabKey, index, 'carton_price', e.target.value)}
+            />
+          </td>
+
+          <td style={{ width: '18%' }}>
+            <Input
+              type="number"
+              value={row.fixed_price}
+              onChange={(e) => handleFieldChange(tabKey, index, 'fixed_price', e.target.value)}
+            />
+          </td>
+
+          <td className="text-center" style={{ width: '6%' }}>
+            <Button color="danger" size="sm" onClick={() => handleDeleteRow(tabKey, index)}>
+              <Icon.Trash2 size={16} />
+            </Button>
+          </td>
+        </tr>
+      );
+    });
+  };
 
   return (
-    <Modal size="xl" isOpen={addPurchaseOrderModal}>
-      <ComponentCard>
-        <Nav tabs>
-          <NavItem>
-            <NavLink className={activeTab === '1' ? 'active' : ''} onClick={() => toggle('1')}>
-              Customer
-            </NavLink>
-          </NavItem>
-          <NavItem>
-            <NavLink className={activeTab === '2' ? 'active' : ''} onClick={() => toggle('2')}>
-              Supplier
-            </NavLink>
-          </NavItem>
+    <Modal size="xl" isOpen={isOpen} toggle={onClose}>
+      <ModalHeader toggle={onClose}>Product Contact Price</ModalHeader>
+      <ModalBody>
+        <h5 className="mb-3">{productName || 'Selected Product'}</h5>
+
+        <Nav tabs className="mb-3">
+          {TAB_CONFIG.map((tab) => (
+            <NavItem key={tab.key}>
+              <NavLink
+                className={activeTab === tab.key ? 'active' : ''}
+                onClick={() => setActiveTab(tab.key)}
+                style={{ cursor: 'pointer' }}
+              >
+                {tab.label}
+              </NavLink>
+            </NavItem>
+          ))}
         </Nav>
 
-        <TabContent activeTab={activeTab}>
-          <TabPane tabId="1">
-            <BreadCrumbs heading={productDetails?.title} />
-            <Button color="primary" onClick={AddNewLineItem}>
-              Add Item
-            </Button>
-            <table className="lineitem">
-              <thead>
-                <tr>
-                  <th>Code</th>
-                  <th>Name</th>
-                  <th>Wholesale Price</th>
-                  <th>Carton Price</th>
-                  <th>Fixed Price</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {addMoreItem.map((el, index) => {
-                  const selectedCompany = getProductValue.find((x) => x.contact_id === el.itemId) || null;
-                  const showCode = el.code && el.code !== '';
-                  return (
-                    <tr key={el.id}>
-                      <td>
-                        {showCode && el.itemId ? (
-                          <Input value={el.code} readOnly />
-                        ) : (
-                          <Select
-                            options={getProductValue}
-                            value={selectedCompany}
-                            onChange={(e) => onchangeItem(e, el.id)}
-                            getOptionLabel={(option) => option.company_name}
-                            getOptionValue={(option) => option.contact_id}
-                            placeholder="Select Company"
-                          />
-                        )}
-                      </td>
-                      <td>
-                        <Input value={showCode && el.itemId ? (selectedCompany ? selectedCompany.company_name : el.title) : (selectedCompany ? selectedCompany.company_name : '')} readOnly />
-                      </td>
-                      <td><Input value={el.wholesale_price} onChange={(e) => updateState(index, 'wholesale_price', e)} /></td>
-                      <td><Input value={el.carton_price} onChange={(e) => updateState(index, 'carton_price', e)} /></td>
-                    <td><Input value={el.fixed_price} onChange={(e) => updateState(index, 'fixed_price', e)} /></td>
-                      <td><Button color="link" onClick={() => ClearValue(el)}>Clear</Button></td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            <ModalFooter>
-              <Button color="primary" onClick={EditCSProductLineItems}>
-                Submit
-              </Button>
-              <Button color="secondary" onClick={() => setAddPurchaseOrderModal(false)}>
-                Cancel
-              </Button>
-            </ModalFooter>
-          </TabPane>
+        <div className="d-flex justify-content-end mb-3">
+          <Button color="dark" onClick={() => handleAddRow(activeTab)}>
+            <Icon.PlusCircle size={18} className="me-2" />
+            Add Row
+          </Button>
+        </div>
 
-          <TabPane tabId="2">
-            <Button color="primary" onClick={AddNewSupplierLineItem}>
-              Add Item
+        <Row className="align-items-end mb-3">
+          <Col md="3">
+            <Label>New Wholesale Price</Label>
+            <Input
+              type="number"
+              value={bulkValues.wholesale_price}
+              onChange={(e) => setBulkValues((prev) => ({ ...prev, wholesale_price: e.target.value }))}
+            />
+          </Col>
+          <Col md="2" className="mt-2 mt-md-0">
+            <Button color="primary" className="w-100" onClick={() => handleApplyAll(activeTab, 'wholesale_price')}>
+              Apply All
             </Button>
-            <table className="lineitem">
-              <thead>
-                <tr>
-                  <th>Code</th>
-                  <th>Name</th>
-                  <th>Wholesale Price</th>
-                  <th>Carton Price</th>
-                  <th>Fixed Price</th>
-                </tr>
-              </thead>
-              <tbody>
-                {purchaserequesteditdetails.map((item, index) => {
-                  const selectedSupplier = getsupplier.find((x) => x.value === item.contact_id) || null;
-                  return (
-                    <tr key={item.id}>
-                      <td>
-                        <Select
-                          options={getsupplier}
-                          value={selectedSupplier}
-                          onChange={(e) => onSupplierChange(e, index)}
-                          getOptionLabel={(option) => option.label}
-                          getOptionValue={(option) => option.value}
-                          placeholder="Select Supplier"
-                        />
-                      </td>
-                      <td>
-                        <Input value={item.name} onChange={(e) => updateSupplierState(index, 'name', e)} />
-                      </td>
-                      <td>
-                        <Input
-                          value={item.wholesale_price}
-                          onChange={(e) => updateSupplierState(index, 'wholesale_price', e)}
-                        />
-                      </td>
-                      <td>
-                        <Input
-                          value={item.carton_price}
-                          onChange={(e) => updateSupplierState(index, 'carton_price', e)}
-                        />
-                      </td>
-                      <td>
-                        <Input
-                          value={item.fixed_price}
-                          onChange={(e) => updateSupplierState(index, 'fixed_price', e)}
-                        />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            <ModalFooter>
-              <Button color="primary" onClick={editPurchaseRequestItems}>
-                Submit
-              </Button>
-              <Button color="secondary" onClick={() => setAddPurchaseOrderModal(false)}>
-                Cancel
-              </Button>
-            </ModalFooter>
-          </TabPane>
-        </TabContent>
-      </ComponentCard>
+          </Col>
+          <Col md="3" className="mt-3 mt-md-0">
+            <Label>New Carton Price</Label>
+            <Input
+              type="number"
+              value={bulkValues.carton_price}
+              onChange={(e) => setBulkValues((prev) => ({ ...prev, carton_price: e.target.value }))}
+            />
+          </Col>
+          <Col md="2" className="mt-2 mt-md-0">
+            <Button color="primary" className="w-100" onClick={() => handleApplyAll(activeTab, 'carton_price')}>
+              Apply All
+            </Button>
+          </Col>
+        </Row>
+
+        <Table bordered responsive>
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Name</th>
+              <th>Wholesale Price</th>
+              <th>Carton Price</th>
+              <th>Fixed Price</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>{renderRows(activeTab)}</tbody>
+        </Table>
+      </ModalBody>
+      <ModalFooter>
+        <Button color="primary" onClick={handleSave} disabled={saving}>
+          {saving ? <Spinner size="sm" className="me-2" /> : null}
+          Save
+        </Button>
+        <Button color="danger" onClick={onClose} disabled={saving}>
+          Cancel
+        </Button>
+      </ModalFooter>
     </Modal>
   );
-}
+};
+
+ContactPriceButton.propTypes = {
+  productId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  isOpen: PropTypes.bool,
+  onClose: PropTypes.func,
+  productName: PropTypes.string,
+};
+
+ContactPriceButton.defaultProps = {
+  productId: null,
+  isOpen: false,
+  onClose: () => {},
+  productName: '',
+};
+
+export default ContactPriceButton;
