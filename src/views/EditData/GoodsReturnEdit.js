@@ -297,6 +297,7 @@ useEffect(() => {
     .catch(() => {
       message('Network connection error.', 'error');
     });
+     navigate('/GoodsReturn'); 
   };
   const handleRowChange = (id, field, value) => {
     setRows(prevRows =>

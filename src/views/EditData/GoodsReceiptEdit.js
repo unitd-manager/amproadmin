@@ -177,7 +177,7 @@ console.log('formdata',formData);
     // Fetch supplier options for dropdown
     api.post("/purchaseorder/getGoodsReceiptById",{goods_receipt_id:id}).then((response) => {
       console.log('goodsreceipt',response.data);
-      setFormData(response.data.data);
+      setFormData(response.data.data[0]);
     });
   
     api.post("/currency/getCuerrencyByGoodsReceiptId",{goods_receipt_id:id}).then((response) => {
@@ -266,36 +266,49 @@ const handleKeyDown = (e) => {
     };
   // Handle form submit (example API call structure)
   const handleSubmit = async () => {
-    const calculatedSubTotal = rows.reduce((sum, row) => sum + Number(row.total_price), 0);
+    const calculatedSubTotal = rows.reduce((sum, row) => sum + Number(row.total_price || 0), 0);
     const calculatedTaxAmount = calculatedSubTotal * 0.09;
     const calculatedNetTotal = calculatedSubTotal + calculatedTaxAmount;
 
-    formData.sub_total = calculatedSubTotal;
-    formData.tax_amount = calculatedTaxAmount;
-    formData.net_total = calculatedNetTotal;
+    const payload = {
+      ...formData,
+      goods_receipt_id: formData?.goods_receipt_id || id,
+      sub_total: Number(calculatedSubTotal),
+      tax_amount: Number(calculatedTaxAmount),
+      net_total: Number(calculatedNetTotal),
+      grand_total: Number(calculatedNetTotal),
+    };
 
     api
-    .post('/purchaseorder/editGoodsReceipt', formData)
-    .then(() => {
-      api
-      .post('/currency/editGoodsReceiptCurrency', currency) 
-      .then(() => {})
-      
-      rows?.forEach((el)=>{
-       el.gross_total=el.total_price;
+      .post('/purchaseorder/editGoodsReceipt', payload)
+      .then(() => {
+        const currencyPayload = {
+          ...currency,
+          goods_receipt_id: currency?.goods_receipt_id || payload.goods_receipt_id,
+        };
         api
-      .post('/purchaseorder/editGrProduct', el) 
-      .then(() => {})
+          .post('/currency/editGoodsReceiptCurrency', currencyPayload)
+          .then(() => {});
+
+        rows
+          ?.filter((el) => el?.product_id && el?.gr_product_id)
+          .forEach((el) => {
+            const rowPayload = { ...el, gross_total: el.total_price };
+            api
+              .post('/purchaseorder/editGrProduct', rowPayload)
+              .then(() => {});
+          });
+
+        message('Record edited successfully.', 'success');
+        setTimeout(() => {
+          window.location.reload();
+          navigate('/GoodsReceipt');
+        }, 300);
       })
-     
-      message('Record edited successfully.', 'success');
-      setTimeout(() => {
-        window.location.reload();
-      }, 300);
-    })
-    .catch(() => {
-      message('Network connection error.', 'error');
-    });
+      .catch((err) => {
+        console.error('editGoodsReceipt failed:', err?.response?.data || err);
+        message('Network connection error.', 'error');
+      });
   };
   const handleRowChange = (id, field, value) => {
     setRows(prevRows =>
