@@ -84,8 +84,8 @@ const PurchaseOrder = () => {
         await Promise.all(selectedIds.map(purchaseInvoiceId =>
           api.post('/purchaseorder/deletePurchaseorder', { purchase_order_id: purchaseInvoiceId })
         ));
-        message('PurchaseOrders deleted successfully!','success');
-        setSelectedIds([]);
+        // message('PurchaseOrders deleted successfully!','success');
+        // setSelectedIds([]);
         setTimeout(()=>{
           window.location.reload();
         },300)
@@ -142,7 +142,7 @@ const PurchaseOrder = () => {
     api.post("/purchaseorder/repeatPurchaseOrder", { purchase_order_ids: selectedIds })
       .then(() => {
         message("Purchase orders repeated successfully",'success');
-        setSelectedIds([]);
+        // setSelectedIds([]);
         setTimeout(()=>{
           window.location.reload();
         },300)
