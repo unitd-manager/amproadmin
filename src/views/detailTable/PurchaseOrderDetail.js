@@ -183,21 +183,18 @@ const handleKeyDown = (e) => {
   };
 
 
-  let subtotal = rows?.reduce((acc, p) => acc + (p.total || 0), 0);
+  let subtotal = rows?.reduce((acc, p) => acc + (Number(p.total_price) || 0), 0);
   const tax = subtotal * 0.09;
   let finalTotal = subtotal + tax;
-  // Calculate totals
   const summary = rows?.reduce(
     (acc, p) => {
-      const total = p.qty * p.price;
-      const grossTotal = total - (p.discount_amount || 0);
-      acc.carton_qty += p.carton_qty;
-      acc.loose_qty  += p.loose_qty;
-      acc.qty += p.qty;
-      acc.carton_price +=p.carton_price;
-      acc.price += p.price;
-      acc.total += total;
-      acc.grossTotal = subtotal;
+      acc.cartonQty += Number(p.carton_qty || 0);
+      acc.looseQty += Number(p.loose_qty || 0);
+      acc.qty += Number(p.qty || 0);
+      acc.cartonPrice += Number(p.carton_price || 0);
+      acc.price += Number(p.price || 0);
+      acc.total += Number(p.qty || 0) * Number(p.price || 0);
+      acc.grossTotal += Number(p.total_price || 0);
       return acc;
     },
     {
@@ -212,9 +209,7 @@ const handleKeyDown = (e) => {
   );
 
 const handleDiscountChange=(value)=>{
-setBillDiscount(parseFloat(value) || 0)
-subtotal -= billDiscount;
-finalTotal -= billDiscount;
+setBillDiscount(parseFloat(value) || 0);
 }
 const navigate=useNavigate();
   useEffect(() => {
@@ -314,18 +309,19 @@ useEffect(() => {
     };
   // Handle form submit (example API call structure)
   const handleSubmit = async (code) => {
-    const subTotalNum = rows.reduce((sum, row) => sum + Number(row.total_price || 0), 0);
-    const taxAmountNum = Number((subTotalNum * 0.09).toFixed(2));
-    const netTotalNum = Number((subTotalNum + taxAmountNum).toFixed(2));
+    const baseSubTotal = rows.reduce((sum, row) => sum + Number(row.total_price || 0), 0);
+    const subTotalAfterBill = Number((baseSubTotal - Number(billDiscount || 0)).toFixed(2));
+    const taxAmount = Number((subTotalAfterBill * 0.09).toFixed(2));
+    const netTotal = Number((subTotalAfterBill + taxAmount).toFixed(2));
 
     const payloadForm = {
       ...formData,
       tran_no: code,
       bill_discount: billDiscount,
-      sub_total: Number((subTotalNum -billDiscount).toFixed(2)),
-      tax_amount: taxAmountNum,
-      net_total: Number(netTotalNum-billDiscount),
-      grand_total: netTotalNum,
+      sub_total: subTotalAfterBill,
+      tax_amount: taxAmount,
+      net_total: netTotal,
+      grand_total: netTotal,
       status: 'open'
     };
 console.log('formData', payloadForm);
@@ -406,6 +402,15 @@ console.log('formData', payloadForm);
             const price = Number(updatedRow.price || 0);
             const discountPercentage = Number(value || 0);
             updatedRow.discount_amount = ((qty * price * discountPercentage) / 100).toFixed(2);
+          }
+
+          // Recalculate discount_percentage if discount_amount changes
+          if (field === "discount_amount") {
+            const qty = Number(updatedRow.qty || 0);
+            const price = Number(updatedRow.price || 0);
+            const discountAmount = Number(value || 0);
+            const lineTotal = qty * price;
+            updatedRow.discount_percentage = lineTotal ? ((discountAmount / lineTotal) * 100).toFixed(2) : 0;
           }
 
           // Recalculate totals if relevant fields change
@@ -754,8 +759,8 @@ console.log('formData', payloadForm);
           <Label className="small mb-1">Request DeliveryDate</Label>
         </Col>
         <Col md="8">
-          <Input bsSize="sm" className="py-0 px-1" type="date"  name="request_delivery_date"
-              value={formData?.request_delivery_date}
+          <Input bsSize="sm" className="py-0 px-1" type="date"  name="req_delivery_date"
+              value={formData?.req_delivery_date}
               onChange={handleChange} 
                onKeyDown={(e) => {
               if (e.key === 'Enter') {
@@ -1192,14 +1197,14 @@ console.log('formData', payloadForm);
               Summary:
             </td>
             <td style={{ padding: '0.3rem' }}></td> {/* Empty for Product Name */}
-            <td style={{ padding: '0.3rem' }}>{summary.cartonQty.toFixed(2)}</td>
-            <td style={{ padding: '0.3rem' }}>{summary.looseQty.toFixed(2)}</td>
-            <td style={{ padding: '0.3rem' }}>{summary.qty.toFixed(2)}</td>
-            <td style={{ padding: '0.3rem' }}>{summary.cartonPrice.toFixed(2)}</td>
-            <td style={{ padding: '0.3rem' }}>{summary.price}</td>
-            <td style={{ padding: '0.3rem' }}>{summary.total}</td>
+            <td style={{ padding: '0.3rem' }}>{Number(summary.cartonQty).toFixed(2)}</td>
+            <td style={{ padding: '0.3rem' }}>{Number(summary.looseQty).toFixed(2)}</td>
+            <td style={{ padding: '0.3rem' }}>{Number(summary.qty).toFixed(2)}</td>
+            <td style={{ padding: '0.3rem' }}>{Number(summary.cartonPrice).toFixed(2)}</td>
+            <td style={{ padding: '0.3rem' }}>{Number(summary.price).toFixed(2)}</td>
+            <td style={{ padding: '0.3rem' }}>{Number(summary.total).toFixed(2)}</td>
             <td style={{ padding: '0.3rem' }}></td>
-            <td style={{ padding: '0.3rem' }}>{summary.grossTotal}</td>
+            <td style={{ padding: '0.3rem' }}>{Number(summary.grossTotal).toFixed(2)}</td>
             <td style={{ padding: '0.3rem' }}></td>
           </tr>
         </tbody>
@@ -1269,15 +1274,15 @@ console.log('formData', payloadForm);
       <Col md="3">
         <div className="d-flex justify-content-between small">
           <strong>➤ Sub Total:</strong>
-          <span className="text-primary">${Number(subtotal - parseFloat(billDiscount)).toFixed(2)}</span>
+          <span className="text-primary">${Number(subtotal - Number(billDiscount || 0)).toFixed(2)}</span>
         </div>
         <div className="d-flex justify-content-between small">
           <strong>➤ Tax:</strong>
-          <span className="text-primary">${Number(tax).toFixed(2)}</span>
+          <span className="text-primary">${Number(((subtotal - Number(billDiscount || 0)) * 0.09)).toFixed(2)}</span>
         </div>
         <div className="d-flex justify-content-between fw-bold">
           <span>Net Total:</span>
-          <span className="text-primary">${Number(finalTotal - parseFloat(billDiscount)).toFixed(2)}</span>
+          <span className="text-primary">${Number(((subtotal - Number(billDiscount || 0)) * 1.09)).toFixed(2)}</span>
         </div>
       </Col>
     </Row>
