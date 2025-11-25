@@ -302,7 +302,7 @@ useEffect(() => {
       console.log("Selected Product:", selectedProduct);
       const updatedRows = [...rows];
       updatedRows[index].product_id = selectedProduct.value;
-      updatedRows[index].product_code = selectedProduct.label;
+      updatedRows[index].product_code = selectedProduct.product_code;
       updatedRows[index].product_name = selectedProduct.product_name;
       setRows(updatedRows);
       console.log("Updated Rows:", updatedRows);
@@ -914,7 +914,6 @@ console.log('formData', payloadForm);
   <Select
     options={products.map((pr) => ({
       value: pr.product_id,
-      label: `${pr.product_code} - ${pr.product_name}`,
       product_code: pr.product_code,
       product_name: pr.product_name,
     }))}
@@ -922,7 +921,8 @@ console.log('formData', payloadForm);
       p.product_id
         ? {
             value: p.product_id,
-            label: `${p.product_code} - ${p.product_name}`,
+            product_code: p.product_code,
+            product_name: p.product_name,
           }
         : null
     }
@@ -951,6 +951,12 @@ console.log('formData', payloadForm);
     })
   }}
     placeholder="Select Product"
+    formatOptionLabel={(opt, { context }) =>
+      context === 'menu'
+        ? `${opt.product_code || ''} - ${opt.product_name || ''}`
+        : `${opt.product_code || ''}`
+    }
+    getOptionValue={(opt) => String(opt.value)}
     filterOption={(candidate, input) => {
       if (!input) return true;
       const lowerInput = input.toLowerCase();
