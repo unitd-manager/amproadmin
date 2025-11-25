@@ -267,22 +267,22 @@ useEffect(() => {
   
   
     // Handle product selection
-    const handleProductSelect = (index, selectedProduct) => {
+  const handleProductSelect = (index, selectedProduct) => {
       console.log('selectedProduct:', selectedProduct);
+      const base = products.find(pr => String(pr.product_id) === String(selectedProduct.value));
       const updatedRows = [...rows];
       updatedRows[index].product_id = selectedProduct.value;
-      updatedRows[index].product_code = selectedProduct.product_code;
-      updatedRows[index].product_name = selectedProduct.product_name;
-      updatedRows[index].carton_price = selectedProduct.carton_price;
-      updatedRows[index].price = selectedProduct.price;
-      updatedRows[index].uom = selectedProduct.uom;
-      updatedRows[index].carton_qty = selectedProduct.carton_qty;
-      updatedRows[index].qty = selectedProduct.qty;
+      updatedRows[index].product_code = selectedProduct.product_code || base?.product_code || '';
+      updatedRows[index].product_name = selectedProduct.product_name || base?.product_name || base?.title || '';
+      updatedRows[index].carton_price = base?.carton_price ?? updatedRows[index].carton_price ?? 0;
+      updatedRows[index].price = base?.price ?? updatedRows[index].price ?? 0;
+      updatedRows[index].uom = base?.uom ?? updatedRows[index].uom ?? '';
+      updatedRows[index].carton_qty = base?.carton_qty ?? updatedRows[index].carton_qty ?? 0;
+      updatedRows[index].qty = base?.qty ?? updatedRows[index].qty ?? 0;
       
       console.log('updatedRows[index].product_code:', updatedRows[index].product_code);
       setRows(updatedRows);
 
-      // Autofocus on Carton Price input
       if (cartonPriceRefs.current[index]) {
         cartonPriceRefs.current[index].focus();
       }
@@ -847,7 +847,6 @@ console.log('formdata',payloadForm);
   <Select
     options={products.map((pr) => ({
       value: pr.product_id,
-      label: `${pr.product_code} - ${pr.product_name}`,
       product_code: pr.product_code,
       product_name: pr.product_name,
     }))}
@@ -855,7 +854,8 @@ console.log('formdata',payloadForm);
       p.product_id
         ? {
             value: p.product_id,
-            label: `${p.product_code} - ${p.product_name}`,
+            product_code: p.product_code,
+            product_name: p.product_name,
           }
         : null
     }
@@ -884,6 +884,12 @@ console.log('formdata',payloadForm);
     })
   }}
     placeholder="Select Product"
+    formatOptionLabel={(opt, { context }) =>
+      context === 'menu'
+        ? `${opt.product_code || ''} - ${opt.product_name || ''}`
+        : `${opt.product_code || ''}`
+    }
+    getOptionValue={(opt) => String(opt.value)}
     filterOption={(candidate, input) => {
       if (!input) return true;
       const lowerInput = input.toLowerCase();
