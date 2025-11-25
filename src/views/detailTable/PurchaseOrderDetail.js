@@ -611,12 +611,18 @@ console.log('formData', payloadForm);
               name="supplier_id"
               value={
                 formData?.supplier_id
-                  ? {
-                      value: formData.supplier_id,
-                      label: supplierOptions.find(
-                        (s) => String(s.supplier_id) === String(formData.supplier_id)
-                      )?.supplier_code || "",
-                    }
+                  ? (() => {
+                      const s = supplierOptions.find(
+                        (opt) => String(opt.supplier_id) === String(formData.supplier_id)
+                      );
+                      return s
+                        ? {
+                            value: s.supplier_id,
+                            supplier_code: s.supplier_code,
+                            supplier_name: s.supplier_name,
+                          }
+                        : null;
+                    })()
                   : null
               }
               onChange={(selected) =>
@@ -627,10 +633,24 @@ console.log('formData', payloadForm);
               onKeyDown={handleKeyDown}
               options={supplierOptions.map((s) => ({
                 value: s.supplier_id,
-                label: s.supplier_code,
+                supplier_code: s.supplier_code,
+                supplier_name: s.supplier_name,
               }))}
               placeholder="Select Supplier"
               isClearable
+              filterOption={(candidate, input) => {
+                if (!input) return true;
+                const q = input.toLowerCase();
+                const code = String(candidate.data.supplier_code || "").toLowerCase();
+                const name = String(candidate.data.supplier_name || "").toLowerCase();
+                return code.includes(q) || name.includes(q);
+              }}
+              formatOptionLabel={(opt, { context }) =>
+                context === "menu"
+                  ? `${opt.supplier_code || ""} - ${opt.supplier_name || ""}`
+                  : `${opt.supplier_code || ""}`
+              }
+              getOptionValue={(opt) => String(opt.value)}
               styles={{
                 control: (base) => ({
                   ...base,
