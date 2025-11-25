@@ -39,7 +39,7 @@ const Supplier = () => {
     setLoading(true);
     try {
       const params = {
-        company_name: supplierNameFilter,
+        supplier_name: supplierNameFilter,
         mobile: mobileFilter,
       };
       
@@ -47,7 +47,7 @@ const Supplier = () => {
         params.is_active = statusFilter === 'active' ? 1 : 0;
       }
 
-      const res = await api.get('/contact/getContactss', { params });
+      const res = await api.get('/supplier/getSupplier', { params });
   
       const formattedCustomers = res.data.data.map(item => ({
         ...item,
@@ -67,7 +67,7 @@ const Supplier = () => {
   const handleDeleteSupplier = async (contactId) => {
     if (window.confirm('Are you sure you want to delete this supplier?')) {
       try {
-        await api.post('/contact/deleteContact', { company_id: contactId });
+        await api.post('/supplier/deleteSupplier', { supplier_id: contactId });
         message('Supplier deleted successfully', 'success');
         getCustomer();
       } catch (error) {
@@ -247,12 +247,12 @@ const Supplier = () => {
               </thead>
               <tbody>
                 {supplier.map((element) => (
-                  <tr key={element.company_id}>
+                  <tr key={element.supplier_id}>
                     <td>
                       <button 
                         type="button"
                         className="btn btn-sm btn-icon p-0"
-                        onClick={() => handleDeleteSupplier(element.company_id)}
+                        onClick={() => handleDeleteSupplier(element.supplier_id)}
                         title="Delete"
                       >
                         <Icon.Trash2 size={16} className="text-danger" />
@@ -266,20 +266,20 @@ const Supplier = () => {
                       />
                     </td>
                     <td>
-                      <Link to={`/SupplierEdit/${element.company_id}`} className="text-primary text-decoration-none">
-                        {element.supplier_code || 'N/A'}
+                      <Link to={`/SupplierEdit/${element.supplier_id}`} className="text-primary text-decoration-none">
+                        {element.supplier_code || ''}
                       </Link>
                     </td>
                     <td>
-                      <Link to={`/SupplierEdit/${element.company_id}`} className="text-primary text-decoration-none">
-                        {element.company_name || 'N/A'}
+                      <Link to={`/SupplierEdit/${element.supplier_id}`} className="text-primary text-decoration-none">
+                        {element.supplier_name || ''}
                       </Link>
                     </td>
                     <td className="text-truncate" style={{ maxWidth: '200px' }}>
-                      {element.address || 'N/A'}
+                      {element.address || ''}
                     </td>
-                    <td>{element.phone || 'N/A'}</td>
-                    <td>{element.email || 'N/A'}</td>
+                    <td>{element.phone || ''}</td>
+                    <td>{element.email || ''}</td>
                     <td>
                       <span className={`badge ${element.is_active ? 'bg-success' : 'bg-danger'}`}>
                         {element.is_active ? 'Active' : 'Inactive'}
