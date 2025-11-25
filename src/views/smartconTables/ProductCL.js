@@ -354,7 +354,7 @@ const [qrProduct, setQrProduct] = useState(null);
           </Button>
         </div>
 
-        {/* Third row: Show entries dropdown */}
+         {/* Third row: Show entries dropdown */}
         <div className="d-flex align-items-center mb-3">
           <label htmlFor="entriesDropdown" className="me-2 mb-0">
             Show
