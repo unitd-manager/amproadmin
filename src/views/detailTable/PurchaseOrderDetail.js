@@ -31,7 +31,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarAlt, faPlus, faPrint } from '@fortawesome/free-solid-svg-icons';
 import api from "../../constants/api";
 import ProductInfoModal from "../../components/PurchaseOrder/ProductInfoModal";
-
+import Currency from '../../components/PurchaseOrder/Currency';
 
 const PurchaseOrderDetails = () => {
 
@@ -81,7 +81,7 @@ const { id } = useParams();
     contact_address3: "",
     country: "",
     remarks: "",
-    request_delivery_date: today,
+    req_delivery_date: today,
     postal_code: "",
     sub_total:"",
     net_total:"",
@@ -313,7 +313,7 @@ useEffect(() => {
     const subTotalAfterBill = Number((baseSubTotal - Number(billDiscount || 0)).toFixed(2));
     const taxAmount = Number((subTotalAfterBill * 0.09).toFixed(2));
     const netTotal = Number((subTotalAfterBill + taxAmount).toFixed(2));
-
+console.log('formData',formData);
     const payloadForm = {
       ...formData,
       tran_no: code,
@@ -325,8 +325,17 @@ useEffect(() => {
       status: 'open'
     };
 console.log('formData', payloadForm);
-    if (!currency.currency_code) {
-      message('Please Enter currency code.', 'error');
+    if (!formData.currency_id) {
+      message('Please Enter currency Details.', 'error');
+      return;
+    }
+     if (!formData.supplier_id) {
+      message('Please Select Supplier.', 'error');
+      return;
+    }
+    const lineItems = rows.filter((el) => el.product_id);
+    if (lineItems.length === 0) {
+      message('Please create LineItems.', 'error');
       return;
     }
 
@@ -335,7 +344,7 @@ console.log('formData', payloadForm);
       const insertedDataId = res.data.data.insertId;
       currency.purchase_order_id = insertedDataId;
 
-      await api.post('/currency/insertPurchaseOrderCurrency', currency);
+      // await api.post('/currency/insertPurchaseOrderCurrency', currency);
  
       // Fire all product inserts in parallel
       await Promise.all(
@@ -819,9 +828,9 @@ console.log('formData', payloadForm);
                  <>
     {/* Supplier Code & Contact Address1 */}
   
-                 <Row>
+                 {/* <Row>
     {/* Supplier Name & Contact Address2 */}
-    <Col md="6">
+    {/* <Col md="6">
       <Row className="mb-1">
         <Col md="4">
           <Label className="small mb-1">Currency Code</Label>
@@ -831,8 +840,8 @@ console.log('formData', payloadForm);
               value={currency?.currency_code}
               onChange={handleCurrency}  onKeyDown={handleKeyDown}/>
         </Col>
-      </Row>
-    </Col>
+      </Row> */}
+    {/* </Col>
     <Col md="6">
       <Row className="mb-1">
         <Col md="4">
@@ -855,10 +864,10 @@ console.log('formData', payloadForm);
               value={currency?.currency_rate}
               onChange={handleCurrency}  onKeyDown={handleKeyDown}/>
         </Col>
-      </Row>
-    </Col>
-  </Row>
-
+      </Row> */}
+    {/* </Col>
+  </Row> */} 
+<Currency settingdetails={formData} setSettingDetails={setFormData} handleInputs={handleChange}/>
     
       </>
                 </TabPane>

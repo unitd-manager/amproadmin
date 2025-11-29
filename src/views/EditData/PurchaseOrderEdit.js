@@ -33,7 +33,7 @@ import api from "../../constants/api";
 // import PurchaseOrderProductInfoModal from "../../components/PurchaseOrder/PurchaseOrderProductInfoModal";
 import PurchaseOrderProductInfoModal from "../../components/PurchaseOrder/PurchaseOrderProductInfoModal";
 // import PdfPurchaseInvoice from "../../components/PDF/PdfPurchaseInvoice";
-
+import Currency from '../../components/PurchaseOrder/Currency';
 const PurchaseOrderEdit = () => {
 
   const [productInfoModal, setProductInfoModal] = useState(false);
@@ -310,17 +310,26 @@ useEffect(() => {
             grand_total: netTotal,
           };
       console.log('formData', payloadForm);
-          if (!currency.currency_code) {
-            message('Please Enter currency code.', 'error');
+          if (!formData.currency_id) {
+            message('Please Enter currency Details.', 'error');
             return;
           }
+            if (!formData.supplier_id) {
+      message('Please Select Supplier.', 'error');
+      return;
+    }
+    const lineItems = rows.filter((el) => el.product_id);
+    if (lineItems.length === 0) {
+      message('Please create LineItems.', 'error');
+      return;
+    }
 console.log('formdata',payloadForm);
     api
     .post('/purchaseorder/editPurchaseOrder', payloadForm)
     .then(() => {
-      api
-      .post('/currency/editCurrency', currency) 
-      .then(() => {})
+      // api
+      // .post('/currency/editCurrency', currency) 
+      // .then(() => {})
       
       rows?.forEach((el)=>{
        el.gross_total=el.total_price;
@@ -752,9 +761,9 @@ console.log('formdata',payloadForm);
                  <>
     {/* Supplier Code & Contact Address1 */}
   
-                 <Row>
+                 {/* <Row> */}
     {/* Supplier Name & Contact Address2 */}
-    <Col md="6">
+    {/* <Col md="6">
       <Row className="mb-1">
         <Col md="4">
           <Label className="small mb-1">Currency Code</Label>
@@ -790,8 +799,8 @@ console.log('formdata',payloadForm);
         </Col>
       </Row>
     </Col>
-  </Row>
-
+  </Row> */}
+<Currency settingdetails={formData} setSettingDetails={setFormData} handleInputs={handleChange} />
     
       </>
                 </TabPane>

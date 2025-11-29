@@ -7,6 +7,7 @@ import {
 import moment from 'moment';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../constants/api';
+import Select from 'react-select';
 import PdfPurchaseOrderList from '../../components/PDF/PdfPurchaseOrderList';
 import { ToastContainer } from 'react-toastify';
 import PdfPurchaseOrderWithoutPrice from '../../components/PDF/PdfPurchaseOrderWithoutPrice';
@@ -27,6 +28,7 @@ const PurchaseOrder = () => {
   const [limit, setLimit] = useState(20); // Added limit state
   const [selectedIds, setSelectedIds] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [supplierOptions, setSupplierOptions] = useState([]);
 
   const [statusModal, setStatusModal] = useState(false);
   const [newStatus, setNewStatus] = useState('Open');
@@ -58,6 +60,12 @@ const PurchaseOrder = () => {
   useEffect(() => {
     fetchData();
   }, [currentPage, limit]);
+
+  useEffect(() => {
+    api.get('/supplier/getSupplier').then((response) => {
+      setSupplierOptions(response.data.data || []);
+    }).catch(() => {});
+  }, []);
 
   const handleFilterChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
@@ -220,7 +228,54 @@ const PurchaseOrder = () => {
             <option>Cancelled</option>
           </Input>
         </Col>
-        <Col md={2}><Input name="supplier" placeholder="Supplier" value={filters.supplier} onChange={handleFilterChange} /></Col>
+        <Col md={2}>
+          <Select
+            name="supplier"
+            placeholder="Supplier"
+            value={
+              filters.supplier
+                ? (() => {
+                    const s = supplierOptions.find(
+                      (opt) => String(opt.supplier_id) === String(filters.supplier)
+                    );
+                    return s
+                      ? {
+                          value: s.supplier_id,
+                          supplier_code: s.supplier_code,
+                          supplier_name: s.supplier_name,
+                        }
+                      : null;
+                  })()
+                : null
+            }
+            onChange={(selected) =>
+              setFilters((prev) => ({ ...prev, supplier: selected?.value || '' }))
+            }
+            options={supplierOptions.map((s) => ({
+              value: s.supplier_id,
+              supplier_code: s.supplier_code,
+              supplier_name: s.supplier_name,
+            }))}
+            isClearable
+            filterOption={(candidate, input) => {
+              if (!input) return true;
+              const q = input.toLowerCase();
+              const code = String(candidate.data.supplier_code || '').toLowerCase();
+              const name = String(candidate.data.supplier_name || '').toLowerCase();
+              return code.includes(q) || name.includes(q);
+            }}
+            formatOptionLabel={(opt, { context }) =>
+              context === 'menu'
+                ? `${opt.supplier_code || ''} - ${opt.supplier_name || ''}`
+                : `${opt.supplier_code || ''}`
+            }
+            getOptionValue={(opt) => String(opt.value)}
+            styles={{
+              control: (base) => ({ ...base, minHeight: '30px', fontSize: '12px' }),
+              menu: (base) => ({ ...base, fontSize: '12px' }),
+            }}
+          />
+        </Col>
       </Row>
 
       <Row className="mb-3">
