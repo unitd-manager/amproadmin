@@ -275,9 +275,16 @@ const Customer = () => {
                         {element.company_name || 'N/A'}
                       </Link>
                     </td>
-                    <td className="text-truncate" style={{ maxWidth: '200px' }}>
-                      {element.address || 'N/A'}
-                    </td>
+                 <td className="text-truncate" style={{ maxWidth: '200px' }}>
+  <div>
+    <div>{element.address1 || ''}</div>
+    {element.address2 && (
+      <div style={{ fontSize: '0.85em', color: '#6c757d' }}>
+        {element.address2}
+      </div>
+    )}
+  </div>
+</td>
                     <td>{element.phone || 'N/A'}</td>
                     <td>{element.email || 'N/A'}</td>
                     <td>

@@ -54,7 +54,7 @@ const ContentUpdate = () => {
 
   const getContentById = () => {
     api
-      .post('/contact/getContactssById', { company_id: id })
+      .post('/supplier/get-SupplierById', { supplier_id: id })
       .then((res) => {
         const fetchedData = res.data.data[0];
         if (fetchedData) {
@@ -86,7 +86,7 @@ const ContentUpdate = () => {
       };
 
       api
-        .post('/contact/editContact', updatedDetails)
+        .post('/supplier/edit-Supplier', updatedDetails)
         .then(() => {
           message('Record edited successfully', 'success');
         })
@@ -402,7 +402,7 @@ const ContentUpdate = () => {
                 <FormGroup row><Label sm="3">Phone</Label><Col sm="7"><Input type="text" name="phone" value={contentDetails.phone || ''} onChange={handleInputs} /></Col></FormGroup>
                 <FormGroup row><Label sm="3">Mobile</Label><Col sm="7"><Input type="text" name="mobile" value={contentDetails.mobile || ''} onChange={handleInputs} /></Col></FormGroup>
                 <FormGroup row><Label sm="3">Email</Label><Col sm="7"><Input type="email" name="email" value={contentDetails.email || ''} onChange={handleInputs} /></Col></FormGroup>
-                <FormGroup row><Label sm="3">Website</Label><Col sm="7"><Input type="text" name="web_site" value={contentDetails.web_site || ''} onChange={handleInputs} /></Col></FormGroup>
+                <FormGroup row><Label sm="3">Website</Label><Col sm="7"><Input type="text" name="website" value={contentDetails.website || ''} onChange={handleInputs} /></Col></FormGroup>
                 <FormGroup row><Label sm="3">Fax</Label><Col sm="7"><Input type="text" name="fax" value={contentDetails.fax || ''} onChange={handleInputs} /></Col></FormGroup>
               </Col>
 

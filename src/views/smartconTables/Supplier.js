@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import * as Icon from 'react-feather';
-import { Button, Card, CardBody, Input, Row, Col,Label } from 'reactstrap';
+import { Button, Card, CardBody, Input, Row, Col, Label, Pagination, PaginationItem, PaginationLink } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'datatables.net-dt/js/dataTables.dataTables';
 import 'datatables.net-dt/css/jquery.dataTables.min.css';
-import $ from 'jquery';
+//import $ from 'jquery';
 import { Link } from 'react-router-dom';
 import message from '../../components/Message';
 import api from '../../constants/api';
@@ -18,8 +18,9 @@ const Supplier = () => {
   const [mobileFilter, setMobileFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showStatusFilter, setShowStatusFilter] = useState(false);
-  const dataTableRef = useRef(null);
   const filterRef = useRef(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -39,7 +40,7 @@ const Supplier = () => {
     setLoading(true);
     try {
       const params = {
-        company_name: supplierNameFilter,
+        supplier_name: supplierNameFilter,
         mobile: mobileFilter,
       };
       
@@ -47,7 +48,7 @@ const Supplier = () => {
         params.is_active = statusFilter === 'active' ? 1 : 0;
       }
 
-      const res = await api.get('/contact/getContactss', { params });
+      const res = await api.get('/supplier/getSupplier', { params });
   
       const formattedCustomers = res.data.data.map(item => ({
         ...item,
@@ -67,7 +68,7 @@ const Supplier = () => {
   const handleDeleteSupplier = async (contactId) => {
     if (window.confirm('Are you sure you want to delete this supplier?')) {
       try {
-        await api.post('/contact/deleteContact', { company_id: contactId });
+        await api.post('/supplier/deleteSupplier', { supplier_id: contactId });
         message('Supplier deleted successfully', 'success');
         getCustomer();
       } catch (error) {
@@ -78,35 +79,18 @@ const Supplier = () => {
   };
 
   useEffect(() => {
+    setCurrentPage(1);
     getCustomer();
-  }, [supplierNameFilter, mobileFilter]);
+  }, [supplierNameFilter, mobileFilter, statusFilter]);
 
   useEffect(() => {
-    if (dataTableRef.current && $.fn.DataTable.isDataTable(dataTableRef.current)) {
-      $(dataTableRef.current).DataTable().destroy();
+    const totalPages = Math.ceil((supplier?.length || 0) / pageSize) || 1;
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
     }
+  }, [supplier, pageSize]);
 
-    if (supplier && supplier.length > 0) {
-      setTimeout(() => {
-        dataTableRef.current = $('#example').DataTable({
-          pagingType: 'full_numbers',
-          pageLength: 20,
-          processing: true,
-          destroy: true,
-          dom: 'rtip',
-          searching: false,
-          buttons: [],
-          columnDefs: [{ targets: [0, 2, 3], orderable: false }],
-        });
-      }, 100);
-    }
-
-    return () => {
-      if (dataTableRef.current && $.fn.DataTable.isDataTable(dataTableRef.current)) {
-        $(dataTableRef.current).DataTable().destroy();
-      }
-    };
-  }, [supplier]);
+  
 
 
   return (
@@ -246,13 +230,15 @@ const Supplier = () => {
                 </tr>
               </thead>
               <tbody>
-                {supplier.map((element) => (
-                  <tr key={element.company_id}>
+                {supplier
+                  .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+                  .map((element) => (
+                  <tr key={element.supplier_id}>
                     <td>
                       <button 
                         type="button"
                         className="btn btn-sm btn-icon p-0"
-                        onClick={() => handleDeleteSupplier(element.company_id)}
+                        onClick={() => handleDeleteSupplier(element.supplier_id)}
                         title="Delete"
                       >
                         <Icon.Trash2 size={16} className="text-danger" />
@@ -266,29 +252,85 @@ const Supplier = () => {
                       />
                     </td>
                     <td>
-                      <Link to={`/SupplierEdit/${element.company_id}`} className="text-primary text-decoration-none">
-                        {element.supplier_code || 'N/A'}
+                      <Link to={`/SupplierEdit/${element.supplier_id}`} className="text-primary text-decoration-none">
+                        {element.supplier_code || ''}
                       </Link>
                     </td>
                     <td>
-                      <Link to={`/SupplierEdit/${element.company_id}`} className="text-primary text-decoration-none">
-                        {element.company_name || 'N/A'}
+                      <Link to={`/SupplierEdit/${element.supplier_id}`} className="text-primary text-decoration-none">
+                        {element.supplier_name || element.company_name || ''}
                       </Link>
                     </td>
-                    <td className="text-truncate" style={{ maxWidth: '200px' }}>
-                      {element.address || 'N/A'}
-                    </td>
-                    <td>{element.phone || 'N/A'}</td>
-                    <td>{element.email || 'N/A'}</td>
+                 <td className="text-truncate" style={{ maxWidth: '200px' }}>
+  <div>
+    <div>{element.address1 || ''}</div>
+    {element.address2 && (
+      <div style={{ fontSize: '0.85em', color: '#6c757d' }}>
+        {element.address2}
+      </div>
+    )}
+  </div>
+</td>
+                    <td>{element.phone || element.mobile || ''}</td>
+                    <td>{element.email || ''}</td>
                     <td>
-                      <span className={`badge ${element.is_active ? 'bg-success' : 'bg-danger'}`}>
-                        {element.is_active ? 'Active' : 'Inactive'}
+                      <span className={`badge ${((element.is_active === 1 || element.is_active === true) || String(element.status || '').toLowerCase() === 'active') ? 'bg-success' : 'bg-danger'}`}>
+                        {((element.is_active === 1 || element.is_active === true) || String(element.status || '').toLowerCase() === 'active') ? 'Active' : 'Inactive'}
                       </span>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </CommonTable>
+          </div>
+          <div className="d-flex justify-content-between align-items-center mt-3">
+            <span>Total Records : {supplier?.length || 0}</span>
+            <div className="d-flex align-items-center gap-2">
+              <span className="me-2">Rows per page</span>
+              <Input
+                type="select"
+                bsSize="sm"
+                style={{ width: 80 }}
+                value={pageSize}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value, 10) || 20;
+                  setPageSize(val);
+                  setCurrentPage(1);
+                }}
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </Input>
+            </div>
+            <Pagination className="mb-0">
+              <PaginationItem disabled={currentPage === 1}>
+                <PaginationLink previous onClick={() => setCurrentPage(currentPage - 1)} />
+              </PaginationItem>
+              {Array.from({ length: Math.ceil((supplier?.length || 0) / pageSize) || 1 }, (_, i) => i + 1)
+                .slice(0, 5)
+                .map((page) => (
+                  <PaginationItem active={page === currentPage} key={page}>
+                    <PaginationLink onClick={() => setCurrentPage(page)}>{page}</PaginationLink>
+                  </PaginationItem>
+                ))}
+              {Math.ceil((supplier?.length || 0) / pageSize) > 5 && (
+                <>
+                  <PaginationItem disabled>
+                    <PaginationLink>...</PaginationLink>
+                  </PaginationItem>
+                  <PaginationItem>
+                    <PaginationLink onClick={() => setCurrentPage(Math.ceil((supplier?.length || 0) / pageSize))}>
+                      {Math.ceil((supplier?.length || 0) / pageSize)}
+                    </PaginationLink>
+                  </PaginationItem>
+                </>
+              )}
+              <PaginationItem disabled={currentPage === (Math.ceil((supplier?.length || 0) / pageSize) || 1)}>
+                <PaginationLink next onClick={() => setCurrentPage(currentPage + 1)} />
+              </PaginationItem>
+            </Pagination>
           </div>
         </CardBody>
       </Card>
