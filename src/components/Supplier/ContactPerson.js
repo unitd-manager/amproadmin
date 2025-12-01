@@ -19,14 +19,14 @@ export default function ContactPerson({ contactId }) {
     phone: '',
     fax: '',
     designation: '',
-    company_id: contactId,
+    supplier_id: contactId,
   });
 
   const [contactList, setContactList] = useState([]);
 
   const getContact = () => {
     api
-      .post('/contact/getContactByContactId', { company_id: contactId })
+      .post('/contact/getContactBySupplierId', { supplier_id: contactId })
       .then((res) => {
         setContactList(res.data.data);
       })
@@ -62,7 +62,7 @@ export default function ContactPerson({ contactId }) {
             phone: '',
             fax: '',
             designation: '',
-            company_id: contactId,
+            supplier_id: contactId,
           });
           message('Contact added successfully', 'success');
           getContact(); // Refresh the list

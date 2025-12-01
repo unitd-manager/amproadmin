@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Row, Col, FormGroup, Label, Input,Button } from 'reactstrap';
+import { Row, Col, FormGroup, Label, Input } from 'reactstrap';
 import PropTypes from 'prop-types';
 
 export default function SupplierLogin({ contentDetails, handleInputs }) {
@@ -55,7 +55,7 @@ export default function SupplierLogin({ contentDetails, handleInputs }) {
           </FormGroup>
         </Col>
       </Row>
-
+{/* 
       <Row className="mb-3">
         <Col sm="3" className="d-flex align-items-center">
           <Label className="mb-0">Is Active</Label>
@@ -72,16 +72,16 @@ export default function SupplierLogin({ contentDetails, handleInputs }) {
             />
           </FormGroup>
         </Col>
-      </Row>
+      </Row> */}
 
-      <Row>
+      {/* <Row>
         <Col sm="3"></Col>
         <Col sm="9">
           <Button color="primary" onClick={handleInputs}>
             Send Mail
           </Button>
         </Col>
-      </Row>
+      </Row> */}
     </div>
   );
 }

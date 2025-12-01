@@ -26,7 +26,7 @@ import SupplierLogin from '../../components/Supplier/SupplierLogin';
 import ContactPerson from '../../components/Supplier/ContactPerson';
 //import SupplierShippingDetail from '../../components/Supplier/ShippingDetail';
 //import SupplierSalesmen from '../../components/Supplier/SalesMan';
-import SupplierTransactions from '../../components/Supplier/Module';
+//import SupplierTransactions from '../../components/Supplier/Module';
 //import SupplierProductDetails from '../../components/Supplier/ProductDetails';
 
 const SupplierDetails = () => {
@@ -64,7 +64,7 @@ const SupplierDetails = () => {
         })
         .catch((err) => {
           console.error('Error fetching supplier:', err);
-          message('Error fetching supplier details', 'error');
+         // message('Error fetching supplier details', 'error');
         });
     }
   }, [id]);
@@ -239,7 +239,7 @@ const SupplierDetails = () => {
     // };
     try {
       // await ensureCode();
-      const res = await api.post('supplier/insert-Supplier', payload);
+      const res = await api.post('supplier/insertCompanySupplier', payload);
       const insertedId = res.data && res.data.data ? res.data.data.insertId : null;
       if (insertedId) {
         message('Supplier inserted successfully.', 'success');
@@ -260,7 +260,7 @@ const SupplierDetails = () => {
       return;
     }
     try {
-      await api.post('supplier/edit-Supplier', contentDetails);
+      await api.post('supplier/editSuppliers', contentDetails);
       message('Supplier updated successfully.', 'success');
     } catch (error) {
       console.error('Update error:', error);
@@ -371,11 +371,11 @@ const SupplierDetails = () => {
               Salesman
             </NavLink>
           </NavItem> */}
-          <NavItem>
+          {/* <NavItem>
             <NavLink className={classnames({ active: activeTab === '6' })} onClick={() => toggle('6')}>
               Transactions
             </NavLink>
-          </NavItem>
+          </NavItem> */}
           {/* <NavItem>
             <NavLink className={classnames({ active: activeTab === '7' })} onClick={() => toggle('7')}>
               Product Details
@@ -507,9 +507,9 @@ const SupplierDetails = () => {
           {/* <TabPane tabId="5">
             <SupplierSalesmen supplierId={id} contentDetails={contentDetails} />
           </TabPane> */}
-          <TabPane tabId="6">
+          {/* <TabPane tabId="6">
             <SupplierTransactions supplierId={id} />
-          </TabPane>
+          </TabPane> */}
           {/* <TabPane tabId="7">
             <SupplierProductDetails supplierId={id} contentDetails={contentDetails} />
           </TabPane> */}

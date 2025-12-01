@@ -25,10 +25,10 @@ import creationdatetime from '../../constants/creationdatetime';
 import AppContext from '../../context/AppContext';
 import SupplierLogin from '../../components/Supplier/SupplierLogin';
 import ContactPerson from '../../components/Supplier/ContactPerson';
-import SupplierShippingDetail from '../../components/Supplier/ShippingDetail';
+//import SupplierShippingDetail from '../../components/Supplier/ShippingDetail';
 //import SupplierSalesmen from '../../components/Supplier/SalesMan';
-import SupplierTransactions from '../../components/Supplier/Module';
-import SupplierProductDetails from '../../components/Supplier/ProductDetails';
+//import SupplierTransactions from '../../components/Supplier/Module';
+//import SupplierProductDetails from '../../components/Supplier/ProductDetails';
 
 const ContentUpdate = () => {
   const [contentDetails, setContentDetails] = useState({});
@@ -54,7 +54,7 @@ const ContentUpdate = () => {
 
   const getContentById = () => {
     api
-      .post('/supplier/get-SupplierById', { supplier_id: id })
+      .post('/supplier/getSupplierssById', { supplier_id: id })
       .then((res) => {
         const fetchedData = res.data.data[0];
         if (fetchedData) {
@@ -86,7 +86,7 @@ const ContentUpdate = () => {
       };
 
       api
-        .post('/supplier/edit-Supplier', updatedDetails)
+        .post('/supplier/editSuppliers', updatedDetails)
         .then(() => {
           message('Record edited successfully', 'success');
         })
@@ -384,7 +384,7 @@ const ContentUpdate = () => {
           <NavItem><NavLink className={classnames({ active: activeTab === '3' })} onClick={() => toggle('3')}>Contact</NavLink></NavItem>
           {/* <NavItem><NavLink className={classnames({ active: activeTab === '4' })} onClick={() => toggle('4')}>ShippingDetail</NavLink></NavItem> */}
           {/* <NavItem><NavLink className={classnames({ active: activeTab === '5' })} onClick={() => toggle('5')}>SalesMan</NavLink></NavItem> */}
-          <NavItem><NavLink className={classnames({ active: activeTab === '6' })} onClick={() => toggle('6')}>Transaction</NavLink></NavItem>
+          {/* <NavItem><NavLink className={classnames({ active: activeTab === '6' })} onClick={() => toggle('6')}>Transaction</NavLink></NavItem> */}
           {/* <NavItem><NavLink className={classnames({ active: activeTab === '7' })} onClick={() => toggle('7')}>ProductDetails</NavLink></NavItem> */}
         </Nav>
 
@@ -556,10 +556,10 @@ const ContentUpdate = () => {
           {/* Other Tabs */}
           <TabPane tabId="2"><SupplierLogin handleInputs={handleInputs} contentDetails={contentDetails} /></TabPane>
           <TabPane tabId="3"><ContactPerson contactId={id} contentDetails={contentDetails} /></TabPane>
-          <TabPane tabId="4"><SupplierShippingDetail contactId={id} contentDetails={contentDetails} /></TabPane>
+          {/* <TabPane tabId="4"><SupplierShippingDetail contactId={id} contentDetails={contentDetails} /></TabPane> */}
           {/* <TabPane tabId="5"><SupplierSalesmen supplierId={id} contentDetails={contentDetails} /></TabPane> */}
-          <TabPane tabId="6"><SupplierTransactions supplierId={id} /></TabPane>
-          <TabPane tabId="7"><SupplierProductDetails supplierId={id} contentDetails={contentDetails} /></TabPane>
+          {/* <TabPane tabId="6"><SupplierTransactions supplierId={id} /></TabPane>
+          <TabPane tabId="7"><SupplierProductDetails supplierId={id} contentDetails={contentDetails} /></TabPane> */}
         </TabContent>
     </div>
   );

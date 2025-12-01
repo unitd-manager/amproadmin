@@ -48,7 +48,7 @@ const Supplier = () => {
         params.is_active = statusFilter === 'active' ? 1 : 0;
       }
 
-      const res = await api.get('/supplier/getSupplier', { params });
+      const res = await api.get('/supplier/getSupplierss', { params });
   
       const formattedCustomers = res.data.data.map(item => ({
         ...item,
