@@ -26,7 +26,7 @@ import SupplierLogin from '../../components/Supplier/SupplierLogin';
 import ContactPerson from '../../components/Supplier/ContactPerson';
 //import SupplierShippingDetail from '../../components/Supplier/ShippingDetail';
 //import SupplierSalesmen from '../../components/Supplier/SalesMan';
-//import SupplierTransactions from '../../components/Supplier/Module';
+import SupplierTransactions from '../../components/Supplier/Module';
 //import SupplierProductDetails from '../../components/Supplier/ProductDetails';
 
 const SupplierDetails = () => {
@@ -371,11 +371,11 @@ const SupplierDetails = () => {
               Salesman
             </NavLink>
           </NavItem> */}
-          {/* <NavItem>
+          <NavItem>
             <NavLink className={classnames({ active: activeTab === '6' })} onClick={() => toggle('6')}>
               Transactions
             </NavLink>
-          </NavItem> */}
+          </NavItem>
           {/* <NavItem>
             <NavLink className={classnames({ active: activeTab === '7' })} onClick={() => toggle('7')}>
               Product Details
@@ -507,9 +507,9 @@ const SupplierDetails = () => {
           {/* <TabPane tabId="5">
             <SupplierSalesmen supplierId={id} contentDetails={contentDetails} />
           </TabPane> */}
-          {/* <TabPane tabId="6">
+          <TabPane tabId="6">
             <SupplierTransactions supplierId={id} />
-          </TabPane> */}
+          </TabPane>
           {/* <TabPane tabId="7">
             <SupplierProductDetails supplierId={id} contentDetails={contentDetails} />
           </TabPane> */}

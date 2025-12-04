@@ -27,7 +27,7 @@ import SupplierLogin from '../../components/Supplier/SupplierLogin';
 import ContactPerson from '../../components/Supplier/ContactPerson';
 //import SupplierShippingDetail from '../../components/Supplier/ShippingDetail';
 //import SupplierSalesmen from '../../components/Supplier/SalesMan';
-//import SupplierTransactions from '../../components/Supplier/Module';
+import SupplierTransactions from '../../components/Supplier/Module';
 //import SupplierProductDetails from '../../components/Supplier/ProductDetails';
 
 const ContentUpdate = () => {
@@ -384,7 +384,7 @@ const ContentUpdate = () => {
           <NavItem><NavLink className={classnames({ active: activeTab === '3' })} onClick={() => toggle('3')}>Contact</NavLink></NavItem>
           {/* <NavItem><NavLink className={classnames({ active: activeTab === '4' })} onClick={() => toggle('4')}>ShippingDetail</NavLink></NavItem> */}
           {/* <NavItem><NavLink className={classnames({ active: activeTab === '5' })} onClick={() => toggle('5')}>SalesMan</NavLink></NavItem> */}
-          {/* <NavItem><NavLink className={classnames({ active: activeTab === '6' })} onClick={() => toggle('6')}>Transaction</NavLink></NavItem> */}
+          <NavItem><NavLink className={classnames({ active: activeTab === '6' })} onClick={() => toggle('6')}>Transaction</NavLink></NavItem>
           {/* <NavItem><NavLink className={classnames({ active: activeTab === '7' })} onClick={() => toggle('7')}>ProductDetails</NavLink></NavItem> */}
         </Nav>
 
@@ -558,8 +558,8 @@ const ContentUpdate = () => {
           <TabPane tabId="3"><ContactPerson contactId={id} contentDetails={contentDetails} /></TabPane>
           {/* <TabPane tabId="4"><SupplierShippingDetail contactId={id} contentDetails={contentDetails} /></TabPane> */}
           {/* <TabPane tabId="5"><SupplierSalesmen supplierId={id} contentDetails={contentDetails} /></TabPane> */}
-          {/* <TabPane tabId="6"><SupplierTransactions supplierId={id} /></TabPane>
-          <TabPane tabId="7"><SupplierProductDetails supplierId={id} contentDetails={contentDetails} /></TabPane> */}
+           <TabPane tabId="6"><SupplierTransactions supplierId={id} /></TabPane>
+          {/*<TabPane tabId="7"><SupplierProductDetails supplierId={id} contentDetails={contentDetails} /></TabPane> */}
         </TabContent>
     </div>
   );

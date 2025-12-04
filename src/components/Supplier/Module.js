@@ -5,7 +5,7 @@ import ComponentCard from '../ComponentCard';
 import message from '../Message';
 import api from '../../constants/api';
 
-export default function SupplierTransactions({ customerId }) {
+export default function SupplierTransactions({ supplierId }) {
   const [selectedTransactionType, setSelectedTransactionType] = useState('');
   const [transactions, setTransactions] = useState([]);
   const [fromDate, setFromDate] = useState('');
@@ -14,7 +14,7 @@ export default function SupplierTransactions({ customerId }) {
 
   // Modified fetchTransactions to include transaction type and date range
   const fetchTransactions = () => {
-    if (!customerId || !selectedTransactionType) {
+    if (!supplierId || !selectedTransactionType) {
       message('Please select a transaction type', 'warning');
       return;
     }
@@ -22,7 +22,7 @@ export default function SupplierTransactions({ customerId }) {
     setLoading(true);
     
     const payload = {
-      company_id: customerId.toString(),
+      supplier_id: supplierId.toString(),
       transaction_type: selectedTransactionType,
       from_date: fromDate || '',
       to_date: toDate || ''
@@ -200,5 +200,5 @@ export default function SupplierTransactions({ customerId }) {
 }
 
 SupplierTransactions.propTypes = {
-  customerId: PropTypes.any,
+  supplierId: PropTypes.any,
 };

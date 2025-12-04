@@ -40,7 +40,7 @@ const Supplier = () => {
     setLoading(true);
     try {
       const params = {
-        supplier_name: supplierNameFilter,
+        company_name: supplierNameFilter,
         mobile: mobileFilter,
       };
       
