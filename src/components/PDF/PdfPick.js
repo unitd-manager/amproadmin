@@ -86,15 +86,17 @@ const PdfPickingList = ({ salesOrderIds }) => {
       }
     });
 
-    Object.values(aggregatedItems).forEach((item, index) => {
-      const cQty = parseFloat(item.carton_qty || 0);
-      productItems.push([
-        { text: `${index + 1}`, style: 'tableBody' },
-        { text: `${item.product_name || ''}`, style: 'tableBody' },
-        { text: `${item.unit || ''}`, style: 'tableBody' }, // Display unit
-        { text: cQty.toFixed(2), style: 'tableBody' },
-      ]);
-    });
+    Object.values(aggregatedItems)
+      .sort((a, b) => parseFloat(b.carton_qty || 0) - parseFloat(a.carton_qty || 0))
+      .forEach((item, index) => {
+        const cQty = parseFloat(item.carton_qty || 0);
+        productItems.push([
+          { text: `${index + 1}`, style: 'tableBody' },
+          { text: `${item.product_name || ''}`, style: 'tableBody' },
+          { text: `${item.unit || ''}`, style: 'tableBody' }, // Display unit
+          { text: cQty.toFixed(2), style: 'tableBody' },
+        ]);
+      });
   
     const dd = {
       pageSize: 'A4',

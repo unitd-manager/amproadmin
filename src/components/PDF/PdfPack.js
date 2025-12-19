@@ -7,7 +7,7 @@ import moment from 'moment';
 import api from '../../constants/api';
 import message from '../Message';
 import PdfFooter from './PdfFooter'; // Assuming you have a footer component
-import PdfHeader from './PdfHeader'; // Assuming you have a header component
+import PdfHeader from './PdfHeader1'; // Assuming you have a header component
  
 const PdfPackingList = ({ selectedOrderIds }) => {
   PdfPackingList.propTypes = {
@@ -85,8 +85,17 @@ const PdfPackingList = ({ selectedOrderIds }) => {
       let totalFocQty = 0;
       let totalCQty = 0;
       let totalQuantity = 0; // To store the sum of all quantities for current order
-console.log(totalQuantity, 'totalQuantity')
-      lineItemsForOrder.forEach((item, index) => {
+      console.log(totalQuantity, 'totalQuantity')
+
+
+      // Sort line items by CQty (carton_qty) from smallest to largest
+      const sortedLineItems = [...lineItemsForOrder].sort((a, b) => {
+        const aCQty = parseFloat(a.carton_qty || 0);
+        const bCQty = parseFloat(b.carton_qty || 0);
+        return aCQty - bCQty;
+      });
+
+      sortedLineItems.forEach((item, index) => {
         const lQty = parseFloat(item.loose_qty || 0);
         const fQty = parseFloat(item.foc || 0);
         const cQty = parseFloat(item.carton_qty || 0);
@@ -189,7 +198,7 @@ console.log(totalQuantity, 'totalQuantity')
 
     const dd = {
       pageSize: 'A4',
-      pageMargins: [40, 150, 40, 80],
+      pageMargins: [40, 70, 40, 80],
       header: PdfHeader({ findCompany }),
       footer: PdfFooter,
       content: allContent,
