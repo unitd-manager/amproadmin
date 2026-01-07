@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import pdfMake from 'pdfmake';
+//import pdfMake from 'pdfmake';
+import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 // import { Button } from 'reactstrap'; 
 import PropTypes from 'prop-types';
 import moment from 'moment';
 import api from '../../constants/api';
 import message from '../Message';
-import PdfFooter from './PdfFooter'; // Assuming you have a footer component
-import PdfHeader from './PdfHeader'; // Assuming you have a header component
+// import PdfFooter from './PdfFooter'; // Assuming you have a footer component
+// import PdfHeader from './PdfHeader'; // Assuming you have a header component
 
 
 const PdfPickingList = ({ selectedOrderIds }) => {
@@ -15,7 +16,7 @@ const PdfPickingList = ({ selectedOrderIds }) => {
     selectedOrderIds: PropTypes.array,
   };
 
-  const [salesOrder, setSalesOrder] = useState({});
+  const [salesOrder, setSalesOrder] = useState([]);
   const [lineItems, setLineItems] = useState([]);
   const [hfdata, setHeaderFooterData] = useState();
 
@@ -61,14 +62,13 @@ const PdfPickingList = ({ selectedOrderIds }) => {
   }, [selectedOrderIds]);
 
   const GetPdf = () => {
-    const productItems = [
-      [
-        { text: 'S.No', style: 'tableHead' },
-        { text: 'Product Name', style: 'tableHead' },
-        { text: 'Uom', style: 'tableHead' },
-        { text: 'CQty', style: 'tableHead' },
-      ],
-    ];
+   const productItems = [[
+  { text: 'S.No', style: 'tableHead', alignment: 'center' },
+  { text: 'Product Name', style: 'tableHead', alignment: 'left' },
+  { text: 'Uom', style: 'tableHead', alignment: 'center' },
+  { text: 'CQty', style: 'tableHead', alignment: 'right' },
+]];
+
   
     const aggregatedItems = {};
 
@@ -86,26 +86,39 @@ const PdfPickingList = ({ selectedOrderIds }) => {
       }
     });
 
-    Object.values(aggregatedItems).forEach((item, index) => {
-      const cQty = parseFloat(item.carton_qty || 0);
-      productItems.push([
-        { text: `${index + 1}`, style: 'tableBody' },
-        { text: `${item.product_name || ''}`, style: 'tableBody' },
-        { text: `${item.unit || ''}`, style: 'tableBody' }, // Display unit
-        { text: cQty.toFixed(2), style: 'tableBody' },
-      ]);
-    });
-  
+   Object.values(aggregatedItems).forEach((item, index) => {
+  const cQty = parseFloat(item.carton_qty || 0);
+
+  productItems.push([
+    { text: index + 1, style: 'tableBody', alignment: 'center' },   // S.No
+    { text: item.product_name || '', style: 'tableBody', alignment: 'left' }, // Name
+    { text: item.unit || '', style: 'tableBody', alignment: 'center' }, // UOM
+    { text: cQty.toFixed(2), style: 'tableBody', alignment: 'right' }, // Qty
+  ]);
+});
+
     const dd = {
       pageSize: 'A4',
-      pageMargins: [40, 150, 40, 80], // Adjust margins as needed
-            header: PdfHeader({ findCompany }),
-      footer: PdfFooter, // Assuming you have a standard footer
+      pageMargins: [40, 50, 40, 80], // Adjust margins as needed
+            // header: PdfHeader({ findCompany }),
+      //footer: PdfFooter, // Assuming you have a standard footer
       content: [
         {
-          text: findCompany('company_name') || 'Ampro PTE LTD', // Fallback if not found
-          style: 'header',
-          alignment: 'left',
+          columns: [
+            {
+              width: '*',
+              text: findCompany('company_name') || 'Ampro PTE LTD',
+              style: 'header',
+            },
+            {
+              width: 'auto',
+              text: `Print Date: ${moment().format('DD-MM-YYYY HH:mm:ss')}`,
+              style: 'textSize',
+              alignment: 'right',
+            },
+          ],
+          columnGap: 10,
+          margin: [0, 0, 0, 5],
         },
         {
           text: 'Picking List',
@@ -116,21 +129,15 @@ const PdfPickingList = ({ selectedOrderIds }) => {
         {
           text: `Selected Sales Invoice: ${salesOrder.map(so => so.invoice_code).join(', ') || ''}`,
           style: 'textSize',
-          margin: [0, 0, 0, 5],
-        },
-        {
-          text: `Print Date: ${moment().format('DD-MM-YYYY HH:mm:ss')}`,
-          style: 'textSize',
-          alignment: 'right',
           margin: [0, 0, 0, 15],
         },
         {
           layout: 'lightHorizontalLines',
-          table: {
-            headerRows: 1,
-            widths: ['auto', '*', 'auto', 'auto'], // Adjust column widths
-            body: productItems,
-          },
+         table: {
+  headerRows: 1,
+  widths: [30, '*', 60, 60],
+  body: productItems,
+}
         },
       ],
       styles: {
