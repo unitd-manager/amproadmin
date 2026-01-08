@@ -6,7 +6,6 @@ import PropTypes from 'prop-types';
 import moment from 'moment';
 import api from '../../constants/api';
 import message from '../Message';
-import PdfFooter from './PdfFooter'; // Assuming you have a footer component
 import PdfHeader from './PdfHeader1'; // Assuming you have a header component
  
 const PdfPackingList = ({ selectedOrderIds }) => {
@@ -30,10 +29,13 @@ const PdfPackingList = ({ selectedOrderIds }) => {
   };
 
   // Helper function to format numbers - returns empty string for 0 and NaN
-  const formatNumber = (value) => {
-    const num = parseFloat(value || 0);
-    return (num === 0 || Number.isNaN(num)) ? '' : num.toFixed(2);
-  };
+  // Helper function to format numbers - removes .00
+const formatNumber = (value) => {
+  const num = parseFloat(value || 0);
+  if (num === 0 || Number.isNaN(num)) return '';
+  return Number.isInteger(num) ? num.toString() : num.toString();
+};
+
 
   const fetchAllSalesOrderData = async () => {
     const salesOrdersPromises = selectedOrderIds.map(async (orderId) => {
@@ -131,34 +133,34 @@ const PdfPackingList = ({ selectedOrderIds }) => {
           alignment: 'center',
           margin: [0, salesOrderIndex === 0 ? 0 : 20, 0, 0], // Add margin between orders
         },
-        {
-          columns: [
-            {
-              text: `Date: ${moment().format('DD-MM-YYYY')}`,
-              style: 'textSize',
-            },
-            {
-              text: `Sales Order Code: ${salesOrder.tran_no || ''}`,
-              style: 'textSize',
-              alignment: 'right',
-            },
-          ],
-          margin: [0, 0, 0, 5],
-        },
-        {
-          columns: [
-            {
-              text: `Customer Code: ${salesOrder.customer_code || ''}`,
-              style: 'textSize',
-            },
-            {
-              text: `Customer Name: ${salesOrder.company_name || ''}`,
-              style: 'textSize',
-              alignment: 'right',
-            },
-          ],
-          margin: [0, 0, 0, 15],
-        },
+       {
+  columns: [
+    {
+      width: '15%',
+      text: `${moment().format('DD-MM-YYYY')}`,
+      style: 'textSize',
+    },
+    {
+      width: '20%',
+      text: `${salesOrder.tran_no || ''}`,
+      style: 'textSize',
+    },
+    {
+      width: '20%',
+      text: `${salesOrder.customer_code || ''}`,
+      style: 'textSize',
+    },
+    {
+      width: '45%',
+      text: `${salesOrder.company_name || ''}`,
+      style: 'textSize',
+      alignment: 'right',
+    },
+  ],
+  margin: [0, 0, 0, 8],
+},
+
+
         {
           layout: 'lightHorizontalLines',
           table: {
@@ -200,7 +202,6 @@ const PdfPackingList = ({ selectedOrderIds }) => {
       pageSize: 'A4',
       pageMargins: [40, 70, 40, 80],
       header: PdfHeader({ findCompany }),
-      footer: PdfFooter,
       content: allContent,
       styles: {
         header: {

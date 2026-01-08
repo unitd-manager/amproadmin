@@ -6,9 +6,57 @@ import PropTypes from 'prop-types';
 import moment from 'moment';
 import api from '../../constants/api';
 import message from '../Message';
-import PdfFooter from './PdfFooter'; // Assuming you have a footer component
-import PdfHeader from './PdfHeader'; // Assuming you have a header component
 
+const PdfHeader = ({ findCompany }) => {
+  return function pdfHeaderContent(currentPage, pageCount) {
+    return {
+      margin: [40, 20, 40, 10],
+      stack: [
+        {
+          columns: [
+            {
+              text: findCompany('company_name') || 'AMPRO PTE LTD',
+              fontSize: 16,
+              bold: true,
+            },
+            {
+              text: `Print Date : ${moment().format('MM/DD/YYYY hh:mm:ss A')}`,
+              alignment: 'right',
+              fontSize: 9,
+            },
+          ],
+        },
+        {
+          columns: [
+            {
+              text: 'Sales Order Picking List',
+              fontSize: 11,
+              bold: true,
+            },
+            {
+              text: `Page No : ${currentPage} of ${pageCount}`,
+              alignment: 'right',
+              fontSize: 9,
+            },
+          ],
+          margin: [3, 8, 8, 0],
+        },
+        {
+          canvas: [
+            {
+              type: 'line',
+              x1: 0,
+              y1: 0,
+              x2: 515,
+              y2: 0,
+              lineWidth: 1,
+            },
+          ],
+        },
+      ],
+    };
+  };
+};
 
 const PdfPickingList = ({ salesOrderIds }) => {
   PdfPickingList.propTypes = {
@@ -62,13 +110,14 @@ const PdfPickingList = ({ salesOrderIds }) => {
 
   const GetPdf = () => {
     const productItems = [
-      [
-        { text: 'S.No', style: 'tableHead' },
-        { text: 'Product Name', style: 'tableHead' },
-        { text: 'Uom', style: 'tableHead' },
-        { text: 'CQty', style: 'tableHead' },
-      ],
-    ];
+  [
+    { text: 'S.No', style: 'tableHead', alignment: 'center', noWrap: true },
+    { text: 'Product Name', style: 'tableHead' },
+    { text: 'Uom', style: 'tableHead', alignment: 'center' },
+    { text: 'CQty', style: 'tableHead', alignment: 'left'},
+  ],
+];
+
   
     const aggregatedItems = {};
 
@@ -91,46 +140,30 @@ const PdfPickingList = ({ salesOrderIds }) => {
       .forEach((item, index) => {
         const cQty = parseFloat(item.carton_qty || 0);
         productItems.push([
-          { text: `${index + 1}`, style: 'tableBody' },
-          { text: `${item.product_name || ''}`, style: 'tableBody' },
-          { text: `${item.unit || ''}`, style: 'tableBody' }, // Display unit
-          { text: cQty.toFixed(2), style: 'tableBody' },
-        ]);
+  { text: index + 1, alignment: 'center', style: 'tableBody' },
+  { text: item.product_name, style: 'tableBody' },
+  { text: item.unit, alignment: 'center', style: 'tableBody' },
+  { text: cQty % 1 === 0 ? cQty.toString() : cQty.toFixed(2), alignment: 'left', style: 'tableBody' },
+]);
+
       });
   
     const dd = {
       pageSize: 'A4',
-      pageMargins: [40, 150, 40, 80], // Adjust margins as needed
-            header: PdfHeader({ findCompany }),
-      footer: PdfFooter, // Assuming you have a standard footer
+      pageMargins: [40, 80, 40, 40], // Adjust margins as needed
+      header: PdfHeader({ findCompany }), // ✅ ONLY HEADER USED
       content: [
-        {
-          text: findCompany('company_name') || 'Ampro PTE LTD', // Fallback if not found
-          style: 'header',
-          alignment: 'left',
-        },
-        {
-          text: 'Picking List',
-          style: 'subheader',
-          alignment: 'left',
-          margin: [0, 0, 0, 10],
-        },
         {
           text: `Selected Sales Orders: ${salesOrder.map(so => so.tran_no).join(', ') || ''}`,
           style: 'textSize',
-          margin: [0, 0, 0, 5],
-        },
-        {
-          text: `Print Date: ${moment().format('DD-MM-YYYY HH:mm:ss')}`,
-          style: 'textSize',
-          alignment: 'right',
-          margin: [0, 0, 0, 15],
+          margin: [0, 0, 0, 20],
         },
         {
           layout: 'lightHorizontalLines',
+          margin: [0, 0, 0, 20],
           table: {
             headerRows: 1,
-            widths: ['auto', '*', 'auto', 'auto'], // Adjust column widths
+            widths: [40, '*', 70, 60], // Adjust column widths
             body: productItems,
           },
         },
