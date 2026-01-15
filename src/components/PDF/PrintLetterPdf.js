@@ -10,6 +10,43 @@ import PdfFooter from './PdfFooter';
 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
+const PdfHeader = (invoiceData, salesOrder) => {
+  return function (currentPage, pageCount) {
+    return {
+      margin: [40, 20, 40, 10],
+      columns: [
+        {
+          width: '60%',
+          text:
+            `${salesOrder.company_name || ''}\n` +
+            `${salesOrder.address1 || ''}\n` +
+            `${salesOrder.address2 || ''}\n` +
+            `${salesOrder.address_street || ''}\n` +
+            `${salesOrder.address_country || ''} ${salesOrder.address_po_code || ''}\n` +
+            `Tel : ${salesOrder.phone || ''}`,
+          fontSize: 10,
+        },
+        {
+          width: '40%',
+          alignment: 'right',
+          fontSize: 10,
+          text:
+            `${invoiceData.invoice_code || ''}\n\n` +
+            `${invoiceData.invoice_date
+              ? moment(invoiceData.invoice_date).format('DD/MM/YYYY dddd')
+              : ''}\n\n` +
+            `Page : ${currentPage} / ${pageCount}\n\n` +   // ✅ 1/5, 2/5
+            `Payment Terms : ${salesOrder.payment_terms || 'COD'}\n\n` +
+            `${salesOrder.salesman_name || ''} ${salesOrder.salesman_phone || ''}`,
+        },
+      ],
+      columnGap: 20,
+    };
+  };
+};
+
+
+
 const PrintPerfomaInvList = ({ id }) => {
   PrintPerfomaInvList.propTypes = {
     id: PropTypes.arrayOf(PropTypes.any).isRequired,
@@ -20,6 +57,9 @@ const PrintPerfomaInvList = ({ id }) => {
   // const [hfdata, setHeaderFooterData] = useState([]);
   const [setGtotal] = useState(0);
   const [taxRate] = useState(0.09);
+  const headerInvoice = salesOrders[0] || {};
+  const headerInvoiceData = lineItems[0] || {};
+
 
   // useEffect(() => {
   //   api.get('/setting/getSettingsForCompany')
@@ -95,10 +135,10 @@ const PrintPerfomaInvList = ({ id }) => {
     const allContent = [];
     const invoiceIds = Object.keys(invoiceGroups);
 
-    invoiceIds.forEach((invoiceId, index) => {
+    invoiceIds.forEach((invoiceId) => {
       const invoiceData = invoiceGroups[invoiceId];
       const invoiceItems = invoiceData.items;
-      const currentSalesOrder = salesOrders.find(order => String(order.invoice_id) === invoiceId) || {};
+      // const currentSalesOrder = salesOrders.find(order => String(order.invoice_id) === invoiceId) || {};
 
       let invoiceSubtotal = 0;
       invoiceItems.forEach(item => {
@@ -145,57 +185,15 @@ const PrintPerfomaInvList = ({ id }) => {
         { text: '', style: 'tableBody' },
       ]);
     }
-
-      if (index > 0) {
-        allContent.push({ text: '', pageBreak: 'before' });
-      }
-
-      allContent.push(
-     {
-  columns: [
-    {
-      width: '50%',
-      text: `${currentSalesOrder.company_name || ''}\n${currentSalesOrder.address1 || ''}\n${currentSalesOrder.address2 || ''}\n${currentSalesOrder.address_street || ''}\n${currentSalesOrder.address_country || ''} - ${currentSalesOrder.address_po_code || ''}\nTEL: ${currentSalesOrder.phone || 'NULL'}\n\n`,
-
-      style: 'textSize',
+    allContent.push(
+  {
+    layout: 'lightHorizontalLines',
+    table: {
+      headerRows: 1,
+      widths: ['auto', '*', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto'],
+      body: productItems,
     },
-    {
-      width: '50%',
-      table: {
-        widths: ['50%', '50%'],
-        body: [
-          [
-            { text: ``, bold: true, border: [false, false, false, false] },
-            { text: `${invoiceData.invoice_code || ''}`, alignment: 'right', border: [false, false, false, false] },
-          ],
-          [
-            { text: ``, bold: true, border: [false, false, false, false] },
-            { 
-              text: invoiceData.invoice_date 
-                ? moment(invoiceData.invoice_date).format('DD-MM-YYYY') 
-                : '', 
-              alignment: 'right',
-              border: [false, false, false, false],
-            },
-          ],
-        ],
-      },
-      layout: 'noBorders',
-      style: 'textSize',
-    },
-  ],
-  columnGap: 30,
-  margin: [0, 0, 0, 15],
-},
-
-        {
-          layout: 'lightHorizontalLines',
-          table: {
-            headerRows: 1,
-            widths: ['auto', '*', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto'],
-            body: productItems,
-          },
-        },
+  },
         {
           table: {
             widths: ['*', 'auto'],
@@ -215,8 +213,8 @@ const PrintPerfomaInvList = ({ id }) => {
     const dd = {
       pageSize: 'A4',
       pageMargins: [40, 150, 40, 80],
-      header: '',
       footer: PdfFooter,
+      header: PdfHeader(headerInvoiceData, headerInvoice), /// ✅ correct
       content: allContent,
       styles: {
         tableHead: { bold: true, fontSize: 10, color: 'black' },
