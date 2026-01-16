@@ -197,7 +197,7 @@ const formatNumber = (value) => {
         alignment: 'right',
       },
     );
- 
+  
     const dd = {
       pageSize: 'A4',
       pageMargins: [40, 70, 40, 80],
