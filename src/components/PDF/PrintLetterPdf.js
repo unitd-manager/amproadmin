@@ -5,45 +5,45 @@ import PropTypes from 'prop-types';
 import moment from 'moment';
 import api from '../../constants/api';
 import message from '../Message';
-import PdfFooter from './PdfFooter';
+//import PdfFooter from './PdfFooter';
 //mport PdfHeader from './PdfHeader';
 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
-const PdfHeader = (invoiceData, salesOrder) => {
-  return function (currentPage, pageCount) {
-    return {
-      margin: [40, 20, 40, 10],
-      columns: [
-        {
-          width: '60%',
-          text:
-            `${salesOrder.company_name || ''}\n` +
-            `${salesOrder.address1 || ''}\n` +
-            `${salesOrder.address2 || ''}\n` +
-            `${salesOrder.address_street || ''}\n` +
-            `${salesOrder.address_country || ''} ${salesOrder.address_po_code || ''}\n` +
-            `Tel : ${salesOrder.phone || ''}`,
-          fontSize: 10,
-        },
-        {
-          width: '40%',
-          alignment: 'right',
-          fontSize: 10,
-          text:
-            `${invoiceData.invoice_code || ''}\n\n` +
-            `${invoiceData.invoice_date
-              ? moment(invoiceData.invoice_date).format('DD/MM/YYYY dddd')
-              : ''}\n\n` +
-            `Page : ${currentPage} / ${pageCount}\n\n` +   // ✅ 1/5, 2/5
-            `Payment Terms : ${salesOrder.payment_terms || 'COD'}\n\n` +
-            `${salesOrder.salesman_name || ''} ${salesOrder.salesman_phone || ''}`,
-        },
-      ],
-      columnGap: 20,
-    };
-  };
-};
+// const PdfHeader = (invoiceData, salesOrder) => {
+//   return function PdfHeaderFunction(currentPage, pageCount) {
+//     return {
+//       margin: [40, 20, 40, 10],
+//       columns: [
+//         {
+//           width: '60%',
+//           text:
+//             `${salesOrder.company_name || ''}\n` +
+//             `${salesOrder.address1 || ''}\n` +
+//             `${salesOrder.address2 || ''}\n` +
+//             `${salesOrder.address_street || ''}\n` +
+//             `${salesOrder.address_country || ''} ${salesOrder.address_po_code || ''}\n` +
+//             `Tel : ${salesOrder.phone || ''}`,
+//           fontSize: 10,
+//         },
+//         {
+//           width: '40%',
+//           alignment: 'right',
+//           fontSize: 10,
+//           text:
+//             `${invoiceData.invoice_code || ''}\n\n` +
+//             `${invoiceData.invoice_date
+//               ? moment(invoiceData.invoice_date).format('DD/MM/YYYY dddd')
+//               : ''}\n\n` +
+//             `${currentPage} / ${pageCount}\n\n` +   // ✅ 1/5, 2/5
+//             `${salesOrder.payment_terms || 'COD'}\n\n` +
+//             `${salesOrder.salesman_name || ''} ${salesOrder.salesman_phone || ''}`,
+//         },
+//       ],
+//       columnGap: 20,
+//     };
+//   };
+// };
 
 
 
@@ -57,8 +57,8 @@ const PrintPerfomaInvList = ({ id }) => {
   // const [hfdata, setHeaderFooterData] = useState([]);
   const [setGtotal] = useState(0);
   const [taxRate] = useState(0.09);
-  const headerInvoice = salesOrders[0] || {};
-  const headerInvoiceData = lineItems[0] || {};
+  // const headerInvoice = salesOrders[0] || {};
+  // const headerInvoiceData = lineItems[0] || {};
 
 
   // useEffect(() => {
@@ -138,7 +138,9 @@ const PrintPerfomaInvList = ({ id }) => {
     invoiceIds.forEach((invoiceId) => {
       const invoiceData = invoiceGroups[invoiceId];
       const invoiceItems = invoiceData.items;
-      // const currentSalesOrder = salesOrders.find(order => String(order.invoice_id) === invoiceId) || {};
+      // Find the correct sales order for this invoice
+      const currentSalesOrder = salesOrders.find(order => String(order.invoice_id) === String(invoiceId)) || {};
+      const currentInvoiceData = invoiceItems[0] || {};
 
       let invoiceSubtotal = 0;
       invoiceItems.forEach(item => {
@@ -147,74 +149,100 @@ const PrintPerfomaInvList = ({ id }) => {
       const invoiceGst = invoiceSubtotal * taxRate;
       const invoiceTotalWithGst = invoiceSubtotal + invoiceGst;
 
-      const productItems = [
-        [
-          { text: 'No', style: 'tableHead' },
-          { text: 'Description', style: 'tableHead' },
-          { text: 'UOM', style: 'tableHead' },
-          { text: 'CTN', style: 'tableHead' },
-          { text: 'PCS', style: 'tableHead' },
-          { text: 'F.O.C', style: 'tableHead' },
-          { text: 'C/PRI', style: 'tableHead' },
-          { text: 'Amount', style: 'tableHead' },
-        ],
-      ];
+      const productItems = [];
 
       invoiceItems.forEach((item, itemIndex) => {
         productItems.push([
-          { text: `${itemIndex + 1}`, style: 'tableBody' },
-          { text: `${item.product_name || ''}`, style: 'tableBody' },
-          { text: `${item.unit || ''}`, style: 'tableBody' },
-          { text: `${item.carton_qty || ''}`, style: 'tableBody' },
-          { text: `${item.loose_qty || ''}`, style: 'tableBody' },
-          { text: `${item.foc || ''}`, style: 'tableBody' },
-          { text: `${item.carton_price || ''}`, style: 'tableBody' },
-          { text: `${item.total || ''}`, style: 'tableBody' },
+          { text: `${itemIndex + 1}`, style: 'tableBody', margin: [0, 0, 20, 0] },
+          { text: `${item.product_name || ''}`, style: 'tableBody', margin: [0, 0, 20, 0] },
+          { text: `${item.unit || ''}`, style: 'tableBody', margin: [0, 0, 20, 0] },
+          { text: `${item.carton_qty || ''}`, style: 'tableBody', margin: [0, 0, 20, 0] },
+          { text: `${item.loose_qty || ''}`, style: 'tableBody', margin: [0, 0, 20, 0] },
+          { text: `${item.foc || ''}`, style: 'tableBody', margin: [0, 0, 20, 0] },
+          { text: `${item.carton_price || ''}`, style: 'tableBody', margin: [0, 0, 20, 0] },
+          { text: `${item.wholesale_price || ''}`, style: 'tableBody', margin: [0, 0, 20, 0] },
+          { text: `${item.total || ''}`, style: 'tableBody', margin: [0, 0, 20, 0] },
         ]);
       });
 
-       for (let i = 0; i < 10; i++) {
-      productItems.push([
-        { text: '', style: 'tableBody' },
-        { text: '', style: 'tableBody' },
-        { text: '', style: 'tableBody' },
-        { text: '', style: 'tableBody' },
-        { text: '', style: 'tableBody' },
-        { text: '', style: 'tableBody' },
-        { text: '', style: 'tableBody' },
-        { text: '', style: 'tableBody' },
-      ]);
-    }
-    allContent.push(
-  {
-    layout: 'lightHorizontalLines',
-    table: {
-      headerRows: 1,
-      widths: ['auto', '*', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto'],
-      body: productItems,
-    },
-  },
+      for (let i = 0; i < 10; i++) {
+        productItems.push([
+          { text: '', style: 'tableBody', margin: [0, 0, 20, 0] },
+          { text: '', style: 'tableBody', margin: [0, 0, 20, 0] },
+          { text: '', style: 'tableBody', margin: [0, 0, 20, 0] },
+          { text: '', style: 'tableBody', margin: [0, 0, 20, 0] },
+          { text: '', style: 'tableBody', margin: [0, 0, 20, 0] },
+          { text: '', style: 'tableBody', margin: [0, 0, 20, 0] },
+          { text: '', style: 'tableBody', margin: [0, 0, 20, 0] },
+          { text: '', style: 'tableBody', margin: [0, 0, 20, 0] },
+          { text: '', style: 'tableBody', margin: [0, 0, 20, 0] },
+        ]);
+      }
+
+      // Add pageBreak: 'before' for all but the first invoice, and group header, table, and total in a stack
+      const stackContent = [
         {
+          margin: [40, 20, 40, 10],
+          columns: [
+            {
+              width: '60%',
+              text:
+                `${currentSalesOrder.company_name || ''}\n` +
+                `${currentSalesOrder.address1 || ''}\n` +
+                `${currentSalesOrder.address2 || ''}\n` +
+                `${currentSalesOrder.address_street || ''}\n` +
+                `${currentSalesOrder.address_country || ''} ${currentSalesOrder.address_po_code || ''}\n` +
+                `Tel : ${currentSalesOrder.phone || ''}`,
+              fontSize: 10,
+            },
+            {
+              width: '40%',
+              alignment: 'right',
+              fontSize: 10,
+              text:
+                `${currentInvoiceData.invoice_code || ''}\n\n` +
+                `${currentInvoiceData.invoice_date
+                  ? moment(currentInvoiceData.invoice_date).format('DD/MM/YYYY dddd')
+                  : ''}\n\n` +
+                `${currentSalesOrder.payment_terms || 'COD'}\n\n` +
+                `${currentSalesOrder.salesman_name || ''} ${currentSalesOrder.salesman_phone || ''}`,
+            },
+          ],
+          columnGap: 20,
+        },
+        {
+          layout: 'noBorders',
+          table: {
+            headerRows: 0,
+            widths: ['auto', '*', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto'],
+            body: productItems,
+          },
+          margin: [0, 0, 0, 120], // More space below the table
+        },
+        {
+          absolutePosition: {x: 400, y: 650},
           table: {
             widths: ['*', 'auto'],
             body: [
-              ['Subtotal:', invoiceSubtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })],
-              ['GST:', invoiceGst.toLocaleString('en-IN', { minimumFractionDigits: 2 })],
-              ['Net Total:', invoiceTotalWithGst.toLocaleString('en-IN', { minimumFractionDigits: 2 })],
+              ['', invoiceSubtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })],
+              ['', invoiceGst.toLocaleString('en-IN', { minimumFractionDigits: 2 })],
+              ['', invoiceTotalWithGst.toLocaleString('en-IN', { minimumFractionDigits: 2 })],
             ],
           },
           layout: 'noBorders',
-          margin: [0, 20, 0, 10],
           style: 'textSize',
         }
-      );
+      ];
+      const stackObj = allContent.length > 0
+        ? { pageBreak: 'before', stack: stackContent }
+        : { stack: stackContent };
+      allContent.push(stackObj);
     });
 
     const dd = {
       pageSize: 'A4',
-      pageMargins: [40, 150, 40, 80],
-      footer: PdfFooter,
-      header: PdfHeader(headerInvoiceData, headerInvoice), /// ✅ correct
+      pageMargins: [40, 70, 40, 80],
+      footer: '',
       content: allContent,
       styles: {
         tableHead: { bold: true, fontSize: 10, color: 'black' },
