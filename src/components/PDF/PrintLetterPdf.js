@@ -182,30 +182,28 @@ const PrintPerfomaInvList = ({ id }) => {
       // Add pageBreak: 'before' for all but the first invoice, and group header, table, and total in a stack
       const stackContent = [
         {
-          margin: [40, 20, 40, 10],
+          margin: [0, 0, 0, 50], // Add more space below header
           columns: [
             {
-              width: '60%',
-              text:
-                `${currentSalesOrder.company_name || ''}\n` +
-                `${currentSalesOrder.address1 || ''}\n` +
-                `${currentSalesOrder.address2 || ''}\n` +
-                `${currentSalesOrder.address_street || ''}\n` +
-                `${currentSalesOrder.address_country || ''} ${currentSalesOrder.address_po_code || ''}\n` +
-                `Tel : ${currentSalesOrder.phone || ''}`,
-              fontSize: 10,
+              width: '70%',
+              stack: [
+                { text: currentSalesOrder.company_name || '', bold: true, fontSize: 13, margin: [0, 0, 0, 2] },
+                { text: currentSalesOrder.address1 || '', bold: true, fontSize: 13, margin: [0, 0, 0, 2] },
+                { text: `${currentSalesOrder.address2 || ''}${currentSalesOrder.address_street ? `  ${currentSalesOrder.address_street}` : ''}`, bold: true, fontSize: 13, margin: [0, 0, 0, 2] },
+                { text: `${currentSalesOrder.address_country || ''}${currentSalesOrder.address_po_code ? `  ${currentSalesOrder.address_po_code}` : ''}`, bold: true, fontSize: 13, margin: [0, 0, 0, 2] },
+                { text: `Tel : ${currentSalesOrder.phone || ''}`, bold: true, fontSize: 13, margin: [0, 0, 0, 2] },
+              ],
             },
             {
-              width: '40%',
-              alignment: 'right',
-              fontSize: 10,
-              text:
-                `${currentInvoiceData.invoice_code || ''}\n\n` +
-                `${currentInvoiceData.invoice_date
-                  ? moment(currentInvoiceData.invoice_date).format('DD/MM/YYYY dddd')
-                  : ''}\n\n` +
-                `${currentSalesOrder.payment_terms || 'COD'}\n\n` +
-                `${currentSalesOrder.salesman_name || ''} ${currentSalesOrder.salesman_phone || ''}`,
+              width: '30%',
+              alignment: 'left',
+              stack: [
+                { text: currentInvoiceData.invoice_code || '', bold: true, fontSize: 13, margin: [0, 0, 0, 2] },
+                { text: currentInvoiceData.invoice_date ? moment(currentInvoiceData.invoice_date).format('DD/MM/YYYY  dddd') : '', bold: true, fontSize: 13, margin: [0, 0, 0, 2] },
+                { text: currentSalesOrder.payment_terms || 'COD', bold: true, fontSize: 13, margin: [0, 0, 0, 2] },
+                { text: '1/1', bold: true, fontSize: 13, margin: [0, 0, 0, 2] },
+                { text: `${currentSalesOrder.salesman_name || ''} ${currentSalesOrder.salesman_phone || ''}`, bold: true, fontSize: 13, margin: [0, 0, 0, 2] },
+              ],
             },
           ],
           columnGap: 20,
@@ -241,7 +239,7 @@ const PrintPerfomaInvList = ({ id }) => {
 
     const dd = {
       pageSize: 'A4',
-      pageMargins: [40, 70, 40, 80],
+      pageMargins: [30, 70, 10, 70],
       footer: '',
       content: allContent,
       styles: {
