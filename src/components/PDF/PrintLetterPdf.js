@@ -170,9 +170,9 @@ const PrintPerfomaInvList = ({ id }) => {
           { text: `${cartonQty}`, style: 'tableBody', margin: [0, 0, 20, 0] },
           { text: `${looseQty}`, style: 'tableBody', margin: [0, 0, 20, 0] },
           { text: `${item.foc || ''}`, style: 'tableBody', margin: [0, 0, 20, 0] },
-          { text: `${cartonPrice}`, style: 'tableBody', margin: [0, 0, 20, 0] },
-          { text: `${wholesalePrice}`, style: 'tableBody', margin: [0, 0, 20, 0] },
-          { text: `${totalPrice}`, style: 'tableBody', margin: [0, 0, 20, 0] },
+          { text: `${cartonPrice}`, style: 'tableBody', alignment: 'right', margin: [0, 0, 20, 0] },
+          { text: `${wholesalePrice}`, style: 'tableBody', alignment: 'right', margin: [0, 0, 20, 0] },
+          { text: `${totalPrice}`, style: 'tableBody', alignment: 'right', margin: [0, 0, 20, 0] },
         ]);
       });
 
