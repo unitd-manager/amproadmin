@@ -191,7 +191,7 @@ const PrintPerfomaInvList = ({ id }) => {
                 { text: currentSalesOrder.address1 || '', bold: true, fontSize: 13, margin: [0, 0, 0, 2] },
                 { text: `${currentSalesOrder.address2 || ''}${currentSalesOrder.address_street ? `  ${currentSalesOrder.address_street}` : ''}`, bold: true, fontSize: 13, margin: [0, 0, 0, 2] },
                 { text: `${currentSalesOrder.address_country || ''}${currentSalesOrder.address_po_code ? `  ${currentSalesOrder.address_po_code}` : ''}`, bold: true, fontSize: 13, margin: [0, 0, 0, 2] },
-                { text: `Tel : ${currentSalesOrder.phone || ''}`, bold: true, fontSize: 13, margin: [0, 0, 0, 2] },
+                
               ],
             },
             {
