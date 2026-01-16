@@ -137,7 +137,11 @@ const PrintPerfomaInvList = ({ id }) => {
 
     invoiceIds.forEach((invoiceId) => {
       const invoiceData = invoiceGroups[invoiceId];
-      const invoiceItems = invoiceData.items;
+      // Sort: loose qty products first, then carton qty products
+      const invoiceItems = [
+        ...invoiceData.items.filter(item => item.loose_qty && Number(item.loose_qty) > 0),
+        ...invoiceData.items.filter(item => (!item.loose_qty || Number(item.loose_qty) === 0) && item.carton_qty && Number(item.carton_qty) > 0)
+      ];
       // Find the correct sales order for this invoice
       const currentSalesOrder = salesOrders.find(order => String(order.invoice_id) === String(invoiceId)) || {};
       const currentInvoiceData = invoiceItems[0] || {};
@@ -152,16 +156,23 @@ const PrintPerfomaInvList = ({ id }) => {
       const productItems = [];
 
       invoiceItems.forEach((item, itemIndex) => {
+        // Show loose qty and price first, then carton qty and price
+        const looseQty = item.loose_qty && Number(item.loose_qty) > 0 ? item.loose_qty : '';
+        const wholesalePrice = item.loose_qty && Number(item.loose_qty) > 0 && item.wholesale_price !== undefined ? Number(item.wholesale_price).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '';
+        const cartonQty = item.carton_qty && Number(item.carton_qty) > 0 ? item.carton_qty : '';
+        const cartonPrice = item.carton_qty && Number(item.carton_qty) > 0 && item.carton_price !== undefined ? Number(item.carton_price).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '';
+        const totalPrice = item.total !== undefined ? Number(item.total).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '';
+
         productItems.push([
           { text: `${itemIndex + 1}`, style: 'tableBody', margin: [0, 0, 20, 0] },
           { text: `${item.product_name || ''}`, style: 'tableBody', margin: [0, 0, 20, 0] },
           { text: `${item.unit || ''}`, style: 'tableBody', margin: [0, 0, 20, 0] },
-          { text: `${item.carton_qty || ''}`, style: 'tableBody', margin: [0, 0, 20, 0] },
-          { text: `${item.loose_qty || ''}`, style: 'tableBody', margin: [0, 0, 20, 0] },
+          { text: `${cartonQty}`, style: 'tableBody', margin: [0, 0, 20, 0] },
+          { text: `${looseQty}`, style: 'tableBody', margin: [0, 0, 20, 0] },
           { text: `${item.foc || ''}`, style: 'tableBody', margin: [0, 0, 20, 0] },
-          { text: `${item.carton_price || ''}`, style: 'tableBody', margin: [0, 0, 20, 0] },
-          { text: `${item.wholesale_price || ''}`, style: 'tableBody', margin: [0, 0, 20, 0] },
-          { text: `${item.total || ''}`, style: 'tableBody', margin: [0, 0, 20, 0] },
+          { text: `${cartonPrice}`, style: 'tableBody', margin: [0, 0, 20, 0] },
+          { text: `${wholesalePrice}`, style: 'tableBody', margin: [0, 0, 20, 0] },
+          { text: `${totalPrice}`, style: 'tableBody', margin: [0, 0, 20, 0] },
         ]);
       });
 
