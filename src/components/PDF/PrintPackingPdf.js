@@ -11,7 +11,7 @@ import PdfHeader from './PdfHeader';
 /* ============================
    ✅ REGISTER FONTS ONCE
 ============================ */
-pdfMake.vfs = pdfFonts.pdfMake.vfs;
+
 
 const PdfPackingList = ({ selectedOrderIds }) => {
 
@@ -84,7 +84,7 @@ const PdfPackingList = ({ selectedOrderIds }) => {
       return;
     }
 
-    const content = [];
+    const allContent = [];
     let grandTotalQty = 0;
 
     allSalesOrders.forEach((salesOrder, index) => {
@@ -134,7 +134,7 @@ const PdfPackingList = ({ selectedOrderIds }) => {
 
       grandTotalQty += totalCarton;
 
-      content.push(
+      allContent.push(
         {
           text: findCompany('company_name'),
           style: 'header',
@@ -165,7 +165,7 @@ const PdfPackingList = ({ selectedOrderIds }) => {
       );
     });
 
-    content.push(
+    allContent.push(
       { text: '', margin: [0, 15] },
       {
         text: `Grand Total: ${grandTotalQty}`,
@@ -179,24 +179,39 @@ const PdfPackingList = ({ selectedOrderIds }) => {
       pageMargins: [40, 150, 40, 80],
       header: PdfHeader({ findCompany }),
       footer: PdfFooter,
-      defaultStyle: { font: 'Roboto' }, // ✅ FIXES Roboto error
-      content,
-      styles: {
-        header: { fontSize: 18, bold: true },
-        tableHead: { fontSize: 10, bold: true },
-        tableBody: { fontSize: 9 },
-        textSize: { fontSize: 10 },
-        boldText: { fontSize: 10, bold: true },
+      content: allContent,
+        styles: {
+        header: {
+          fontSize: 18,
+          bold: true,
+        },
+        tableHead: {
+          bold: true,
+          fontSize: 10,
+          color: 'black',
+        },
+        tableBody: {
+          fontSize: 9,
+        },
+        textSize: {
+          fontSize: 10,
+        },
+        boldText: {
+          fontSize: 10,
+          bold: true,
+        },
       },
     };
 
-    pdfMake.createPdf(dd).open();
+  
+     pdfMake.vfs = pdfFonts.pdfMake.vfs;
+    pdfMake.createPdf(dd, null, null, pdfFonts.pdfMake.vfs).open();
   };
-
+ 
   return (
-    <button type="button" onClick={GetPdf}>
-      Print Packing
-    </button>
+     <a onClick={GetPdf}>
+        Print Packing
+      </a>
   );
 };
 
