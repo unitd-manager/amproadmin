@@ -412,6 +412,7 @@ const EmployeeEdit = () => {
     await editEQData();
     await editECData();
     await editCIData();
+    navigate('/Employee');
   };
 
   //Attachments

@@ -32,30 +32,22 @@ const ApiButton = ({ editData, navigate, applyChanges, backToList, module }) => 
           <Row>
             <Col className="d-flex" xl={3} sm={12}>
               {' '}
-              <HasAccess
-                roles={null}
-                permissions={`${module}-edit`}
-                renderAuthFailed={<p></p>}
-              >
+             
                 <Button
                   onClick={() => {
                     editData();
-                    navigate('/Leave');
+                  
                   }}
                   color="primary"
                 >
                   {' '}
                   Save
                 </Button>
-              </HasAccess>
+              
             </Col>
             <Col className="d-flex" xl={3} sm={12}>
               {' '}
-              <HasAccess
-                roles={null}
-                permissions={`${module}-edit`}
-                renderAuthFailed={<p></p>}
-              >
+           
                 <Button
                   onClick={() => {
                     editData();
@@ -65,7 +57,7 @@ const ApiButton = ({ editData, navigate, applyChanges, backToList, module }) => 
                 >
                   Apply
                 </Button>
-              </HasAccess>
+             
             </Col>
             <Col className="d-flex" xl={4} sm={12}>
               {' '}

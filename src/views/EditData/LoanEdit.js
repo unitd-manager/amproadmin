@@ -122,6 +122,7 @@ const LoanEdit = () => {
 
           message('Record edited successfully', 'success');
           getLoanById();
+           navigate('/Loan');
         })
         .catch(() => {
           message('Unable to edit record.', 'error');

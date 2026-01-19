@@ -153,7 +153,7 @@ const LeavesEdit = () => {
           .post('/leave/editleave', leavesDetails)
           .then(() => {
             message('Record editted successfully', 'success');
-                   
+              navigate('/Leave');      
           })
           .catch(() => {
             message('Unable to edit record.', 'error');
