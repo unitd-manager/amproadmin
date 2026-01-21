@@ -11,6 +11,57 @@ import message from '../Message';
 // import PdfHeader from './PdfHeader'; // Assuming you have a header component
 
 
+const PdfHeader = ({ findCompany }) => {
+  return function pdfHeaderContent(currentPage, pageCount) {
+    return {
+      margin: [40, 20, 40, 10],
+      stack: [
+        {
+          columns: [
+            {
+              text: findCompany('company_name') || 'AMPRO PTE LTD',
+              fontSize: 16,
+              bold: true,
+            },
+            {
+              text: `Print Date : ${moment().format('MM/DD/YYYY hh:mm:ss A')}`,
+              alignment: 'right',
+              fontSize: 9,
+            },
+          ],
+        },
+        {
+          columns: [
+            {
+              text: 'Sales Invoice Picking List',
+              fontSize: 11,
+              bold: true,
+            },
+            {
+              text: `Page No : ${currentPage} of ${pageCount}`,
+              alignment: 'right',
+              fontSize: 9,
+            },
+          ],
+          // margin: [3, 8, 8, 0],
+        },
+        {
+          canvas: [
+            {
+              type: 'line',
+              x1: 0,
+              y1: 0,
+              x2: 515,
+              y2: 0,
+              lineWidth: 1,
+            },
+          ],
+        },
+      ],
+    };
+  };
+};
+
 const PdfPickingList = ({ selectedOrderIds }) => {
   PdfPickingList.propTypes = {
     selectedOrderIds: PropTypes.array,
@@ -93,39 +144,21 @@ const PdfPickingList = ({ selectedOrderIds }) => {
     { text: index + 1, style: 'tableBody', alignment: 'center' },   // S.No
     { text: item.product_name || '', style: 'tableBody', alignment: 'left' }, // Name
     { text: item.unit || '', style: 'tableBody', alignment: 'center' }, // UOM
-    { text: cQty.toFixed(2), style: 'tableBody', alignment: 'right' }, // Qty
+    {
+  text: Number.isInteger(cQty) ? cQty.toString() : cQty,
+  style: 'tableBody',
+  alignment: 'right',
+}
+
   ]);
 });
 
     const dd = {
       pageSize: 'A4',
-      pageMargins: [40, 50, 40, 80], // Adjust margins as needed
-            // header: PdfHeader({ findCompany }),
+      pageMargins: [40, 70, 40, 80], // Adjust margins as needed
+      header: PdfHeader({ findCompany }),
       //footer: PdfFooter, // Assuming you have a standard footer
-      content: [
-        {
-          columns: [
-            {
-              width: '*',
-              text: findCompany('company_name') || 'Ampro PTE LTD',
-              style: 'header',
-            },
-            {
-              width: 'auto',
-              text: `Print Date: ${moment().format('DD-MM-YYYY HH:mm:ss')}`,
-              style: 'textSize',
-              alignment: 'right',
-            },
-          ],
-          columnGap: 10,
-          margin: [0, 0, 0, 5],
-        },
-        {
-          text: 'Picking List',
-          style: 'subheader',
-          alignment: 'left',
-          margin: [0, 0, 0, 10],
-        },
+      content: [   
         {
           text: `Selected Sales Invoice: ${salesOrder.map(so => so.invoice_code).join(', ') || ''}`,
           style: 'textSize',
@@ -135,7 +168,7 @@ const PdfPickingList = ({ selectedOrderIds }) => {
           layout: 'lightHorizontalLines',
          table: {
   headerRows: 1,
-  widths: [30, '*', 60, 60],
+  widths: [30, '*', 60, 90],
   body: productItems,
 }
         },

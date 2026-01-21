@@ -17,7 +17,6 @@ import api from '../../constants/api';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
 import PrintPerfomaList from '../../components/PDF/PrintPerfomaInvList';
-
 import SalesInvoicePickingListPdf from '../../components/PDF/SalesInvoicePickingListPdf';
 import PrintLetterPdf from '../../components/PDF/PrintLetterPdf';
 import PrintPackingPdf from '../../components/PDF/PrintPackingPdf';
@@ -371,14 +370,24 @@ const handleConvertToDelivryVerification = async () => {
                       type="checkbox"
                       checked={selectedInvoiceIds.includes(element.invoice_id)}
                       onChange={() => {
-                        setSelectedInvoiceIds((prev) =>
-                          prev.includes(element.invoice_id)
-                            ? prev.filter((ids) => ids !== element.invoice_id)
-                            : [...prev, element.invoice_id]
-                        );
-                        setSelectedOrder(element); // Keep single selection for compatibility
-                      }}
-                    />
+    setSelectedInvoiceIds((prev) => {
+      const newSelection = prev.includes(element.invoice_id)
+        ? prev.filter((ids) => ids !== element.invoice_id)
+        : [...prev, element.invoice_id];
+      
+      // Update selectedOrder based on the last selected item
+      if (newSelection.length > 0) {
+        const lastSelectedId = newSelection[newSelection.length - 1];
+        const lastSelectedOrder = supplier.find(s => s.invoice_id === lastSelectedId);
+        setSelectedOrder(lastSelectedOrder);
+      } else {
+        setSelectedOrder(null);
+      }
+      
+      return newSelection;
+    });
+  }}
+/>
                   </td>
                   <td>{index + 1}</td>
                  <td>
