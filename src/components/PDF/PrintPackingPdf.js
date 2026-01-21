@@ -6,12 +6,12 @@ import moment from 'moment';
 import api from '../../constants/api';
 import message from '../Message';
 import PdfFooter from './PdfFooter';
-import PdfHeader from './PdfHeader';
+import PdfHeader from './PdfHeader2'; 
 
 /* ============================
    ✅ REGISTER FONTS ONCE
 ============================ */
-pdfMake.vfs = pdfFonts.pdfMake.vfs;
+
 
 const PdfPackingList = ({ selectedOrderIds }) => {
 
@@ -84,7 +84,7 @@ const PdfPackingList = ({ selectedOrderIds }) => {
       return;
     }
 
-    const content = [];
+    const allContent = [];
     let grandTotalQty = 0;
 
     allSalesOrders.forEach((salesOrder, index) => {
@@ -134,7 +134,7 @@ const PdfPackingList = ({ selectedOrderIds }) => {
 
       grandTotalQty += totalCarton;
 
-      content.push(
+      allContent.push(
         {
           text: findCompany('company_name'),
           style: 'header',
@@ -142,15 +142,29 @@ const PdfPackingList = ({ selectedOrderIds }) => {
           margin: [0, index === 0 ? 0 : 20, 0, 5],
         },
         {
-          text: [
-            moment().format('DD-MM-YYYY'),
-            '   |   ',
-            salesOrder.customer_code || '',
-            '   |   ',
-            salesOrder.company_name || '',
-            '   |   ',
-            salesOrder.invoice_code || '',
-          ],
+          columns: [
+              {
+                width: '15%',
+                text: `${moment().format('DD-MM-YYYY')}`,
+                style: 'textSize',
+              },
+              {
+                width: '20%',
+                text: `${salesOrder.tran_no || ''}`,
+                style: 'textSize',
+              },
+              {
+                width: '20%',
+                text: `${salesOrder.customer_code || ''}`,
+                style: 'textSize',
+              },
+              {
+                width: '45%',
+                text: `${salesOrder.company_name || ''}`,
+                style: 'textSize',
+                alignment: 'right',
+              },
+            ],
           style: 'textSize',
           margin: [0, 0, 0, 10],
         },
@@ -161,42 +175,133 @@ const PdfPackingList = ({ selectedOrderIds }) => {
             body: tableBody,
           },
           layout: 'lightHorizontalLines',
-        }
+        },  {
+    table: {
+      widths: ['*', 50, 50],
+      body: [
+        [
+          {
+            text: `Total For InvoiceNo : ${
+  salesOrder.tran_no ||
+  salesOrder.invoice_no ||
+  salesOrder.invoice_number ||
+  salesOrder.sales_invoice_no ||
+  ''
+}`,
+
+            bold: true,
+            alignment: 'center',
+          },
+          {
+            text: totalFoc.toString(),
+            bold: true,
+            alignment: 'right',
+          },
+          {
+            text: totalCarton.toString(),
+            bold: true,
+            alignment: 'right',
+          },
+        ],
+      ],
+    },
+    layout: {
+      hLineWidth: () => 1,
+      vLineWidth: () => 0,
+      hLineColor: () => 'black',
+    },
+    margin: [0, 5, 0, 15],
+  }
+
       );
     });
 
-    content.push(
-      { text: '', margin: [0, 15] },
-      {
-        text: `Grand Total: ${grandTotalQty}`,
-        style: 'boldText',
-        alignment: 'right',
-      }
-    );
+   allContent.push(
+  // ===== TOP DOUBLE LINE =====
+  {
+    canvas: [
+      { type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1 },
+      { type: 'line', x1: 0, y1: 3, x2: 515, y2: 3, lineWidth: 1 },
+    ],
+    margin: [0, 10, 0, 5],
+  },
+
+  // ===== GRAND TOTAL ROW =====
+  {
+    table: {
+      widths: ['*', 50, 50],
+      body: [
+        [
+          {
+            text: 'Grand Total',
+            alignment: 'right',
+            bold: true,
+            fontSize: 10,
+          },
+          {
+            text: grandTotalQty.toString(),
+            alignment: 'right',
+            bold: true,
+            fontSize: 10,
+          },
+          {
+            text: '', // if you later add Foc/LQty you can use this
+          },
+        ],
+      ],
+    },
+    layout: 'noBorders',
+    margin: [0, 5, 0, 5],
+  },
+
+  // ===== BOTTOM DOUBLE LINE =====
+  {
+    canvas: [
+      { type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1 },
+      { type: 'line', x1: 0, y1: 3, x2: 515, y2: 3, lineWidth: 1 },
+    ],
+    margin: [0, 5, 0, 0],
+  }
+);
 
     const dd = {
       pageSize: 'A4',
-      pageMargins: [40, 150, 40, 80],
+      pageMargins: [40, 65, 40, 60],
       header: PdfHeader({ findCompany }),
       footer: PdfFooter,
-      defaultStyle: { font: 'Roboto' }, // ✅ FIXES Roboto error
-      content,
-      styles: {
-        header: { fontSize: 18, bold: true },
-        tableHead: { fontSize: 10, bold: true },
-        tableBody: { fontSize: 9 },
-        textSize: { fontSize: 10 },
-        boldText: { fontSize: 10, bold: true },
+      content: allContent,
+        styles: {
+        header: {
+          fontSize: 18,
+          bold: true,
+        },
+        tableHead: {
+          bold: true,
+          fontSize: 10,
+          color: 'black',
+        },
+        tableBody: {
+          fontSize: 9,
+        },
+        textSize: {
+          fontSize: 10,
+        },
+        boldText: {
+          fontSize: 10,
+          bold: true,
+        },
       },
     };
 
-    pdfMake.createPdf(dd).open();
+  
+     pdfMake.vfs = pdfFonts.pdfMake.vfs;
+    pdfMake.createPdf(dd, null, null, pdfFonts.pdfMake.vfs).open();
   };
-
+ 
   return (
-    <button type="button" onClick={GetPdf}>
-      Print Packing
-    </button>
+     <a onClick={GetPdf}>
+        Print Packing
+      </a>
   );
 };
 

@@ -216,6 +216,7 @@ useEffect(() => {
         .post('/jobinformation/edit-jobinformation', job)
         .then(() => {
           message('Record editted successfully', 'success');
+           navigate('/JobInformation');
         })
         .catch(() => {
           message('Unable to edit record.', 'error');

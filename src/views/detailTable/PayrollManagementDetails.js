@@ -389,6 +389,7 @@ function PayrollManagementDetails() {
         getPayroll();
         //getPreviousEarlierLoan();
         setEditTotalDeduction(false);
+         navigate('/PayrollManagement');
       })
       .catch(() => {
         message('Unable to edit record.', 'error');

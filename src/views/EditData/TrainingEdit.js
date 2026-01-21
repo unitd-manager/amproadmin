@@ -256,6 +256,7 @@ const TrainingEdit = () => {
           .then(() => {
             message('Record editted successfully', 'success');
             insertStaff(result);
+             navigate('/Training');
           })
           .catch(() => {
             message('Unable to edit record.', 'error');
