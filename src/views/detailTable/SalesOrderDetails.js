@@ -43,6 +43,7 @@ const SalesOrderEdit = () => {
 
   const [id, setId] = useState(paramId);
   const [triggerSave, setTriggerSave] = useState(false);
+  const [pendingSalesmen, setPendingSalesmen] = useState([]);
 
 console.log(navigate);
   const [activeTab, setActiveTab] = useState("1");
@@ -177,10 +178,31 @@ const saveSalesOrder = async () => {
   if (id) {
     return editSettingData();
   }
-  const newId = await generateCode();
-  setId(newId);
-  setTriggerSave(true);
-  return newId;
+  try {
+    const newId = await generateCode();
+    setId(newId);
+    setTriggerSave(true);
+    // Save any pending salesmen with the new sales order ID
+    if (pendingSalesmen && pendingSalesmen.length > 0) {
+      const savePromises = pendingSalesmen.map((salesman) =>
+        api.post('/employee/addSalesOrderSalesman', {
+          sales_order_id: newId,
+          sales_id: salesman.sales_id_dup,
+          salesman_name: salesman.salesman_name,
+        }).catch((err) => {
+          console.error('Failed to save salesman:', err);
+          // Continue with other salesmen even if one fails
+          return null;
+        })
+      );
+      await Promise.all(savePromises);
+      setPendingSalesmen([]); // Clear pending after saving
+    }
+    return newId;
+  } catch (error) {
+    message('Failed to create sales order', 'error');
+    throw error;
+  }
 };
 
 console.log(editSettingData);
@@ -259,6 +281,8 @@ useEffect(() => {
                 <SalesMan
                  settingdetails={settingdetails}
                  handleInputs={handleInputs}
+                 salesOrderId={id}
+                 onSavePendingSalesmen={(salesmen) => setPendingSalesmen(salesmen)}
                  ></SalesMan>
               </TabPane>
          
