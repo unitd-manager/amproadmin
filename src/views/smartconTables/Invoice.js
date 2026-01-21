@@ -255,7 +255,7 @@ const handleConvertToDelivryVerification = async () => {
     //   return;
     // }
     setSalesInfoOpen(true);
-  };
+  }; 
 
   // Add delete handler
   const handleDeleteInvoices = async () => {
