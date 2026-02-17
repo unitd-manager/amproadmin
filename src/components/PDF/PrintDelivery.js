@@ -71,7 +71,7 @@ const PrintPerfomaInvList = ({ id }) => {
       setGtotal(grandTotal);
       setLoading(false);
     } catch (error) {
-      message('Error fetching sales order data', 'error');
+     // message('Error fetching sales order data', 'error');
       setLoading(false);
     }
   };

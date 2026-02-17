@@ -6,7 +6,7 @@ import pdfFonts from 'pdfmake/build/vfs_fonts';
 import PropTypes from 'prop-types';
 import moment from 'moment';
 import api from '../../constants/api';
-import message from '../Message';
+//import message from '../Message';
 import PdfFooter from './PdfFooter'; // Assuming you have a footer component
 import PdfHeader from './PdfHeader'; // Assuming you have a header component
 
@@ -56,7 +56,7 @@ console.log(id,"wsed")
       });
       setGtotal(grandTotal);
     } catch (error) {
-      message('Error fetching sales order data', 'error');
+     // message('Error fetching sales order data', 'error');
     }
   };
 

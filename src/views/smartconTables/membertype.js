@@ -13,28 +13,33 @@ import CommonTable from '../../components/CommonTable';
 
 const MemberType = () => {
   const [memberTypes, setMemberTypes] = useState([]);
+  const [allMemberTypes, setAllMemberTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [memberTypeFilter, setMemberTypeFilter] = useState('');
-  const [selectedId, setSelectedId] = useState(null);
+  const [selectedId] = useState(null);
   const [modal, setModal] = useState(false);
   const dataTableRef = useRef(null);
-console.log(setSelectedId);
   const getMemberTypes = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/membertype/getAll', {
-        params: {
-          member_type_name: memberTypeFilter,
-        },
-      });
+      const res = await api.get('/membertype/getAll');
 
       const responseData = res.data.data || [];
-      const formatted = responseData.map((item) => ({
+      const formattedAll = responseData.map((item) => ({
         ...item,
         status: item.is_active === 1 ? 'Active' : 'Inactive',
       }));
 
-      setMemberTypes(formatted);
+      setAllMemberTypes(formattedAll);
+      const filter = memberTypeFilter.trim().toLowerCase();
+      const filtered = filter
+        ? formattedAll.filter(
+            (item) =>
+              item.member_type_name &&
+              String(item.member_type_name).toLowerCase().includes(filter),
+          )
+        : formattedAll;
+      setMemberTypes(filtered);
     } catch (error) {
       message('Cannot get Member Type data', 'error');
       console.error('Error fetching Member Types:', error);
@@ -76,7 +81,19 @@ console.log(setSelectedId);
 
   useEffect(() => {
     getMemberTypes();
-  }, [memberTypeFilter]);
+  }, []);
+
+  useEffect(() => {
+    const filter = memberTypeFilter.trim().toLowerCase();
+    const filtered = filter
+      ? allMemberTypes.filter(
+          (item) =>
+            item.member_type_name &&
+            String(item.member_type_name).toLowerCase().includes(filter),
+        )
+      : allMemberTypes;
+    setMemberTypes(filtered);
+  }, [memberTypeFilter, allMemberTypes]);
 
   useEffect(() => {
     if (dataTableRef.current && $.fn.DataTable.isDataTable(dataTableRef.current)) {

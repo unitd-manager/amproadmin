@@ -271,7 +271,7 @@ const Supplier = () => {
     )}
   </div>
 </td>
-                    <td>{element.phone || element.mobile || ''}</td>
+                    <td>{element.mobile || ''}</td>
                     <td>{element.email || ''}</td>
                     <td>
                       <span className={`badge ${((element.is_active === 1 || element.is_active === true) || String(element.status || '').toLowerCase() === 'active') ? 'bg-success' : 'bg-danger'}`}>

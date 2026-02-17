@@ -209,7 +209,7 @@ function Inventory() {
           
                   
                 </Col>
-                <Col md="6">
+                {/* <Col md="6">
                   <a
                     href="https://pyramid.unitdtechnologies.com/storage/excelsheets/Inventory.xlsx"
                     download
@@ -218,7 +218,7 @@ function Inventory() {
                       Sample
                     </Button>
                   </a>
-                </Col>
+                </Col> */}
               </Row>
             </>
           }

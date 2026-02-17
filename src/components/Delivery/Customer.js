@@ -41,7 +41,7 @@ export default function SupplierDetails({ handleInputs, settingdetails, setSetti
             <Col md="6">
               <FormGroup row style={{ marginBottom: '8px' }}>
                 <Label sm={4} style={{ fontSize: '11px', marginBottom: '0' }}>
-                  Customer Code <span className="required">*</span>
+                  Customer Code
                 </Label>
                 <Col sm={8}>
                   <Select

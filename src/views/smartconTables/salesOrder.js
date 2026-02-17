@@ -334,14 +334,14 @@ const Test = () => {
                   />
                 
                 </DropdownItem>
-                <DropdownItem>
+                {/* <DropdownItem>
                   <PdfSalesQuote
                     id={selectedSalesOrderIds.length === 1 ? selectedSalesOrderIds[0] : selectedOrder?.sales_order_id || ''}
                     settingdetails={null}
                     lineItem={null}
                   />
                
-                </DropdownItem>
+                </DropdownItem> */}
                 <DropdownItem onClick={() => { /* TODO: Add tracking images logic */ }}>Tracking Images</DropdownItem>
                 <DropdownItem>
                   <SalesOrderPrintWithCost

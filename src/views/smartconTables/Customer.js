@@ -40,7 +40,8 @@ const Customer = () => {
     try {
       const params = {
         company_name: customerNameFilter,
-        mobile: mobileFilter,
+        phone: mobileFilter,
+        
       };
       
       if (statusFilter !== 'all') {
@@ -49,11 +50,19 @@ const Customer = () => {
 
       const res = await api.get('/contact/getContactss', { params });
   
-      const formattedCustomers = res.data.data.map(item => ({
+      let formattedCustomers = res.data.data.map(item => ({
         ...item,
         formattedStatus: item.is_active === 1 ? 'Active' : 'Inactive',
       }));
   
+      if (mobileFilter) {
+        const term = String(mobileFilter).toLowerCase();
+        formattedCustomers = formattedCustomers.filter((c) => {
+          const phoneVal = (c.phone || '').toString().toLowerCase();
+        //  const mobileVal = (c.mobile || '').toString().toLowerCase();
+          return phoneVal.includes(term);
+        });
+      }
       setCustomer(formattedCustomers || []);
     } catch (error) {
       message('Cannot get Customer Data', 'error');

@@ -52,7 +52,7 @@ export default function SupplierDetails({ handleInputs, settingdetails, setSetti
             <Col md="3">
               <FormGroup style={{ marginBottom: '8px' }}>
                 <Label style={{ fontSize: '11px', marginBottom: '2px' }}>
-                  Currency code <span className="required"> *</span>
+                  Currency code
                 </Label>
                 <Input
                   type="select"

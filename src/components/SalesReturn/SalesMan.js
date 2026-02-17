@@ -32,7 +32,7 @@ export default function SupplierDetails({ handleInputs, settingdetails }) {
             <Col md="3">
               <FormGroup>
                 <Label style={{ fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>
-                  Sales man <span className="required"> *</span>
+                  Sales man
                 </Label>
                 <Input
                   type="select"

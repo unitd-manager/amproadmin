@@ -12,6 +12,7 @@ const PriceGroupList = () => {
   const [priceGroups, setPriceGroups] = useState([]);
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 15;
   const navigate = useNavigate();
 
   const getPriceGroups = () => {
@@ -38,6 +39,18 @@ const PriceGroupList = () => {
   useEffect(() => {
     getPriceGroups();
   }, []);
+
+  const filteredPriceGroups = priceGroups.filter((pg) =>
+    (pg.price_group_name || '').toLowerCase().includes(search)
+  );
+  const totalPages = Math.max(1, Math.ceil(filteredPriceGroups.length / recordsPerPage));
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const currentRecords = filteredPriceGroups.slice(indexOfFirstRecord, indexOfLastRecord);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, priceGroups.length]);
 
   return (
     <div className="MainDiv">
@@ -86,14 +99,13 @@ const PriceGroupList = () => {
             <th style={{ width: '10%', padding: '12px 8px', textAlign: 'center' }}>Action</th>
             <th style={{ width: '30%', padding: '12px 8px' }}>Group Name</th>
             <th style={{ width: '30%', padding: '12px 8px' }}>Status</th>
+              <th style={{ width: '30%', padding: '12px 8px' }}>Created On</th>
             <th style={{ width: '30%', padding: '12px 8px' }}>Modified On</th>
           </tr>
         </thead>
         <tbody>
-          {priceGroups.length > 0 ? (
-            priceGroups
-              .filter((pg) => pg.price_group_name.toLowerCase().includes(search))
-              .map((pg) => (
+          {filteredPriceGroups.length > 0 ? (
+            currentRecords.map((pg) => (
                 <tr key={pg.id} style={{ borderBottom: '1px solid #efefef' }}>
                   <td style={{ padding: '12px 8px', textAlign: 'center' }}>
                     <Button 
@@ -119,7 +131,8 @@ const PriceGroupList = () => {
                       {pg.status ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td style={{ padding: '12px 8px' }}>{pg.created_by || '02/07/2020'}</td>
+                  <td style={{ padding: '12px 8px' }}>{pg.creation_date ? pg.creation_date.split('T')[0] : 'N/A'}</td>
+                  <td style={{ padding: '12px 8px' }}>{pg.modification_date ? pg.modification_date.split('T')[0] : 'N/A'}</td>
                 </tr>
               ))
           ) : (
@@ -138,7 +151,7 @@ const PriceGroupList = () => {
         <div className="row mt-3">
           <div className="col-12 d-flex justify-content-between align-items-center">
             <div>
-              <span>Total Records: {priceGroups.length}</span>
+              <span>Total Records: {filteredPriceGroups.length}</span>
             </div>
             <div>
               <Button 
@@ -176,7 +189,8 @@ const PriceGroupList = () => {
                   border: '1px solid #ced4da',
                   borderRadius: '5px'
                 }}
-                onClick={() => setCurrentPage(currentPage + 1)}
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
               >
                 NEXT
               </Button>

@@ -47,7 +47,7 @@ const SupplierDetails = ({ handleInputs, settingdetails, setSettingDetails }) =>
             <Col md="6">
               <FormGroup row style={{ marginBottom: '8px' }}>
                                 <Label sm={4} style={{ fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>
-                  Delivery name <span className="required"> *</span>
+                  Delivery name
                 </Label>
                  <Col sm={8}>
                 <Input

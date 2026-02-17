@@ -165,7 +165,7 @@ const CustomerDetails = () => {
                   </Col>
                   <Col md="6">
                     <Label>
-                      Customer Name<span className="required">*</span>
+                      Customer Name
                     </Label>
                     <Input
                       type="text"

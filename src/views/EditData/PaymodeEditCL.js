@@ -81,6 +81,9 @@ const PaymodeEdit = () => {
       api.post('/paymode/update', paymode)
         .then(() => {
           message('Record edited successfully', 'success');
+           setTimeout(() => {
+                      navigate('/PaymodeCL');
+                    }, 1100);
         })
         .catch(() => {
           message('Unable to edit record.', 'error');

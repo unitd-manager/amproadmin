@@ -132,7 +132,7 @@ export default function SalesManComponent({  salesOrderId, onSavePendingSalesmen
             <Col md="4">
               <FormGroup>
                 <Label style={{ fontSize: '12px', fontWeight: '500', marginBottom: '4px' }}>
-                  Select Sales Man <span className="required"> *</span>
+                  Select Sales Man
                 </Label>
                 <Input
                   type="select"
