@@ -40,6 +40,7 @@ const PurchaseOrderEdit = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedSNo, setSelectedSNo] = useState(null);
   const [selectedUOM, setSelectedUOM] = useState('');
+  const [openProductSelectForRowIndex, setOpenProductSelectForRowIndex] = useState(null); // newly added row: open Select by default
   const cartonPriceRefs = useRef([]);
   const productCodeRefs = useRef([]); // keeps Select refs
   const cartonQtyRefs = useRef([]);
@@ -175,7 +176,8 @@ const navigate=useNavigate();
     
     // Fetch table data
     api.post("/purchaseorder/TabPurchaseOrderLineItemById",{purchase_order_id:id}).then((response) => { 
-      const updatedRows = response.data.data.map(product => {
+      const data = response.data.data || [];
+      const updatedRows = (Array.isArray(data) ? data : []).map(product => {
         const totalVal = Number(product.total) || (Number(product.qty || 0) * Number(product.price || 0));
         const grossVal = totalVal - (Number(product.discount_amount) || 0);
         return {
@@ -185,8 +187,24 @@ const navigate=useNavigate();
           grossTotal: grossVal
         };
       });
-      setRows(updatedRows);
-      setTableData(response.data.data);
+      // Ensure at least one row so user always sees a product row (with "Select Product") and "+ Add" works
+      setRows(updatedRows.length > 0 ? updatedRows : [{
+        po_product_id: 'new-0',
+        product_code: '',
+        product_name: '',
+        carton_qty: 0,
+        loose_qty: 0,
+        carton_price: 0,
+        qty: 0,
+        price: 0,
+        total: 0,
+        discount: 0,
+        total_price: 0,
+        discount_percentage: 0,
+        discount_amount: 0,
+        grossTotal: 0,
+      }]);
+      setTableData(Array.isArray(data) ? data : []);
     });
 
     // Fetch supplier options for dropdown
@@ -327,21 +345,19 @@ console.log('formdata',payloadForm);
     api
     .post('/purchaseorder/editPurchaseOrder', payloadForm)
     .then(() => {
-      // api
-      // .post('/currency/editCurrency', currency) 
-      // .then(() => {})
-      
-      rows?.forEach((el)=>{
-       el.gross_total=el.total_price;
-       console.log('el',el);
-        api
-      .post('/purchaseorder/editPoProduct', el) 
-      .then(() => {})
-      })
+      const purchaseOrderId = id;
+      rows?.forEach((el) => {
+        if (!el.product_id) return;
+        el.gross_total = el.total_price;
+        const isNewRow = String(el.po_product_id || '').startsWith('new-');
+        if (isNewRow) {
+          const insertPayload = { ...el, purchase_order_id: purchaseOrderId };
+          api.post('/purchaseorder/insertPoProduct', insertPayload).then(() => {});
+        } else {
+          api.post('/purchaseorder/editPoProduct', el).then(() => {});
+        }
+      });
       message('Record edited successfully.', 'success');
-      setTimeout(() => {
-        navigate('/PurchaseOrder')
-      }, 300);
     })
     .catch(() => {
       message('Network connection error.', 'error');
@@ -437,9 +453,9 @@ console.log('formdata',payloadForm);
   };
 
   const addRow = (insertAfterIndex) => {
-    // insertAfterIndex is the index after which the new row will be inserted
+    const safeIndex = Math.max(0, Number(insertAfterIndex) + 1);
     const newRow = {
-      po_product_id: `new-${rows.length}`,
+      po_product_id: `new-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
       product_code: "",
       product_name: "",
       carton_qty: 0,
@@ -456,21 +472,23 @@ console.log('formdata',payloadForm);
     };
     setRows((prevRows) => {
       const updatedRows = [...prevRows];
-      updatedRows.splice(insertAfterIndex + 1, 0, newRow);
+      const insertAt = Math.min(safeIndex, updatedRows.length);
+      updatedRows.splice(insertAt, 0, newRow);
       return updatedRows;
     });
+    const nextIndex = safeIndex;
+
+    // Open product Select for the new row so "Select Product" is visible and user can pick immediately
+    setOpenProductSelectForRowIndex(nextIndex);
 
     // give React a tick to render the new Select, then focus
     setTimeout(() => {
-      const nextIndex = insertAfterIndex + 1;
       const ref = productCodeRefs.current[nextIndex];
-      // react-select instances expose focus()
       try {
         if (ref && typeof ref.focus === 'function') {
           ref.focus();
           return;
         }
-        // fallback: try to find underlying input by id
         const input = document.querySelector(`#product-select-${nextIndex} input`);
         if (input) input.focus();
       } catch (err) {
@@ -868,7 +886,11 @@ console.log('formdata',payloadForm);
           }
         : null
     }
+    placeholder="Select Product"
+    menuIsOpen={openProductSelectForRowIndex === idx ? true : undefined}
+    onMenuClose={() => setOpenProductSelectForRowIndex(null)}
     onChange={(selectedOption) => {
+      setOpenProductSelectForRowIndex(null);
       handleProductSelect(idx, selectedOption);
       if (cartonQtyRefs.current[idx]) {
         cartonQtyRefs.current[idx].focus();
@@ -892,7 +914,6 @@ console.log('formdata',payloadForm);
       zIndex: 9999   // just in case
     })
   }}
-    placeholder="Select Product"
     formatOptionLabel={(opt, { context }) =>
       context === 'menu'
         ? `${opt.product_code || ''} - ${opt.product_name || ''}`
@@ -1146,10 +1167,10 @@ console.log('formdata',payloadForm);
                       value={p.standard_rate || ''}
                       onChange={(e) => handleRowChange(p.po_product_id, 'standard_rate', e.target.value)}
                     >
-                      <option>Standard Rate</option>
+                      <option>ZR - Zero Rate</option>
                       {/* You might want to populate these options dynamically based on your product data */}
-                      <option value="rate1">Rate 1</option>
-                      <option value="rate2">Rate 2</option>
+                      <option value="rate1">In - Tax Inclusive</option>
+                     
                     </Input>
                   </td>
                   <td style={{ padding: '0.3rem' }}></td> {/* Empty for Gross Total */}
@@ -1160,9 +1181,16 @@ console.log('formdata',payloadForm);
             ))}
           {/* Summary Row */}
           <tr style={{ fontWeight: "bold", color: "#007bff", fontSize: '0.75rem' }}>
-            <td style={{ padding: '0.3rem' }}></td> {/* Empty for S No */}
-            <td colSpan={1} style={{ textAlign: "right", padding: '0.3rem' }}>
-              Summary:
+            <td colSpan={2} style={{ padding: '0.3rem' }}>
+              <Button
+                size="sm"
+                color="primary"
+                onClick={() => addRow(rows.length - 1)}
+                style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', marginRight: '0.5rem' }}
+              >
+                + Add
+              </Button>
+              <span style={{ marginLeft: '0.5rem' }}>Summary:</span>
             </td>
             <td style={{ padding: '0.3rem' }}></td> {/* Empty for Product Name */}
             <td style={{ padding: '0.3rem' }}>{summary.cartonQty.toFixed(2)}</td>

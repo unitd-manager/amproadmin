@@ -31,6 +31,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarAlt, faPlus, faPrint } from '@fortawesome/free-solid-svg-icons';
 import api from "../../constants/api";
 import ProductInfoModal from "../../components/PurchaseOrder/ProductInfoModal";
+import Currency from '../../components/PurchaseOrder/Currency';
+
 
 
 const GoodsReceiptDetails = () => {
@@ -93,6 +95,7 @@ const { id } = useParams();
     currency_name: "",
   });
   const [supplierOptions, setSupplierOptions] = useState([]);
+  const [billDiscount, setBillDiscount] = useState(0);
   const [rows, setRows] = useState([
     {
       gr_product_id: 1,
@@ -261,7 +264,7 @@ useEffect(() => {
         );
         console.log('handleChange - selectedSupplier:', selectedSupplier);
         if (selectedSupplier) {
-          updatedFormData.company_name = selectedSupplier.company_name;
+          updatedFormData.supplier_name = selectedSupplier.supplier_name;
           updatedFormData.contact_person = selectedSupplier.contact_person;
           updatedFormData.contact_address1 = selectedSupplier.address_flat;
           updatedFormData.contact_address2 = selectedSupplier.address_street;
@@ -302,17 +305,24 @@ useEffect(() => {
     formData.net_total = Number(formData.net_total);
     formData.grand_total = Number(formData.net_total);
 
-    if (!currency.currency_code) {
-      message('Please Enter currency code.', 'error');
+    // Validate currency from formData (set by Currency component when user selects)
+    const currencyCode = formData.currency_code || currency.currency_code;
+    if (!currencyCode) {
+      message('Please select a currency code.', 'error');
       return;
     }
 
     try {
       const res = await api.post('/purchaseorder/insertGoodsReceipt', formData);
       const insertedDataId = res.data.data.insertId;
-      currency.goods_receipt_id = insertedDataId;
+      // const currencyPayload = {
+      //   currency_code: currencyCode,
+      //   currency_rate: formData.currency_rate ?? currency.currency_rate,
+      //   currency_name: formData.currency_name ?? currency.currency_name,
+      //   goods_receipt_id: insertedDataId,
+      // };
 
-      await api.post('/currency/insertGoodsReceiptCurrency', currency);
+      // await api.post('/currency/insertGoodsReceiptCurrency', currencyPayload);
  
       // Fire all product inserts in parallel
       await Promise.all(
@@ -363,12 +373,19 @@ useEffect(() => {
             }
           }
 
-          // Recalculate discount_amount if discount_percentage changes
+          // Recalculate discount_amount if discount_percentage changes (use same row total formula)
           if (field === "discount_percentage") {
+            const cartonQty = Number(updatedRow.carton_qty || 0);
+            const cartonPrice = Number(updatedRow.carton_price || 0);
+            const looseQty = Number(updatedRow.loose_qty || 0);
             const qty = Number(updatedRow.qty || 0);
             const price = Number(updatedRow.price || 0);
+            const cartonTotal = cartonQty * cartonPrice;
+            const looseTotal = looseQty * (cartonPrice / 12);
+            const total = qty * price;
+            const preDiscountGrossTotal = cartonTotal + looseTotal + total;
             const discountPercentage = Number(value || 0);
-            updatedRow.discount_amount = ((qty * price * discountPercentage) / 100).toFixed(2);
+            updatedRow.discount_amount = (preDiscountGrossTotal * (discountPercentage / 100)).toFixed(2);
           }
 
           // Recalculate totals if relevant fields change
@@ -626,8 +643,8 @@ useEffect(() => {
           <Label className="small mb-1">Supplier Name</Label>
         </Col>
         <Col md="8">
-          <Input bsSize="sm" className="py-0 px-1"  name="company_name"
-              value={formData?.company_name}
+          <Input bsSize="sm" className="py-0 px-1"  name="supplier_name"
+              value={formData?.supplier_name}
               onChange={handleChange}  onKeyDown={handleKeyDown} readOnly/>
         </Col>
       </Row>
@@ -786,9 +803,9 @@ useEffect(() => {
                  <>
     {/* Supplier Code & Contact Address1 */}
   
-                 <Row>
+                 {/* <Row> */}
     {/* Supplier Name & Contact Address2 */}
-    <Col md="6">
+    {/* <Col md="6">
       <Row className="mb-1">
         <Col md="4">
           <Label className="small mb-1">Currency Code</Label>
@@ -824,9 +841,10 @@ useEffect(() => {
         </Col>
       </Row>
     </Col>
-  </Row>
+  </Row> */}
 
-    
+  <Currency settingdetails={formData} setSettingDetails={setFormData} handleInputs={handleChange}/>
+
       </>
                 </TabPane>
               </TabContent>
@@ -1232,7 +1250,15 @@ useEffect(() => {
       <Col md="3">
         <FormGroup className="mb-1">
           <Label className="small mb-1">Bill Discount : $</Label>
-          <Input bsSize="sm" value="0" />
+          <Input
+            bsSize="sm"
+            type="number"
+            min={0}
+            step={0.01}
+            value={billDiscount}
+            onChange={(e) => setBillDiscount(Number(e.target.value) || 0)}
+            onKeyDown={handleKeyDown}
+          />
         </FormGroup>
         <div>Total Product: <strong>{rows?.length}</strong></div>
       </Col>

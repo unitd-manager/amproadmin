@@ -33,12 +33,12 @@ export default function SupplierDetails({ handleInputs, settingdetails, setSetti
     const selectedCompany = company.find((comp) => String(comp.currency_id) === selectedCompanyId);
 
     if (selectedCompany) {
-      // Update settingdetails with selected company data
+      // Update settingdetails with selected company data (including currency_code for validation/save)
       setSettingDetails((prevDetails) => ({
         ...prevDetails,
+        currency_code: selectedCompany.currency_code || '',
         currency_name: selectedCompany.currency_name || '',
         currency_rate: selectedCompany.currency_rate || '',
-     
       }));
     }
   };
