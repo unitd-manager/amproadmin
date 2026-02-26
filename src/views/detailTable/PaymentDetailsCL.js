@@ -197,12 +197,12 @@ const PaymentManagement = () => {
           return {
             purchase_invoice_id: invoiceId,
             paid_amount: invoice?.payable_amount || 0,
+            payment_status: 'paid',
           };
         }),
         creation_date: creationdatetime,
         modified_by: loggedInuser.first_name,
       });
-
       message('Payment saved successfully!', 'success');
       navigate('/paymentsCL');
     } catch (err) {
