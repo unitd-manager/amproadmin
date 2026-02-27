@@ -147,6 +147,7 @@ const PurchaseOrder = () => {
     alert('Please select at least one record to convert.');
     return;
   }
+  
     api.post("/purchaseorder/repeatPurchaseOrder", { purchase_order_ids: selectedIds })
       .then(() => {
         message("Purchase orders repeated successfully",'success');
@@ -157,6 +158,30 @@ const PurchaseOrder = () => {
       })
       .catch(() => message.error("Repeat failed"));
   };
+  
+    // const repeatSalesOrder = async () => {
+    //   if (!selectedOrder) {
+    //     message('Please select a sales order first', 'error');
+    //     return;
+    //   }
+    //   try {
+    //     // Get new delivery code from your API
+    //     const codeRes = await api.post('/commonApi/getCodeValues', { type: 'purchaseOrder' });
+    //     const deliveryCode = codeRes.data.data;
+  
+    //     // Call repeatSalesOrder API with delivery_code
+    //     const response = await api.post('/purchaseorder/repeatPurchaseOrder', {
+    //       purchase_order_id: selectedOrder.purchase_order_id,
+    //       delivery_code: deliveryCode,
+    //     });
+    //     message(response.data.msg, 'success');
+    //     setTimeout(() => {
+    //       window.location.reload();
+    //     }, 400);
+    //   } catch (error) {
+    //     message(error.response?.data?.msg || 'Failed to repeat sales order', 'error');
+    //   }
+    // };
 
   const handleConverttoGra = async () => {
     if (selectedIds.length !== 1) {

@@ -358,7 +358,7 @@ console.log('formData', payloadForm);
       );
 
       message('GoodsReturn has been Created successfully.', 'success');
-      setTimeout(() => navigate(`/GoodsReturn/${insertedDataId}`), 300);
+      setTimeout(() => navigate(`/GoodsReturnEdit/${insertedDataId}`), 300);
     } catch (error) {
       message('Network connection error.', 'error');
     }
@@ -1326,7 +1326,7 @@ console.log('formData', payloadForm);
   <Row className="mt-2" style={{ backgroundColor: '#212529', padding: '8px' }}>
   {/* Cancel on left */}
   <Col className="d-flex justify-content-start">
-    <Button size="sm" style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#fff' }} className="me-2"  onClick={()=>navigate('/PurchaseOrder')}>
+    <Button size="sm" style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#fff' }} className="me-2"  onClick={()=>navigate('/GoodsReturn')}>
       Cancel
     </Button>
   </Col>

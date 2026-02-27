@@ -358,7 +358,7 @@ console.log('formData', payloadForm);
       );
 
       message('PurchaseDebitNote has been Created successfully.', 'success');
-      setTimeout(() => navigate(`/GoodsReceipt/${insertedDataId}`), 300);
+      setTimeout(() => navigate(`/GoodsReceiptEdit/${insertedDataId}`), 300);
     } catch (error) {
       message('Network connection error.', 'error');
     }
@@ -1355,7 +1355,7 @@ console.log('formData', payloadForm);
   <Row className="mt-2" style={{ backgroundColor: '#212529', padding: '8px' }}>
   {/* Cancel on left */}
   <Col className="d-flex justify-content-start">
-    <Button size="sm" style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#fff' }} className="me-2"  onClick={()=>navigate('/PurchaseOrder')}>
+    <Button size="sm" style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#fff' }} className="me-2"  onClick={()=>navigate('/GoodsReceipt')}>
       Cancel
     </Button>
   </Col>
