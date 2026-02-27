@@ -501,7 +501,27 @@ console.log('formdata',payloadForm);
     setRows(updatedRows);
     deleteRow(index,id);
   };
-  
+  useEffect(() => {
+  if (!formData?.supplier_id || supplierOptions.length === 0) return;
+
+  const selectedSupplier = supplierOptions.find(
+    (s) => String(s.supplier_id) === String(formData.supplier_id)
+  );
+
+  if (selectedSupplier) {
+    setFormData((prev) => ({
+      ...prev,
+      supplier_name: selectedSupplier.supplier_name,
+      company_name: selectedSupplier.supplier_name,
+      contact_person: selectedSupplier.contact_person,
+      contact_address1: selectedSupplier.address_flat,
+      contact_address2: selectedSupplier.address_street,
+      contact_address3: selectedSupplier.address_state,
+      country: selectedSupplier.address_country,
+      postal_code: selectedSupplier.address_po_code,
+    }));
+  }
+}, [formData?.supplier_id, supplierOptions]);
   return (
     <div style={{ fontSize: "12px" }}>
       <ToastContainer/>

@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useState,useEffect,useRef} from "react";
+import React, { useState,useEffect, useRef} from "react";
 import {
   Container,
   Row,
@@ -30,16 +30,18 @@ import { FaTrashAlt, FaPlusCircle } from "react-icons/fa";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarAlt, faPlus, faPrint } from '@fortawesome/free-solid-svg-icons';
 import api from "../../constants/api";
-import ProductInfoModal from "../../components/PurchaseOrder/ProductInfoModal";
-import PdfGoodsReceipt from "../../components/PDF/PdfGoodsReceipt";
-
+// import PurchaseOrderProductInfoModal from "../../components/PurchaseOrder/PurchaseOrderProductInfoModal";
+import PurchaseOrderProductInfoModal from "../../components/PurchaseOrder/PurchaseOrderProductInfoModal";
+// import PdfPurchaseInvoice from "../../components/PDF/PdfPurchaseInvoice";
+import Currency from '../../components/PurchaseOrder/Currency';
 const GoodsReceiptEdit = () => {
 
   const [productInfoModal, setProductInfoModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedSNo, setSelectedSNo] = useState(null);
   const [selectedUOM, setSelectedUOM] = useState('');
-const cartonPriceRefs = useRef([]);
+  const [openProductSelectForRowIndex, setOpenProductSelectForRowIndex] = useState(null); // newly added row: open Select by default
+  const cartonPriceRefs = useRef([]);
   const productCodeRefs = useRef([]); // keeps Select refs
   const cartonQtyRefs = useRef([]);
   const looseQtyRefs = useRef([]);
@@ -48,6 +50,7 @@ const cartonPriceRefs = useRef([]);
   const discountAmountRefs = useRef([]);
   const grossTotalRefs = useRef([]);
   const tableRef = useRef(null);
+
 
   const handleSNoClick = (sNo, product) => {
     setSelectedSNo(sNo);
@@ -104,30 +107,31 @@ const { id } = useParams();
       total: 0,
       discount: 0,
       total_price: 0,
+      po_product_id: 'new-0'
     },
+
   ]);
+  
+    const [billDiscount, setBillDiscount] = React.useState(0);
   const handleAddExtraFields = (id) => {
     setRows(rows.map(p =>
-      p.gr_product_id === id ? { ...p, showExtraFields: !p.showExtraFields, remarks: p.remarks || '', foc_qty: p.foc_qty || 0 } : p
+      p.po_product_id === id ? { ...p, showExtraFields: !p.showExtraFields, remarks: p.remarks || '', foc_qty: p.foc_qty || 0 } : p
     ));
   };
 
 
-  const subtotal = rows.reduce((acc, p) => acc + (Number(p.total) || 0), 0);
+  let subtotal = rows.reduce((acc, p) => acc + (Number(p.total_price) || 0), 0);
   const tax = subtotal * 0.09;
-  const finalTotal = subtotal + tax;
-  // Calculate totals
+  let finalTotal = subtotal + tax;
   const summary = rows.reduce(
     (acc, p) => {
-      const total = p.qty * p.price;
-      const grossTotal = total - (p.discount_amount || 0);
-      acc.carton_qty += p.carton_qty;
-      acc.loose_qty  += p.loose_qty;
-      acc.qty += p.qty;
-      acc.carton_price +=p.carton_price;
-      acc.price += p.price;
-      acc.total += total;
-      acc.grossTotal = subtotal;
+      acc.cartonQty += Number(p.carton_qty || 0);
+      acc.looseQty += Number(p.loose_qty || 0);
+      acc.qty += Number(p.qty || 0);
+      acc.cartonPrice += Number(p.carton_price || 0);
+      acc.price += Number(p.price || 0);
+      acc.total += Number(p.qty || 0) * Number(p.price || 0);
+      acc.grossTotal += Number(p.total_price || 0);
       return acc;
     },
     {
@@ -140,7 +144,14 @@ const { id } = useParams();
       grossTotal: 0,
     }
   );
-
+const handleKeyDown = (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault(); // prevent form submission
+    const form = e.target.form;
+    const index = Array.prototype.indexOf.call(form, e.target);
+    form.elements[index + 1]?.focus(); // focus next element if exists
+  }
+};
 
 const navigate=useNavigate();
   useEffect(() => {
@@ -153,7 +164,7 @@ const navigate=useNavigate();
     api.get("/api/supplier-products").then((response) => {
       setTableData(response.data);
     });
-console.log('formdata',formData);
+
     // Fetch supplier options for dropdown
     api.get("/supplier/getSupplier").then((response) => {
       setSupplierOptions(response.data.data);
@@ -165,19 +176,41 @@ console.log('formdata',formData);
     
     // Fetch table data
     api.post("/purchaseorder/getGrProductByGoodsReceiptId",{goods_receipt_id:id}).then((response) => { 
-      const updatedRows = response.data.data.map(product => ({
-        ...product,
-        total: Number(product.total) || 0,
-        grossTotal: (Number(product.total) || 0) - (Number(product.discount_amount) || 0)
-      }));
-      setRows(updatedRows);
-      setTableData(response.data.data);
+      const data = response.data.data || [];
+      const updatedRows = (Array.isArray(data) ? data : []).map(product => {
+        const totalVal = Number(product.total) || (Number(product.qty || 0) * Number(product.price || 0));
+        const grossVal = totalVal - (Number(product.discount_amount) || 0);
+        return {
+          ...product,
+          total: totalVal,
+          total_price: grossVal,
+          grossTotal: grossVal
+        };
+      });
+      // Ensure at least one row so user always sees a product row (with "Select Product") and "+ Add" works
+      setRows(updatedRows.length > 0 ? updatedRows : [{
+        po_product_id: 'new-0',
+        product_code: '',
+        product_name: '',
+        carton_qty: 0,
+        loose_qty: 0,
+        carton_price: 0,
+        qty: 0,
+        price: 0,
+        total: 0,
+        discount: 0,
+        total_price: 0,
+        discount_percentage: 0,
+        discount_amount: 0,
+        grossTotal: 0,
+      }]);
+      setTableData(Array.isArray(data) ? data : []);
     });
 
     // Fetch supplier options for dropdown
     api.post("/purchaseorder/getGoodsReceiptById",{goods_receipt_id:id}).then((response) => {
-      console.log('goodsreceipt',response.data);
       setFormData(response.data.data[0]);
+      setBillDiscount(response?.data.data[0]?.bill_discount || 0);
     });
   
     api.post("/currency/getCuerrencyByGoodsReceiptId",{goods_receipt_id:id}).then((response) => {
@@ -197,7 +230,9 @@ const calculateRowTotal = (row) => {
   const total_price = total - (total * (row.discount / 100));
   return { ...row, total, total_price };
 };
-
+const handleDiscountChange=(value)=>{
+setBillDiscount(parseFloat(value) || 0);
+}
 // Update totals on initial render and when rows change
 useEffect(() => {
   setRows((prevRows) => prevRows.map(calculateRowTotal));
@@ -210,14 +245,7 @@ useEffect(() => {
     }));
     console.log(currency,'currency');
   };
-const handleKeyDown = (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault(); // prevent form submission
-    const form = e.target.form;
-    const index = Array.prototype.indexOf.call(form, e.target);
-    form.elements[index + 1]?.focus(); // focus next element if exists
-  }
-};
+
   // Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -235,12 +263,12 @@ const handleKeyDown = (e) => {
         );
         console.log('handleChange - selectedSupplier:', selectedSupplier);
         if (selectedSupplier) {
-          updatedFormData.company_name = selectedSupplier.company_name;
+          updatedFormData.company_name = selectedSupplier.supplier_name;
           updatedFormData.contact_person = selectedSupplier.contact_person;
           updatedFormData.contact_address1 = selectedSupplier.address_flat;
           updatedFormData.contact_address2 = selectedSupplier.address_street;
           updatedFormData.contact_address3 = selectedSupplier.address_state;
-          // updatedFormData.state = selectedSupplier.address_state;
+        updatedFormData.supplier_name = selectedSupplier.supplier_name;
           updatedFormData.country = selectedSupplier.address_country;
           updatedFormData.postal_code = selectedSupplier.address_po_code;
         }
@@ -257,69 +285,97 @@ const handleKeyDown = (e) => {
   
   
     // Handle product selection
-    const handleProductSelect = (index, selectedProduct) => {
+  const handleProductSelect = (index, selectedProduct) => {
+      console.log('selectedProduct:', selectedProduct);
+      const base = products.find(pr => String(pr.product_id) === String(selectedProduct.value));
       const updatedRows = [...rows];
-      updatedRows[index].product_id = selectedProduct.product_id;
-      updatedRows[index].product_code = selectedProduct.product_code;
-      updatedRows[index].product_name = selectedProduct.product_name;
+      updatedRows[index].product_id = selectedProduct.value;
+      updatedRows[index].product_code = selectedProduct.product_code || base?.product_code || '';
+      updatedRows[index].product_name = selectedProduct.product_name || base?.product_name || base?.title || '';
+      updatedRows[index].carton_price = base?.carton_price ?? updatedRows[index].carton_price ?? 0;
+      updatedRows[index].price = base?.price ?? updatedRows[index].price ?? 0;
+      updatedRows[index].uom = base?.uom ?? updatedRows[index].uom ?? '';
+      updatedRows[index].carton_qty = base?.carton_qty ?? updatedRows[index].carton_qty ?? 0;
+      updatedRows[index].qty = base?.qty ?? updatedRows[index].qty ?? 0;
+      
+      console.log('updatedRows[index].product_code:', updatedRows[index].product_code);
       setRows(updatedRows);
+
+      if (cartonPriceRefs.current[index]) {
+        cartonPriceRefs.current[index].focus();
+      }
     };
   // Handle form submit (example API call structure)
   const handleSubmit = async () => {
-    const calculatedSubTotal = rows.reduce((sum, row) => sum + Number(row.total_price || 0), 0);
-    const calculatedTaxAmount = calculatedSubTotal * 0.09;
-    const calculatedNetTotal = calculatedSubTotal + calculatedTaxAmount;
+    // const calculatedSubTotal = rows.reduce((sum, row) => sum + Number(row.total_price), 0);
+    // const calculatedTaxAmount = calculatedSubTotal * 0.09;
+    // const calculatedNetTotal = calculatedSubTotal + calculatedTaxAmount;
 
-    const payload = {
-      ...formData,
-      goods_receipt_id: formData?.goods_receipt_id || id,
-      sub_total: Number(calculatedSubTotal),
-      tax_amount: Number(calculatedTaxAmount),
-      net_total: Number(calculatedNetTotal),
-      grand_total: Number(calculatedNetTotal),
-    };
-
+    // formData.sub_total = calculatedSubTotal;
+    // formData.tax_amount = calculatedTaxAmount;
+    // formData.net_total = calculatedNetTotal;
+        const baseSubTotal = rows.reduce((sum, row) => sum + Number(row.total_price || 0), 0);
+          const subTotalAfterBill = Number((baseSubTotal - Number(billDiscount || 0)).toFixed(2));
+          const taxAmount = Number((subTotalAfterBill * 0.09).toFixed(2));
+          const netTotal = Number((subTotalAfterBill + taxAmount).toFixed(2));
+      
+          const payloadForm = {
+            ...formData,
+            bill_discount: billDiscount,
+            sub_total: subTotalAfterBill,
+            tax_amount: taxAmount,
+            net_total: netTotal,
+            grand_total: netTotal,
+          };
+      console.log('formData', payloadForm);
+          if (!formData.currency_id) {
+            message('Please Enter currency Details.', 'error');
+            return;
+          }
+            if (!formData.supplier_id) {
+      message('Please Select Supplier.', 'error');
+      return;
+    }
+    const lineItems = rows.filter((el) => el.product_id);
+    if (lineItems.length === 0) {
+      message('Please create LineItems.', 'error');
+      return;
+    }
+console.log('formdata',payloadForm);
     api
-      .post('/purchaseorder/editGoodsReceipt', payload)
-      .then(() => {
-        const currencyPayload = {
-          ...currency,
-          goods_receipt_id: currency?.goods_receipt_id || payload.goods_receipt_id,
-        };
-        api
-          .post('/currency/editGoodsReceiptCurrency', currencyPayload)
-          .then(() => {});
-
-        rows
-          ?.filter((el) => el?.product_id && el?.gr_product_id)
-          .forEach((el) => {
-            const rowPayload = { ...el, gross_total: el.total_price };
-            api
-              .post('/purchaseorder/editGrProduct', rowPayload)
-              .then(() => {});
-          });
-
-        message('Record edited successfully.', 'success');
-        setTimeout(() => {
-          window.location.reload();
-          navigate('/GoodsReceipt');
-        }, 300);
-      })
-      .catch((err) => {
-        console.error('editGoodsReceipt failed:', err?.response?.data || err);
-        message('Network connection error.', 'error');
+    .post('/purchaseorder/editGoodsReceipt', payloadForm)
+    .then(() => {
+      const purchaseOrderId = id;
+      rows?.forEach((el) => {
+        if (!el.product_id) return;
+        el.gross_total = el.total_price;
+        const isNewRow = String(el.po_product_id || '').startsWith('new-');
+        if (isNewRow) {
+          const insertPayload = { ...el, goods_receipt_id: purchaseOrderId };
+          api.post('/purchaseorder/insertGrProduct', insertPayload).then(() => {});
+        } else {
+          api.post('/purchaseorder/editGrProduct', el).then(() => {});
+        }
       });
+      message('Record edited successfully.', 'success');
+    })
+    .catch(() => {
+      message('Network connection error.', 'error');
+    });
   };
+  
   const handleRowChange = (id, field, value) => {
     setRows(prevRows =>
       prevRows.map(row => {
-        if (row.gr_product_id === id) {
+        if (row.po_product_id === id) {
           const updatedRow = { ...row, [field]: value };
 
           if (field === "product_code") {
             const product = tableData.find(item => item.product_code === value);
             if (product) {
+              
               updatedRow.product_name = product.product_name;
+              updatedRow.product_id = product.product_id;
               updatedRow.carton_price = product.carton_price;
               updatedRow.qty = 0;
               updatedRow.loose_qty = 0;
@@ -339,6 +395,15 @@ const handleKeyDown = (e) => {
             const price = Number(updatedRow.price || 0);
             const discountPercentage = Number(value || 0);
             updatedRow.discount_amount = ((qty * price * discountPercentage) / 100).toFixed(2);
+          }
+
+          // Recalculate discount_percentage if discount_amount changes
+          if (field === "discount_amount") {
+            const qty = Number(updatedRow.qty || 0);
+            const price = Number(updatedRow.price || 0);
+            const discountAmount = Number(value || 0);
+            const lineTotal = qty * price;
+            updatedRow.discount_percentage = lineTotal ? ((discountAmount / lineTotal) * 100).toFixed(2) : 0;
           }
 
           // Recalculate totals if relevant fields change
@@ -376,7 +441,7 @@ const handleKeyDown = (e) => {
   console.log('formdata',formData);
   const deleteRow = (index,id) => {
     if(id){
-      api.post('/purchaseorder/deleteGrProduct',{gr_product_id:id}).then(() => {
+      api.post('/purchaseorder/deleteGrProduct',{po_product_id:id}).then(() => {
         message('Record deleted successfully.', 'success');
       }).catch(() => {
         message('Network connection error.', 'error');
@@ -386,11 +451,32 @@ const handleKeyDown = (e) => {
       setRows(rows.filter((_, i) => i !== index));
     }
   };
+useEffect(() => {
+  if (!formData?.supplier_id || supplierOptions.length === 0) return;
+
+  const selectedSupplier = supplierOptions.find(
+    (s) => String(s.supplier_id) === String(formData.supplier_id)
+  );
+
+  if (selectedSupplier) {
+    setFormData((prev) => ({
+      ...prev,
+      supplier_name: selectedSupplier.supplier_name,
+      company_name: selectedSupplier.supplier_name,
+      contact_person: selectedSupplier.contact_person,
+      contact_address1: selectedSupplier.address_flat,
+      contact_address2: selectedSupplier.address_street,
+      contact_address3: selectedSupplier.address_state,
+      country: selectedSupplier.address_country,
+      postal_code: selectedSupplier.address_po_code,
+    }));
+  }
+}, [formData?.supplier_id, supplierOptions]);
 
   const addRow = (insertAfterIndex) => {
-    // insertAfterIndex is the index after which the new row will be inserted
+    const safeIndex = Math.max(0, Number(insertAfterIndex) + 1);
     const newRow = {
-      gr_product_id: `new-${rows.length}`,
+      po_product_id: `new-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
       product_code: "",
       product_name: "",
       carton_qty: 0,
@@ -407,21 +493,23 @@ const handleKeyDown = (e) => {
     };
     setRows((prevRows) => {
       const updatedRows = [...prevRows];
-      updatedRows.splice(insertAfterIndex + 1, 0, newRow);
+      const insertAt = Math.min(safeIndex, updatedRows.length);
+      updatedRows.splice(insertAt, 0, newRow);
       return updatedRows;
     });
+    const nextIndex = safeIndex;
+
+    // Open product Select for the new row so "Select Product" is visible and user can pick immediately
+    setOpenProductSelectForRowIndex(nextIndex);
 
     // give React a tick to render the new Select, then focus
     setTimeout(() => {
-      const nextIndex = insertAfterIndex + 1;
       const ref = productCodeRefs.current[nextIndex];
-      // react-select instances expose focus()
       try {
         if (ref && typeof ref.focus === 'function') {
           ref.focus();
           return;
         }
-        // fallback: try to find underlying input by id
         const input = document.querySelector(`#product-select-${nextIndex} input`);
         if (input) input.focus();
       } catch (err) {
@@ -430,17 +518,15 @@ const handleKeyDown = (e) => {
     }, 80);
   };
   const handleDelete = (index,id) => {
-    const updatedRows = rows.filter((row) => row.gr_product_id !== id);
+    const updatedRows = rows.filter((row) => row.po_product_id !== id);
     setRows(updatedRows);
     deleteRow(index,id);
   };
+  
   return (
     <div style={{ fontSize: "12px" }}>
       <ToastContainer/>
       <Container fluid className="p-1 mb-5">
-        {/* <Card className="shadow-sm">
-          <CardBody className="p-3"> */}
-            {/* Header */}
             <h6 className="mb-2">Add/Edit Goods Receipt</h6>
 
             <Form>
@@ -454,7 +540,7 @@ const handleKeyDown = (e) => {
         </Col>
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1" name="tran_no" value={formData?.tran_no}  
-              onChange={handleChange} onKeyDown={handleKeyDown}/>
+              onChange={handleChange} onKeyDown={handleKeyDown} readOnly />
         </Col>
       </Row>
     </Col>
@@ -465,7 +551,7 @@ const handleKeyDown = (e) => {
         </Col>
         <Col md="8">
           <Input bsSize="sm" type='date' className="py-0 px-1" name="tran_date" value={formData?.tran_date}  
-              onChange={handleChange} onKeyDown={handleKeyDown} />
+              onChange={handleChange} onKeyDown={handleKeyDown}/>
         </Col>
       </Row>
     </Col>
@@ -493,7 +579,6 @@ const handleKeyDown = (e) => {
 
               <TabContent activeTab={activeTab} style={{ maxHeight: 'calc(100vh - 400px)'}}>
                 {/* Supplier Tab */}
-               {/* Supplier Tab */}
 <TabPane tabId="1">
   <Row>
     {/* Supplier Code & Contact Address1 */}
@@ -503,37 +588,57 @@ const handleKeyDown = (e) => {
           <Label className="small mb-1">Supplier Code</Label>
         </Col>
         <Col md="8">
-       <Select
-         bsSize="sm"
-         className="py-0 px-1"
-         name="supplier_id"
-         value={
-           formData?.supplier_id
-             ? {
-                 value: formData.supplier_id,
-                 label: supplierOptions.find(
-                   (s) => String(s.supplier_id) === String(formData.supplier_id)
-                 )?.supplier_code,
-               }
-             : null
-         }
-         onChange={(selected) =>
-           handleChange({
-             target: { name: "supplier_id", value: selected?.value || "" },
-           })
-         }
-         onKeyDown={handleKeyDown}
-         options={supplierOptions.map((s) => ({
-           value: s.supplier_id,
-           label: s.supplier_code,
-         }))}
-         placeholder="Select Supplier"
-         isClearable
-         styles={{
-           control: (base) => ({ ...base, minHeight: "30px", fontSize: "12px" }),
-           menu: (base) => ({ ...base, fontSize: "12px" }),
-         }}
-       />
+<Select
+  bsSize="sm"
+  className="py-0 px-1"
+  name="supplier_id"
+  value={
+    formData?.supplier_id
+      ? (() => {
+          const s = supplierOptions.find(
+            (opt) => String(opt.supplier_id) === String(formData.supplier_id)
+          );
+          return s
+            ? {
+                value: s.supplier_id,
+                supplier_code: s.supplier_code,
+                supplier_name: s.supplier_name,
+              }
+            : null;
+        })()
+      : null
+  }
+  onChange={(selected) =>
+    handleChange({
+      target: { name: "supplier_id", value: selected?.value || "" },
+    })
+  }
+  onKeyDown={handleKeyDown}
+  options={supplierOptions.map((s) => ({
+    value: s.supplier_id,
+    supplier_code: s.supplier_code,
+    supplier_name: s.supplier_name,
+  }))}
+  placeholder="Select Supplier"
+  isClearable
+  filterOption={(candidate, input) => {
+    if (!input) return true;
+    const q = input.toLowerCase();
+    const code = String(candidate.data.supplier_code || "").toLowerCase();
+    const name = String(candidate.data.supplier_name || "").toLowerCase();
+    return code.includes(q) || name.includes(q);
+  }}
+  formatOptionLabel={(opt, { context }) =>
+    context === "menu"
+      ? `${opt.supplier_code || ""} - ${opt.supplier_name || ""}`
+      : `${opt.supplier_code || ""}`
+  }
+  getOptionValue={(opt) => String(opt.value)}
+  styles={{
+    control: (base) => ({ ...base, minHeight: "30px", fontSize: "12px" }),
+    menu: (base) => ({ ...base, fontSize: "12px" }),
+  }}
+/>
         
         </Col>
       </Row>
@@ -546,7 +651,7 @@ const handleKeyDown = (e) => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1"  name="contact_address1"
               value={formData?.contact_address1}
-              onChange={handleChange} onKeyDown={handleKeyDown}/>
+              onChange={handleChange}  onKeyDown={handleKeyDown} />
         </Col>
       </Row>
     </Col>
@@ -562,8 +667,8 @@ const handleKeyDown = (e) => {
        <Col md="8">
           <FormGroup>
              <Input bsSize="sm" className="py-0 px-1"  name="company_name"
-              value={formData?.company_name}
-              onChange={handleChange} onKeyDown={handleKeyDown}/>
+              value={formData?.supplier_name}
+              onChange={handleChange}  onKeyDown={handleKeyDown} />
             
           </FormGroup>
         </Col>
@@ -577,7 +682,7 @@ const handleKeyDown = (e) => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1"  name="contact_address2"
               value={formData?.contact_address2}
-              onChange={handleChange} onKeyDown={handleKeyDown}/>
+              onChange={handleChange}  onKeyDown={handleKeyDown} />
         </Col>
       </Row>
     </Col>
@@ -595,7 +700,7 @@ const handleKeyDown = (e) => {
            name="contact_person"
               value={formData?.contact_person}
               onChange={handleChange}
-              onKeyDown={handleKeyDown}
+               onKeyDown={handleKeyDown}
           />
         </Col>
       </Row>
@@ -608,7 +713,7 @@ const handleKeyDown = (e) => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1"  name="contact_address3"
               value={formData?.contact_address3}
-              onChange={handleChange} onKeyDown={handleKeyDown}/>
+              onChange={handleChange}  onKeyDown={handleKeyDown}/>
         </Col>
       </Row>
     </Col>
@@ -624,7 +729,7 @@ const handleKeyDown = (e) => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1"  name="remarks"
               value={formData?.remarks}
-              onChange={handleChange} onKeyDown={handleKeyDown}/>
+              onChange={handleChange}  onKeyDown={handleKeyDown} />
         </Col>
       </Row>
     </Col>
@@ -636,12 +741,12 @@ const handleKeyDown = (e) => {
         <Col md="5">
           <Input bsSize="sm" className="py-0 px-1"  name="country"
               value={formData?.country}
-              onChange={handleChange} onKeyDown={handleKeyDown}/>
+              onChange={handleChange}  onKeyDown={handleKeyDown}/>
         </Col>
         <Col md="3">
           <Input bsSize="sm" className="py-0 px-1"  name="postal_code"
               value={formData?.postal_code}
-              onChange={handleChange} onKeyDown={handleKeyDown}/>
+              onChange={handleChange}  onKeyDown={handleKeyDown}/>
         </Col>
       </Row>
     </Col>
@@ -657,7 +762,20 @@ const handleKeyDown = (e) => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1" type="date"  name="invoice_date"
               value={formData?.invoice_date}
-              onChange={handleChange} onKeyDown={handleKeyDown}/>
+              onChange={handleChange}  
+               onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                // Focus the first product code Select in the table
+                const firstProductSelect = document.querySelector(
+                  'tbody tr:first-child td:nth-child(2) [class*="css-"] input'
+                );
+                if (firstProductSelect) firstProductSelect.focus();
+              } else {
+                handleKeyDown(e);
+              }
+            }}
+              />
         </Col>
       </Row>
     </Col>
@@ -669,35 +787,23 @@ const handleKeyDown = (e) => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1"  name="invoice_no"
               value={formData?.invoice_no}
-              onChange={handleChange} onKeyDown={handleKeyDown}/>
+              onChange={handleChange} />
         </Col>
       </Row>
     </Col>
   </Row>
-
   <Row>
-    {/* Delivery Date & DO No */}
+    {/* Invoice Date & Invoice No */}
     <Col md="6">
       <Row className="mb-1">
         <Col md="4">
           <Label className="small mb-1">Delivery Date</Label>
         </Col>
         <Col md="8">
-          <Input bsSize="sm" className="py-0 px-1" type="date" name="delivery_date"
+          <Input bsSize="sm" className="py-0 px-1" type="date"  name="delivery_date"
               value={formData?.delivery_date}
-              onChange={handleChange} onKeyDown={handleKeyDown}/>
-        </Col>
-      </Row>
-    </Col>
-    <Col md="6">
-      <Row className="mb-1">
-        <Col md="4">
-          <Label className="small mb-1">DO No</Label>
-        </Col>
-        <Col md="8">
-          <Input bsSize="sm" className="py-0 px-1" name="do_no"
-              value={formData?.do_no}
-              onChange={handleChange}  onKeyDown={(e) => {
+              onChange={handleChange}  
+               onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
                 // Focus the first product code Select in the table
@@ -708,20 +814,34 @@ const handleKeyDown = (e) => {
               } else {
                 handleKeyDown(e);
               }
-            }}/>
+            }}
+              />
+        </Col>
+      </Row>
+    </Col>
+    <Col md="6">
+      <Row className="mb-1">
+        <Col md="4">
+          <Label className="small mb-1">Do No</Label>
+        </Col>
+        <Col md="8">
+          <Input bsSize="sm" className="py-0 px-1"  name="do_no"
+              value={formData?.do_no}
+              onChange={handleChange} />
         </Col>
       </Row>
     </Col>
   </Row>
+ 
 </TabPane>
                 {/* Currency Tab */}
                 <TabPane tabId="2">
                  <>
     {/* Supplier Code & Contact Address1 */}
   
-                 <Row>
+                 {/* <Row> */}
     {/* Supplier Name & Contact Address2 */}
-    <Col md="6">
+    {/* <Col md="6">
       <Row className="mb-1">
         <Col md="4">
           <Label className="small mb-1">Currency Code</Label>
@@ -729,7 +849,7 @@ const handleKeyDown = (e) => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1" name="currency_code"
               value={currency?.currency_code}
-              onChange={handleCurrency} onKeyDown={handleKeyDown}/>
+              onChange={handleCurrency}  onKeyDown={handleKeyDown}/>
         </Col>
       </Row>
     </Col>
@@ -741,7 +861,7 @@ const handleKeyDown = (e) => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1" name="currency_name"
               value={currency?.currency_name} 
-              onChange={handleCurrency} onKeyDown={handleKeyDown}/>
+              onChange={handleCurrency}  onKeyDown={handleKeyDown}/>
         </Col>
       </Row>
     </Col>
@@ -753,12 +873,12 @@ const handleKeyDown = (e) => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1" name="currency_rate"
               value={currency?.currency_rate}
-              onChange={handleCurrency} onKeyDown={handleKeyDown}/>
+              onChange={handleCurrency}  onKeyDown={handleKeyDown}/>
         </Col>
       </Row>
     </Col>
-  </Row>
-
+  </Row> */}
+<Currency settingdetails={formData} setSettingDetails={setFormData} handleInputs={handleChange} />
     
       </>
                 </TabPane>
@@ -798,8 +918,8 @@ const handleKeyDown = (e) => {
         </thead>
         <tbody>
           {rows.map((p, idx) => (
-            <React.Fragment key={p.gr_product_id}>
-              <tr key={p.gr_product_id} style={{ fontSize: '13px', height: '20px', background:  '#fff' }}>
+            <React.Fragment key={p.po_product_id}>
+              <tr key={p.po_product_id} style={{ fontSize: '13px', height: '20px', background:  '#fff' }}>
                 <td
                   style={{
                     padding: '0.3rem',
@@ -814,7 +934,6 @@ const handleKeyDown = (e) => {
   <Select
     options={products.map((pr) => ({
       value: pr.product_id,
-      label: `${pr.product_code} - ${pr.product_name}`,
       product_code: pr.product_code,
       product_name: pr.product_name,
     }))}
@@ -822,11 +941,16 @@ const handleKeyDown = (e) => {
       p.product_id
         ? {
             value: p.product_id,
-            label: `${p.product_code} - ${p.product_name}`,
+            product_code: p.product_code,
+            product_name: p.product_name,
           }
         : null
     }
+    placeholder="Select Product"
+    menuIsOpen={openProductSelectForRowIndex === idx ? true : undefined}
+    onMenuClose={() => setOpenProductSelectForRowIndex(null)}
     onChange={(selectedOption) => {
+      setOpenProductSelectForRowIndex(null);
       handleProductSelect(idx, selectedOption);
       if (cartonQtyRefs.current[idx]) {
         cartonQtyRefs.current[idx].focus();
@@ -850,7 +974,12 @@ const handleKeyDown = (e) => {
       zIndex: 9999   // just in case
     })
   }}
-    placeholder="Select Product"
+    formatOptionLabel={(opt, { context }) =>
+      context === 'menu'
+        ? `${opt.product_code || ''} - ${opt.product_name || ''}`
+        : `${opt.product_code || ''}`
+    }
+    getOptionValue={(opt) => String(opt.value)}
     filterOption={(candidate, input) => {
       if (!input) return true;
       const lowerInput = input.toLowerCase();
@@ -880,7 +1009,7 @@ const handleKeyDown = (e) => {
                     type="number"
                     bsSize="sm"
                     value={p.carton_qty}
-                    onChange={(e) => handleRowChange(p.gr_product_id, 'carton_qty', e.target.value)}
+                    onChange={(e) => handleRowChange(p.po_product_id, 'carton_qty', e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -897,8 +1026,8 @@ const handleKeyDown = (e) => {
                   <Input
                     type="number"
                     bsSize="sm"
-                    value={p.loose_qty}
-                    onChange={(e) => handleRowChange(p.gr_product_id, 'loose_qty', e.target.value)}
+                    value={p?.loose_qty}
+                    onChange={(e) => handleRowChange(p.po_product_id, 'loose_qty', e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -916,8 +1045,8 @@ const handleKeyDown = (e) => {
                   <Input
                     type="number"
                     bsSize="sm"
-                    value={Number(p?.carton_price).toFixed(2)}
-                    onChange={(e) => handleRowChange(p.gr_product_id, 'carton_price', e.target.value)}
+                    value={Number(p?.carton_price)}
+                    onChange={(e) => handleRowChange(p.po_product_id, 'carton_price', e.target.value)}
                     style={{ width: '80px' }}
                     innerRef={(el) => (cartonPriceRefs.current[idx] = el)}
                     onKeyDown={(e) => {
@@ -934,8 +1063,8 @@ const handleKeyDown = (e) => {
                   <Input
                     type="number"
                     bsSize="sm"
-                    value={Number(p?.price).toFixed(2)}
-                    onChange={(e) => handleRowChange(p.gr_product_id, 'price', e.target.value)}
+                    value={Number(p?.price)}
+                    onChange={(e) => handleRowChange(p.po_product_id, 'price', e.target.value)}
                     style={{ width: '80px' }}
                     innerRef={(el) => (priceRefs.current[idx] = el)}
                     onKeyDown={(e) => {
@@ -952,8 +1081,8 @@ const handleKeyDown = (e) => {
                   <Input
                     type="number"
                     bsSize="sm"
-                    value={Number(p.qty * p.price).toFixed(2)}
-                    onChange={(e) => handleRowChange(p.gr_product_id, 'total', e.target.value)}
+                    value={Number(p.qty * p.price)}
+                    onChange={(e) => handleRowChange(p.po_product_id, 'total', e.target.value)}
                     style={{ width: '80px' }}
                     readOnly
                   />
@@ -963,8 +1092,8 @@ const handleKeyDown = (e) => {
                     <Input
                       type="number"
                       bsSize="sm"
-                      value={Number(p?.discount_percentage).toFixed(2)}
-                      onChange={(e) => handleRowChange(p.gr_product_id, 'discount_percentage', e.target.value)}
+                      value={Number(p?.discount_percentage)}
+                      onChange={(e) => handleRowChange(p.po_product_id, 'discount_percentage', e.target.value)}
                       style={{ width: '50%', marginRight: '2px' }}
                       innerRef={(el) => (discountPercentageRefs.current[idx] = el)}
                       onKeyDown={(e) => {
@@ -979,8 +1108,8 @@ const handleKeyDown = (e) => {
                     <Input
                       type="number"
                       bsSize="sm"
-                      value={Number(p?.discount_amount).toFixed(2)}
-                      onChange={(e) => handleRowChange(p.gr_product_id, 'discount_amount', e.target.value)}
+                      value={Number(p?.discount_amount)}
+                      onChange={(e) => handleRowChange(p.po_product_id, 'discount_amount', e.target.value)}
                       style={{ width: '50%' }}
                       innerRef={(el) => (discountAmountRefs.current[idx] = el)}
                       onKeyDown={(e) => {
@@ -999,7 +1128,7 @@ const handleKeyDown = (e) => {
                     type="number"
                     bsSize="sm"
                     value={Number(p.grossTotal).toFixed(2)}
-                    onChange={(e) => handleRowChange(p.gr_product_id, 'grossTotal',e.target.value)}
+                    onChange={(e) => handleRowChange(p.po_product_id, 'grossTotal',e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -1016,7 +1145,7 @@ const handleKeyDown = (e) => {
                     size="sm"
                     color="danger"
                     className="me-1"
-                    onClick={() => handleDelete(idx,p.gr_product_id)}
+                    onClick={() => handleDelete(idx,p.po_product_id)}
                     style={{ padding: '0.1rem 0.3rem', fontSize: '0.7rem' }}
                   >
                     🗑
@@ -1025,7 +1154,7 @@ const handleKeyDown = (e) => {
                     size="sm"
                     color="success"
                     className="me-1"
-                    onClick={() => handleAddExtraFields(p.gr_product_id)}
+                    onClick={() => handleAddExtraFields(p.po_product_id)}
                     style={{ padding: '0.1rem 0.3rem', fontSize: '0.7rem' }}
                   >
                     <FontAwesomeIcon icon={faPlus} />
@@ -1050,7 +1179,7 @@ const handleKeyDown = (e) => {
                       placeholder="Remarks"
                       style={{ fontSize: '0.75rem', padding: '0.1rem' }}
                       value={p.remarks}
-                      onChange={(e) => handleRowChange(p.gr_product_id, 'remarks', e.target.value)}
+                      onChange={(e) => handleRowChange(p.po_product_id, 'remarks', e.target.value)}
                     />
                   </td>
                   <td style={{ padding: '0.3rem' }}></td> {/* Empty for Product Name */}
@@ -1061,7 +1190,7 @@ const handleKeyDown = (e) => {
                       placeholder="Foc Qty"
                       style={{ fontSize: '0.75rem', padding: '0.1rem' }}
                       value={p.foc_qty}
-                      onChange={(e) => handleRowChange(p.gr_product_id, 'foc_qty', e.target.value)}
+                      onChange={(e) => handleRowChange(p.po_product_id, 'foc_qty', e.target.value)}
                     />
                   </td>
                   <td style={{ padding: '0.3rem' }}></td> {/* Empty for Loose Qty */}
@@ -1071,7 +1200,7 @@ const handleKeyDown = (e) => {
                       type="select"
                       style={{ fontSize: '0.75rem', padding: '0.1rem', width: '100%' }}
                       value={p.UOM || ''}
-                      onChange={(e) => handleRowChange(p.gr_product_id, 'UOM', e.target.value)}
+                      onChange={(e) => handleRowChange(p.po_product_id, 'UOM', e.target.value)}
                     >
                       <option>Uom</option>
                       {/* You might want to populate these options dynamically based on your product data */}
@@ -1086,7 +1215,7 @@ const handleKeyDown = (e) => {
                       placeholder="Kilo Price"
                       style={{ fontSize: '0.75rem', padding: '0.1rem' }}
                       value={p.kilo_price || ''}
-                      onChange={(e) => handleRowChange(p.gr_product_id, 'kilo_price', e.target.value)}
+                      onChange={(e) => handleRowChange(p.po_product_id, 'kilo_price', e.target.value)}
                     />
                   </td>
                   <td colSpan={1} style={{ padding: '0.3rem' }}>
@@ -1096,12 +1225,12 @@ const handleKeyDown = (e) => {
                       name="standard_rate"
                       style={{ fontSize: '0.75rem', padding: '0.1rem' }}
                       value={p.standard_rate || ''}
-                      onChange={(e) => handleRowChange(p.gr_product_id, 'standard_rate', e.target.value)}
+                      onChange={(e) => handleRowChange(p.po_product_id, 'standard_rate', e.target.value)}
                     >
-                      <option>Standard Rate</option>
+                      <option>ZR - Zero Rate</option>
                       {/* You might want to populate these options dynamically based on your product data */}
-                      <option value="rate1">Rate 1</option>
-                      <option value="rate2">Rate 2</option>
+                      <option value="rate1">In - Tax Inclusive</option>
+                     
                     </Input>
                   </td>
                   <td style={{ padding: '0.3rem' }}></td> {/* Empty for Gross Total */}
@@ -1112,9 +1241,16 @@ const handleKeyDown = (e) => {
             ))}
           {/* Summary Row */}
           <tr style={{ fontWeight: "bold", color: "#007bff", fontSize: '0.75rem' }}>
-            <td style={{ padding: '0.3rem' }}></td> {/* Empty for S No */}
-            <td colSpan={1} style={{ textAlign: "right", padding: '0.3rem' }}>
-              Summary:
+            <td colSpan={2} style={{ padding: '0.3rem' }}>
+              <Button
+                size="sm"
+                color="primary"
+                onClick={() => addRow(rows.length - 1)}
+                style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', marginRight: '0.5rem' }}
+              >
+                + Add
+              </Button>
+              <span style={{ marginLeft: '0.5rem' }}>Summary:</span>
             </td>
             <td style={{ padding: '0.3rem' }}></td> {/* Empty for Product Name */}
             <td style={{ padding: '0.3rem' }}>{summary.cartonQty.toFixed(2)}</td>
@@ -1124,14 +1260,12 @@ const handleKeyDown = (e) => {
             <td style={{ padding: '0.3rem' }}>{summary.price}</td>
             <td style={{ padding: '0.3rem' }}>{summary.total}</td>
             <td style={{ padding: '0.3rem' }}></td>
-            <td style={{ padding: '0.3rem' }}>{summary.grossTotal}</td>
+            <td style={{ padding: '0.3rem' }}>{Number(summary?.grossTotal).toFixed(2)}</td>
             <td style={{ padding: '0.3rem' }}></td>
           </tr>
         </tbody>
       </Table>
             </Form>
-          {/* </CardBody>
-        </Card> */}
       </Container>
 
       {/* Fixed Footer */}
@@ -1165,37 +1299,35 @@ const handleKeyDown = (e) => {
       <Col md="3">
         <FormGroup className="mb-1">
           <Label className="small mb-1">Bill Discount : $</Label>
-          <Input bsSize="sm" value="0" />
+           <Input
+                               type="number"
+                               name="bill_discount"
+                               value={billDiscount}
+                               onChange={(e) => handleDiscountChange(e.target.value)}
+                              
+                               style={{ width: '100px', height: '28px' }}
+                             />
         </FormGroup>
         <div>Total Product: <strong>{rows?.length}</strong></div>
       </Col>
 
       {/* Center column (center aligned) */}
       <Col md="6" className="text-center">
-        {/* <div className="text-muted small">
-          Additional Charges <span className="text-primary">0.00</span>
-        </div>
-        <div className="text-muted small">
-          Additional Discount <span className="text-primary">0.00</span>
-        </div>
-        <div className="fw-bold mt-1">
-          Final Total : <span>{Number(finalTotal)?.toFixed(2)}</span>
-        </div> */}
       </Col>
 
       {/* Right column */}
       <Col md="3">
         <div className="d-flex justify-content-between small">
           <strong>➤ Sub Total:</strong>
-          <span className="text-primary">${Number(subtotal).toFixed(2)}</span>
+          <span className="text-primary">${Number(subtotal - parseFloat(billDiscount)).toFixed(2)}</span>
         </div>
         <div className="d-flex justify-content-between small">
           <strong>➤ Tax:</strong>
-          <span className="text-primary">${Number(tax).toFixed(2)}</span>
+          <span className="text-primary">${Number(((subtotal - Number(billDiscount || 0)) * 0.09)).toFixed(2)}</span>
         </div>
         <div className="d-flex justify-content-between fw-bold">
           <span>Net Total:</span>
-          <span className="text-primary">${Number(finalTotal).toFixed(2)}</span>
+          <span className="text-primary">${Number(((subtotal - Number(billDiscount || 0)) * 1.09)).toFixed(2)}</span>
         </div>
       </Col>
     </Row>
@@ -1204,44 +1336,45 @@ const handleKeyDown = (e) => {
   <Row className="mt-2" style={{ backgroundColor: '#212529', padding: '8px' }}>
   {/* Cancel on left */}
   <Col className="d-flex justify-content-start">
-    <Button size="sm" style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#fff' }} className="me-2"  onClick={()=>navigate('/GoodsReceipt')}>
+    <Button size="sm" style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#fff' }} className="me-2"  onClick={()=>navigate('/PurchaseOrder')}>
       Cancel
     </Button>
   </Col>
 
   {/* Print + Save on right */}
   <Col className="d-flex justify-content-end">
-    <Button size="sm" style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#fff' }} className="me-2">
+    {/* <Button size="sm" style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#fff' }} className="me-2">
       <FontAwesomeIcon icon={faPrint} className="me-1" />
-    <PdfGoodsReceipt id={id} />
-    </Button>
+    <PdfPurchaseInvoice id={id} />
+    </Button> */}
     <div className="btn-group">
       <Button size="sm" style={{ backgroundColor: '#213042', borderColor: '#213042', color: '#fff' }} onClick={()=>handleSubmit()}>
         Save
       </Button>
-      <Button
+      {/* <Button
         size="sm"
         style={{ backgroundColor: '#213042', borderColor: '#213042', color: '#fff' }}
         className="dropdown-toggle dropdown-toggle-split"
         data-bs-toggle="dropdown"
       >
         <span className="visually-hidden">Toggle Dropdown</span>
-      </Button>
-      <div className="dropdown-menu dropdown-menu-end">
+      </Button> */}
+      {/* <div className="dropdown-menu dropdown-menu-end">
         <button className="dropdown-item">Save & New</button>
         <button className="dropdown-item">Save & Close</button>
-      </div>
+      </div> */}
     </div>
   </Col>
 </Row>
   </Container>
 </div>
- {productInfoModal && <ProductInfoModal
+ {productInfoModal && <PurchaseOrderProductInfoModal
         isOpen={productInfoModal}
         toggle={toggleProductInfoModal}
         selectedProduct={selectedProduct}
       />}
 
+   
     </div>
   );
 };

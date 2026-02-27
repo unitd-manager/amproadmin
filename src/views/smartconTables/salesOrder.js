@@ -23,7 +23,7 @@ import PrintPerfomaList from '../../components/PDF/PrintPerfomaList';
 import SalesOrderPrintWithCost from '../../components/PDF/SalesOrderPrintWithCost';
  import PdfPickingList from '../../components/PDF/PdfPick';
 import PdfPackingList from '../../components/PDF/PdfPack';
-import PdfSalesQuote from '../../components/PDF/PdfSalesOrderQuote';
+//import PdfSalesQuote from '../../components/PDF/PdfSalesOrderQuote';
 import './salesOrderTable.css';
   
 const Test = () => {

@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useState,useEffect,useRef} from "react";
+import React, { useState,useEffect, useRef, createRef} from "react";
 import {
   Container,
   Row,
@@ -31,7 +31,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarAlt, faPlus, faPrint } from '@fortawesome/free-solid-svg-icons';
 import api from "../../constants/api";
 import ProductInfoModal from "../../components/PurchaseOrder/ProductInfoModal";
-
+import Currency from '../../components/PurchaseOrder/Currency';
 
 const GoodsReturnDetails = () => {
 
@@ -39,7 +39,8 @@ const GoodsReturnDetails = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedSNo, setSelectedSNo] = useState(null);
   const [selectedUOM, setSelectedUOM] = useState('');
-const cartonPriceRefs = useRef([]);
+
+ const cartonPriceRefs = useRef([]);
   const productCodeRefs = useRef([]); // keeps Select refs
   const cartonQtyRefs = useRef([]);
   const looseQtyRefs = useRef([]);
@@ -68,9 +69,10 @@ const { id } = useParams();
   const [supplierData, setSupplierData] = useState({});
   const [products, setProducts] = useState([]);
   const [tableData, setTableData] = useState([]);
+  const today = new Date().toISOString().slice(0, 10);
   const [formData, setFormData] = useState({
     tran_no: "",
-    tran_date: "",
+    tran_date: today,
     supplier_code: "",
     supplier_id: "",
     contact_person: "",
@@ -79,7 +81,7 @@ const { id } = useParams();
     contact_address3: "",
     country: "",
     remarks: "",
-    req_delivery_date: "",
+    req_delivery_date: today,
     postal_code: "",
     sub_total:"",
     net_total:"",
@@ -126,11 +128,18 @@ const { id } = useParams();
       grossTotal: 0,
     },
   ]);
+ const [billDiscount, setBillDiscount] = React.useState(0);
+  useEffect(() => {
+    productCodeRefs.current = rows.map(
+      (row, i) => productCodeRefs.current[i] || createRef()
+    );
+  }, [rows]);
   const handleAddExtraFields = (id) => {
     setRows(rows.map(p =>
       p.goods_return_product_id === id ? { ...p, showExtraFields: !p.showExtraFields, remarks: p.remarks || '', foc_qty: p.foc_qty || 0 } : p
     ));
   };
+// Utility function to handle Enter key focus shift
 // Utility function to handle Enter key focus shift
 const handleKeyDown = (e) => {
   if (e.key === "Enter") {
@@ -141,44 +150,51 @@ const handleKeyDown = (e) => {
   }
 };
 
-  const addNewRow = () => {
-    setRows((prevRows) => [
-      ...prevRows,
-      {
-        goods_return_product_id: prevRows.length > 0 ? Math.max(...prevRows.map(r => r.goods_return_product_id)) + 1 : 1,
-        product_code: "",
-        product_name: "",
-        carton_qty: 0,
-        loose_qty: 0,
-        carton_price: 0,
-        qty: 0,
-        price: 0,
-        total: 0,
-        discount: 0,
-        total_price: 0,
-        discount_percentage: 0,
-        discount_amount: 0,
-        grossTotal: 0,
-      },
-    ]);
+  const addNewRow = (callback) => {
+    let newPoProductId;
+    setRows((prevRows) => {
+      newPoProductId = prevRows.length > 0 ? Math.max(...prevRows.map(r => r.goods_return_product_id)) + 1 : 1;
+      const updatedRows = [
+        ...prevRows,
+        {
+          goods_return_product_id: newPoProductId,
+          product_code: "",
+          product_name: "",
+          carton_qty: 0,
+          loose_qty: 0,
+          carton_price: 0,
+          qty: 0,
+          price: 0,
+          total: 0,
+          discount: 0,
+          total_price: 0,
+          discount_percentage: 0,
+          discount_amount: 0,
+          grossTotal: 0,
+        },
+      ];
+      return updatedRows;
+    });
+    if (callback && typeof callback === 'function') {
+      // Execute callback after state update, ensuring the new row is rendered
+      setTimeout(() => callback(newPoProductId), 0);
+    }
+    return newPoProductId;
   };
 
 
-  const subtotal = rows?.reduce((acc, p) => acc + (p.total || 0), 0);
+  let subtotal = rows?.reduce((acc, p) => acc + (Number(p.total_price) || 0), 0);
   const tax = subtotal * 0.09;
-  const finalTotal = subtotal + tax;
-  // Calculate totals
+  let finalTotal = subtotal + tax;
   const summary = rows?.reduce(
     (acc, p) => {
-      const total = p.qty * p.price;
-      const grossTotal = total - (p.discount_amount || 0);
-      acc.carton_qty += p.carton_qty;
-      acc.loose_qty  += p.loose_qty;
-      acc.qty += p.qty;
-      acc.carton_price +=p.carton_price;
-      acc.price += p.price;
-      acc.total += total;
-      acc.grossTotal = subtotal;
+      acc.cartonQty += Number(p.carton_qty || 0);
+      acc.looseQty += Number(p.loose_qty || 0);
+      acc.qty += Number(p.qty || 0);
+      acc.cartonPrice += Number(p.carton_price || 0);
+      acc.price += Number(p.price || 0);
+      acc.total += Number(p.qty || 0) * Number(p.price || 0);
+      acc.grossTotal += Number(p.total_price || 0);
       return acc;
     },
     {
@@ -192,7 +208,9 @@ const handleKeyDown = (e) => {
     }
   );
 
-
+const handleDiscountChange=(value)=>{
+setBillDiscount(parseFloat(value) || 0);
+}
 const navigate=useNavigate();
   useEffect(() => {
     // Fetch supplier form data
@@ -260,7 +278,7 @@ useEffect(() => {
         );
         console.log('handleChange - selectedSupplier:', selectedSupplier);
         if (selectedSupplier) {
-          updatedFormData.company_name = selectedSupplier.company_name;
+          updatedFormData.company_name = selectedSupplier.supplier_name;
           updatedFormData.contact_person = selectedSupplier.contact_person;
           updatedFormData.contact_address1 = selectedSupplier.address_flat;
           updatedFormData.contact_address2 = selectedSupplier.address_street;
@@ -284,34 +302,49 @@ useEffect(() => {
       console.log("Selected Product:", selectedProduct);
       const updatedRows = [...rows];
       updatedRows[index].product_id = selectedProduct.value;
-      updatedRows[index].product_code = selectedProduct.label;
+      updatedRows[index].product_code = selectedProduct.product_code;
       updatedRows[index].product_name = selectedProduct.product_name;
       setRows(updatedRows);
       console.log("Updated Rows:", updatedRows);
     };
   // Handle form submit (example API call structure)
-  const handleSubmit = async () => {
-    formData.sub_total = rows.reduce((sum, row) => sum + row.total_price, 0).toFixed(2);
-    formData.tax_amount = parseFloat((formData.sub_total * 0.09).toFixed(2));
-    formData.net_total = (
-      Number(formData.sub_total) + Number(formData.tax_amount)
-    ).toFixed(2);
-    formData.sub_total = Number(formData.sub_total);
-    formData.tax_amount = Number(formData.tax_amount);
-    formData.net_total = Number(formData.net_total);
-    formData.grand_total = Number(formData.net_total);
-
-    if (!currency.currency_code) {
-      message('Please Enter currency code.', 'error');
+  const handleSubmit = async (code) => {
+    const baseSubTotal = rows.reduce((sum, row) => sum + Number(row.total_price || 0), 0);
+    const subTotalAfterBill = Number((baseSubTotal - Number(billDiscount || 0)).toFixed(2));
+    const taxAmount = Number((subTotalAfterBill * 0.09).toFixed(2));
+    const netTotal = Number((subTotalAfterBill + taxAmount).toFixed(2));
+console.log('formData',formData);
+    const payloadForm = {
+      ...formData,
+      tran_no: code,
+      bill_discount: billDiscount,
+      sub_total: subTotalAfterBill,
+      tax_amount: taxAmount,
+      net_total: netTotal,
+      grand_total: netTotal,
+      status: 'open'
+    };
+console.log('formData', payloadForm);
+    if (!formData.currency_id) {
+      message('Please Enter currency Details.', 'error');
+      return;
+    }
+     if (!formData.supplier_id) {
+      message('Please Select Supplier.', 'error');
+      return;
+    }
+    const lineItems = rows.filter((el) => el.product_id);
+    if (lineItems.length === 0) {
+      message('Please create LineItems.', 'error');
       return;
     }
 
     try {
-      const res = await api.post('/purchaseorder/insertGoodsReturn', formData);
+      const res = await api.post('/purchaseorder/insertGoodsReturn', payloadForm);
       const insertedDataId = res.data.data.insertId;
       currency.goods_return_id = insertedDataId;
 
-      await api.post('/currency/insertGoodsReturnCurrency', currency);
+      // await api.post('/currency/insertPurchaseOrderCurrency', currency);
  
       // Fire all product inserts in parallel
       await Promise.all(
@@ -324,12 +357,22 @@ useEffect(() => {
         })
       );
 
-      message('Goods Return has been Created successfully.', 'success');
-      setTimeout(() => navigate(`/GoodsReturnEdit/${insertedDataId}`), 300);
-    } catch {
+      message('GoodsReturn has been Created successfully.', 'success');
+      setTimeout(() => navigate(`/GoodsReturn/${insertedDataId}`), 300);
+    } catch (error) {
       message('Network connection error.', 'error');
     }
   };
+  const generateCode = () => {
+      return api
+        .post('/commonApi/getCodeValues', { type: 'goodsReturn' })
+        .then((res) => {
+          return handleSubmit(res.data.data);
+        })
+        .catch(() => {
+          return handleSubmit('');
+        });
+    };
 
   const handleRowChange = (id, field, value) => {
     setRows(prevRows => {
@@ -368,6 +411,15 @@ useEffect(() => {
             const price = Number(updatedRow.price || 0);
             const discountPercentage = Number(value || 0);
             updatedRow.discount_amount = ((qty * price * discountPercentage) / 100).toFixed(2);
+          }
+
+          // Recalculate discount_percentage if discount_amount changes
+          if (field === "discount_amount") {
+            const qty = Number(updatedRow.qty || 0);
+            const price = Number(updatedRow.price || 0);
+            const discountAmount = Number(value || 0);
+            const lineTotal = qty * price;
+            updatedRow.discount_percentage = lineTotal ? ((discountAmount / lineTotal) * 100).toFixed(2) : 0;
           }
 
           // Recalculate totals if relevant fields change
@@ -442,7 +494,7 @@ useEffect(() => {
     }
   };
 
- 
+  
   const addRow = (insertAfterIndex) => {
     // insertAfterIndex is the index after which the new row will be inserted
     const newRow = {
@@ -485,7 +537,7 @@ useEffect(() => {
       }
     }, 80);
   };
-const handleDelete = (index,id) => {
+  const handleDelete = (index,id) => {
     const updatedRows = rows.filter((row) => row.goods_return_product_id !== id);
     setRows(updatedRows);
     deleteRow(index,id);
@@ -510,7 +562,7 @@ const handleDelete = (index,id) => {
         </Col>
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1" name="tran_no" value={formData?.tran_no}  
-              onChange={handleChange}  onKeyDown={handleKeyDown}/>
+              onChange={handleChange}  onKeyDown={handleKeyDown} readOnly/>
         </Col>
       </Row>
     </Col>
@@ -562,42 +614,62 @@ const handleDelete = (index,id) => {
        <Col md="8">
           <FormGroup>
            
-             <Select
-                          bsSize="sm"
-                          className="py-0 px-1"
-                          name="supplier_id"
-                          value={
-                            formData?.supplier_id
-                              ? {
-                                  value: formData.supplier_id,
-                                  label: supplierOptions.find(
-                                    (s) => String(s.supplier_id) === String(formData.supplier_id)
-                                  )?.supplier_code || "",
-                                }
-                              : null
-                          }
-                          onChange={(selected) =>
-                            handleChange({
-                              target: { name: "supplier_id", value: selected?.value || "" },
-                            })
-                          }
-                          onKeyDown={handleKeyDown}
-                          options={supplierOptions.map((s) => ({
+            <Select
+              bsSize="sm"
+              className="py-0 px-1"
+              name="supplier_id"
+              value={
+                formData?.supplier_id
+                  ? (() => {
+                      const s = supplierOptions.find(
+                        (opt) => String(opt.supplier_id) === String(formData.supplier_id)
+                      );
+                      return s
+                        ? {
                             value: s.supplier_id,
-                            label: s.supplier_code,
-                          }))}
-                          placeholder="Select Supplier"
-                          isClearable
-                          styles={{
-                            control: (base) => ({
-                              ...base,
-                              minHeight: "30px",
-                              fontSize: "12px",
-                            }),
-                            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                          }}
-                          menuPortalTarget={document.body}
-                        />
+                            supplier_code: s.supplier_code,
+                            supplier_name: s.supplier_name,
+                          }
+                        : null;
+                    })()
+                  : null
+              }
+              onChange={(selected) =>
+                handleChange({
+                  target: { name: "supplier_id", value: selected?.value || "" },
+                })
+              }
+              onKeyDown={handleKeyDown}
+              options={supplierOptions.map((s) => ({
+                value: s.supplier_id,
+                supplier_code: s.supplier_code,
+                supplier_name: s.supplier_name,
+              }))}
+              placeholder="Select Supplier"
+              isClearable
+              filterOption={(candidate, input) => {
+                if (!input) return true;
+                const q = input.toLowerCase();
+                const code = String(candidate.data.supplier_code || "").toLowerCase();
+                const name = String(candidate.data.supplier_name || "").toLowerCase();
+                return code.includes(q) || name.includes(q);
+              }}
+              formatOptionLabel={(opt, { context }) =>
+                context === "menu"
+                  ? `${opt.supplier_code || ""} - ${opt.supplier_name || ""}`
+                  : `${opt.supplier_code || ""}`
+              }
+              getOptionValue={(opt) => String(opt.value)}
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  minHeight: "30px",
+                  fontSize: "12px",
+                }),
+                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+              }}
+              menuPortalTarget={document.body}
+            />
           </FormGroup>
         </Col>
       </Row>
@@ -718,7 +790,9 @@ const handleDelete = (index,id) => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1" type="date"  name="invoice_date"
               value={formData?.invoice_date}
-              onChange={handleChange}  onKeyDown={handleKeyDown}/>
+              onChange={handleChange} 
+              onKeyDown={handleKeyDown}
+            />
         </Col>
       </Row>
     </Col>
@@ -730,7 +804,7 @@ const handleDelete = (index,id) => {
         <Col md="8">
           <Input bsSize="sm" className="py-0 px-1"  name="invoice_no"
               value={formData?.invoice_no}
-              onChange={handleChange}    onKeyDown={(e) => {
+              onChange={handleChange}   onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
                 // Focus the first product code Select in the table
@@ -741,7 +815,7 @@ const handleDelete = (index,id) => {
               } else {
                 handleKeyDown(e);
               }
-            }} />
+            }}  />
         </Col>
       </Row>
     </Col>
@@ -754,9 +828,9 @@ const handleDelete = (index,id) => {
                  <>
     {/* Supplier Code & Contact Address1 */}
   
-                 <Row>
+                 {/* <Row>
     {/* Supplier Name & Contact Address2 */}
-    <Col md="6">
+    {/* <Col md="6">
       <Row className="mb-1">
         <Col md="4">
           <Label className="small mb-1">Currency Code</Label>
@@ -766,8 +840,8 @@ const handleDelete = (index,id) => {
               value={currency?.currency_code}
               onChange={handleCurrency}  onKeyDown={handleKeyDown}/>
         </Col>
-      </Row>
-    </Col>
+      </Row> */}
+    {/* </Col>
     <Col md="6">
       <Row className="mb-1">
         <Col md="4">
@@ -790,17 +864,17 @@ const handleDelete = (index,id) => {
               value={currency?.currency_rate}
               onChange={handleCurrency}  onKeyDown={handleKeyDown}/>
         </Col>
-      </Row>
-    </Col>
-  </Row>
-
+      </Row> */}
+    {/* </Col>
+  </Row> */} 
+<Currency settingdetails={formData} setSettingDetails={setFormData} handleInputs={handleChange}/>
     
       </>
                 </TabPane>
               </TabContent>
 
               {/* Table */}
-  <Table id="example" className="display border border-secondary rounded" ref={tableRef}>
+   <Table id="example" className="display border border-secondary rounded" ref={tableRef}>
          <colgroup>
             <col style={{ width: "1rem" }} /> 
     <col style={{ width: "6rem" }} /> {/* Product Code */}
@@ -849,7 +923,6 @@ const handleDelete = (index,id) => {
   <Select
     options={products.map((pr) => ({
       value: pr.product_id,
-      label: `${pr.product_code} - ${pr.product_name}`,
       product_code: pr.product_code,
       product_name: pr.product_name,
     }))}
@@ -857,7 +930,8 @@ const handleDelete = (index,id) => {
       p.product_id
         ? {
             value: p.product_id,
-            label: `${p.product_code} - ${p.product_name}`,
+            product_code: p.product_code,
+            product_name: p.product_name,
           }
         : null
     }
@@ -886,6 +960,12 @@ const handleDelete = (index,id) => {
     })
   }}
     placeholder="Select Product"
+    formatOptionLabel={(opt, { context }) =>
+      context === 'menu'
+        ? `${opt.product_code || ''} - ${opt.product_name || ''}`
+        : `${opt.product_code || ''}`
+    }
+    getOptionValue={(opt) => String(opt.value)}
     filterOption={(candidate, input) => {
       if (!input) return true;
       const lowerInput = input.toLowerCase();
@@ -951,7 +1031,7 @@ const handleDelete = (index,id) => {
                   <Input
                     type="number"
                     bsSize="sm"
-                    value={Number(p?.carton_price).toFixed(2)}
+                    value={p?.carton_price}
                     onChange={(e) => handleRowChange(p.goods_return_product_id, 'carton_price', e.target.value)}
                     style={{ width: '80px' }}
                     innerRef={(el) => (cartonPriceRefs.current[idx] = el)}
@@ -969,7 +1049,7 @@ const handleDelete = (index,id) => {
                   <Input
                     type="number"
                     bsSize="sm"
-                    value={Number(p?.price).toFixed(2)}
+                    value={p?.price}
                     onChange={(e) => handleRowChange(p.goods_return_product_id, 'price', e.target.value)}
                     style={{ width: '80px' }}
                     innerRef={(el) => (priceRefs.current[idx] = el)}
@@ -987,7 +1067,7 @@ const handleDelete = (index,id) => {
                   <Input
                     type="number"
                     bsSize="sm"
-                    value={Number(p.qty * p.price).toFixed(2)}
+                    value={Number(p?.qty * p?.price).toFixed(2)}
                     onChange={(e) => handleRowChange(p.goods_return_product_id, 'total', e.target.value)}
                     style={{ width: '80px' }}
                     readOnly
@@ -998,7 +1078,7 @@ const handleDelete = (index,id) => {
                     <Input
                       type="number"
                       bsSize="sm"
-                      value={Number(p?.discount_percentage).toFixed(2)}
+                      value={Number(p?.discount_percentage)}
                       onChange={(e) => handleRowChange(p.goods_return_product_id, 'discount_percentage', e.target.value)}
                       style={{ width: '50%', marginRight: '2px' }}
                       innerRef={(el) => (discountPercentageRefs.current[idx] = el)}
@@ -1014,7 +1094,7 @@ const handleDelete = (index,id) => {
                     <Input
                       type="number"
                       bsSize="sm"
-                      value={Number(p?.discount_amount).toFixed(2)}
+                      value={Number(p?.discount_amount)}
                       onChange={(e) => handleRowChange(p.goods_return_product_id, 'discount_amount', e.target.value)}
                       style={{ width: '50%' }}
                       innerRef={(el) => (discountAmountRefs.current[idx] = el)}
@@ -1152,14 +1232,14 @@ const handleDelete = (index,id) => {
               Summary:
             </td>
             <td style={{ padding: '0.3rem' }}></td> {/* Empty for Product Name */}
-            <td style={{ padding: '0.3rem' }}>{summary.cartonQty.toFixed(2)}</td>
-            <td style={{ padding: '0.3rem' }}>{summary.looseQty.toFixed(2)}</td>
-            <td style={{ padding: '0.3rem' }}>{summary.qty.toFixed(2)}</td>
-            <td style={{ padding: '0.3rem' }}>{summary.cartonPrice.toFixed(2)}</td>
-            <td style={{ padding: '0.3rem' }}>{summary.price}</td>
-            <td style={{ padding: '0.3rem' }}>{summary.total}</td>
+            <td style={{ padding: '0.3rem' }}>{Number(summary.cartonQty).toFixed(2)}</td>
+            <td style={{ padding: '0.3rem' }}>{Number(summary.looseQty).toFixed(2)}</td>
+            <td style={{ padding: '0.3rem' }}>{Number(summary.qty).toFixed(2)}</td>
+            <td style={{ padding: '0.3rem' }}>{Number(summary.cartonPrice).toFixed(2)}</td>
+            <td style={{ padding: '0.3rem' }}>{Number(summary.price).toFixed(2)}</td>
+            <td style={{ padding: '0.3rem' }}>{Number(summary.total).toFixed(2)}</td>
             <td style={{ padding: '0.3rem' }}></td>
-            <td style={{ padding: '0.3rem' }}>{summary.grossTotal}</td>
+            <td style={{ padding: '0.3rem' }}>{Number(summary.grossTotal).toFixed(2)}</td>
             <td style={{ padding: '0.3rem' }}></td>
           </tr>
         </tbody>
@@ -1200,7 +1280,14 @@ const handleDelete = (index,id) => {
       <Col md="3">
         <FormGroup className="mb-1">
           <Label className="small mb-1">Bill Discount : $</Label>
-          <Input bsSize="sm" value="0" />
+           <Input
+                                         type="number"
+                                         name="bill_discount"
+                                         value={billDiscount}
+                                         onChange={(e) => handleDiscountChange(e.target.value)}
+                                        
+                                         style={{ width: '100px', height: '28px' }}
+                                       />
         </FormGroup>
         <div>Total Product: <strong>{rows?.length}</strong></div>
       </Col>
@@ -1222,15 +1309,15 @@ const handleDelete = (index,id) => {
       <Col md="3">
         <div className="d-flex justify-content-between small">
           <strong>➤ Sub Total:</strong>
-          <span className="text-primary">${Number(subtotal).toFixed(2)}</span>
+          <span className="text-primary">${Number(subtotal - Number(billDiscount || 0)).toFixed(2)}</span>
         </div>
         <div className="d-flex justify-content-between small">
           <strong>➤ Tax:</strong>
-          <span className="text-primary">${Number(tax).toFixed(2)}</span>
+          <span className="text-primary">${Number(((subtotal - Number(billDiscount || 0)) * 0.09)).toFixed(2)}</span>
         </div>
         <div className="d-flex justify-content-between fw-bold">
           <span>Net Total:</span>
-          <span className="text-primary">${Number(finalTotal).toFixed(2)}</span>
+          <span className="text-primary">${Number(((subtotal - Number(billDiscount || 0)) * 1.09)).toFixed(2)}</span>
         </div>
       </Col>
     </Row>
@@ -1239,7 +1326,7 @@ const handleDelete = (index,id) => {
   <Row className="mt-2" style={{ backgroundColor: '#212529', padding: '8px' }}>
   {/* Cancel on left */}
   <Col className="d-flex justify-content-start">
-    <Button size="sm" style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#fff' }} className="me-2"  onClick={()=>navigate('/GoodsReturn')}>
+    <Button size="sm" style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#fff' }} className="me-2"  onClick={()=>navigate('/PurchaseOrder')}>
       Cancel
     </Button>
   </Col>
@@ -1251,10 +1338,10 @@ const handleDelete = (index,id) => {
     <PdfPurchaseInvoice id={id} />
     </Button> */}
     <div className="btn-group">
-      <Button size="sm" style={{ backgroundColor: '#213042', borderColor: '#213042', color: '#fff' }} onClick={()=>handleSubmit()}>
+      <Button size="sm" style={{ backgroundColor: '#213042', borderColor: '#213042', color: '#fff' }} onClick={()=>generateCode()}>
         Save
       </Button>
-      <Button
+      {/* <Button
         size="sm"
         style={{ backgroundColor: '#213042', borderColor: '#213042', color: '#fff' }}
         className="dropdown-toggle dropdown-toggle-split"
@@ -1265,7 +1352,7 @@ const handleDelete = (index,id) => {
       <div className="dropdown-menu dropdown-menu-end">
         <button className="dropdown-item">Save & New</button>
         <button className="dropdown-item">Save & Close</button>
-      </div>
+      </div> */}
     </div>
   </Col>
 </Row>
