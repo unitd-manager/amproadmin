@@ -9,7 +9,6 @@ input[type="text"], select {
 }
 .sidebarArea .nav-link {
     font-size: 11px !important;
-<<<<<<< HEAD
 }
 
 /* Dashboard uniform card sizing */
@@ -29,6 +28,4 @@ input[type="text"], select {
     .uniform-card {
         min-height: auto;
     }
-=======
->>>>>>> 0c728bf6df3af20b6b0fb1dffda79934d91cdcf8
 }
