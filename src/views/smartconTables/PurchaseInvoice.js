@@ -143,6 +143,23 @@ const PurchaseInvoice = () => {
       alert('Failed to update status');
     }
   };
+const repeatPurchaseInvoice = () => {
+    
+    if (selectedPurchaseInvoiceIds.length === 0) {
+    alert('Please select at least one record to convert.');
+    return;
+  }
+  
+    api.post("/purchaseorder/repeatPurchaseInvoice", { purchase_invoice_ids: selectedPurchaseInvoiceIds })
+      .then(() => {
+        message("Purchase invoices repeated successfully",'success');
+        // setSelectedPurchaseInvoiceIds([]);
+        setTimeout(()=>{
+          window.location.reload();
+        },300)
+      })
+      .catch(() => message.error("Repeat failed"));
+  };
 
   const handleRepeatPurchaseOrder = async () => {
     if (selectedPurchaseInvoiceIds.length !== 1) {
@@ -150,11 +167,11 @@ const PurchaseInvoice = () => {
       return;
     }
     try {
-      const res = await api.post('purchaseorder/repeatGoodsReceipt', {
+      const res = await api.post('purchaseorder/repeatPurchaseInvoice', {
         tran_no: selectedPurchaseInvoiceIds[0]
       });
       alert('Repeated successfully');
-      navigate(`/PurchaseOrderEdit/${res.data.new_id}`);
+      navigate(`/PurchaseInvoiceEdit/${res.data.new_id}`);
     } catch (err) {
       console.error(err);
       alert('Repeat failed');
@@ -381,7 +398,7 @@ const PurchaseInvoice = () => {
       <DropdownToggle caret color="primary" size="sm" />
       <DropdownMenu end>
         <DropdownItem onClick={() => navigate('/MakePayment')}>Make Payment</DropdownItem>
-        <DropdownItem onClick={handleRepeatPurchaseOrder}>Repeat Purchase Invoice</DropdownItem>
+        <DropdownItem onClick={repeatPurchaseInvoice}>Repeat Purchase Invoice</DropdownItem>
         <DropdownItem onClick={() => navigate('/Recap')}>Recap</DropdownItem>
         <DropdownItem onClick={() => navigate('/AddOperationCost')}>Add Operation Cost</DropdownItem>
       </DropdownMenu>
@@ -422,7 +439,11 @@ const PurchaseInvoice = () => {
                 />
               </td>
               <td><Link to={`/PurchaseInvoiceEdit/${item.purchase_invoice_id}`}>{item.tran_no}</Link></td>
-              <td>{moment(item.tran_date).format('YYYY-MM-DD')}</td>
+                <td>
+                {item?.tran_date && moment(item.tran_date).isValid()
+                  ? moment(item.tran_date).format('YYYY-MM-DD')
+                  : ''}
+              </td>
               <td>{item.company_name}</td>
               <td>{item.invoice_no}</td>
               <td>{item.sub_total}</td>

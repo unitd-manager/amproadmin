@@ -280,7 +280,11 @@ const handleDeleteSelected = async () => {
                 />
               </td>
               <td><Link to={`/PurchaseDebitNoteEdit/${item.purchase_debit_note_id}`}>{item.tran_no}</Link></td>
-              <td>{moment(item.tran_date).format('YYYY-MM-DD')}</td>
+                <td>
+                {item?.tran_date && moment(item.tran_date).isValid()
+                  ? moment(item.tran_date).format('YYYY-MM-DD')
+                  : ''}
+              </td>
               <td>{item.company_name}</td>
               <td>{item.status}</td>
               <td>{item.invoice_no}</td>
