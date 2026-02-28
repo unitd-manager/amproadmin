@@ -24,7 +24,7 @@ const PurchaseDebitNote = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-
+const [selectedTranNos, setSelectedTranNos] = useState([]);
   const [statusModal, setStatusModal] = useState(false);
   const [newStatus, setNewStatus] = useState('Open');
 
@@ -167,25 +167,22 @@ const handleDeleteSelected = async () => {
     }
   };
 
-  const handleRepeatPurchaseorder = async () => {
-    if (selectedTranNos.length !== 1) {
-      alert('Please select one Purchase Debit Note to repeat as Purchase Credit');
-      return;
-    }
-    try {
-      const res = await api.post('/purchaseorder/repeatPurchaseCredit', {
-        tran_no: selectedTranNos[0]
-      });
-      if (res.data.success) {
-        alert('Purchase Credit created successfully!');
-        navigate(`/PurchaseCreditEdit/${res.data.new_id}`);
-      } else {
-        alert('Failed to create Purchase Credit');
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Error creating Purchase Credit');
-    }
+  const repeatPurchaseDebitNote = () => {
+    
+    if (selectedPurchaseInvoiceIds.length === 0) {
+    alert('Please select at least one record to convert.');
+    return;
+  }
+  
+    api.post("/purchaseorder/repeatPurchaseDebitNote", { purchase_debit_note_ids: selectedPurchaseInvoiceIds })
+      .then(() => {
+        message("Purchase Debit Notes repeated successfully",'success');
+        // setSelectedPurchaseInvoiceIds([]);
+        setTimeout(()=>{
+          window.location.reload();
+        },300)
+      })
+      .catch(() => message.error("Repeat failed"));
   };
 
   const handleRecap = async () => {
@@ -243,7 +240,7 @@ const handleDeleteSelected = async () => {
             <DropdownToggle caret color="primary" />
             <DropdownMenu end>
             
-              <DropdownItem onClick={handleRepeatPurchaseorder}>Repeat Purchase Credit</DropdownItem>
+              <DropdownItem onClick={repeatPurchaseDebitNote}>Repeat Purchase Debit Note</DropdownItem>
               <DropdownItem onClick={handleRecap}>Recap</DropdownItem>
             </DropdownMenu>
           </ButtonDropdown>

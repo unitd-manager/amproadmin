@@ -12,6 +12,7 @@ import PdfPurchaseInvoiceList from '../../components/PDF/PdfPurchaseInvoiceList'
 import message from '../../components/Message';
 
 const PurchaseInvoice = () => {
+
   const [filters, setFilters] = useState({
     tran_no: '',
     from_date: '',
@@ -26,29 +27,30 @@ const PurchaseInvoice = () => {
   const [goodsReturns, setGoodsReturns] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+
   const [selectedPurchaseInvoiceIds, setSelectedPurchaseInvoiceIds] = useState([]);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [suppliers, setSuppliers] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
 
-  const [statusModal, setStatusModal] = useState(false);
-  const [newStatus, setNewStatus] = useState('Open');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [suppliers, setSuppliers] = useState([]);
 
-  const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
+  // 🔥 Modals
+  const [paymentModal, setPaymentModal] = useState(false);
+  const [operationModal, setOperationModal] = useState(false);
+
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [operationCost, setOperationCost] = useState('');
+
   const navigate = useNavigate();
+  const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
+
+  // ================= FETCH =================
 
   const fetchData = async () => {
     try {
       const res = await api.get('/purchaseorder/getFilteredPurchaseInvoice', {
         params: {
-          tran_no: filters.tran_no || '',
-          invoice_no: filters.invoice_no || '',
-          from_date: filters.from_date || '',
-          to_date: filters.to_date || '',
-          status: filters.status || '',
-          supplier_id: filters.supplier || '',
-          head_office: filters.head_office || '',
-          payment_status: filters.payment_status || '',
+          ...filters
         }
       });
 
@@ -61,428 +63,366 @@ const PurchaseInvoice = () => {
 
   useEffect(() => {
     fetchData();
+
     api.get('/supplier/getSupplier')
       .then(res => setSuppliers(res.data.data))
-      .catch(err => console.error(err));
+      .catch(console.error);
+
   }, [currentPage]);
 
-  const handleFilterChange = (e) => {
+  // ================= FILTERS =================
+
+  const handleFilterChange = e =>
     setFilters({ ...filters, [e.target.name]: e.target.value });
-  };
 
   const handleSearch = () => {
     setCurrentPage(1);
     fetchData();
   };
 
-  const handlePrev = () => setCurrentPage(prev => Math.max(prev - 1, 1));
-  const handleNext = () => setCurrentPage(prev => prev + 1);
+  const handlePrev = () => setCurrentPage(p => Math.max(p - 1, 1));
+  const handleNext = () => setCurrentPage(p => p + 1);
 
-  const handleNewTransactionClick = () => {
-    navigate('/PurchaseInvoiceDetails'); // Example
+  const handleNewTransactionClick = () =>
+    navigate('/PurchaseInvoiceDetails');
+
+  // ================= SELECTION =================
+
+  const handleSelectAll = e => {
+    setSelectAll(e.target.checked);
+    setSelectedPurchaseInvoiceIds(
+      e.target.checked ? goodsReturns.map(i => i.purchase_invoice_id) : []
+    );
   };
 
-  const handlePrintwithoutPrice = async () => {
-    if (selectedPurchaseInvoiceIds.length !== 1) {
-      alert('Select a single Purchase Order to print.');
-      return;
-    }
-    const purchaseInvoiceId = selectedPurchaseInvoiceIds[0];
-    const res = await api.get(`/purchaseorder/getPoByTranNo/${purchaseInvoiceId}`);
-    const poData = res.data.data;
-
-    const content = `
-      <html><body>
-        <h3>PO: ${poData.tran_no}</h3>
-        <p>Status: ${poData.status}</p>
-        <p>Supplier: ${poData.company_name}</p>
-        <ul>
-          ${poData.items.map(i => `<li>${i.item_title} - Qty: ${i.quantity}</li>`).join('')}
-        </ul>
-      </body></html>
-    `;
-    const win = window.open('', '', 'width=800,height=600');
-    win.document.write(content);
-    win.print();
-    win.close();
+  const handleIndividualCheckboxChange = (e, id) => {
+    if (e.target.checked)
+      setSelectedPurchaseInvoiceIds(prev => [...prev, id]);
+    else
+      setSelectedPurchaseInvoiceIds(prev => prev.filter(i => i !== id));
   };
 
-  const handleConverttoGra = async () => {
-    if (selectedPurchaseInvoiceIds.length !== 1) {
-      alert('Please select one PO to convert.');
-      return;
-    }
-    try {
-      await api.post('/purchaseorder/convertToGRA', { tran_no: selectedPurchaseInvoiceIds[0] });
-      alert('Converted to GRA!');
-    } catch (err) {
-      console.error(err);
-      alert('Conversion failed');
-    }
-  };
+  // ================= REPEAT =================
 
-  const handleChangeStatus = () => {
-    if (selectedPurchaseInvoiceIds.length !== 1) {
-      alert('Select one PO to change status');
-      return;
-    }
-    setStatusModal(true);
-  };
-
-  const submitNewStatus = async () => {
-    try {
-      await api.post('/purchaseorder/changeStatus', {
-        tran_no: selectedPurchaseInvoiceIds[0],
-        status: newStatus
-      });
-      alert('Status updated!');
-      setStatusModal(false);
-      fetchData();
-    } catch (err) {
-      console.error(err);
-      alert('Failed to update status');
-    }
-  };
-const repeatPurchaseInvoice = () => {
-    
+  const repeatPurchaseInvoice = () => {
     if (selectedPurchaseInvoiceIds.length === 0) {
-    alert('Please select at least one record to convert.');
-    return;
-  }
-  
-    api.post("/purchaseorder/repeatPurchaseInvoice", { purchase_invoice_ids: selectedPurchaseInvoiceIds })
-      .then(() => {
-        message("Purchase invoices repeated successfully",'success');
-        // setSelectedPurchaseInvoiceIds([]);
-        setTimeout(()=>{
-          window.location.reload();
-        },300)
-      })
-      .catch(() => message.error("Repeat failed"));
-  };
-
-  const handleRepeatPurchaseOrder = async () => {
-    if (selectedPurchaseInvoiceIds.length !== 1) {
-      alert('Select one PO to repeat');
+      alert('Select at least one invoice');
       return;
     }
-    try {
-      const res = await api.post('purchaseorder/repeatPurchaseInvoice', {
-        tran_no: selectedPurchaseInvoiceIds[0]
-      });
-      alert('Repeated successfully');
-      navigate(`/PurchaseInvoiceEdit/${res.data.new_id}`);
-    } catch (err) {
-      console.error(err);
-      alert('Repeat failed');
-    }
+
+    api.post('/purchaseorder/repeatPurchaseInvoice', {
+      purchase_invoice_ids: selectedPurchaseInvoiceIds
+    })
+      .then(() => {
+        message('Purchase invoices repeated successfully', 'success');
+        fetchData();
+      })
+      .catch(() => alert('Repeat failed'));
   };
+
+  // ================= DELETE =================
 
   const handleDeleteSelected = async () => {
+
     if (selectedPurchaseInvoiceIds.length === 0) {
-      alert('Please select at least one record to delete.');
+      alert('Select records to delete');
       return;
     }
-    if (window.confirm('Are you sure you want to delete the selected records?')) {
-      try {
-        await Promise.all(selectedPurchaseInvoiceIds.map(purchaseInvoiceId =>
-          api.post('/purchaseorder/deletePurchaseInvoice', { purchase_invoice_id: purchaseInvoiceId })
-        ));
-        message('Invoices deleted successfully!','success');
-        setSelectedPurchaseInvoiceIds([]);
-        fetchData();
-      } catch (err) {
-        console.error(err);
-        alert('Failed to delete selected records.');
-      }
+
+    if (!window.confirm('Delete selected invoices?')) return;
+
+    await Promise.all(
+      selectedPurchaseInvoiceIds.map(id =>
+        api.post('/purchaseorder/deletePurchaseInvoice', {
+          purchase_invoice_id: id
+        })
+      )
+    );
+
+    message('Deleted successfully', 'success');
+    setSelectedPurchaseInvoiceIds([]);
+    fetchData();
+  };
+
+  // ================= MAKE PAYMENT =================
+
+  const handleMakePayment = () => {
+    if (selectedPurchaseInvoiceIds.length === 0) {
+      alert('Select invoice(s)');
+      return;
+    }
+    setPaymentModal(true);
+  };
+
+  const submitPayment = async () => {
+    try {
+
+      await api.post('/purchaseorder/makePaymentPurchaseInvoice', {
+        purchase_invoice_ids: selectedPurchaseInvoiceIds,
+        amount: paymentAmount
+      });
+
+      message('Payment recorded', 'success');
+
+      setPaymentModal(false);
+      setPaymentAmount('');
+      fetchData();
+
+    } catch {
+      alert('Payment failed');
     }
   };
 
-  const handleSelectAll = (e) => {
-    setSelectAll(e.target.checked);
-    if (e.target.checked) {
-      setSelectedPurchaseInvoiceIds(goodsReturns.map(item => item.purchase_invoice_id));
-    } else {
-      setSelectedPurchaseInvoiceIds([]);
+  // ================= OPERATION COST =================
+
+  const handleAddOperationCost = () => {
+    if (selectedPurchaseInvoiceIds.length === 0) {
+      alert('Select invoice(s)');
+      return;
+    }
+    setOperationModal(true);
+  };
+
+  const submitOperationCost = async () => {
+    try {
+
+      await api.post('/purchaseorder/addOperationCostPurchaseInvoice', {
+        purchase_invoice_ids: selectedPurchaseInvoiceIds,
+        cost: operationCost
+      });
+
+      message('Operation cost added', 'success');
+
+      setOperationModal(false);
+      setOperationCost('');
+      fetchData();
+
+    } catch {
+      alert('Failed to add cost');
     }
   };
 
-  const handleIndividualCheckboxChange = (e, purchaseInvoiceId) => {
-    if (e.target.checked) {
-      setSelectedPurchaseInvoiceIds(prev => [...prev, purchaseInvoiceId]);
-    } else {
-      setSelectedPurchaseInvoiceIds(prev => prev.filter(id => id !== purchaseInvoiceId));
+  // ================= RECAP =================
+
+  const handleRecap = async () => {
+
+    if (selectedPurchaseInvoiceIds.length === 0) {
+      alert('Select invoice(s)');
+      return;
+    }
+
+    try {
+
+      await api.post('/purchaseorder/recapPurchaseInvoice', {
+        purchase_invoice_ids: selectedPurchaseInvoiceIds
+      });
+
+      message('Recap completed', 'success');
+      fetchData();
+
+    } catch {
+      alert('Recap failed');
     }
   };
+
+  // ================= UI =================
 
   return (
     <div className="p-4 bg-light">
-      <ToastContainer/>
-      <h4 className="mb-4">Purchase Invoice Management</h4>
 
-      {/* <Row className="mb-3">
-        <Col md={2}><Input name="tran_no" placeholder="Tran No" value={filters.tran_no} onChange={handleFilterChange} /></Col>
-        <Col md={2}><Input type="date" name="from_date" value={filters.from_date} onChange={handleFilterChange} /></Col>
-        <Col md={2}><Input type="date" name="to_date" value={filters.to_date} onChange={handleFilterChange} /></Col>
+      <ToastContainer />
+      <h4>Purchase Invoice Management</h4>
+
+      {/* ===== FILTER ROW ===== */}
+
+      <Row className="mb-2">
+
         <Col md={2}>
-          <Input type="select" name="status" value={filters.status} onChange={handleFilterChange}>
-            <option value="">Open</option>
+          <Input bsSize="sm" name="tran_no"
+            placeholder="Tran No"
+            value={filters.tran_no}
+            onChange={handleFilterChange} />
+        </Col>
+
+        <Col md={2}>
+          <Input bsSize="sm" type="date"
+            name="from_date"
+            value={filters.from_date}
+            onChange={handleFilterChange} />
+        </Col>
+
+        <Col md={2}>
+          <Input bsSize="sm" type="date"
+            name="to_date"
+            value={filters.to_date}
+            onChange={handleFilterChange} />
+        </Col>
+
+        <Col md={2}>
+          <Input bsSize="sm" type="select"
+            name="status"
+            value={filters.status}
+            onChange={handleFilterChange}>
+            <option value="">All Status</option>
             <option>Open</option>
             <option>Closed</option>
             <option>Cancelled</option>
           </Input>
         </Col>
+
         <Col md={2}>
-          <Button color="primary" onClick={handleSearch}><i className="fa fa-search" /></Button>
+          <div style={{ display: 'flex', flexDirection: 'row', gap: 8, alignItems: 'center', whiteSpace: 'nowrap' }}>
+            <Button size="sm" color="primary" onClick={handleSearch} style={{ display: 'inline-flex' }}>
+              <i className="fa fa-search" />
+            </Button>
+
+            <Button color="secondary" style={{ display: 'inline-flex' }}>
+              <i className="fa fa-print" />
+              <PdfPurchaseInvoiceList ids={selectedPurchaseInvoiceIds} />
+            </Button>
+
+            <Button color="danger" onClick={handleDeleteSelected} style={{ display: 'inline-flex' }}>
+              <i className="fa fa-trash" />
+            </Button>
+          </div>
         </Col>
-        <Col md={2}>
-          <Button color="secondary" ><i className="fa fa-print" /> <PdfPurchaseInvoiceList ids={selectedPurchaseInvoiceIds} /> </Button>
-          <Button color="danger" onClick={handleDeleteSelected}><i className="fa fa-trash" /></Button>
-        </Col>
+
       </Row>
 
-      <Row className="mb-3">
-        <Col md={2}>
-          <Input type="select" name="head_office" value={filters.head_office} onChange={handleFilterChange}>
-            <option value="">Head Office</option>
-            <option>Head Office</option>
-            <option>Branch Office</option>
-          </Input>
-        </Col>
-        <Col md={2}>
-          <Input type="select" name="supplier" value={filters.supplier} onChange={handleFilterChange}>
-            <option value="">Select All Supplier</option>
-            {suppliers.map(sup => (
-              <option key={sup.supplier_id} value={sup.supplier_id}>{sup.company_name}</option>
-            ))}
-          </Input>
-        </Col>
-        <Col md={2}><Input name="invoice_no" placeholder="Invoice No" value={filters.invoice_no} onChange={handleFilterChange} /></Col>
-        <Col md={2}>
-          <Input type="select" name="payment_status" value={filters.payment_status} onChange={handleFilterChange}>
-            <option value="">Not Paid</option>
-            <option>Paid</option>
-            <option>Not Paid</option>
-          </Input>
-        </Col>
+      {/* ===== ACTION ROW ===== */}
+
+      <Row className="mb-2">
+
+        <Col md={8} />
+
         <Col md={4} className="text-right">
+
           <ButtonDropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
-            <Button color="primary" onClick={handleNewTransactionClick}>New Transaction</Button>
-            <DropdownToggle caret color="primary" />
+
+            <Button size="sm" color="primary"
+              onClick={handleNewTransactionClick}>
+              New Transaction
+            </Button>
+
+            <DropdownToggle caret size="sm" color="primary" />
+
             <DropdownMenu end>
-              <DropdownItem onClick={() => navigate('/MakePayment')}>Make Payment</DropdownItem>
-              <DropdownItem onClick={handleRepeatPurchaseOrder}>Repeat Purchase Invoice</DropdownItem>
-              <DropdownItem onClick={() => navigate('/Recap')}>Recap</DropdownItem>
-              <DropdownItem onClick={() => navigate('/AddOperationCost')}>Add Operation Cost</DropdownItem>
+
+              <DropdownItem onClick={handleMakePayment}>
+                Make Payment
+              </DropdownItem>
+
+              <DropdownItem onClick={repeatPurchaseInvoice}>
+                Repeat Invoice
+              </DropdownItem>
+
+              <DropdownItem onClick={handleRecap}>
+                Recap
+              </DropdownItem>
+
+              <DropdownItem onClick={handleAddOperationCost}>
+                Add Operation Cost
+              </DropdownItem>
+
             </DropdownMenu>
+
           </ButtonDropdown>
+
         </Col>
-      </Row> */}
-      <Row className="mb-2 align-items-center">
-  <Col md={2}>
-    <Input
-      bsSize="sm"
-      name="tran_no"
-      placeholder="Tran No"
-      value={filters.tran_no}
-      onChange={handleFilterChange}
-    />
-  </Col>
-  <Col md={2}>
-    <Input
-      bsSize="sm"
-      type="date"
-      name="from_date"
-      value={filters.from_date}
-      onChange={handleFilterChange}
-    />
-  </Col>
-  <Col md={2}>
-    <Input
-      bsSize="sm"
-      type="date"
-      name="to_date"
-      value={filters.to_date}
-      onChange={handleFilterChange}
-    />
-  </Col>
-  <Col md={2}>
-    <Input
-      bsSize="sm"
-      type="select"
-      name="status"
-      value={filters.status}
-      onChange={handleFilterChange}
-    >
-      <option value="">All Status</option>
-      <option>Open</option>
-      <option>Closed</option>
-      <option>Cancelled</option>
-    </Input>
-  </Col>
-  <Col md={2} className="d-flex gap-2">
-    <Button color="primary" size="sm" onClick={handleSearch}>
-      <i className="fa fa-search" />
-    </Button>
-    <Button color="secondary" size="sm" onClick={() => {
-      if (selectedPurchaseInvoiceIds.length===0) {
-       alert('Please select at least one record to print.');
-      } 
-    }}>
-      <i className="fa fa-print" />
-       {selectedPurchaseInvoiceIds.length>0 && <PdfPurchaseInvoiceList ids={selectedPurchaseInvoiceIds} />}
-    </Button>
-    <Button color="danger" size="sm" onClick={handleDeleteSelected}>
-      <i className="fa fa-trash" />
-    </Button>
-  </Col>
-</Row>
 
-<Row className="mb-2 align-items-center">
-  <Col md={2}>
-    <Input
-      bsSize="sm"
-      type="select"
-      name="head_office"
-      value={filters.head_office}
-      onChange={handleFilterChange}
-    >
-      <option value="">Head Office</option>
-      <option>Head Office</option>
-      <option>Branch Office</option>
-    </Input>
-  </Col>
-  <Col md={2}>
-    <Input
-      bsSize="sm"
-      type="select"
-      name="supplier"
-      value={filters.supplier}
-      onChange={handleFilterChange}
-    >
-      <option value="">All Supplier</option>
-      {suppliers.map(sup => (
-        <option key={sup.supplier_id} value={sup.supplier_id}>
-          {sup.company_name}
-        </option>
-      ))}
-    </Input>
-  </Col>
-  <Col md={2}>
-    <Input
-      bsSize="sm"
-      name="invoice_no"
-      placeholder="Invoice No"
-      value={filters.invoice_no}
-      onChange={handleFilterChange}
-    />
-  </Col>
-  <Col md={2}>
-    <Input
-      bsSize="sm"
-      type="select"
-      name="payment_status"
-      value={filters.payment_status}
-      onChange={handleFilterChange}
-    >
-      <option value="">All Payments</option>
-      <option>Paid</option>
-      <option>Not Paid</option>
-    </Input>
-  </Col>
-  <Col md={4} className="text-right">
-    <ButtonDropdown isOpen={dropdownOpen} toggle={toggleDropdown}>
-      <Button color="primary" size="sm" onClick={handleNewTransactionClick}>
-        New Transaction
-      </Button>
-      <DropdownToggle caret color="primary" size="sm" />
-      <DropdownMenu end>
-        <DropdownItem onClick={() => navigate('/MakePayment')}>Make Payment</DropdownItem>
-        <DropdownItem onClick={repeatPurchaseInvoice}>Repeat Purchase Invoice</DropdownItem>
-        <DropdownItem onClick={() => navigate('/Recap')}>Recap</DropdownItem>
-        <DropdownItem onClick={() => navigate('/AddOperationCost')}>Add Operation Cost</DropdownItem>
-      </DropdownMenu>
-    </ButtonDropdown>
-  </Col>
-</Row>
+      </Row>
 
+      {/* ===== TABLE ===== */}
 
       <Table className="bg-white">
+
         <thead>
           <tr>
             <th>
-              <Input
-                type="checkbox"
+              <Input type="checkbox"
                 checked={selectAll}
-                onChange={handleSelectAll}
-              />
+                onChange={handleSelectAll} />
             </th>
             <th>Tran No</th>
-            <th>Tran Date</th>
+            <th>Date</th>
             <th>Supplier</th>
-            <th>InvoiceNo</th>
-            <th>SubTotal</th>
-            <th>Tax</th>
-            <th>NetTotal</th>
-            <th>PaidAmount</th>
-            <th>BalanceAmount</th>
+            <th>Invoice</th>
+            <th>Net Total</th>
+            <th>Paid</th>
+            <th>Balance</th>
           </tr>
         </thead>
+
         <tbody>
-          {goodsReturns.length > 0 ? goodsReturns.map((item) => (
+          {goodsReturns.map(item => (
+
             <tr key={item.purchase_invoice_id}>
+
               <td>
-                <Input
-                  type="checkbox"
+                <Input type="checkbox"
                   checked={selectedPurchaseInvoiceIds.includes(item.purchase_invoice_id)}
-                  onChange={(e) => handleIndividualCheckboxChange(e, item.purchase_invoice_id)}
-                />
+                  onChange={e =>
+                    handleIndividualCheckboxChange(e, item.purchase_invoice_id)
+                  } />
               </td>
-              <td><Link to={`/PurchaseInvoiceEdit/${item.purchase_invoice_id}`}>{item.tran_no}</Link></td>
-                <td>
-                {item?.tran_date && moment(item.tran_date).isValid()
-                  ? moment(item.tran_date).format('YYYY-MM-DD')
-                  : ''}
+
+              <td>
+                <Link to={`/PurchaseInvoiceEdit/${item.purchase_invoice_id}`}>
+                  {item.tran_no}
+                </Link>
               </td>
+
+               <td>
+                              {item?.tran_date && moment(item.tran_date).isValid()
+                                ? moment(item.tran_date).format('YYYY-MM-DD')
+                                : ''}
+                            </td>
+
               <td>{item.company_name}</td>
               <td>{item.invoice_no}</td>
-              <td>{item.sub_total}</td>
-              <td>{item.gst}</td>
               <td>{item.net_total}</td>
               <td>{item.paid_amount}</td>
               <td>{item.balance_amount}</td>
+
             </tr>
-          )) : (
-            <tr>
-              <td colSpan="9" className="text-center">No data available in table</td>
-            </tr>
-          )}
+
+          ))}
         </tbody>
+
       </Table>
 
-      <div className="d-flex justify-content-between px-2">
-        <span>Total Records : {totalRecords}</span>
-        <div>
-          <Button size="sm" disabled={currentPage === 1} onClick={handlePrev}>Previous</Button>{' '}
-          <Button size="sm" onClick={handleNext}>Next</Button>
-        </div>
-      </div>
+      {/* ===== PAYMENT MODAL ===== */}
 
-      {/* Change Status Modal */}
-      <Modal isOpen={statusModal} toggle={() => setStatusModal(false)}>
-        <ModalHeader>Change PO Status</ModalHeader>
+      <Modal isOpen={paymentModal} toggle={() => setPaymentModal(false)}>
+        <ModalHeader>Make Payment</ModalHeader>
         <ModalBody>
-          <Input type="select" value={newStatus} onChange={(e) => setNewStatus(e.target.value)}>
-            <option>Open</option>
-            <option>Closed</option>
-            <option>Cancelled</option>
-          </Input>
+          <Input type="number"
+            placeholder="Amount"
+            value={paymentAmount}
+            onChange={e => setPaymentAmount(e.target.value)} />
         </ModalBody>
         <ModalFooter>
-          <Button color="primary" onClick={submitNewStatus}>Update</Button>
-          <Button color="secondary" onClick={() => setStatusModal(false)}>Cancel</Button>
+          <Button color="primary" onClick={submitPayment}>Submit</Button>
+          <Button onClick={() => setPaymentModal(false)}>Cancel</Button>
         </ModalFooter>
       </Modal>
+
+      {/* ===== OPERATION COST MODAL ===== */}
+
+      <Modal isOpen={operationModal} toggle={() => setOperationModal(false)}>
+        <ModalHeader>Add Operation Cost</ModalHeader>
+        <ModalBody>
+          <Input type="number"
+            placeholder="Cost"
+            value={operationCost}
+            onChange={e => setOperationCost(e.target.value)} />
+        </ModalBody>
+        <ModalFooter>
+          <Button color="primary" onClick={submitOperationCost}>Add</Button>
+          <Button onClick={() => setOperationModal(false)}>Cancel</Button>
+        </ModalFooter>
+      </Modal>
+
     </div>
   );
 };

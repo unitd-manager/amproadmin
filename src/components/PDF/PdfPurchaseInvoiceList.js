@@ -395,7 +395,7 @@ const PdfPurchaseInvoiceList = ({ id }) => {
   return (
     <div>
       {loading ? (
-        <div>Loading...</div>
+        <div>.</div>
       ) : (
         <div>
           <button type="button" onClick={GetPdf}><Icon.Printer size={16} /></button>
