@@ -36,7 +36,9 @@ const ApiButton = ({ editData, navigate, applyChanges, backToList, module }) => 
                 <Button
                   onClick={() => {
                     editData();
-                  
+                    setTimeout(() => {
+                      navigate('/Employee');
+                    }, 1100);
                   }}
                   color="primary"
                 >

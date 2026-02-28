@@ -91,12 +91,9 @@ function Deductions({
   return (
     <div>
       <Row>
-      <Col md="9">
-        CPF(Employee)</Col>{' '}
-      
+        <Col md="9">CPF(Employee)</Col>
         <Col md="3">
           <Input
-            disabled
             name="cpf_employee"
             type="text"
             value={payroll && payroll.cpf_employee}
@@ -116,6 +113,21 @@ function Deductions({
                 payroll.pay_mbmf,
                 payroll.pay_sinda,
               );
+            }}
+          />
+        </Col>
+      </Row>
+      <Row>
+        <Col md="9">CPF(Employer)</Col>
+        <Col md="3">
+          <Input
+            name="cpf_employer"
+            type="text"
+            value={payroll && payroll.cpf_employer}
+            onChange={(e) => {
+              handleInputs(e);
+              // Generally employer CPF is not a deduction from employee net pay,
+              // so we don't include it in handleDeductions / totalDeductionsAmount.
             }}
           />
         </Col>

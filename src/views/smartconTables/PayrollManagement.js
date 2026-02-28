@@ -22,7 +22,7 @@ import PrintPayslipModal from '../../components/PayrollManagement/PrintPayslipMo
 //import FileExporter from '../../components/Excelarabexport';
 // import PrintIR8AModal from '../../components/PayrollManagement/PrintIR8AModal';
 // import { columns } from '../../data/PayrollHR/PayrollColumn';
-// import PdfPaySlipList from '../../components/PDF/PdfPaySlipList';
+import PdfPaySlipList from '../../components/PDF/PdfPaySlipList';
 
 const Payrollmanagement = () => {
   //state variables
@@ -680,7 +680,7 @@ console.log('arabic', arabic);
                     <td>{arb ? element.employee_name_arb ||element.first_name_arb : element.employee_name ||element.first_name}</td>
 
                     <td>
-                      {/* <PdfPaySlipList payroll={element}></PdfPaySlipList> */}
+                     <PdfPaySlipList payroll={element}></PdfPaySlipList> 
                     </td>
                     <td>{element.payroll_month}</td>
                     <td>{element.payroll_year}</td>

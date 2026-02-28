@@ -20,6 +20,8 @@ const SalesOrderProducts = ({
   id,
   onSaveTrigger,
   setOnSaveTrigger,
+  billDiscount,
+  setBillDiscount,
 }) => {
   const { loggedInuser } = useContext(AppContext);
   const [lineItems, setLineItems] = useState(() => {
@@ -265,48 +267,20 @@ const SalesOrderProducts = ({
     }
   }, [lineItems]);
   
-  const [billDiscount, setBillDiscount] = React.useState(0);
+  // billDiscount and setBillDiscount are now received from parent props
  // const [isInitialLoad, setIsInitialLoad] = React.useState(true);
   
  // 1. Only fetch the value on load
- const [taxType] = React.useState('');
  const [taxRate] = React.useState(0.09); // Set default tax rate to 9%
  
- React.useEffect(() => {
-  const fetchBillDiscount = async () => {
-    try {
-      const response = await api.post('/salesreturn/getCreditNoteById', {
-        credit_note_id: id,
-      });
 
-      const data = response.data.data[0];
-      const discount = parseFloat(data?.bill_discount) || 0;
-      setBillDiscount(discount);
-
-      // No longer fetching tax type or rate from backend
-      // const type = data?.tax_type || '';
-      // setTaxType(type);
-
-      // const taxResponse = await api.post('/valuelist/getValueListByKeyText', {
-      //   value: type, // use this instead of taxType
-      // });
-
-      // const taxCode = parseFloat(taxResponse.data.data[0]?.code) || 0;
-      // setTaxRate(taxCode / 100);
-    } catch (error) {
-      console.error('Failed to fetch bill discount:', error);
-    }
-  };
-
-  if (id) {
-    fetchBillDiscount();
-  }
-}, [id]);
+  // Bill discount is now managed by parent, no need to fetch here
 
  
 
-console.log("Bill discount loaded:", billDiscount,taxRate, taxType);
+console.log("Bill discount loaded:", billDiscount,taxRate);
 // 2. Save function - not triggered automatically
+
 const saveBillDiscount = async (value) => {
   try {
     await api.post('/invoice/updateBillDiscountCN', {

@@ -20,6 +20,8 @@ const SalesOrderProducts = ({
   id,
   onSaveTrigger,
   setOnSaveTrigger,
+  billDiscount,
+  setBillDiscount,
 }) => {
   const { loggedInuser } = useContext(AppContext);
   const [lineItems, setLineItems] = useState(() => {
@@ -264,11 +266,7 @@ const SalesOrderProducts = ({
     }
   }, [lineItems]);
   
-  const [billDiscount, setBillDiscount] = React.useState(0);
- // const [isInitialLoad, setIsInitialLoad] = React.useState(true);
-  
- // 1. Only fetch the value on load
- const [taxType] = React.useState('');
+  const [taxType] = React.useState('');
  const [taxRate] = React.useState(0.09); // Set default tax rate to 9%
  
  React.useEffect(() => {

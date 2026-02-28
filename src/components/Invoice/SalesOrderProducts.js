@@ -20,6 +20,8 @@ const SalesOrderProducts = ({
   id,
   onSaveTrigger,
   setOnSaveTrigger,
+  billDiscount,
+  setBillDiscount,
 }) => {
   const { loggedInuser } = useContext(AppContext);
   const [lineItems, setLineItems] = useState(() => {
@@ -265,11 +267,7 @@ const SalesOrderProducts = ({
     }
   }, [lineItems]);
   
-  const [billDiscount, setBillDiscount] = React.useState(0);
- // const [isInitialLoad, setIsInitialLoad] = React.useState(true);
-  
- // 1. Only fetch the value on load
- const [taxType] = React.useState('');
+  const [taxType] = React.useState('');
  const [taxRate] = React.useState(0.09); // Set default tax rate to 9%
  
  React.useEffect(() => {
@@ -278,26 +276,13 @@ const SalesOrderProducts = ({
       const response = await api.post('/invoice/getSalesorderById', {
         invoice_id: id,
       });
-
       const data = response.data.data[0];
       const discount = parseFloat(data?.bill_discount) || 0;
-      setBillDiscount(discount);
-
-      // No longer fetching tax type or rate from backend
-      // const type = data?.tax_type || '';
-      // setTaxType(type);
-
-      // const taxResponse = await api.post('/valuelist/getValueListByKeyText', {
-      //   value: type, // use this instead of taxType
-      // });
-
-      // const taxCode = parseFloat(taxResponse.data.data[0]?.code) || 0;
-      // setTaxRate(taxCode / 100);
+      setBillDiscount(discount); // This will update parent state
     } catch (error) {
       console.error('Failed to fetch bill discount:', error);
     }
   };
-
   if (id) {
     fetchBillDiscount();
   }
@@ -859,7 +844,13 @@ React.useEffect(() => {
       <Col md="12" className="text-end" style={{ marginTop: '4px' }}>
         <Button color="secondary" size="sm" onClick={async () => { await deleteSalesOrder(); navigate('/Invoice'); }} style={{ marginRight: '3px', float:'left', padding: '4px 8px' }}>Cancel</Button>
         {/* <Button color="info" size="sm" onClick={(Invoicea()} style={{ marginRight: '3px' }}>Apply</Button> */}
-        <Button color="primary" size="sm" onClick={async () => { await saveBillDiscount(billDiscount); await saveSalesOrder(); handleSave();  setTimeout(() => { navigate('/Invocie'); window.location.reload(); }, 1100); }}  style={{ padding: '4px 8px' }}>Save</Button>
+        <Button color="primary" size="sm" onClick={async () => {
+          await saveBillDiscount(billDiscount);
+          await saveSalesOrder();
+          handleSave();
+          navigate('/Invoice');
+          window.location.reload();
+        }} style={{ padding: '4px 8px' }}>Save</Button>
       </Col>
     </Row>
   </div>

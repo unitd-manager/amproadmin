@@ -219,6 +219,7 @@ useEffect(() => {
                 <SalesMan
                  settingdetails={settingdetails}
                  handleInputs={handleInputs}
+                 salesOrderId={id}
                  ></SalesMan>
               </TabPane>
          
