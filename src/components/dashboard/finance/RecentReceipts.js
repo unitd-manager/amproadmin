@@ -22,7 +22,7 @@ const RecentReceipts = () => {
     setLoading(true);
     const params = { fromDate, toDate };
     api
-      .post('/getFilteredInvoices', params)
+      .post('/invoice/getFilteredInvoices', params)
       .then((res) => {
         const data = res?.data?.data || [];
         // Normalize fields to match UI columns

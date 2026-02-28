@@ -12,8 +12,9 @@ const DepartmentWiseProduct = () => {
     api
       .get("/product/DepartmentwiseProductReport")
       .then((res) => {
+        // Use only department name for labels
         const departments = res.data.map(
-          (item) => item.department_with_percentage
+          (item) => item.department_with_percentage.split(' (')[0]
         );
         const sales = res.data.map((item) => item.total_sales_value);
 
@@ -31,18 +32,17 @@ const DepartmentWiseProduct = () => {
               label: "Product Department Sales",
               data: sales,
               backgroundColor: [
-  "#FF6F61", // coral red
-  "#FFA07A", // light salmon
-  "#FFD700", // golden yellow
-  "#90EE90", // light green
-  "#40E0D0", // turquoise
-  "#6495ED", // cornflower blue
-  "#BA55D3", // medium orchid
-  "#FF8C00", // dark orange
-  "#FF69B4", // hot pink
-  "#6A5ACD", // slate blue
-],
-
+                "#FF6F61", // coral red
+                "#FFA07A", // light salmon
+                "#FFD700", // golden yellow
+                "#90EE90", // light green
+                "#40E0D0", // turquoise
+                "#6495ED", // cornflower blue
+                "#BA55D3", // medium orchid
+                "#FF8C00", // dark orange
+                "#FF69B4", // hot pink
+                "#6A5ACD", // slate blue
+              ],
               borderColor: "#fff",
               borderWidth: 2,
             },
@@ -60,11 +60,8 @@ const DepartmentWiseProduct = () => {
           const { index } = tooltipItem;
           const value = data.datasets[0].data[index];
           const label = data.labels[index];
-          const percentMatch = label.match(/\((.*?)\)/);
-          const percent = percentMatch
-            ? percentMatch[1]
-            : `${percentages[index]}%`;
-          return `${label.split(" (")[0]} ${percent}: ${value.toFixed(2)}`;
+          const percent = percentages[index] ? `${percentages[index]}%` : '';
+          return `${label} (${percent}): ${value.toFixed(2)}`;
         },
       },
     },

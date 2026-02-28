@@ -95,7 +95,7 @@ const SalesReportFor30Days = () => {
       <CardHeader className="bg-white d-flex align-items-center">
         <FaChartBar className="me-2 text-primary" />
         <h5 className="mb-0">Sales Report (Last 30 Days)</h5>
-      </CardHeader>
+      </CardHeader> 
       <CardBody style={cardBodyStyle}>
         <div style={{ width: "100%", height: 350 }}>
           <Bar data={chartData} options={options} />

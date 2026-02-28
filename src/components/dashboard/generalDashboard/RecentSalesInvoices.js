@@ -55,7 +55,7 @@ RecentSalesInvoices.propTypes = {
 
   // fetch invoices
   const fetchInvoices = (params) => {
-    api.post("/getFilteredInvoices", params)
+    api.post("/invoice/getFilteredInvoices", params)
       .then((res) => {
         if (res.data && res.data.data) setInvoices(res.data.data);
         else setInvoices([]);
@@ -69,7 +69,7 @@ RecentSalesInvoices.propTypes = {
   // fetch totals (use same params so totals reflect filter)
   const fetchTotals = (params) => {
     // Backend earlier used getSalesTotalOutstanding without params; this code sends params.
-    api.post("/getSalesTotalOutstanding", params)
+    api.post("/invoice/getSalesTotalOutstanding", params)
       .then((res) => {
         // support both array result or object
         const payload = res.data && res.data.data ? res.data.data : [];
@@ -206,10 +206,10 @@ RecentSalesInvoices.propTypes = {
             {invoices.length > 0 ? (
               invoices.map((inv) => (
                 <tr key={inv.invoice_id}>
-                  <td>{inv.invoiceNo}</td>
-                  <td>{inv.date}</td>
+                  <td>{inv.invoice_code}</td>
+                  <td>{inv.invoice_date}</td>
                   <td>{inv.customer}</td>
-                  <td className="text-end">{Number(inv.amount || 0).toFixed(2)}</td>
+                  <td className="text-end">{Number(inv.invoice_amount || 0).toFixed(2)}</td>
                 </tr>
               ))
             ) : (

@@ -4,7 +4,7 @@ import RecentReceipts from '../../components/dashboard/finance/RecentReceipts';
 import RecentPayments from '../../components/dashboard/finance/RecentPayments';
 
 const FinanceDashboard = () => { 
- 
+  
 
   return (
     <div>
