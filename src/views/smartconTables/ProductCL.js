@@ -9,7 +9,7 @@ import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import QRCodeModal from '../../components/ProductTable/QRCodeModal';
 import CommonTable from '../../components/CommonTable';
 import './ProductCL.css';
-
+ 
 const SectionDetails = () => {
   const [section, setSection] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,7 +35,7 @@ const [qrProduct, setQrProduct] = useState(null);
   const getSection = () => {
     setLoading(true);
     api
-      .get('/product/getProductAdmin')
+      .get('/product/getProducts')
       .then((res) => {
         setSection(res.data.data);
         setLoading(false);

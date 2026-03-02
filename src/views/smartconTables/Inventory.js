@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState} from 'react';
 import * as Icon from 'react-feather';
 import { Input, Button } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -10,44 +10,44 @@ import 'datatables.net-buttons/js/buttons.colVis';
 import 'datatables.net-buttons/js/buttons.flash';
 import 'datatables.net-buttons/js/buttons.html5';
 import 'datatables.net-buttons/js/buttons.print';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link} from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
-import AppContext from '../../context/AppContext';
+//import AppContext from '../../context/AppContext';
 import api from '../../constants/api';
 import message from '../../components/Message';
 import { columns } from '../../data/Tender/InventoryData';
-import ViewAdjustStockHistoryModal from '../../components/Inventory/ViewAdjustStockHistoryModal';
+// import ViewAdjustStockHistoryModal from '../../components/Inventory/ViewAdjustStockHistoryModal';
 import BreadCrumbs from '../../layouts/breadcrumbs/BreadCrumbs';
 import CommonTable from '../../components/CommonTable';
-import creationdatetime from '../../constants/creationdatetime';
+//import creationdatetime from '../../constants/creationdatetime';
 
 function Inventory() {
   // State variables
-  const [stockinputOpen, setStockinputOpen] = useState(false);
+  // const [stockinputOpen, setStockinputOpen] = useState(false);
   const [inventories, setInventories] = useState([]);
-  const [modalId, setModalId] = useState(null);
-  const [adjustStockHistoryModal, setAdjustStockHistoryModal] = useState(false);
-  const [stockChangeId, setStockChangeId] = useState();
-  const [inventoryStock, setInventoryStock] = useState({
-    inventory_id: null,
-    stock: null,
-  });
+  // const [modalId, setModalId] = useState(null);
+  // const [adjustStockHistoryModal, setAdjustStockHistoryModal] = useState(false);
+  // const [stockChangeId, setStockChangeId] = useState();
+  // const [inventoryStock, setInventoryStock] = useState({
+  //   inventory_id: null,
+  //   stock: null,
+  // });
   const [loading, setLoading] = useState(false);
-  const [adjuststockDetails, setAdjuststockDetails] = useState({
-    inventory_id: null,
-    product_id: null,
-    adjust_stock: 0,
-    modified_by: '',
-    created_by: '',
-    current_stock: null,
-  });
+  // const [adjuststockDetails, setAdjuststockDetails] = useState({
+  //   inventory_id: null,
+  //   product_id: null,
+  //   adjust_stock: 0,
+  //   modified_by: '',
+  //   created_by: '',
+  //   current_stock: null,
+  // });
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
 
   //navigate
-  const navigate = useNavigate();
-  const { loggedInuser } = useContext(AppContext);
+  // const navigate = useNavigate();
+  // const { loggedInuser } = useContext(AppContext);
   // Get All inventories
   const getAllinventories = () => {
     setLoading(true);
@@ -63,27 +63,23 @@ function Inventory() {
       });
   };
   //handle change
-  const handleStockinput = (e, element) => {
-    setInventoryStock({
-      inventory_id: element.inventory_id,
-      stock: e.target.value,
-    });
-    
-  
-    const adjustedStockValue = parseFloat(e.target.value);
-    const currentStockValue = parseFloat(element.stock) || 0; // If element.stock is null, set it to 0
-  
-    const adjustStock = adjustedStockValue - currentStockValue;
-  
-    setAdjuststockDetails({
-      inventory_id: element.inventory_id,
-      product_id: element.productId,
-      adjust_stock: adjustStock,
-      modified_by: '',
-      created_by: '',
-      current_stock: currentStockValue,
-    });
-  };
+  // const handleStockinput = (e, element) => {
+  //   setInventoryStock({
+  //     inventory_id: element.inventory_id,
+  //     stock: e.target.value,
+  //   });
+  //   const adjustedStockValue = parseFloat(e.target.value);
+  //   const currentStockValue = parseFloat(element.stock) || 0; // If element.stock is null, set it to 0
+  //   const adjustStock = adjustedStockValue - currentStockValue;
+  //   setAdjuststockDetails({
+  //     inventory_id: element.inventory_id,
+  //     product_id: element.productId,
+  //     adjust_stock: adjustStock,
+  //     modified_by: '',
+  //     created_by: '',
+  //     current_stock: currentStockValue,
+  //   });
+  // };
    // TRIGGER TO IMPORT EXCEL SHEET
    const importExcel = () => {
     $('#import_excel').trigger('click');
@@ -152,35 +148,35 @@ function Inventory() {
     }
   };
   //adjust stock
-  const adjuststock = () => {
-    adjuststockDetails.creation_date = creationdatetime;
-    adjuststockDetails.created_by = loggedInuser.first_name;
-    api
-      .post('/inventory/insertadjust_stock_log', adjuststockDetails)
-      .then(() => {
-        message('Stock updated successfully', 'success');
-        getAllinventories();
-        navigate('/inventory');
-      })
-      .catch(() => {
-        message('Unable to edit record.', 'error');
-      });
-  };
+  // const adjuststock = () => {
+  //   adjuststockDetails.creation_date = creationdatetime;
+  //   adjuststockDetails.created_by = loggedInuser.first_name;
+  //   api
+  //     .post('/inventory/insertadjust_stock_log', adjuststockDetails)
+  //     .then(() => {
+  //       message('Stock updated successfully', 'success');
+  //       getAllinventories();
+  //       navigate('/inventory');
+  //     })
+  //     .catch(() => {
+  //       message('Unable to edit record.', 'error');
+  //     });
+  // };
   //update stock
-  const updateStockinInventory = () => {
-    inventoryStock.modification_date = creationdatetime;
-    inventoryStock.modified_by = loggedInuser.first_name;
-    api
-      .post('/inventory/updateInventoryStock', inventoryStock)
-      .then(() => {
-        message('Stock updated successfully', 'success');
-        getAllinventories();
-        navigate('/inventory');
-      })
-      .catch(() => {
-        message('Unable to edit record.', 'error');
-      });
-  };
+  // const updateStockinInventory = () => {
+  //   inventoryStock.modification_date = creationdatetime;
+  //   inventoryStock.modified_by = loggedInuser.first_name;
+  //   api
+  //     .post('/inventory/updateInventoryStock', inventoryStock)
+  //     .then(() => {
+  //       message('Stock updated successfully', 'success');
+  //       getAllinventories();
+  //       navigate('/inventory');
+  //     })
+  //     .catch(() => {
+  //       message('Unable to edit record.', 'error');
+  //     });
+  // };
 
   useEffect(() => {
     setTimeout(() => {
@@ -289,7 +285,7 @@ function Inventory() {
                     <td>{element.product_code}</td>
                     <td>{element.unit}</td>
                     <td>{element.stock}</td>
-                    {stockinputOpen && stockChangeId === element.inventory_id ? (
+                    {/* {stockinputOpen && stockChangeId === element.inventory_id ? (
                       <td>
                         <Input
                           type="text"
@@ -319,8 +315,8 @@ function Inventory() {
                           <Link to="">Adjust Stock</Link>
                         </span>
                       </td>
-                    )}
-                    <td>
+                    )} */}
+                    {/* <td>
                       <span
                         onClick={() => {
                           setAdjustStockHistoryModal(true);
@@ -329,13 +325,13 @@ function Inventory() {
                       >
                         <Link to="">view</Link>
                       </span>
-                    </td>
-                   {adjustStockHistoryModal && modalId === element.inventory_id && <ViewAdjustStockHistoryModal
+                    </td> */}
+                   {/* {adjustStockHistoryModal && modalId === element.inventory_id && <ViewAdjustStockHistoryModal
                       adjustStockHistoryModal={adjustStockHistoryModal}
                       setAdjustStockHistoryModal={setAdjustStockHistoryModal}
                       inventoryId={modalId}
-                    />}
-                    <td>{element.minimum_order_level}</td>
+                    />} */}
+                    {/* <td>{element.minimum_order_level}</td> */}
                   </tr>
                 );
               })

@@ -167,12 +167,12 @@ const remainingQty =
                 </Row>
                 <span>{productQty && productQty.materials_sold}</span>
               </Col>
-              <Col xs="12" md="3">
+              {/* <Col xs="12" md="3">
                 <Row>
                   <h5>Adjusted Quantity</h5>
                 </Row>
                 <span>{changedStock}</span>
-              </Col>
+              </Col> */}
               <Col xs="12" md="3">
                 <Row>
                   <h5>Remaining Quantity</h5>
