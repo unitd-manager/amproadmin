@@ -50,6 +50,7 @@ const PurchaseInvoiceEdit = () => {
   const discountAmountRefs = useRef([]);
   const grossTotalRefs = useRef([]);
   const tableRef = useRef(null);
+  const initialFormRef = useRef({});
 
 
   const handleSNoClick = (sNo, product) => {
@@ -209,8 +210,10 @@ const navigate=useNavigate();
 
     // Fetch supplier options for dropdown
     api.post("/purchaseorder/getPurchaseInvoiceById",{purchase_invoice_id:id}).then((response) => {
-      setFormData(response.data.data[0]);
-      setBillDiscount(response?.data.data[0]?.bill_discount || 0);
+      const initial = response.data.data[0] || {};
+      initialFormRef.current = initial;
+      setFormData(initial);
+      setBillDiscount(initial?.bill_discount || 0);
     });
   
     api.post("/currency/getCuerrencyByPurchaseInvoiceId",{purchase_invoice_id:id}).then((response) => {
@@ -319,15 +322,24 @@ useEffect(() => {
           const taxAmount = Number((subTotalAfterBill * 0.09).toFixed(2));
           const netTotal = Number((subTotalAfterBill + taxAmount).toFixed(2));
       
+          const selectedSupplier = supplierOptions.find(s => String(s.supplier_id) === String(formData.supplier_id));
+          const initial = initialFormRef.current || {};
+
           const payloadForm = {
             ...formData,
+            contact_address1: (formData.contact_address1 && String(formData.contact_address1).trim()) || initial.contact_address1 || selectedSupplier?.address_flat || '',
+            contact_address2: (formData.contact_address2 && String(formData.contact_address2).trim()) || initial.contact_address2 || selectedSupplier?.address_street || '',
+            contact_address3: (formData.contact_address3 && String(formData.contact_address3).trim()) || initial.contact_address3 || selectedSupplier?.address_state || '',
+            contact_person: (formData.contact_person && String(formData.contact_person).trim()) || initial.contact_person || selectedSupplier?.contact_person || '',
+            company_name: (formData.company_name && String(formData.company_name).trim()) || initial.company_name || selectedSupplier?.supplier_name || '',
+            supplier_name: (formData.supplier_name && String(formData.supplier_name).trim()) || initial.supplier_name || selectedSupplier?.supplier_name || '',
             bill_discount: billDiscount,
             sub_total: subTotalAfterBill,
             tax_amount: taxAmount,
             net_total: netTotal,
             grand_total: netTotal,
           };
-      console.log('formData', payloadForm);
+    console.log('Submitting payloadForm (debug):', { formData, initial, selectedSupplier, payloadForm });
           if (!formData.currency_id) {
             message('Please Enter currency Details.', 'error');
             return;

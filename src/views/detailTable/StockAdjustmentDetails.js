@@ -137,11 +137,14 @@ const StockAdjustmentDetails = () => {
       console.log("Selected Product:", selectedProduct);
       const updatedRows = [...rows];
       updatedRows[index].product_id = selectedProduct.value;
-      updatedRows[index].product_code = selectedProduct.label;
-      updatedRows[index].product_name = selectedProduct.product_name;
-      updatedRows[index].stock_in_hand_carton = selectedProduct.carton_qty;
-      updatedRows[index].stock_in_hand_loose = selectedProduct.loose_qty;
-      updatedRows[index].stock_in_hand_qty = selectedProduct.qty_in_stock;
+      updatedRows[index].product_code = selectedProduct.product_code ?? (selectedProduct.label || '').split(' - ')[0];
+      updatedRows[index].product_name = selectedProduct.product_name ?? selectedProduct.label ?? '';
+      updatedRows[index].stock_in_hand_carton = selectedProduct.carton_qty ?? selectedProduct.carton_qty === 0 ? selectedProduct.carton_qty : '';
+      updatedRows[index].stock_in_hand_loose = selectedProduct.loose_qty ?? selectedProduct.loose_qty === 0 ? selectedProduct.loose_qty : '';
+      updatedRows[index].stock_in_hand_qty = selectedProduct.qty_in_stock ?? selectedProduct.qty_in_stock === 0 ? selectedProduct.qty_in_stock : '';
+
+      // Recalculate new stock immediately after selecting product
+      calculateNewStock(updatedRows, index);
       setRows(updatedRows);
       console.log("Updated Rows:", updatedRows);
     };
@@ -285,7 +288,7 @@ const StockAdjustmentDetails = () => {
               <thead>
                 <tr>
                   <th>S.No</th>
-                  <th>Product ID</th>
+                  
                   <th>Product Code</th>
                   <th>Product Name</th>
                   <th colSpan="3">Stock In Hand</th>
@@ -295,7 +298,6 @@ const StockAdjustmentDetails = () => {
                   <th>Action</th>
                 </tr>
                 <tr>
-                  <th></th>
                   <th></th>
                   <th></th>
                   <th></th>
@@ -316,7 +318,7 @@ const StockAdjustmentDetails = () => {
                 {rows?.map((row, i) => (
                   <tr key={i}>
                     <td>{i + 1}</td>
-                    <td>
+                    {/* <td>
                       <Input
                         value={row.product_id}
                         onChange={(e) =>
@@ -324,7 +326,7 @@ const StockAdjustmentDetails = () => {
                         }
                         placeholder="Product ID"
                       />
-                    </td>
+                    </td> */}
                       <td style={{ padding: "0.3rem", minWidth: "200px" }}>
   <Select
     options={products.map((pr) => ({
@@ -332,7 +334,9 @@ const StockAdjustmentDetails = () => {
       label: `${pr.product_code} - ${pr.product_name}`,
       product_code: pr.product_code,
       product_name: pr.product_name,
-      qty_in_stock:pr.qty_in_stock
+      qty_in_stock: pr.qty_in_stock,
+      carton_qty: pr.carton_qty,
+      loose_qty: pr.loose_qty
     }))}
     value={
       row.product_id
@@ -349,23 +353,26 @@ const StockAdjustmentDetails = () => {
       }
     }}
       styles={{
-    control: (base) => ({
-      ...base,
-      fontSize: "12px",
-      minHeight: "30px"
-     
-    }),
-    menuPortal: (base) => ({
-      ...base,
-      zIndex: 9999,
-      fontSize: "12px", 
-      width: '300px'  // keep it above modal, table, etc.
-    }),
-    menu: (base) => ({
-      ...base,
-      zIndex: 9999   // just in case
-    })
-  }}
+          control: (base) => ({
+            ...base,
+            fontSize: "12px",
+            minHeight: "30px"
+          }),
+          menuPortal: (base) => ({
+            ...base,
+            zIndex: 9999,
+            fontSize: "12px",
+            minWidth: 240
+          }),
+          menu: (base) => ({
+            ...base,
+            zIndex: 9999
+          })
+        }}
+      menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+      menuPosition="fixed"
+      menuPlacement="auto"
+      menuShouldScrollIntoView={false}
     placeholder="Select Product"
     filterOption={(candidate, input) => {
       if (!input) return true;
@@ -427,8 +434,8 @@ const StockAdjustmentDetails = () => {
                         value={row.adjustment_type}
                         onChange={(e) => handleChange(i, "adjustment_type", e.target.value)}
                       >
-                        <option value="Increase">Increase</option>
-                        <option value="Decrease">Decrease</option>
+                        <option value="Increase">+</option>
+                        <option value="Decrease">-</option>
                       </Input>
                     </td>
                     <td>
