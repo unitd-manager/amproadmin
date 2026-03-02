@@ -54,19 +54,27 @@ const LeaveDetails = () => {
   }
 
   const calculateLeaveDays = (fromDate, toDate) => {
-    const fromMoment = moment(fromDate);
-    const toMoment = moment(toDate);
+    const fromMoment = moment(fromDate).startOf('day');
+    const toMoment = moment(toDate).startOf('day');
 
-    const endOfMonth = fromMoment.clone().endOf('month');
-    const startOfNextMonth = fromMoment.clone().add(1, 'month').startOf('month');
+    if (!fromMoment.isValid() || !toMoment.isValid() || toMoment.isBefore(fromMoment)) {
+      return { daysInCurrentMonth: 0, daysInNextMonth: 0 };
+    }
 
-    const daysInCurrentMonth = toMoment.isAfter(endOfMonth)
-      ? endOfMonth.diff(fromMoment, 'days') + 1
-      : toMoment.diff(fromMoment, 'days') + 1;
+    const currentMonthStart = fromMoment.clone().startOf('month');
+    const currentMonthEnd = fromMoment.clone().endOf('month');
+    const nextMonthStart = currentMonthEnd.clone().add(1, 'day').startOf('day');
+    const nextMonthEnd = nextMonthStart.clone().endOf('month');
 
-    const daysInNextMonth = toMoment.isSameOrAfter(startOfNextMonth)
-      ? toMoment.diff(startOfNextMonth, 'days') + 1
-      : 0;
+    const currentStart = moment.max(fromMoment, currentMonthStart);
+    const currentEnd = moment.min(toMoment, currentMonthEnd);
+    const daysInCurrentMonth =
+      currentEnd.isBefore(currentStart) ? 0 : currentEnd.diff(currentStart, 'days') + 1;
+
+    const nextStart = moment.max(nextMonthStart, fromMoment);
+    const nextEnd = moment.min(nextMonthEnd, toMoment);
+    const daysInNextMonth =
+      nextEnd.isBefore(nextStart) ? 0 : nextEnd.diff(nextStart, 'days') + 1;
 
     return { daysInCurrentMonth, daysInNextMonth };
   };

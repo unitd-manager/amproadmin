@@ -29,17 +29,16 @@ function InventoryEditTables({ tabPurchaseOrdersLinked }) {
                   <tr key={element.po_code}>
                     <td>
                       <Link to={`/PurchaseOrderEdit/${element.purchase_order_id}`}>
-                        {element.po_code}
+                        {element.tran_no}
                       </Link>
                     </td>
 
                     <td>
-                      {element.purchase_order_date
-                        ? moment(element.purchase_order_date).format('YYYY-MM-DD')
+                      {element.tran_date
+                        ? moment(element.tran_date).format('YYYY-MM-DD')
                         : ''}
                     </td>
-                    <td>{element.title}</td>
-                    <td>{element.cost_price}</td>
+                    <td>{element.gross_total}</td>
                     <td>{element.qty}</td>
                     <td>{element.company_name}</td>
                   </tr>

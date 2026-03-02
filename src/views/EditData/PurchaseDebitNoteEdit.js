@@ -367,6 +367,9 @@ console.log('formdata',payloadForm);
           api.post('/purchaseorder/insertPdProduct', insertPayload).then(() => {});
         } else {
           api.post('/purchaseorder/editPdProduct', el).then(() => {});
+           setTimeout(() => {
+                      navigate('/PurchaseDebitNote');
+                    }, 1100);
         }
       });
       message('Record edited successfully.', 'success');

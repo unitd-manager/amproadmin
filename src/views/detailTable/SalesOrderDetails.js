@@ -44,6 +44,7 @@ const SalesOrderEdit = () => {
   const [id, setId] = useState(paramId);
   const [triggerSave, setTriggerSave] = useState(false);
   const [pendingSalesmen, setPendingSalesmen] = useState([]);
+  const [billDiscount, setBillDiscount] = useState(0);
 
 console.log(navigate);
   const [activeTab, setActiveTab] = useState("1");
@@ -111,6 +112,9 @@ console.log(navigate);
 const handleInputs = (e) => {
   const { name, value } = e.target;
   setSettingDetails((prev) => ({ ...prev, [name]: value }));
+  if (name === 'bill_discount') {
+    setBillDiscount(parseFloat(value) || 0);
+  }
 };
 
 const getSettingById = () => {
@@ -118,6 +122,7 @@ const getSettingById = () => {
     .post('/salesorder/getSalesorderById', { sales_order_id: id })
     .then((res) => {
       setSettingDetails(res.data.data[0]);
+      setBillDiscount(parseFloat(res.data.data[0]?.bill_discount) || 0);
     })
     .catch(() => {
       message('setting Data Not Found', 'info');
@@ -147,8 +152,10 @@ const insertSettingData = (code) => {
       settingdetails.creation_date = creationdatetime;
       settingdetails.created_by = loggedInuser.first_name;
       settingdetails.status = 'Open';
+      // Always include bill_discount in payload
+      const payload = { ...settingdetails, bill_discount: billDiscount };
       return api
-        .post('/salesOrder/insertSalesOrder', settingdetails)
+        .post('/salesOrder/insertSalesOrder', payload)
         .then((res) => {
           const insertedDataId = res.data.data.insertId;
          
@@ -252,7 +259,7 @@ useEffect(() => {
       </div>
       <ToastContainer></ToastContainer>
       
-   
+    
             {/* Compact tabs */}
             <Tab toggle={toggle} tabs={tabs} />
             <TabContent style={{ padding: '4px 6px' }} activeTab={activeTab}>
@@ -303,6 +310,8 @@ useEffect(() => {
                 setViewLineModal={setViewLineModal}
                 onSaveTrigger={triggerSave}
                 setOnSaveTrigger={setTriggerSave}
+                billDiscount={billDiscount}
+                setBillDiscount={setBillDiscount}
               />
         
     </div>

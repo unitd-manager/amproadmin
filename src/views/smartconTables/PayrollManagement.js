@@ -22,7 +22,7 @@ import PrintPayslipModal from '../../components/PayrollManagement/PrintPayslipMo
 //import FileExporter from '../../components/Excelarabexport';
 // import PrintIR8AModal from '../../components/PayrollManagement/PrintIR8AModal';
 // import { columns } from '../../data/PayrollHR/PayrollColumn';
-// import PdfPaySlipList from '../../components/PDF/PdfPaySlipList';
+import PdfPaySlipList from '../../components/PDF/PdfPaySlipList';
 
 const Payrollmanagement = () => {
   //state variables
@@ -283,42 +283,45 @@ console.log('arabic', arabic);
           //const selectedEmployeeId = obj.employee_id;
           const payrollyear = obj.payroll_year;
           const basicpays = obj.basic_pay;
-         
 
-          
+          // Placeholder CPF calculation (replace with actual logic as needed)
+          const cpfRates = { employee: 0.20, employer: 0.17 }; // Example rates
+          const cpfmployee = obj.total_basic_pay_for_month * cpfRates.employee;
+          const cpfmployer = obj.total_basic_pay_for_month * cpfRates.employer;
+          const totalcontribution = cpfmployee + cpfmployer;
+
           console.log('basicpay', basicpays);
           console.log('payrollyear', payrollyear);
-          
 
-              // obj.cpf_employee = cpfmployee;
-              // obj.cpf_employer = cpfmployer;
-              // obj.total_cpf_contribution = totalcontribution;
-              obj.ot_hours=parseFloat(obj.total_ot_hours)*(parseFloat(1.5)) +parseFloat(obj.total_ph_hours)*(parseFloat(2));
+          obj.cpf_employee = cpfmployee;
+          obj.cpf_employer = cpfmployer;
+          obj.total_cpf_contribution = totalcontribution;
+          obj.ot_hours=parseFloat(obj.total_ot_hours)*(parseFloat(1.5)) +parseFloat(obj.total_ph_hours)*(parseFloat(2));
+          obj.ot_amount= parseFloat(obj.ot_hours)*parseFloat(obj.overtime_pay_rate);
+          const normalHoursPay=parseFloat(obj.total_normal_hours)*parseFloat(obj.hourly_pay);
+          const realAmount=parseFloat(normalHoursPay)+parseFloat(obj.ot_amount);
+
+          // if(obj.pay ==='GroupPay'){
+          // if(parseFloat(obj.ot_hours) > 72 ){
+          //   obj.ot_hours=72;
+          //   obj.ot_amount= parseFloat(obj.ot_hours)*parseFloat(obj.overtime_pay_rate);
+          //   }
+          //   const actualAmount=parseFloat(obj.ot_amount)+parseFloat(obj.basic_pay)
+          // if(obj.total_share > actualAmount ){
+          //                   obj.allowance1=parseFloat(obj.allowance1)+parseFloat(obj.total_share)-parseFloat(actualAmount)
+          //                                 }
+          // console.log('objectishere',obj)
+          // console.log('actualamount',actualAmount)
+          // }
+           //if(obj.pay ==='HourlyPay'){
+          console.log('obj',obj);
+            if(parseFloat(obj.ot_hours) > 72 ){
+              obj.ot_hours=72;
               obj.ot_amount= parseFloat(obj.ot_hours)*parseFloat(obj.overtime_pay_rate);
-              const normalHoursPay=parseFloat(obj.total_normal_hours)*parseFloat(obj.hourly_pay);
-              const realAmount=parseFloat(normalHoursPay)+parseFloat(obj.ot_amount);
-
-              // if(obj.pay ==='GroupPay'){
-              // if(parseFloat(obj.ot_hours) > 72 ){
-              //   obj.ot_hours=72;
-              //   obj.ot_amount= parseFloat(obj.ot_hours)*parseFloat(obj.overtime_pay_rate);
-              //   }
-              //   const actualAmount=parseFloat(obj.ot_amount)+parseFloat(obj.basic_pay)
-              // if(obj.total_share > actualAmount ){
-              //                   obj.allowance1=parseFloat(obj.allowance1)+parseFloat(obj.total_share)-parseFloat(actualAmount)
-              //                                 }
-              // console.log('objectishere',obj)
-              // console.log('actualamount',actualAmount)
-              // }
-               //if(obj.pay ==='HourlyPay'){
-              console.log('obj',obj);
-                if(parseFloat(obj.ot_hours) > 72 ){
-                  obj.ot_hours=72;
-                  obj.ot_amount= parseFloat(obj.ot_hours)*parseFloat(obj.overtime_pay_rate);
-                  }
-                 
-                  const actualAmount=parseFloat(obj.ot_amount)+parseFloat(obj.basic_pay)
-                  if(realAmount > actualAmount ){
+              }
+             
+              const actualAmount=parseFloat(obj.ot_amount)+parseFloat(obj.basic_pay)
+              if(realAmount > actualAmount ){
                                     obj.allowance1=parseFloat(obj.allowance1)+parseFloat(realAmount)-parseFloat(actualAmount)
                                                   }
                
@@ -680,7 +683,7 @@ console.log('arabic', arabic);
                     <td>{arb ? element.employee_name_arb ||element.first_name_arb : element.employee_name ||element.first_name}</td>
 
                     <td>
-                      {/* <PdfPaySlipList payroll={element}></PdfPaySlipList> */}
+                     <PdfPaySlipList payroll={element}></PdfPaySlipList> 
                     </td>
                     <td>{element.payroll_month}</td>
                     <td>{element.payroll_year}</td>

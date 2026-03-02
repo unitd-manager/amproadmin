@@ -63,7 +63,7 @@ RecentSalesOrders.propTypes = {
   }, [initialCustomers]);
 
   const fetchOrders = (params) => {
-    api.post("/getFilteredOrders", params)
+    api.post("/invoice/getFilteredOrders", params)
       .then((res) => {
         if (res.data && res.data.data) setOrders(res.data.data);
         else setOrders([]);
@@ -162,10 +162,10 @@ RecentSalesOrders.propTypes = {
             {orders.length > 0 ? (
               orders.map((o) => (
                 <tr key={o.sales_order_id}>
-                  <td>{o.invoiceNo}</td>
-                  <td>{o.date}</td>
+                  <td>{o.tran_no}</td>
+                  <td>{o.tran_date}</td>
                   <td>{o.customer}</td>
-                  <td className="text-end">{Number(o.amount || 0).toFixed(2)}</td>
+                  <td className="text-end">{Number(o.net_total || 0).toFixed(2)}</td>
                 </tr>
               ))
             ) : (

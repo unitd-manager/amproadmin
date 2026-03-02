@@ -484,7 +484,7 @@ const [newDeliveryDate, setNewDeliveryDate] = useState(() => new Date().toISOStr
                     )}
                   </td>
                   <td>{element.delivery_code}</td>
-                  <td>{element.tran_date? moment(element.tran_date).format('DD-MM-YYYY'):''}</td>
+                  <td>{element.date? moment(element.date).format('DD-MM-YYYY'):''}</td>
                   <td>{element.company_name}</td>
                   <td>{element.delivery_status}</td>
                   <td>{element.sms_status || 'No'}</td>

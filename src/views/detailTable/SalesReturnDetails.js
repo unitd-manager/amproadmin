@@ -107,9 +107,13 @@ const deleteRecord = (deleteID) => {
     });
   };
   const [settingdetails, setSettingDetails] = useState({ company_id: '' });
+  const [billDiscount, setBillDiscount] = useState(0);
  //setting data in settingDetails
  const handleInputs = (e) => {
   setSettingDetails({ ...settingdetails, [e.target.name]: e.target.value });
+  if (e.target.name === 'bill_discount') {
+    setBillDiscount(parseFloat(e.target.value) || 0);
+  }
 };
 
 const getSettingById = () => {
@@ -117,6 +121,7 @@ const getSettingById = () => {
     .post('/salesreturn/getSalesorderById', { sales_return_id: id })
     .then((res) => {
       setSettingDetails(res.data.data[0]);
+      setBillDiscount(parseFloat(res.data.data[0]?.bill_discount) || 0);
     })
     .catch(() => {
       message('setting Data Not Found', 'info');
@@ -146,9 +151,11 @@ const insertSettingData = (code) => {
       settingdetails.sales_return_date = new Date().toISOString().slice(0, 10);
       settingdetails.creation_date = creationdatetime;
       settingdetails.created_by = loggedInuser.first_name;
+      // Always include bill_discount in payload
+      const payload = { ...settingdetails, bill_discount: billDiscount };
   
       return api
-        .post('/salesreturn/insertInvoice', settingdetails)
+        .post('/salesreturn/insertInvoice', payload)
         .then((res) => {
           const insertedDataId = res.data.data.insertId;
          
@@ -173,17 +180,38 @@ const insertSettingData = (code) => {
         return insertSettingData('');
       });
   };
+  const [pendingSalesmen, setPendingSalesmen] = useState([]);
 
 const saveSalesOrder = async () => {
   if (id) {
     return editSettingData();
   }
-  const newId = await generateCode();
-  setId(newId);
-  setTriggerSave(true);
-  return newId;
+  try {
+    const newId = await generateCode();
+    setId(newId);
+    setTriggerSave(true);
+    // Save any pending salesmen with the new sales order ID
+    if (pendingSalesmen && pendingSalesmen.length > 0) {
+      const savePromises = pendingSalesmen.map((salesman) =>
+        api.post('/employee/addSalesReturnSalesman', {
+          sales_return_id: newId,
+          sales_id: salesman.sales_id_dup,
+          salesman_name: salesman.salesman_name,
+        }).catch((err) => {
+          console.error('Failed to save salesman:', err);
+          // Continue with other salesmen even if one fails
+          return null;
+        })
+      );
+      await Promise.all(savePromises);
+      setPendingSalesmen([]); // Clear pending after saving
+    }
+    return newId;
+  } catch (error) {
+    message('Failed to create sales order', 'error');
+    throw error;
+  }
 };
-
 
 
 console.log(editSettingData);
@@ -285,6 +313,8 @@ useEffect(() => {
                 setViewLineModal={setViewLineModal}
                  onSaveTrigger={triggerSave}
                 setOnSaveTrigger={setTriggerSave}
+                billDiscount={billDiscount}
+                setBillDiscount={setBillDiscount}
               />
         
     </div>

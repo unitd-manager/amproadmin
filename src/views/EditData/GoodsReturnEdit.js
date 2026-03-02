@@ -370,6 +370,9 @@ console.log('formdata',payloadForm);
         }
       });
       message('Record edited successfully.', 'success');
+       setTimeout(() => {
+                      navigate('/GoodsReturn');
+                    }, 1100);
     })
     .catch(() => {
       message('Network connection error.', 'error');

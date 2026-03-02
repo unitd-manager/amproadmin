@@ -64,6 +64,9 @@ const CatalogueDetails = () => {
       .post('/catalogue/EditCatalogue', payload)
       .then(() => {
         message('Catalogue updated successfully.', 'success');
+          setTimeout(() => {
+           navigate('/CatalogueCl');
+        }, 300);
       })
       .catch(() => {
         message('Unable to update record.', 'error');

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import * as Icon from 'react-feather';
-import { Input, Button, Row, Col } from 'reactstrap';
+import { Input, Button } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'datatables.net-dt/js/dataTables.dataTables';
 import 'datatables.net-dt/css/jquery.dataTables.min.css';
@@ -22,7 +22,7 @@ import CommonTable from '../../components/CommonTable';
 import creationdatetime from '../../constants/creationdatetime';
 
 function Inventory() {
-  //statevariables
+  // State variables
   const [stockinputOpen, setStockinputOpen] = useState(false);
   const [inventories, setInventories] = useState([]);
   const [modalId, setModalId] = useState(null);
@@ -33,7 +33,6 @@ function Inventory() {
     stock: null,
   });
   const [loading, setLoading] = useState(false);
-
   const [adjuststockDetails, setAdjuststockDetails] = useState({
     inventory_id: null,
     product_id: null,
@@ -42,12 +41,16 @@ function Inventory() {
     created_by: '',
     current_stock: null,
   });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [entriesPerPage, setEntriesPerPage] = useState(10);
+
   //navigate
   const navigate = useNavigate();
   const { loggedInuser } = useContext(AppContext);
   // Get All inventories
   const getAllinventories = () => {
-    setLoading(false);
+    setLoading(true);
     api
       .get('/inventory/getinventoryMain')
       .then((res) => {
@@ -188,40 +191,79 @@ function Inventory() {
     getAllinventories();
   }, []);
 
+  // Pagination and search logic
+  const filteredInventories = searchTerm
+    ? inventories.filter(
+        (item) =>
+          (item.product_name && item.product_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (item.inventory_code && item.inventory_code.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (item.product_code && item.product_code.toLowerCase().includes(searchTerm.toLowerCase()))
+      )
+    : inventories;
+  const totalItems = filteredInventories.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / entriesPerPage));
+  const startIndex = (currentPage - 1) * entriesPerPage;
+  const endIndex = Math.min(startIndex + entriesPerPage, totalItems);
+  const paginatedData = filteredInventories.slice(startIndex, endIndex);
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxToShow = 5;
+    if (totalPages <= maxToShow) {
+      for (let i = 1; i <= totalPages; i += 1) pages.push(i);
+    } else {
+      const start = Math.max(1, currentPage - 2);
+      const end = Math.min(totalPages, currentPage + 2);
+      if (start > 1) pages.push(1, '...');
+      for (let i = start; i <= end; i += 1) pages.push(i);
+      if (end < totalPages) pages.push('...', totalPages);
+    }
+    return pages;
+  };
+
   return (
     <div className="MainDiv">
       <ToastContainer></ToastContainer>
-      <div className=" pt-xs-25">
+      <div className="pt-xs-25">
         <BreadCrumbs />
-
+        {/* Search and controls */}
+        <div className="d-flex align-items-center mb-3 gap-2">
+          <Input
+            type="text"
+            placeholder="Search by Product Name, Inventory Code, Product Code"
+            value={searchTerm}
+            onChange={e => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            style={{ width: 300 }}
+            className="me-2"
+          />
+          <label htmlFor="entriesDropdown" className="me-2 mb-0">
+            Show
+            <select
+              id="entriesDropdown"
+              className="form-select ms-2"
+              style={{ width: 100, display: 'inline-block' }}
+              value={entriesPerPage}
+              onChange={e => {
+                setEntriesPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+            >
+              {[10, 25, 50, 100].map(num => (
+                <option key={num} value={num}>{num}</option>
+              ))}
+            </select>
+          </label>
+          <span className="mb-0">entries</span>
+          <Button color="primary" className="shadow-none mr-2" onClick={() => importExcel()}>
+            Import
+          </Button>
+          <input type='file' style={{display: 'none'}} id="import_excel" onChange={importExcelFile} />
+        </div>
         <CommonTable
           loading={loading}
           title="Inventory List"
-          Button={
-            <>
-              <Row>
-                <Col md="6">
-                
-                  <Button color="primary" className="shadow-none mr-2" onClick={() => importExcel()}>
-                Import
-              </Button>
-              <input type='file' style={{display: 'none'}} id="import_excel" onChange={importExcelFile} />
-          
-                  
-                </Col>
-                {/* <Col md="6">
-                  <a
-                    href="https://pyramid.unitdtechnologies.com/storage/excelsheets/Inventory.xlsx"
-                    download
-                  >
-                    <Button color="primary" className="shadow-none">
-                      Sample
-                    </Button>
-                  </a>
-                </Col> */}
-              </Row>
-            </>
-          }
         >
           <thead>
             <tr>
@@ -231,11 +273,11 @@ function Inventory() {
             </tr>
           </thead>
           <tbody>
-            {inventories &&
-              inventories.map((element,i) => {
+            {paginatedData && paginatedData.length > 0 ? (
+              paginatedData.map((element, i) => {
                 return (
                   <tr key={element.inventory_id}>
-                    <td>{i+1}</td>
+                    <td>{startIndex + i + 1}</td>
                     <td>
                       <Link to={`/inventoryEdit/${element.inventory_id}`}>
                         <Icon.Edit2 />
@@ -249,7 +291,6 @@ function Inventory() {
                     <td>{element.stock}</td>
                     {stockinputOpen && stockChangeId === element.inventory_id ? (
                       <td>
-                        {' '}
                         <Input
                           type="text"
                           defaultValue={element.stock}
@@ -289,7 +330,7 @@ function Inventory() {
                         <Link to="">view</Link>
                       </span>
                     </td>
-                   {adjustStockHistoryModal&& modalId === element.inventory_id && <ViewAdjustStockHistoryModal
+                   {adjustStockHistoryModal && modalId === element.inventory_id && <ViewAdjustStockHistoryModal
                       adjustStockHistoryModal={adjustStockHistoryModal}
                       setAdjustStockHistoryModal={setAdjustStockHistoryModal}
                       inventoryId={modalId}
@@ -297,9 +338,35 @@ function Inventory() {
                     <td>{element.minimum_order_level}</td>
                   </tr>
                 );
-              })}
+              })
+            ) : (
+              <tr>
+                <td colSpan={columns.length} className="text-center">
+                  {loading ? 'Loading...' : 'No inventory found'}
+                </td>
+              </tr>
+            )}
           </tbody>
         </CommonTable>
+        {/* Pagination controls */}
+        <div className="d-flex justify-content-between align-items-center mt-2">
+          <div>
+            {totalItems > 0 ? `Showing ${startIndex + 1} to ${endIndex} of ${totalItems} entries` : 'Showing 0 to 0 of 0 entries'}
+          </div>
+          <div className="d-flex align-items-center gap-2">
+            <Button color="light" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(1)}>First</Button>
+            <Button color="light" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}>Prev</Button>
+            {getPageNumbers().map((p) => (
+              typeof p === 'string' ? (
+                <span key={`ellipsis-${p}`} style={{ padding: '0 6px' }}>{p}</span>
+              ) : (
+                <Button key={`page-${p}`} color={p === currentPage ? 'primary' : 'light'} size="sm" onClick={() => setCurrentPage(p)}>{p}</Button>
+              )
+            ))}
+            <Button color="light" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}>Next</Button>
+            <Button color="light" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(totalPages)}>Last</Button>
+          </div>
+        </div>
       </div>
     </div>
   );

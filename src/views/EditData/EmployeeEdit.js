@@ -28,7 +28,6 @@ const EmployeeEdit = () => {
   const [activeTab, setActiveTab] = useState('1');
   const [employeeDetails, setEmployeeDetails] = useState({
     nationality: '',
-     login_email: '',
   });
   const { loggedInuser } = useContext(AppContext);
 
@@ -95,7 +94,7 @@ const EmployeeEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   // Route Change
-  // const applyChanges = () => {};
+  const applyChanges = () => {};
   // const saveChanges = () => {
   //   setTimeout(()=>{
   //     navigate('/Employee');
@@ -200,7 +199,7 @@ const EmployeeEdit = () => {
         //message('contact info Data Not Found', 'info');
       });
   };
-
+console.log('employeeDetails1111',employeeDetails);
   
   // Gettind data from Job By Id
   const getTeams = () => {
@@ -412,7 +411,7 @@ const EmployeeEdit = () => {
     await editEQData();
     await editECData();
     await editCIData();
-    navigate('/Employee');
+   
   };
 
   //Attachments
@@ -480,7 +479,7 @@ const EmployeeEdit = () => {
           <ApiButton
             editData={updateData}
             navigate={navigate}
-            //applyChanges={updateData}
+            applyChanges={applyChanges}
             backToList={backToList}
             deleteData={deleteEmployeeData}
             module="Employee"

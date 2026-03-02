@@ -86,10 +86,7 @@ export const columns = [
       name: "Date",
       
     },
-    {
-      name: "Project Title",
-      
-    },
+   
     {
         name: "Amount",
         

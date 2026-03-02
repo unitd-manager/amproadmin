@@ -42,7 +42,10 @@ const SalesOrderEdit = () => {
   const navigate = useNavigate();
 
   const [id, setId] = useState(paramId);
-      const [triggerSave, setTriggerSave] = useState(false);
+  const [triggerSave, setTriggerSave] = useState(false);
+    const [pendingSalesmen, setPendingSalesmen] = useState([]);
+  
+  const [billDiscount, setBillDiscount] = useState(0);
 
 
 
@@ -117,50 +120,52 @@ const getSettingById = () => {
     .post('/salesreturn/getCreditNoteById', { credit_note_id: id })
     .then((res) => {
       setSettingDetails(res.data.data[0]);
+      setBillDiscount(parseFloat(res.data.data[0]?.bill_discount) || 0);
     })
     .catch(() => {
       message('setting Data Not Found', 'info');
     });
 };
+
 //Update Setting
 const editSettingData = () => {
-   settingdetails.modification_date = creationdatetime;
-      settingdetails.modified_by= loggedInuser.first_name;
-    return api
-      .post('/salesreturn/editcreditnote', settingdetails)
-      .then(() => {
-      
-        return id; // Return the existing ID for consistency
-      })
-      .catch(() => {
-        message('Unable to edit record.', 'error');
-        throw new Error('Unable to edit record.'); // Propagate error
-      });
+  settingdetails.modification_date = creationdatetime;
+  settingdetails.modified_by = loggedInuser.first_name;
+  settingdetails.bill_discount = billDiscount;
+  return api
+    .post('/salesreturn/editcreditnote', settingdetails)
+    .then(() => {
+      return id; // Return the existing ID for consistency
+    })
+    .catch(() => {
+      message('Unable to edit record.', 'error');
+      throw new Error('Unable to edit record.'); // Propagate error
+    });
 };
 
 const insertSettingData = (code) => {
-  
- if (settingdetails.company_id !== '') {
-      settingdetails.credit_note_code = code;
-      settingdetails.credit_note_date = new Date().toISOString().slice(0, 10);
-      settingdetails.creation_date = creationdatetime;
-      settingdetails.created_by = loggedInuser.first_name;
-      settingdetails.status = 'Not Paid';
-      return api
-        .post('/salesOrder/insertCreditNote', settingdetails)
-        .then((res) => {
-          const insertedDataId = res.data.data.insertId;
-         
-          return insertedDataId; // Return the newly inserted ID
-        })
-        .catch(() => {
-          message('Network connection error.', 'error');
-          throw new Error('Network connection error.'); // Propagate error
-        });
-    }
-      message('Please fill all required fields', 'warning');
-      return Promise.reject(new Error('Please fill all required fields')); // Return a rejected Promise
-  };
+  if (settingdetails.company_id !== '') {
+    settingdetails.credit_note_code = code;
+    settingdetails.credit_note_date = new Date().toISOString().slice(0, 10);
+    settingdetails.creation_date = creationdatetime;
+    settingdetails.created_by = loggedInuser.first_name;
+    settingdetails.status = 'Not Paid';
+    settingdetails.bill_discount = billDiscount;
+    return api
+      .post('/salesOrder/insertCreditNote', settingdetails)
+      .then((res) => {
+        const insertedDataId = res.data.data.insertId;
+        setId(insertedDataId);
+        return insertedDataId; // Return the newly inserted ID
+      })
+      .catch(() => {
+        message('Network connection error.', 'error');
+        throw new Error('Network connection error.'); // Propagate error
+      });
+  }
+  message('Please fill all required fields', 'warning');
+  return Promise.reject(new Error('Please fill all required fields'));
+};
 
     const generateCode = () => {
     return api
@@ -177,10 +182,31 @@ const saveSalesOrder = async () => {
   if (id) {
     return editSettingData();
   }
-  const newId = await generateCode();
-  setId(newId);
-  setTriggerSave(true);
-  return newId;
+  try {
+    const newId = await generateCode();
+    setId(newId);
+    setTriggerSave(true);
+    // Save any pending salesmen with the new sales order ID
+    if (pendingSalesmen && pendingSalesmen.length > 0) {
+      const savePromises = pendingSalesmen.map((salesman) =>
+        api.post('/employee/addCreditNoteSalesman', {
+         credit_note_id: newId,
+          sales_id: salesman.sales_id_dup,
+          salesman_name: salesman.salesman_name,
+        }).catch((err) => {
+          console.error('Failed to save salesman:', err);
+          // Continue with other salesmen even if one fails
+          return null;
+        })
+      );
+      await Promise.all(savePromises);
+      setPendingSalesmen([]); // Clear pending after saving
+    }
+    return newId;
+  } catch (error) {
+    message('Failed to create sales credit', 'error');
+    throw error;
+  }
 };
 
 
@@ -281,8 +307,10 @@ useEffect(() => {
                 deleteRecord={deleteRecord}
                 id={id}
                 setViewLineModal={setViewLineModal}
-                 onSaveTrigger={triggerSave}
+                onSaveTrigger={triggerSave}
                 setOnSaveTrigger={setTriggerSave}
+                billDiscount={billDiscount}
+                setBillDiscount={setBillDiscount}
               />
         
     </div>

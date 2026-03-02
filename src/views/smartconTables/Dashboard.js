@@ -36,11 +36,14 @@ import PopularProducts from "../../components/dashboard/PopularProducts";
 import CatagoryWiseProduct from "../../components/dashboard/generalDashboard/CatagoryWiseProduct"
 import DepartmentWiseProduct from "../../components/dashboard/generalDashboard/DepartmentWiseProduct";
 import message from "../../components/Message";
+import FinanceDashboard from "../dashboards/FinanceDashboard";
+
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("1");
   const [salesData, setSalesData] = useState({});
   const [weeklySales, setWeeklySales] = useState([]);
+  const [last12WeeksSales, setLast12WeeksSales] = useState([]);
   const [recentInvoices, setRecentInvoices] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
   const [salestotalvalue, setSalesTotalValue] = useState({});
@@ -71,7 +74,6 @@ const Dashboard = () => {
 
   useEffect(() => {
     const today = getCurrentDate();
-    console.log("today", today);
     api
       .get("/salesOrder/getSalesAnalysis")
       .then((res) => {
@@ -88,10 +90,52 @@ const Dashboard = () => {
       })
       .catch((err) => console.error(err));
 
-      api
+    // Fetch last 12 weeks sales data for the chart
+    api
+      .get("/salesOrder/getLast12WeeksSales")
+      .then((res) => {
+        if (res.data && Array.isArray(res.data.data) && res.data.data.length > 0) {
+          setLast12WeeksSales(res.data.data);
+        } else {
+          // fallback: create mock data if API returns nothing
+          setLast12WeeksSales([
+            { week: 'Week 1', sales: 0 },
+            { week: 'Week 2', sales: 0 },
+            { week: 'Week 3', sales: 0 },
+            { week: 'Week 4', sales: 0 },
+            { week: 'Week 5', sales: 0 },
+            { week: 'Week 6', sales: 0 },
+            { week: 'Week 7', sales: 0 },
+            { week: 'Week 8', sales: 0 },
+            { week: 'Week 9', sales: 0 },
+            { week: 'Week 10', sales: 0 },
+            { week: 'Week 11', sales: 0 },
+            { week: 'Week 12', sales: 0 },
+          ]);
+        }
+      })
+      .catch(() => {
+        // fallback: create mock data if API fails
+        setLast12WeeksSales([
+          { week: 'Week 1', sales: 0 },
+          { week: 'Week 2', sales: 0 },
+          { week: 'Week 3', sales: 0 },
+          { week: 'Week 4', sales: 0 },
+          { week: 'Week 5', sales: 0 },
+          { week: 'Week 6', sales: 0 },
+          { week: 'Week 7', sales: 0 },
+          { week: 'Week 8', sales: 0 },
+          { week: 'Week 9', sales: 0 },
+          { week: 'Week 10', sales: 0 },
+          { week: 'Week 11', sales: 0 },
+          { week: 'Week 12', sales: 0 },
+        ]);
+      });
+
+    api
       .get("/salesOrder/getSalesTotalOutstanding")
       .then((res) => {
-          setSalesTotalValue(res.data.data[0]);
+        setSalesTotalValue(res.data.data[0]);
       })
       .catch((err) => console.error(err));
 
@@ -124,7 +168,6 @@ const Dashboard = () => {
         console.log('Recent Purchase Invoices:', res.data.data);
       })
       .catch((err) => console.error(err));
-      
   }, []);
 
   const handlePurchaseFilterChange = (e) => {
@@ -302,10 +345,10 @@ const Dashboard = () => {
                       {recentInvoices.length > 0 ? (
                         recentInvoices.map((inv) => (
                           <tr key={inv.invoice_id}>
-                            <td>{inv.date}</td>
-                            <td>{inv.invoiceNo}</td>
-                            <td>{inv.customer}</td>
-                            <td>{inv.amount}</td>
+                            <td>{inv.invoice_date}</td>
+                            <td>{inv.invoice_code}</td>
+                            <td>{inv.company_name}</td>
+                            <td>{inv.invoice_amount}</td>
                           </tr>
                         ))
                       ) : (
@@ -338,10 +381,10 @@ const Dashboard = () => {
                     <tbody>
                       {recentOrders.map((order) => (
                         <tr key={order.sales_order_id}>
-                          <td>{order.date}</td>
-                          <td>{order.invoiceNo}</td>
-                          <td>{order.customer}</td>
-                          <td>{order.amount}</td>
+                          <td>{order.tran_date}</td>
+                          <td>{order.tran_no}</td>
+                          <td>{order.company_name}</td>
+                          <td>{order.net_total}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -451,7 +494,7 @@ const Dashboard = () => {
       </CardHeader>
       <CardBody>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={weeklySales}>
+          <BarChart data={last12WeeksSales}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="week" />
             <YAxis />
@@ -717,7 +760,7 @@ const Dashboard = () => {
         </TabPane>
         <TabPane tabId="4">
           <h5>Finance Tab Content</h5>
-        {/* <FinanceDashboard /> */}
+        <FinanceDashboard />
         </TabPane>
       </TabContent>
     </div>

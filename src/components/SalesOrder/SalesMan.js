@@ -50,7 +50,7 @@ export default function SalesManComponent({  salesOrderId, onSavePendingSalesmen
   const handleSelectSalesman = (e) => {
     setSelectedSalesman(e.target.value);
   };
-
+ 
   const addSalesman = () => {
     if (selectedSalesman) {
       const salesmanToAdd = company.find(

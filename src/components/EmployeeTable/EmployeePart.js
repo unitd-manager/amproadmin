@@ -61,7 +61,7 @@ function EmployeePart({ employeeDetails, handleInputChange, allCountries, compan
 
   const totalExperience = calculateTotalExperience(employeeDetails.act_join_date);
 
-  console.log('all countries', allCountries,arabic);
+  console.log('all countries', allCountries,arabic,totalExperience);
 
   return (
     <div>
@@ -471,7 +471,7 @@ function EmployeePart({ employeeDetails, handleInputChange, allCountries, compan
                 </Input>
               </FormGroup>
             </Col>
-            <Col md="3">
+            {/* <Col md="3">
               <FormGroup>
               <Label dir="rtl" style={{ textAlign: 'right' }}>
                Experience</Label>
@@ -480,10 +480,10 @@ function EmployeePart({ employeeDetails, handleInputChange, allCountries, compan
                   value={totalExperience}
                   onChange={handleInputChange}
                   type="text"
-                  disabled
+                  
                 />
               </FormGroup>
-            </Col>
+            </Col> */}
             <Col md="3">
               <FormGroup>
               <Label dir="rtl" style={{ textAlign: 'right' }}>

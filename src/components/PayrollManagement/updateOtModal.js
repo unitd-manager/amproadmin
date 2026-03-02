@@ -142,7 +142,6 @@ function UpdateOtModal({ updateOtModal, setUpdateOtModal}) {
                     <tr>
                       <th scope="col">Id</th>
                       <th scope="col">Name</th>
-                      <th scope="col">OT hr/rt</th>
                      <th scope="col">OverTime Rate</th>
                       <th scope="col">OverTime Hours</th>
                       <th scope="col">Over Time Amount</th>
@@ -180,8 +179,6 @@ function UpdateOtModal({ updateOtModal, setUpdateOtModal}) {
                             />
                           </td>
 
-                          <td >
-                          </td>
                           <td data-label="overtime_pay_rate"><Input
                               defaultValue={item.overtime_pay_rate}
                               type="text"

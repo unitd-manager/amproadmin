@@ -360,7 +360,7 @@ console.log('formdata',payloadForm);
       const purchaseOrderId = id;
       rows?.forEach((el) => {
         if (!el.product_id) return;
-        el.gross_total = el.total_price;
+        el.gross_total = el.total_price; 
         const isNewRow = String(el.po_product_id || '').startsWith('new-');
         if (isNewRow) {
           const insertPayload = { ...el, purchase_order_id: purchaseOrderId };
@@ -370,6 +370,9 @@ console.log('formdata',payloadForm);
         }
       });
       message('Record edited successfully.', 'success');
+       setTimeout(() => {
+                      navigate('/PurchaseOrder');
+                    }, 1100);
     })
     .catch(() => {
       message('Network connection error.', 'error');
