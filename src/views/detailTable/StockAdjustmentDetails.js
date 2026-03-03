@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useState, useEffect,useRef } from "react";
+import React, { useState, useEffect,useRef,useContext } from "react";
 import {
   Button,
   Form,
@@ -18,6 +18,9 @@ import Select from "react-select";
 import { useNavigate } from "react-router-dom";
 import api from "../../constants/api";
 import message from "../../components/Message";
+import { ToastContainer } from 'react-toastify';
+import creationdatetime from '../../constants/creationdatetime';
+import AppContext from '../../context/AppContext';
 
 const StockAdjustmentDetails = () => {
   const navigate = useNavigate();
@@ -28,7 +31,7 @@ const StockAdjustmentDetails = () => {
     location_id: "",
     remarks: ""
   });
-  
+   const { loggedInuser } = useContext(AppContext);
   // Locations state
   const [locations, setLocations] = useState([]);
   const [products, setProducts] = useState([]);
@@ -139,9 +142,34 @@ const StockAdjustmentDetails = () => {
       updatedRows[index].product_id = selectedProduct.value;
       updatedRows[index].product_code = selectedProduct.product_code ?? (selectedProduct.label || '').split(' - ')[0];
       updatedRows[index].product_name = selectedProduct.product_name ?? selectedProduct.label ?? '';
-      updatedRows[index].stock_in_hand_carton = selectedProduct.carton_qty ?? selectedProduct.carton_qty === 0 ? selectedProduct.carton_qty : '';
-      updatedRows[index].stock_in_hand_loose = selectedProduct.loose_qty ?? selectedProduct.loose_qty === 0 ? selectedProduct.loose_qty : '';
-      updatedRows[index].stock_in_hand_qty = selectedProduct.qty_in_stock ?? selectedProduct.qty_in_stock === 0 ? selectedProduct.qty_in_stock : '';
+
+      // find full product record (products list may contain extra fields)
+      const prod = products.find(p => p.product_id === selectedProduct.value) || selectedProduct;
+
+      // determine pieces per carton from product (various possible field names)
+      const pcsPerCarton = Number(
+        prod.pcs_per_carton ?? prod.pieces_per_carton ?? prod.pcsPerCarton ?? prod.piecesPerCarton ?? prod.pack_size ?? 1
+      ) || 1;
+      updatedRows[index].pcs_per_carton = pcsPerCarton;
+
+      // Prefer explicit carton/loose from product; otherwise compute from qty on hand
+      let stockCarton = '';
+      let stockLoose = '';
+      let stockQty = '';
+
+      if (prod.carton_qty !== undefined || prod.loose_qty !== undefined) {
+        stockCarton = prod.carton_qty ?? prod.carton_qty === 0 ? prod.carton_qty : '';
+        stockLoose = prod.loose_qty ?? prod.loose_qty === 0 ? prod.loose_qty : '';
+      } else if (prod.qty_in_stock !== undefined || prod.qty !== undefined || prod.qty_on_hand !== undefined) {
+        const totalOnHand = Number(prod.qty_in_stock ?? prod.qty ?? prod.qty_on_hand) || 0;
+        stockCarton = Math.floor(totalOnHand / pcsPerCarton);
+        stockLoose = totalOnHand - stockCarton * pcsPerCarton;
+      }
+
+      // set stock in hand values
+      updatedRows[index].stock_in_hand_carton = stockCarton;
+      updatedRows[index].stock_in_hand_loose = stockLoose;
+      updatedRows[index].stock_in_hand_qty = Number(pcsPerCarton * (stockCarton || 0) + (stockLoose || 0));
 
       // Recalculate new stock immediately after selecting product
       calculateNewStock(updatedRows, index);
@@ -171,18 +199,24 @@ const StockAdjustmentDetails = () => {
   // Calculate new stock based on adjustment type and values
   const calculateNewStock = (updatedRows, index) => {
     const row = updatedRows[index];
+    const pcsPerCarton = Number(row.pcs_per_carton) || 1;
+
     const stockInHandCarton = parseFloat(row.stock_in_hand_carton) || 0;
     const stockInHandLoose = parseFloat(row.stock_in_hand_loose) || 0;
-    const stockInHandQty = parseFloat(row.stock_in_hand_qty) || 0;
+    // always derive stockInHandQty from carton and loose
+    const stockInHandQty = pcsPerCarton * stockInHandCarton + stockInHandLoose;
     
     const adjustmentCarton = parseFloat(row.adjustment_carton) || 0;
     const adjustmentLoose = parseFloat(row.adjustment_loose) || 0;
-    const adjustmentQty = parseFloat(row.adjustment_qty) || 0;
+    // always derive adjustmentQty from carton and loose
+    const adjustmentQty = pcsPerCarton * adjustmentCarton + adjustmentLoose;
     
     const multiplier = row.adjustment_type === 'Increase' ? 1 : -1;
     
     updatedRows[index].new_stock_carton = stockInHandCarton + (adjustmentCarton * multiplier);
     updatedRows[index].new_stock_loose = stockInHandLoose + (adjustmentLoose * multiplier);
+    updatedRows[index].adjustment_qty = adjustmentQty; // keep adjustment_qty in sync
+    updatedRows[index].stock_in_hand_qty = stockInHandQty; // ensure stock_in_hand_qty is set
     updatedRows[index].new_stock_qty = stockInHandQty + (adjustmentQty * multiplier);
   };
 
@@ -207,6 +241,10 @@ const StockAdjustmentDetails = () => {
 
       // Construct payload
       const payload = {
+        
+          created_at: creationdatetime,
+          created_by: loggedInuser.first_name,
+      
         stock_adjustment_date: formData.stock_adjustment_date,
         location_id: formData.location_id,
         remarks: formData.remarks || '',
@@ -215,13 +253,30 @@ const StockAdjustmentDetails = () => {
 
       // Send API request
       const response = await api.post('/stockRequest/insertStockAdjustment', payload);
-      
-        message.success('Stock adjustment created successfully!');
-        navigate('/StockAdjustment');
+
+      // After successful insert, update product quantities for each valid item
+      try {
+        await Promise.all(validItems.map(async (item) => {
+          const prodPayload = {
+            product_id: item.product_id,
+            qty_in_stock: Number(item.new_stock_qty) || 0,
+            carton_qty: Number(item.new_stock_carton) || 0,
+            loose_qty: Number(item.new_stock_loose) || 0,
+          };
+          return api.post('/product/edit-Product-Qty', prodPayload);
+        }));
+      } catch (err) {
+        console.warn('Failed to update some product quantities', err);
+        // non-fatal: continue but notify user
+        message('Stock adjustment saved but failed to update some product records.', 'warning');
+      }
+
+      message('Stock adjustment created successfully!','success');
+      navigate('/StockAdjustment');
       
     } catch (error) {
       console.error('Error creating stock adjustment:', error);
-      message.error('Failed to create stock adjustment. Please try again.');
+      message('Failed to create stock adjustment. Please try again.', 'error');
     } finally {
       setLoading(false);
     }
@@ -233,6 +288,7 @@ const StockAdjustmentDetails = () => {
 
   return (
     <Container fluid>
+       <ToastContainer />
       <Card>
         <CardBody>
           <h5>Add/Edit Stock Adjustment</h5>
@@ -422,10 +478,8 @@ const StockAdjustmentDetails = () => {
                       <Input
                         type="number"
                         value={row.stock_in_hand_qty}
-                        onChange={(e) =>
-                          handleChange(i, "stock_in_hand_qty", e.target.value)
-                        }
-                        placeholder="0"
+                        readOnly
+                        style={{ backgroundColor: '#f8f9fa' }}
                       />
                     </td>
                     <td>
@@ -462,10 +516,8 @@ const StockAdjustmentDetails = () => {
                       <Input
                         type="number"
                         value={row.adjustment_qty}
-                        onChange={(e) =>
-                          handleChange(i, "adjustment_qty", e.target.value)
-                        }
-                        placeholder="0"
+                        readOnly
+                        style={{ backgroundColor: '#f8f9fa' }}
                       />
                     </td>
                     <td>

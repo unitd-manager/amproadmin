@@ -295,12 +295,42 @@ useEffect(() => {
       updatedRows[index].product_id = selectedProduct.value;
       updatedRows[index].product_code = selectedProduct.product_code || base?.product_code || '';
       updatedRows[index].product_name = selectedProduct.product_name || base?.product_name || base?.title || '';
+
+      // set prices and uom
       updatedRows[index].carton_price = base?.carton_price ?? updatedRows[index].carton_price ?? 0;
       updatedRows[index].price = base?.price ?? updatedRows[index].price ?? 0;
       updatedRows[index].uom = base?.uom ?? updatedRows[index].uom ?? '';
-      updatedRows[index].carton_qty = base?.carton_qty ?? updatedRows[index].carton_qty ?? 0;
-      updatedRows[index].qty = base?.qty ?? updatedRows[index].qty ?? 0;
-      
+
+      // pieces per carton (preferred from product)
+      const piecesPerCarton = Number(base?.pcs_per_carton || base?.pieces_per_carton || base?.carton_qty || 0);
+      updatedRows[index].pieces_per_carton = piecesPerCarton;
+      updatedRows[index].pcs_per_carton = piecesPerCarton;
+
+      // Prefer explicit carton/loose values from product; otherwise compute from total on-hand
+      const cartonQtyFromProduct = Number(base?.carton_qty ?? base?.cartonOnHand ?? base?.carton_on_hand ?? 0);
+      const looseQtyFromProduct = Number(base?.loose_qty ?? base?.looseOnHand ?? base?.loose_on_hand ?? 0);
+
+      if (cartonQtyFromProduct || looseQtyFromProduct) {
+        updatedRows[index].carton_qty = cartonQtyFromProduct;
+        updatedRows[index].loose_qty = looseQtyFromProduct;
+      } else {
+        const totalOnHand = Number(base?.qty || base?.qty_in_stock || base?.on_hand || 0);
+        if (piecesPerCarton > 0) {
+          const cartonOnHand = Math.floor(totalOnHand / piecesPerCarton);
+          const looseOnHand = totalOnHand - cartonOnHand * piecesPerCarton;
+          updatedRows[index].carton_qty = cartonOnHand;
+          updatedRows[index].loose_qty = looseOnHand;
+        } else {
+          updatedRows[index].carton_qty = 0;
+          updatedRows[index].loose_qty = totalOnHand;
+        }
+      }
+
+      // calculate qty = pcs_per_carton * carton_qty + loose_qty
+      const cartonQty = Number(updatedRows[index].carton_qty || 0);
+      const looseQty = Number(updatedRows[index].loose_qty || 0);
+      updatedRows[index].qty = piecesPerCarton * cartonQty + looseQty;
+
       console.log('updatedRows[index].product_code:', updatedRows[index].product_code);
       setRows(updatedRows);
 
@@ -436,7 +466,10 @@ console.log('formdata',payloadForm);
             const preDiscountGrossTotal = cartonTotal + looseTotal + total;
             const grossTotal = preDiscountGrossTotal - discountAmount;
 
-            updatedRow.qty = cartonQty + looseQty;
+            const piecesPerCarton = Number(updatedRow.pieces_per_carton || updatedRow.pcs_per_carton || 0);
+
+            // qty = carton_qty * pieces_per_carton + loose_qty
+            updatedRow.qty = cartonQty * piecesPerCarton + looseQty;
             updatedRow.total = preDiscountGrossTotal; // This is the total before discount
             updatedRow.grossTotal = grossTotal; // This is the total after discount
             updatedRow.total_price = grossTotal; // Assuming total_price is the final gross total

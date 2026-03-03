@@ -103,6 +103,7 @@ const { id } = useParams();
       loose_qty: 0,
       carton_price: 0,
       qty: 0,
+      pieces_per_carton: 0,
       price: 0,
       total: 0,
       discount: 0,
@@ -119,6 +120,7 @@ const { id } = useParams();
       loose_qty: 0,
       carton_price: 0,
       qty: 0,
+      pieces_per_carton: 0,
       price: 0,
       total: 0,
       discount: 0,
@@ -164,6 +166,7 @@ const handleKeyDown = (e) => {
           loose_qty: 0,
           carton_price: 0,
           qty: 0,
+          pieces_per_carton: 0,
           price: 0,
           total: 0,
           discount: 0,
@@ -301,10 +304,33 @@ useEffect(() => {
     const handleProductSelect = (index, selectedProduct) => {
       console.log("Selected Product:", selectedProduct);
       const updatedRows = [...rows];
-      updatedRows[index].product_id = selectedProduct.value;
-      updatedRows[index].product_code = selectedProduct.product_code;
-      updatedRows[index].product_name = selectedProduct.product_name;
-      setRows(updatedRows);
+          updatedRows[index].product_id = selectedProduct.value;
+          updatedRows[index].product_code = selectedProduct.product_code;
+          updatedRows[index].product_name = selectedProduct.product_name;
+          // store pieces per carton on the row for later qty calculations
+          const piecesPerCarton = Number(selectedProduct.pcs_per_carton || selectedProduct.pieces_per_carton || selectedProduct.carton_qty || 0);
+          updatedRows[index].pieces_per_carton = piecesPerCarton;
+          updatedRows[index].pcs_per_carton = piecesPerCarton;
+          // determine current on-hand quantity from product record (fallbacks)
+          const totalOnHand = Number(selectedProduct.qty || selectedProduct.qty_in_stock || selectedProduct.on_hand || 0);
+          // derive carton and loose on-hand from totalOnHand and piecesPerCarton
+          let cartonOnHand = 0;
+          let looseOnHand = 0;
+          if (piecesPerCarton > 0) {
+            cartonOnHand = Math.floor(totalOnHand / piecesPerCarton);
+            looseOnHand = totalOnHand - cartonOnHand * piecesPerCarton;
+          } else {
+            // if no pieces-per-carton info, put everything into loose
+            looseOnHand = totalOnHand;
+          }
+          // set row's carton/loose defaults to in-hand values
+          updatedRows[index].carton_qty = cartonOnHand;
+          updatedRows[index].loose_qty = looseOnHand;
+          // compute qty = carton_qty * pieces_per_carton + loose_qty
+          updatedRows[index].qty = Number(updatedRows[index].carton_qty) * Number(updatedRows[index].pieces_per_carton || 0) + Number(updatedRows[index].loose_qty);
+          // recalc totals for the row
+          updatedRows[index] = calculateRowTotal(updatedRows[index]);
+        setRows(updatedRows);
       console.log("Updated Rows:", updatedRows);
     };
   // Handle form submit (example API call structure)
@@ -427,6 +453,7 @@ console.log('formData', payloadForm);
             const cartonQty = Number(updatedRow.carton_qty || 0);
             const cartonPrice = Number(updatedRow.carton_price || 0);
             const looseQty = Number(updatedRow.loose_qty || 0);
+            const piecesPerCarton = Number(updatedRow.pieces_per_carton || 0);
             const qty = Number(updatedRow.qty || 0);
             const price = Number(updatedRow.price || 0);
             const discountAmount = Number(updatedRow.discount_amount || 0);
@@ -437,7 +464,8 @@ console.log('formData', payloadForm);
             const preDiscountGrossTotal = cartonTotal + looseTotal + total;
             const grossTotal = preDiscountGrossTotal - discountAmount;
 
-            updatedRow.qty = cartonQty + looseQty;
+            // qty = carton_qty * pieces_per_carton + loose_qty
+            updatedRow.qty = cartonQty * piecesPerCarton + looseQty;
             updatedRow.total = parseFloat(preDiscountGrossTotal.toFixed(2)); // This is the total before discount
             updatedRow.grossTotal = parseFloat(grossTotal.toFixed(2)); // This is the total after discount
             updatedRow.total_price = parseFloat(grossTotal.toFixed(2)); // Assuming total_price is the final gross total
@@ -480,6 +508,7 @@ console.log('formData', payloadForm);
               loose_qty: 0,
               carton_price: 0,
               qty: 0,
+              pieces_per_carton: 0,
               price: 0,
               total: 0,
               discount: 0,
@@ -505,6 +534,7 @@ console.log('formData', payloadForm);
       loose_qty: 0,
       carton_price: 0,
       qty: 0,
+      pieces_per_carton: 0,
       price: 0,
       total: 0,
       discount: 0,
@@ -920,11 +950,16 @@ console.log('formData', payloadForm);
                   {idx + 1}
                 </td>
                      <td style={{ padding: "0.3rem", minWidth: "200px" }}>
-  <Select
+    <Select
     options={products.map((pr) => ({
       value: pr.product_id,
       product_code: pr.product_code,
       product_name: pr.product_name,
+      // prefer explicit pcs_per_carton, then pieces_per_carton, then carton_qty
+      pcs_per_carton: pr.pcs_per_carton || pr.pieces_per_carton || pr.carton_qty || 0,
+      pieces_per_carton: pr.pieces_per_carton || pr.carton_qty || 0,
+      carton_price: pr.carton_price || pr.unit_price || 0,
+      qty: pr.qty || pr.qty_in_stock || 0,
     }))}
     value={
       p.product_id

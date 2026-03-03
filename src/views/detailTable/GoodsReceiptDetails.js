@@ -301,9 +301,45 @@ useEffect(() => {
     const handleProductSelect = (index, selectedProduct) => {
       console.log("Selected Product:", selectedProduct);
       const updatedRows = [...rows];
+
+      // find full product record from products list (options only include minimal fields)
+      const prod = products.find(p => p.product_id === selectedProduct.value) || selectedProduct;
+
+      // determine pieces per carton (various possible property names)
+      const pcsPerCarton = Number(
+        prod.pcs_per_carton ?? prod.pieces_per_carton ?? prod.pcsPerCarton ?? prod.piecesPerCarton ?? prod.pack_size ?? 1
+      ) || 1;
+
+      // prefer explicit carton/loose values from product when available
+      let cartonQty = 0;
+      let looseQty = 0;
+
+      if (prod.carton_qty !== undefined && prod.loose_qty !== undefined) {
+        cartonQty = Number(prod.carton_qty) || 0;
+        looseQty = Number(prod.loose_qty) || 0;
+      } else if (prod.qty !== undefined || prod.qty_on_hand !== undefined || prod.qtyOnHand !== undefined) {
+        const totalOnHand = Number(prod.qty ?? prod.qty_on_hand ?? prod.qtyOnHand) || 0;
+        cartonQty = Math.floor(totalOnHand / pcsPerCarton);
+        looseQty = totalOnHand - cartonQty * pcsPerCarton;
+      }
+
       updatedRows[index].product_id = selectedProduct.value;
       updatedRows[index].product_code = selectedProduct.product_code;
       updatedRows[index].product_name = selectedProduct.product_name;
+      updatedRows[index].pcs_per_carton = pcsPerCarton;
+      updatedRows[index].carton_qty = cartonQty;
+      updatedRows[index].loose_qty = looseQty;
+
+      // set prices if available on product
+      updatedRows[index].carton_price = prod.carton_price ?? prod.unit_price ?? prod.price ?? updatedRows[index].carton_price;
+      updatedRows[index].price = prod.unit_price ?? prod.price ?? updatedRows[index].price;
+
+      // compute qty from pieces per carton
+      updatedRows[index].qty = Number(pcsPerCarton * cartonQty + looseQty);
+
+      // recalc totals for the row
+      updatedRows[index] = calculateRowTotal(updatedRows[index]);
+
       setRows(updatedRows);
       console.log("Updated Rows:", updatedRows);
     };
