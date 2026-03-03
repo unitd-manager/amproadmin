@@ -56,24 +56,7 @@ export const columns = [
       selector: "ref",
       sortable: true
     },
-    {
-      id:9,
-      name: "Adjust Stock",
-      selector: "ref",
-      sortable: true
-    },
-    {
-      id:10,
-      name: "View History",
-      selector: "ref",
-      sortable: true
-    },
-    {
-      id:11,
-      name: "MOL",
-      selector: "minimum_order_level",
-      sortable: true
-    },
+   
   ];
 
   export const pocolumns = [

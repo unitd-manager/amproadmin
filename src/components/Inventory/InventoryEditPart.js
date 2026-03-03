@@ -150,7 +150,7 @@ function InventoryEditPart({ inventoryDetails, handleInputs, editinventoryData }
                     />
                   </FormGroup>
                 </Col>
-                <Col md="3">
+                {/* <Col md="3">
                   <FormGroup>
                     <Label>MOL</Label>
                     <Input
@@ -160,7 +160,7 @@ function InventoryEditPart({ inventoryDetails, handleInputs, editinventoryData }
                       name="minimum_order_level"
                     />
                   </FormGroup>
-                </Col>
+                </Col> */}
                 <Col md="3">
                   <FormGroup>
                     <Label>Notes</Label>
