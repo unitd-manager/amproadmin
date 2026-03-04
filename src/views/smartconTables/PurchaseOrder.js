@@ -11,6 +11,7 @@ import Select from 'react-select';
 import PdfPurchaseOrderList from '../../components/PDF/PdfPurchaseOrderList';
 import { ToastContainer } from 'react-toastify';
 import PdfPurchaseOrderWithoutPrice from '../../components/PDF/PdfPurchaseOrderWithoutPrice';
+import message from '../../components/Message';
 
 const PurchaseOrder = () => {
   const [filters, setFilters] = useState({
@@ -136,7 +137,9 @@ const PurchaseOrder = () => {
     api.post("/purchaseorder/ConvertToGra", { purchase_order_ids: selectedIds })
       .then(() => {
         message("Converted to GRA successfully",'success');
-        setSelectedIds([]);
+         setTimeout(()=>{
+          window.location.reload();
+        },300)
       })
       .catch(() => message.error("Conversion failed"));
   };
@@ -240,7 +243,7 @@ const PurchaseOrder = () => {
   return (
     <div className="p-4 bg-light">
       <h4 className="mb-4">Purchase Order Management</h4>
-<ToastContainer></ToastContainer>
+<ToastContainer/>
       <Row className="mb-3">
         <Col md={2}><Input name="tran_no" placeholder="Tran No" value={filters.tran_no} onChange={handleFilterChange} /></Col>
         <Col md={2}><Input type="date" name="from_date" value={filters.from_date} onChange={handleFilterChange} /></Col>

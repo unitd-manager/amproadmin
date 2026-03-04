@@ -7,7 +7,9 @@ import {
 import moment from 'moment';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../constants/api';
+import { ToastContainer } from 'react-toastify';
 import PdfGoodsReturnList from '../../components/PDF/PdfGoodsReturnList';
+import message from '../../components/Message';
 
 const GoodsReturnList = () => {
   const [filters, setFilters] = useState({
@@ -90,11 +92,13 @@ const handleConvertToDebitNote = async () => {
     await api.post('/purchaseorder/ConvertToPurchaseDebitNote', {
       goods_return_ids: selectedIds
     });
-    alert('Successfully converted to debit note!');
-    fetchData(); // Refresh the table
+    message('Successfully converted to debit note!','success');
+   setTimeout(()=>{
+          window.location.reload();
+        },300)
   } catch (err) {
     console.error('Error converting:', err);
-    alert('Failed to convert to debit note.');
+    message('Failed to convert to debit note.','error');
   }
 };
 const handleDeleteSelected = async () => {
@@ -108,7 +112,9 @@ const handleDeleteSelected = async () => {
           api.post('/purchaseorder/deleteGoodsReturn', { goods_return_id: purchaseInvoiceId })
         ));
         message('Goods Return deleted successfully!','success');
-        setSelectedIds([]);
+        setTimeout(()=>{
+          window.location.reload();
+        },300)
         fetchData();
       } catch (err) {
         console.error(err);
@@ -117,30 +123,35 @@ const handleDeleteSelected = async () => {
     }
   };
 const handleRepeatGoodsReturn = async () => {
-  
-  console.log('selected trans nos:', selectedIds);
+
+  console.log('selected ids:', selectedIds);
+
   if (selectedIds.length === 0) {
     alert('Please select one Goods Return to repeat.');
     return;
   }
 
+
   try {
-     await api.post('/purchaseorder/repeatGoodsReturn', {
+    await api.post('/purchaseorder/repeatGoodsReturn', {
       goods_return_ids: selectedIds
     });
-    alert('Goods Return repeated successfully.');
-    fetchData();
+
+    message('Goods Return repeated successfully.','success');
+ setTimeout(()=>{
+          window.location.reload();
+        },300)
+
   } catch (err) {
     console.error('Error repeating:', err);
-    alert('Failed to repeat Goods Return.');
+    message('Failed to repeat Goods Return.','error');
   }
 };
-
 
   return (
     <div className="p-4 bg-light">
       <h4 className="mb-4">Goods Return Management</h4>
-
+<ToastContainer/>
       <Row className="mb-3">
         <Col md={2}><Input name="tran_no" placeholder="Tran No" value={filters.tran_no} onChange={handleFilterChange} /></Col>
         <Col md={2}><Input type="date" name="from_date" value={filters.from_date} onChange={handleFilterChange} /></Col>

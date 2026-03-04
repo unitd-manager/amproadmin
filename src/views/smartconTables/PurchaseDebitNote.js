@@ -7,7 +7,9 @@ import {
 import moment from 'moment';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../constants/api';
+import { ToastContainer } from 'react-toastify';
 import PdfPurchaseDebitNoteList from '../../components/PDF/PdfPurchaseDebitNoteList';
+import message from '../../components/Message';
 
 const PurchaseDebitNote = () => {
   const [filters, setFilters] = useState({
@@ -169,15 +171,15 @@ const handleDeleteSelected = async () => {
 
   const repeatPurchaseDebitNote = () => {
     
-    if (selectedPurchaseInvoiceIds.length === 0) {
+    if (selectedIds.length === 0) {
     alert('Please select at least one record to convert.');
     return;
   }
   
-    api.post("/purchaseorder/repeatPurchaseDebitNote", { purchase_debit_note_ids: selectedPurchaseInvoiceIds })
+    api.post("/purchaseorder/repeatPurchaseDebitNote", { purchase_debit_note_ids: selectedIds })
       .then(() => {
         message("Purchase Debit Notes repeated successfully",'success');
-        // setSelectedPurchaseInvoiceIds([]);
+        // setSelectedIds([]);
         setTimeout(()=>{
           window.location.reload();
         },300)
@@ -186,20 +188,20 @@ const handleDeleteSelected = async () => {
   };
 
   const handleRecap = async () => {
-    if (selectedTranNos.length === 0) {
+    if (selectedIds.length === 0) {
       alert('Please select at least one Purchase Debit Note for recap');
       return;
     }
     try {
       const res = await api.post('/purchaseorder/recapPurchaseDebitNote', {
-        tran_nos: selectedTranNos
+        tran_nos: selectedIds
       });
       if (res.data.success) {
-        alert(`Recap completed successfully for ${selectedTranNos.length} transaction(s)`);
+        message(`Recap completed successfully for ${selectedIds.length} transaction(s)`,'success');
         // Refresh the data to show updated status
-        fetchData();
-        // Clear selections
-        setSelectedTranNos([]);
+      setTimeout(()=>{
+          window.location.reload();
+        },300)
       } else {
         alert('Recap operation failed');
       }
@@ -212,7 +214,7 @@ const handleDeleteSelected = async () => {
   return (
     <div className="p-4 bg-light">
       <h4 className="mb-4">Purchase DebitNote Management</h4>
-
+<ToastContainer/>
       <Row className="mb-3">
         <Col md={2}><Input name="tran_no" placeholder="Tran No" value={filters.tran_no} onChange={handleFilterChange} /></Col>
         <Col md={2}><Input type="date" name="from_date" value={filters.from_date} onChange={handleFilterChange} /></Col>
@@ -269,8 +271,8 @@ const handleDeleteSelected = async () => {
                 <Input
                   type="checkbox"
                   onChange={(e) => {
-                    const tranNo = item.tran_no;
-                    setSelectedTranNos(prev =>
+                    const tranNo = item.purchase_debit_note_id;
+                    setSelectedIds(prev =>
                       e.target.checked ? [...prev, tranNo] : prev.filter(no => no !== tranNo)
                     );
                   }}

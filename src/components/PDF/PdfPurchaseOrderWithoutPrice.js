@@ -233,10 +233,10 @@ const PdfPurchaseOrderWithoutPrice = ({ id }) => {
                         { text: 'TERMS', margin: [5, 3, 5, 3] },
                         { text: currentSalesOrder.terms_purchase || '', margin: [5, 3, 5, 3] }
                       ],
-                      [
-                        { text: 'PAGE', margin: [5, 3, 5, 3] },
-                        { text: currentSalesOrder.order_no || '', margin: [5, 3, 5, 3] }
-                      ],
+                      // [
+                      //   { text: 'PAGE', margin: [5, 3, 5, 3] },
+                      //   { text: currentSalesOrder.order_no || '', margin: [5, 3, 5, 3] }
+                      // ],
                       [
                         { text: 'AGENT NAME', margin: [5, 3, 5, 3] },
                         { text: currentSalesOrder.supplier_name || '', margin: [5, 3, 5, 3] }
