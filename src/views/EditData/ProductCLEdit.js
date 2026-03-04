@@ -121,9 +121,7 @@ const ProductUpdate = () => {
         .post('/product/edit-Product', productDetails)
         .then(() => {
           message('Record edited successfully', 'success');
-          setTimeout(() => {
-            window.location.reload();
-          }, 700);
+        
         })
         .catch(() => {
           message('Unable to edit record.', 'error');

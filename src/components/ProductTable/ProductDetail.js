@@ -96,15 +96,15 @@ export default function ProductDetail({
                 <Col sm={7}>
                   <Input
                     type="select"
-                    name="department"
-                    value={productDetails.department || ''}
+                    name="department_id"
+                    value={String(productDetails.department_id || '')}
                     onChange={handleInputs}
                   >
                     <option value="">Select</option>
                     {departmentdropdown.map((d) => (
                       <option
                         key={d.department_cli_id}
-                        value={d.department_name}
+                        value={String(d.department_cli_id)}
                       >
                         {d.department_name}
                       </option>
@@ -119,13 +119,13 @@ export default function ProductDetail({
                 <Col sm={7}>
                   <Input
                     type="select"
-                    name="sub_category"
-                    value={productDetails.sub_category || ''}
+                    name="sub_category_id"
+                    value={productDetails.sub_category_id || ''}
                     onChange={handleInputs}
                   >
                     <option value="">Select</option>
                     {subcategorydropdown.map((s) => (
-                      <option key={s.sub_category_id} value={s.sub_category_title}>
+                      <option key={s.sub_category_id} value={s.sub_category_id}>
                         {s.sub_category_title}
                       </option>
                     ))}
@@ -139,13 +139,13 @@ export default function ProductDetail({
                 <Col sm={7}>
                   <Input
                     type="select"
-                    name="supplier"
-                    value={productDetails.supplier || ''}
+                    name="supplier_id"
+                    value={productDetails.supplier_id || ''}
                     onChange={handleInputs}
                   >
                     <option value="">Select</option>
                     {supplierdropdown.map((s) => (
-                      <option key={s.supplier_id} value={s.company_name}>
+                      <option key={s.supplier_id} value={s.supplier_id}>
                         {s.company_name}
                       </option>
                     ))}
@@ -185,8 +185,8 @@ export default function ProductDetail({
                 <Col sm={7}>
                   <Input
                     type="number"
-                    name="pcs_carton"
-                    value={productDetails.pcs_carton || ''}
+                    name="pcs_per_carton"
+                    value={productDetails.pcs_per_carton || ''}
                     onChange={handleInputs}
                   />
                 </Col>
@@ -291,13 +291,13 @@ export default function ProductDetail({
                 <Col sm={7}>
                   <Input
                     type="select"
-                    name="category"
-                    value={productDetails.category || ''}
+                    name="category_id"
+                    value={productDetails.category_id || ''}
                     onChange={handleInputs}
                   >
                     <option value="">Select</option>
                     {categorydropdown.map((c) => (
-                      <option key={c.category_id} value={c.category_title}>
+                      <option key={c.category_id} value={c.category_id}>
                         {c.category_title}
                       </option>
                     ))}
@@ -370,8 +370,8 @@ export default function ProductDetail({
                 <Col sm={7}>
                   <Input
                     type="number"
-                    name="weight"
-                    value={productDetails.weight || ''}
+                    name="product_weight"
+                    value={productDetails.product_weight || ''}
                     onChange={handleInputs}
                   />
                 </Col>
@@ -422,8 +422,8 @@ export default function ProductDetail({
                 <Col sm={7}>
                   <Input
                     type="number"
-                    name="min_car_price"
-                    value={productDetails.min_car_price || ''}
+                    name="min_carton_price"
+                    value={productDetails.min_carton_price || ''}
                     onChange={handleInputs}
                   />
                 </Col>
@@ -570,12 +570,12 @@ ProductDetail.propTypes = {
   productDetails: PropTypes.shape({
     product_code: PropTypes.string,
     product_name: PropTypes.string,
-    department: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    sub_category: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    supplier: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    department_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    sub_category_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    supplier_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     tax_percentage: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     purchase_uom: PropTypes.string,
-    pcs_carton: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    pcs_per_carton: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     purchase_unit_cost: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     retail_price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     wholesale_price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
@@ -583,16 +583,16 @@ ProductDetail.propTypes = {
     style_fabric: PropTypes.string,
     carton_weight: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     bin: PropTypes.string,
-    category: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    category_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     brand: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     product_type: PropTypes.string,
     display_order: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     sales_uom: PropTypes.string,
-    weight: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    product_weight: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     operation_cost: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     min_retail_price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     min_wholesale_price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    min_car_price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    min_carton_price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     model_no: PropTypes.string,
     m3_per_carton: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     remarks: PropTypes.string,

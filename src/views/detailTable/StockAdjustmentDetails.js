@@ -79,7 +79,7 @@ const StockAdjustmentDetails = () => {
       }
     } catch (error) {
       console.error('Error fetching products:', error);
-      message.error('Failed to load products');
+      message('Failed to load products', 'error');
     }
   };
 
@@ -227,7 +227,7 @@ const StockAdjustmentDetails = () => {
       
       // Validate form data
       if (!formData.stock_adjustment_date || !formData.location_id) {
-        message.error('Please fill in all required fields');
+        message('Please fill in all required fields', 'error');
         return;
       }
 
@@ -235,7 +235,7 @@ const StockAdjustmentDetails = () => {
       const validItems = rows.filter(row => row?.product_id && String(row.product_id).trim() !== '');
       
       if (validItems.length === 0) {
-        message.error('Please add at least one product item');
+        message('Please add at least one product item', 'error');
         return;
       }
 

@@ -53,14 +53,18 @@ const StockAdjustment = () => {
   const fetchStockAdjustments = async () => {
     try {
       setLoading(true);
-const response = await api.get('/stockRequest/getFilteredStockAdjustment', {
-  params: {
-    stock_adjustment_no: filters.stock_adjustment_no,
-    from_date: filters.fromDate,
-    to_date: filters.toDate,
-    location_id: filters.location_id,
-  },
-});
+    // Find the selected location object
+    const selectedLocation = locations.find(loc => String(loc.location_id) === String(filters.location_id));
+    const location_name = selectedLocation ? selectedLocation.location_name : '';
+    const response = await api.get('/stockRequest/getFilteredStockAdjustment', {
+      params: {
+        stock_adjustment_no: filters.stock_adjustment_no,
+        from_date: filters.fromDate,
+        to_date: filters.toDate,
+        location_id: filters.location_id,
+        location_name: location_name,
+      },
+    });
       if (response.data.msg ==="Success") {
         setStockAdjustmentData(response.data.data);
         setTotalRecords(response.data.total);
@@ -382,7 +386,7 @@ const response = await api.get('/stockRequest/getFilteredStockAdjustment', {
                   >
                     <option value="">All Locations</option>
                     {locations.map(loc => (
-                      <option key={loc.location_id} value={loc.location_code}>
+                      <option key={loc.location_id} value={loc.location_id}>
                         {loc.location_name}
                       </option>
                     ))}
@@ -460,7 +464,7 @@ const response = await api.get('/stockRequest/getFilteredStockAdjustment', {
                       </td>
                       <td>{item.stock_adjustment_no}</td>
                       <td>{item.stock_adjustment_date ? new Date(item.stock_adjustment_date).toLocaleDateString('en-GB'):''}</td>
-                      <td>{item.location_code}</td>
+                      <td>{item.location_name}</td>
                       <td>{item.remarks || '-'}</td>
                       <td>{item.created_by}</td>
                       <td>{item.created_at ? new Date(item.created_at).toLocaleDateString('en-GB'):''}</td>
