@@ -28,6 +28,7 @@ const PurchaseOrder = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(20); // Added limit state
   const [selectedIds, setSelectedIds] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [supplierOptions, setSupplierOptions] = useState([]);
 
@@ -105,6 +106,16 @@ const PurchaseOrder = () => {
       }
     }
   };
+
+  const handleSelectAll = (e) => {
+    const checked = e.target.checked;
+    setSelectAll(checked);
+    setSelectedIds(checked ? goodsReturns.map(i => i.purchase_order_id) : []);
+  };
+
+  useEffect(() => {
+    setSelectAll(selectedIds.length > 0 && selectedIds.length === goodsReturns.length);
+  }, [selectedIds, goodsReturns]);
   const handlePrintwithoutPrice = async () => {
     if (selectedIds.length !== 1) {
       alert('Select a single Purchase Order to print.');
@@ -329,7 +340,7 @@ const PurchaseOrder = () => {
       <Table className="bg-white">
         <thead>
           <tr>
-            <th><Input type="checkbox" /></th>
+            <th><Input type="checkbox" checked={selectAll} onChange={handleSelectAll} /></th>
             <th>Tran No</th>
             <th>Tran Date</th>
             <th>Supplier</th>
@@ -345,11 +356,18 @@ const PurchaseOrder = () => {
               <td>
                 <Input
                   type="checkbox"
+                  checked={selectedIds.includes(item.purchase_order_id)}
                   onChange={(e) => {
                     const tranNo = item.purchase_order_id;
-                    setSelectedIds(prev =>
-                      e.target.checked ? [...prev, tranNo] : prev.filter(no => no !== tranNo)
-                    );
+                    if (e.target.checked) {
+                      const newSelected = [...selectedIds, tranNo];
+                      setSelectedIds(newSelected);
+                      setSelectAll(newSelected.length === goodsReturns.length);
+                    } else {
+                      const newSelected = selectedIds.filter(no => no !== tranNo);
+                      setSelectedIds(newSelected);
+                      setSelectAll(false);
+                    }
                   }}
                 />
               </td>

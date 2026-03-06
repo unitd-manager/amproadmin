@@ -301,54 +301,52 @@ useEffect(() => {
     const handleProductSelect = (index, selectedProduct) => {
       console.log("Selected Product:", selectedProduct);
       const updatedRows = [...rows];
+      // find original product object (from products list) to read real fields
+      const prod = products.find(p => Number(p.product_id) === Number(selectedProduct.value)) || {};
       updatedRows[index].product_id = selectedProduct.value;
-      updatedRows[index].product_code = selectedProduct.product_code;
-      updatedRows[index].product_name = selectedProduct.product_name;
+      updatedRows[index].product_code = prod.product_code || selectedProduct.product_code || '';
+      updatedRows[index].product_name = prod.product_name || selectedProduct.product_name || '';
 
-      // determine pieces per carton (pcs_per_carton preferred)
-      const piecesPerCarton = Number(
-        selectedProduct.pcs_per_carton || selectedProduct.pieces_per_carton || 0
-      );
+      // determine pieces per carton: prefer explicit fields, else try parsing unit like '1 x 10'
+      let piecesPerCarton = Number(prod.pcs_per_carton || prod.pieces_per_carton || prod.carton_qty || selectedProduct.pcs_per_carton || selectedProduct.pieces_per_carton || 0);
+      if (!piecesPerCarton) {
+        const unitStr = prod.unit || prod.UOM || prod.unit_name || '';
+        const m = String(unitStr).match(/x\s*(\d+)/i);
+        if (m) piecesPerCarton = Number(m[1]);
+      }
       updatedRows[index].pieces_per_carton = piecesPerCarton;
       updatedRows[index].pcs_per_carton = piecesPerCarton;
 
-      // Prefer to take carton_qty and loose_qty directly from the selected product record
-      const cartonQtyFromProduct = Number(
-        selectedProduct.carton_qty ?? selectedProduct.cartonOnHand ?? selectedProduct.carton_on_hand ?? 0
-      );
-      const looseQtyFromProduct = Number(
-        selectedProduct.loose_qty ?? selectedProduct.looseOnHand ?? selectedProduct.loose_on_hand ?? 0
-      );
+      // set pricing: prefer wholesale_price, then unit_price, then price
+      const unitPrice = Number(prod.wholesale_price || prod.unit_price || prod.price || 0);
+      updatedRows[index].price = unitPrice;
 
-      if (cartonQtyFromProduct || looseQtyFromProduct) {
-        updatedRows[index].carton_qty = cartonQtyFromProduct;
-        updatedRows[index].loose_qty = looseQtyFromProduct;
-      } else {
-        const totalOnHand = Number(selectedProduct.qty || selectedProduct.qty_in_stock || selectedProduct.on_hand || 0);
-        if (piecesPerCarton > 0) {
-          const cartonOnHand = Math.floor(totalOnHand / piecesPerCarton);
-          const looseOnHand = totalOnHand - cartonOnHand * piecesPerCarton;
-          updatedRows[index].carton_qty = cartonOnHand;
-          updatedRows[index].loose_qty = looseOnHand;
-        } else {
-          updatedRows[index].carton_qty = 0;
-          updatedRows[index].loose_qty = totalOnHand;
-        }
-      }
+      // carton_price: prefer explicit carton_price on product, else unitPrice * piecesPerCarton
+      const cartonPrice = Number(prod.carton_price || (unitPrice && piecesPerCarton ? unitPrice * piecesPerCarton : 0));
+      updatedRows[index].carton_price = cartonPrice;
 
-      // set prices if provided by product
-      if (selectedProduct.carton_price || selectedProduct.unit_price || selectedProduct.cartonPrice) {
-        updatedRows[index].carton_price = Number(selectedProduct.carton_price || selectedProduct.unit_price || selectedProduct.cartonPrice || 0);
-        updatedRows[index].price = Number(selectedProduct.unit_price || selectedProduct.price || selectedProduct.carton_price || 0);
-      }
+      // Do not auto-fill carton_qty, loose_qty or qty here — leave those to user input.
 
-      // calculate qty = pcs_per_carton * carton_qty + loose_qty
-      const cartonQty = Number(updatedRows[index].carton_qty || 0);
-      const looseQty = Number(updatedRows[index].loose_qty || 0);
-      updatedRows[index].qty = piecesPerCarton * cartonQty + looseQty;
+      // reset discounts to zero for new product selection
+      updatedRows[index].discount = 0;
+      updatedRows[index].discount_percentage = 0;
+      updatedRows[index].discount_amount = 0;
 
-      // recalc totals for the row
-      updatedRows[index] = calculateRowTotal(updatedRows[index]);
+      // compute totals for the row using same logic as handleRowChange
+      const cartonTotal = Number(updatedRows[index].carton_qty || 0) * Number(updatedRows[index].carton_price || 0);
+      const looseTotal = Number(updatedRows[index].loose_qty || 0) * (Number(updatedRows[index].carton_price || 0) / (piecesPerCarton || 1));
+      const totalBeforeDiscount = cartonTotal + looseTotal + (Number(updatedRows[index].qty || 0) * Number(updatedRows[index].price || 0));
+      const grossTotal = totalBeforeDiscount - Number(updatedRows[index].discount_amount || 0);
+      updatedRows[index].total = parseFloat(totalBeforeDiscount.toFixed(2));
+      updatedRows[index].grossTotal = parseFloat(grossTotal.toFixed(2));
+      updatedRows[index].total_price = parseFloat(grossTotal.toFixed(2));
+
+      // update selected product for footer display
+      setSelectedProduct(prod);
+      // update selected UOM (try UOM/unit fields, fallback to piecesPerCarton)
+      const uomLabel = prod.unit || prod.UOM || prod.unit_name || `${piecesPerCarton}`;
+      setSelectedUOM(uomLabel);
+
       setRows(updatedRows);
       console.log("Updated Rows:", updatedRows);
     };

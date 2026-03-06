@@ -25,6 +25,7 @@ const GoodsReturnList = () => {
   const [totalRecords, setTotalRecords] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
 const [selectedIds, setSelectedIds] = useState([]);
+const [selectAll, setSelectAll] = useState(false);
 
 const [supplierOptions, setSupplierOptions] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -49,6 +50,12 @@ const fetchData = async () => {
   } catch (err) {
     console.error(err);
   }
+};
+
+const handleSelectAll = (e) => {
+  const checked = e.target.checked;
+  setSelectAll(checked);
+  setSelectedIds(checked ? goodsReturns.map(i => i.goods_receipt_id) : []);
 };
 
   useEffect(() => {
@@ -182,7 +189,7 @@ const fetchData = async () => {
       <Table hover size="sm" className="bg-white">
         <thead>
           <tr>
-            <th><Input type="checkbox" /></th>
+            <th><Input type="checkbox" checked={selectAll} onChange={handleSelectAll} /></th>
             <th>Tran No</th>
             <th>Tran Date</th>
             <th>Supplier</th>
@@ -199,12 +206,17 @@ const fetchData = async () => {
              <td>
   <Input
     type="checkbox"
+    checked={selectedIds.includes(item.goods_receipt_id)}
     onChange={(e) => {
       const id = item.goods_receipt_id;
       if (e.target.checked) {
-        setSelectedIds(prev => [...prev, id]);
+        const newSelected = [...selectedIds, id];
+        setSelectedIds(newSelected);
+        setSelectAll(newSelected.length === goodsReturns.length);
       } else {
-        setSelectedIds(prev => prev.filter(no => no !== id));
+        const newSelected = selectedIds.filter(no => no !== id);
+        setSelectedIds(newSelected);
+        setSelectAll(false);
       }
     }}
   />

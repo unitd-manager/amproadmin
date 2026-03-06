@@ -102,6 +102,12 @@ const PurchaseInvoice = () => {
       setSelectedPurchaseInvoiceIds(prev => prev.filter(i => i !== id));
   };
 
+  useEffect(() => {
+    setSelectAll(
+      selectedPurchaseInvoiceIds.length > 0 && selectedPurchaseInvoiceIds.length === goodsReturns.length
+    );
+  }, [selectedPurchaseInvoiceIds, goodsReturns]);
+
   // ================= REPEAT =================
 
   const repeatPurchaseInvoice = () => {

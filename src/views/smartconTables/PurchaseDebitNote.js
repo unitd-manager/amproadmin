@@ -25,6 +25,7 @@ const PurchaseDebitNote = () => {
   const [totalRecords, setTotalRecords] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 const [selectedTranNos, setSelectedTranNos] = useState([]);
   const [statusModal, setStatusModal] = useState(false);
@@ -50,6 +51,12 @@ const [selectedTranNos, setSelectedTranNos] = useState([]);
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleSelectAll = (e) => {
+    const checked = e.target.checked;
+    setSelectAll(checked);
+    setSelectedIds(checked ? goodsReturns.map(i => i.purchase_debit_note_id) : []);
   };
 
   useEffect(() => {
@@ -252,7 +259,7 @@ const handleDeleteSelected = async () => {
       <Table hover size="sm" className="bg-white">
         <thead>
           <tr>
-            <th><Input type="checkbox" /></th>
+            <th><Input type="checkbox" checked={selectAll} onChange={handleSelectAll} /></th>
             <th>Tran No</th>
             <th>Tran Date</th>
             <th>Supplier</th>
@@ -270,11 +277,18 @@ const handleDeleteSelected = async () => {
               <td>
                 <Input
                   type="checkbox"
+                  checked={selectedIds.includes(item.purchase_debit_note_id)}
                   onChange={(e) => {
                     const tranNo = item.purchase_debit_note_id;
-                    setSelectedIds(prev =>
-                      e.target.checked ? [...prev, tranNo] : prev.filter(no => no !== tranNo)
-                    );
+                    if (e.target.checked) {
+                      const newSelected = [...selectedIds, tranNo];
+                      setSelectedIds(newSelected);
+                      setSelectAll(newSelected.length === goodsReturns.length);
+                    } else {
+                      const newSelected = selectedIds.filter(no => no !== tranNo);
+                      setSelectedIds(newSelected);
+                      setSelectAll(false);
+                    }
                   }}
                 />
               </td>
