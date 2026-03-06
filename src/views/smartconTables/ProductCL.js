@@ -35,7 +35,7 @@ const [qrProduct, setQrProduct] = useState(null);
   const getSection = () => {
     setLoading(true);
     api
-      .get('/product/getProducts')
+      .get('/product/getProductAdmin')
       .then((res) => {
         setSection(res.data.data);
         setLoading(false);
