@@ -286,57 +286,63 @@ useEffect(() => {
     return rows.reduce((sum, row) => sum + (parseFloat(row[key]) || 0), 0);
   };
   
-  
-    // Handle product selection
   const handleProductSelect = (index, selectedProduct) => {
-      console.log('selectedProduct:', selectedProduct);
-      const base = products.find(pr => String(pr.product_id) === String(selectedProduct.value));
-      const updatedRows = [...rows];
-      updatedRows[index].product_id = selectedProduct.value;
-      updatedRows[index].product_code = selectedProduct.product_code || base?.product_code || '';
-      updatedRows[index].product_name = selectedProduct.product_name || base?.product_name || base?.title || '';
+        console.log('selectedProduct:', selectedProduct);
+        const base = products.find(pr => String(pr.product_id) === String(selectedProduct.value)) || {};
+        const updatedRows = [...rows];
 
-      // set prices and uom
-      updatedRows[index].carton_price = base?.carton_price ?? updatedRows[index].carton_price ?? 0;
-      updatedRows[index].price = base?.price ?? updatedRows[index].price ?? 0;
-      updatedRows[index].uom = base?.uom ?? updatedRows[index].uom ?? '';
+        // set product id/code/name
+        updatedRows[index].product_id = selectedProduct.value;
+        updatedRows[index].product_code = selectedProduct.product_code || base?.product_code || '';
+        updatedRows[index].product_name = selectedProduct.product_name || base?.product_name || base?.title || '';
 
-      // pieces per carton (preferred from product)
-      const piecesPerCarton = Number(base?.pcs_per_carton || base?.pieces_per_carton || base?.carton_qty || 0);
-      updatedRows[index].pieces_per_carton = piecesPerCarton;
-      updatedRows[index].pcs_per_carton = piecesPerCarton;
-
-      // Prefer explicit carton/loose values from product; otherwise compute from total on-hand
-      const cartonQtyFromProduct = Number(base?.carton_qty ?? base?.cartonOnHand ?? base?.carton_on_hand ?? 0);
-      const looseQtyFromProduct = Number(base?.loose_qty ?? base?.looseOnHand ?? base?.loose_on_hand ?? 0);
-
-      if (cartonQtyFromProduct || looseQtyFromProduct) {
-        updatedRows[index].carton_qty = cartonQtyFromProduct;
-        updatedRows[index].loose_qty = looseQtyFromProduct;
-      } else {
-        const totalOnHand = Number(base?.qty || base?.qty_in_stock || base?.on_hand || 0);
-        if (piecesPerCarton > 0) {
-          const cartonOnHand = Math.floor(totalOnHand / piecesPerCarton);
-          const looseOnHand = totalOnHand - cartonOnHand * piecesPerCarton;
-          updatedRows[index].carton_qty = cartonOnHand;
-          updatedRows[index].loose_qty = looseOnHand;
-        } else {
-          updatedRows[index].carton_qty = 0;
-          updatedRows[index].loose_qty = totalOnHand;
+        // determine pieces per carton: prefer explicit fields, else try parsing unit
+        let piecesPerCarton = Number(base?.pcs_per_carton || base?.pieces_per_carton || base?.carton_qty || 0);
+        if (!piecesPerCarton) {
+          const unitStr = base?.unit || base?.UOM || base?.unit_name || '';
+          const m = String(unitStr).match(/x\s*(\d+)/i);
+          if (m) piecesPerCarton = Number(m[1]);
         }
-      }
+        updatedRows[index].pieces_per_carton = piecesPerCarton;
+        updatedRows[index].pcs_per_carton = piecesPerCarton;
 
-      // calculate qty = pcs_per_carton * carton_qty + loose_qty
-      const cartonQty = Number(updatedRows[index].carton_qty || 0);
-      const looseQty = Number(updatedRows[index].loose_qty || 0);
-      updatedRows[index].qty = piecesPerCarton * cartonQty + looseQty;
+        // set pricing: prefer wholesale_price, then unit_price, then price
+        const unitPrice = Number(base?.wholesale_price || base?.unit_price || base?.price || 0);
+        updatedRows[index].price = unitPrice;
 
-      console.log('updatedRows[index].product_code:', updatedRows[index].product_code);
-      setRows(updatedRows);
+        // carton_price: prefer explicit carton_price on product, else compute from unitPrice * piecesPerCarton
+        const cartonPrice = Number(base?.carton_price || (unitPrice && piecesPerCarton ? unitPrice * piecesPerCarton : 0));
+        updatedRows[index].carton_price = cartonPrice;
 
-      if (cartonPriceRefs.current[index]) {
-        cartonPriceRefs.current[index].focus();
-      }
+        // Do NOT auto-fill carton_qty, loose_qty or qty here — leave those to user input.
+
+        // reset discounts for new selection
+        updatedRows[index].discount = 0;
+        updatedRows[index].discount_percentage = 0;
+        updatedRows[index].discount_amount = 0;
+
+        // compute totals using existing carton/loose/qty values
+        const cartonQty = Number(updatedRows[index].carton_qty || 0);
+        const looseQty = Number(updatedRows[index].loose_qty || 0);
+        const qty = Number(updatedRows[index].qty || 0);
+        const cartonTotal = cartonQty * Number(updatedRows[index].carton_price || 0);
+        const looseTotal = looseQty * (Number(updatedRows[index].carton_price || 0) / (piecesPerCarton || 1));
+        const totalBeforeDiscount = cartonTotal + looseTotal + qty * Number(updatedRows[index].price || 0);
+        const grossTotal = totalBeforeDiscount - Number(updatedRows[index].discount_amount || 0);
+        updatedRows[index].total = parseFloat(totalBeforeDiscount.toFixed(2));
+        updatedRows[index].grossTotal = parseFloat(grossTotal.toFixed(2));
+        updatedRows[index].total_price = parseFloat(grossTotal.toFixed(2));
+
+        // update selected product for footer display and UOM
+        setSelectedProduct(base);
+        const uomLabel = base?.unit || base?.UOM || base?.unit_name || `${piecesPerCarton}`;
+        setSelectedUOM(uomLabel);
+
+        setRows(updatedRows);
+
+        if (cartonPriceRefs.current[index]) {
+          cartonPriceRefs.current[index].focus();
+        }
     };
   // Handle form submit (example API call structure)
   const handleSubmit = async () => {
@@ -1308,8 +1314,8 @@ useEffect(() => {
             <td style={{ padding: '0.3rem' }}>{summary.looseQty.toFixed(2)}</td>
             <td style={{ padding: '0.3rem' }}>{summary.qty.toFixed(2)}</td>
             <td style={{ padding: '0.3rem' }}>{summary.cartonPrice.toFixed(2)}</td>
-            <td style={{ padding: '0.3rem' }}>{summary.price}</td>
-            <td style={{ padding: '0.3rem' }}>{summary.total}</td>
+            <td style={{ padding: '0.3rem' }}>{summary.price.toFixed(2)}</td>
+            <td style={{ padding: '0.3rem' }}>{summary.total.toFixed(2)}</td>
             <td style={{ padding: '0.3rem' }}></td>
             <td style={{ padding: '0.3rem' }}>{Number(summary?.grossTotal).toFixed(2)}</td>
             <td style={{ padding: '0.3rem' }}></td>
@@ -1335,13 +1341,13 @@ useEffect(() => {
   <Container fluid>
     {/* === Top Row === */}
     <Row className="align-items-center mb-1 text-muted small">
-        <Col><strong>UOM:</strong> {selectedProduct ? Number(selectedProduct.uom): ''}</Col>
-      <Col>Pieces/Carton: <span className="text-primary">{selectedProduct ? Number(selectedProduct.carton_qty).toFixed(2) : '0.00'}</span></Col>
+          <Col><strong>UOM:</strong> {selectedUOM || (selectedProduct ? (selectedProduct.unit || selectedProduct.UOM || '') : '')}</Col>
+                <Col>Pieces/Carton: <span className="text-primary">{selectedProduct ? Number(selectedProduct.pcs_per_carton || selectedProduct.pieces_per_carton || selectedProduct.carton_qty || (() => { const u = String(selectedProduct.unit||selectedProduct.UOM||''); const m = u.match(/x\s*(\d+)/i); return m ? Number(m[1]) : 0; })()).toFixed(2) : '0.00'}</span></Col>
       <Col>Purchase UnitCost: <span className="text-primary">{selectedProduct ? Number(selectedProduct.price).toFixed(2) : '0.00'}</span></Col>
       <Col>Wholesale Price: <span className="text-primary">{selectedProduct ? Number(selectedProduct.price).toFixed(2) : '0.00'}</span></Col>
       <Col>Carton Price: <span className="text-primary">{selectedProduct ? Number(selectedProduct.carton_price).toFixed(2) : '0.00'}</span></Col>
       <Col>CQty: <span className="text-primary">{selectedProduct ? Number(selectedProduct.carton_qty).toFixed(2) : '0.00'}</span></Col>
-      <Col>Qty On Hand: <span className="text-primary">{selectedProduct ? Number(selectedProduct.qty).toFixed(2) : '0.00'}</span></Col>
+   <Col>Qty On Hand: <span className="text-primary">{selectedProduct ? Number(selectedProduct.qty || selectedProduct.qty_in_stock || 0).toFixed(2) : '0.00'}</span></Col>
     </Row>
 
     {/* === Middle Row === */}

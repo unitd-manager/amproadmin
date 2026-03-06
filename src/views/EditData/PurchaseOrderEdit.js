@@ -1273,8 +1273,8 @@ console.log('formdata',payloadForm);
             <td style={{ padding: '0.3rem' }}>{summary.looseQty.toFixed(2)}</td>
             <td style={{ padding: '0.3rem' }}>{summary.qty.toFixed(2)}</td>
             <td style={{ padding: '0.3rem' }}>{summary.cartonPrice.toFixed(2)}</td>
-            <td style={{ padding: '0.3rem' }}>{summary.price}</td>
-            <td style={{ padding: '0.3rem' }}>{summary.total}</td>
+            <td style={{ padding: '0.3rem' }}>{summary.price.toFixed(2)}</td>
+            <td style={{ padding: '0.3rem' }}>{summary.total.toFixed(2)}</td>
             <td style={{ padding: '0.3rem' }}></td>
             <td style={{ padding: '0.3rem' }}>{Number(summary?.grossTotal).toFixed(2)}</td>
             <td style={{ padding: '0.3rem' }}></td>
@@ -1300,13 +1300,13 @@ console.log('formdata',payloadForm);
   <Container fluid>
     {/* === Top Row === */}
     <Row className="align-items-center mb-1 text-muted small">
-        <Col><strong>UOM:</strong> {selectedProduct ? Number(selectedProduct.uom): ''}</Col>
-      <Col>Pieces/Carton: <span className="text-primary">{selectedProduct ? Number(selectedProduct.carton_qty).toFixed(2) : '0.00'}</span></Col>
+       <Col><strong>UOM:</strong> {selectedUOM || (selectedProduct ? (selectedProduct.unit || selectedProduct.UOM || '') : '')}</Col>
+             <Col>Pieces/Carton: <span className="text-primary">{selectedProduct ? Number(selectedProduct.pcs_per_carton || selectedProduct.pieces_per_carton || selectedProduct.carton_qty || (() => { const u = String(selectedProduct.unit||selectedProduct.UOM||''); const m = u.match(/x\s*(\d+)/i); return m ? Number(m[1]) : 0; })()).toFixed(2) : '0.00'}</span></Col>
       <Col>Purchase UnitCost: <span className="text-primary">{selectedProduct ? Number(selectedProduct.price).toFixed(2) : '0.00'}</span></Col>
       <Col>Wholesale Price: <span className="text-primary">{selectedProduct ? Number(selectedProduct.price).toFixed(2) : '0.00'}</span></Col>
       <Col>Carton Price: <span className="text-primary">{selectedProduct ? Number(selectedProduct.carton_price).toFixed(2) : '0.00'}</span></Col>
       <Col>CQty: <span className="text-primary">{selectedProduct ? Number(selectedProduct.carton_qty).toFixed(2) : '0.00'}</span></Col>
-      <Col>Qty On Hand: <span className="text-primary">{selectedProduct ? Number(selectedProduct.qty).toFixed(2) : '0.00'}</span></Col>
+        <Col>Qty On Hand: <span className="text-primary">{selectedProduct ? Number(selectedProduct.qty || selectedProduct.qty_in_stock || 0).toFixed(2) : '0.00'}</span></Col>
     </Row>
 
     {/* === Middle Row === */}
