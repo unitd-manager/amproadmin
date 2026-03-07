@@ -460,29 +460,51 @@ console.log('formdata',payloadForm);
           }
 
           // Recalculate totals if relevant fields change
-          if (["carton_qty", "carton_price", "qty", "loose_qty", "price", "discount", "discount_percentage", "discount_amount"].includes(field)) {
-            const cartonQty = Number(updatedRow.carton_qty || 0);
-            const cartonPrice = Number(updatedRow.carton_price || 0);
-            const looseQty = Number(updatedRow.loose_qty || 0);
-            const qty = Number(updatedRow.qty || 0);
-            const price = Number(updatedRow.price || 0);
-            const discountAmount = Number(updatedRow.discount_amount || 0);
+           if (
+  [
+    "carton_qty",
+    "carton_price",
+    "loose_qty",
+    "price",
+    "discount_percentage",
+    "discount_amount"
+  ].includes(field)
+) {
 
-            const piecesPerCarton = Number(updatedRow.pieces_per_carton || updatedRow.pcs_per_carton || 0);
+  const cartonQty = Number(updatedRow.carton_qty || 0);
+  const looseQty = Number(updatedRow.loose_qty || 0);
+  const cartonPrice = Number(updatedRow.carton_price || 0);
+  const price = Number(updatedRow.price || 0);
+  const piecesPerCarton = Number(updatedRow.pieces_per_carton || 0);
 
-            const cartonTotal = cartonQty * cartonPrice;
-            const looseTotal = looseQty * (cartonPrice / 12);
-            const total = qty * price;
-            const preDiscountGrossTotal = cartonTotal + looseTotal + total;
-            const grossTotal = preDiscountGrossTotal - discountAmount;
+  let discountAmount = Number(updatedRow.discount_amount || 0);
+  let discountPercentage = Number(updatedRow.discount_percentage || 0);
 
-            // qty = carton_qty * pieces_per_carton + loose_qty
-            updatedRow.qty = cartonQty * piecesPerCarton + looseQty;
-            updatedRow.total = preDiscountGrossTotal; // This is the total before discount
-            updatedRow.grossTotal = grossTotal; // This is the total after discount
-            updatedRow.total_price = grossTotal; // Assuming total_price is the final gross total
-          }
+  // ✅ Qty calculation
+  const qty = (cartonQty * piecesPerCarton) + looseQty;
+  updatedRow.qty = Number(qty.toFixed(2));
 
+  // ✅ Total calculation
+  const total = (cartonQty * cartonPrice) + (looseQty * price);
+
+  // Discount calculations
+  if (field === "discount_percentage") {
+    discountAmount = (total * discountPercentage) / 100;
+    updatedRow.discount_amount = Number(discountAmount.toFixed(2));
+  }
+
+  if (field === "discount_amount") {
+    discountPercentage = total ? (discountAmount / total) * 100 : 0;
+    updatedRow.discount_percentage = Number(discountPercentage.toFixed(2));
+  }
+
+  // ✅ Gross Total
+  const grossTotal = total - discountAmount;
+
+  updatedRow.total = Number(total.toFixed(2));
+  updatedRow.grossTotal = Number(grossTotal.toFixed(2));
+  updatedRow.total_price = Number(grossTotal.toFixed(2));
+}
           if (field === 'total' || field === 'discount_amount') {
             updatedRow.grossTotal = (Number(updatedRow.total) || 0) - (Number(updatedRow.discount_amount) || 0);
           }
