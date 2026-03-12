@@ -89,16 +89,23 @@ const PdfGoodsReceiptList = ({ id }) => {
 
     // Group line items by invoice
     const invoiceGroups = {};
-    lineItems.forEach(item => {
-      if (!invoiceGroups[item.goods_receipt_id]) {
-        invoiceGroups[item.goods_receipt_id] = {
-          items: [],
-          invoice_code: item.invoice_code,
-          invoice_date: item.invoice_date
-        };
-      }
-      invoiceGroups[item.goods_receipt_id].items.push(item);
-    });
+   lineItems.forEach(item => {
+
+  const header = salesOrders.find(
+    s => String(s.goods_receipt_id) === String(item.goods_receipt_id)
+  );
+
+  if (!invoiceGroups[item.goods_receipt_id]) {
+    invoiceGroups[item.goods_receipt_id] = {
+      items: [],
+      invoice_code: header?.tran_no || '',
+      invoice_date: header?.tran_date || '',
+      headerData: header || {}
+    };
+  }
+
+  invoiceGroups[item.goods_receipt_id].items.push(item);
+});
 
     // Create content for each invoice
     const allContent = [];
@@ -198,13 +205,22 @@ invoiceItems.forEach(item => {
                   [
                     {
                       text: [
-                        currentSalesOrder.company_name || '', '\n',
-                        currentSalesOrder.address_street || '', '\n',
-                        currentSalesOrder.address_down || '', '\n',
-                        currentSalesOrder.address_country || '', '\n',
-                        currentSalesOrder.address_po_code || '', '\n',
-                        'TEL: 6789098765', '\n', '\n','\n',
-                      ],
+  invoiceData.headerData.company_name ||
+  invoiceData.headerData.supplier_name ||
+  '', '\n',
+  invoiceData.headerData.contact_address1 ||
+  invoiceData.headerData.address_street ||
+  '', '\n',
+  invoiceData.headerData.contact_address2 ||
+  invoiceData.headerData.address_down ||
+  '', '\n',
+  invoiceData.headerData.country ||
+  invoiceData.headerData.address_country ||
+  '', '\n',
+  invoiceData.headerData.postal_code ||
+  invoiceData.headerData.address_po_code ||
+  '', '\n',
+],
                       margin: [8, 4, 0, 4],
                     }
                   ]

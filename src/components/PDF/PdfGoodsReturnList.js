@@ -63,7 +63,7 @@ const PdfGoodsReturnList = ({ id }) => {
 
       let grandTotal = 0;
       allLineItems.forEach((elem) => {
-        grandTotal += elem.total || 0;
+        grandTotal += Number(elem.total || 0);
       });
       setGtotal(grandTotal);
       setLoading(false);
@@ -89,17 +89,23 @@ const PdfGoodsReturnList = ({ id }) => {
 
     // Group line items by invoice
     const invoiceGroups = {};
-    lineItems.forEach(item => {
-      if (!invoiceGroups[item.goods_return_id]) {
-        invoiceGroups[item.goods_return_id] = {
-          items: [],
-          invoice_code: item.invoice_code,
-          invoice_date: item.invoice_date
-        };
-      }
-      invoiceGroups[item.goods_return_id].items.push(item);
-    });
+   lineItems.forEach(item => {
 
+  const header = salesOrders.find(
+    s => String(s.goods_return_id) === String(item.goods_return_id)
+  );
+
+  if (!invoiceGroups[item.goods_return_id]) {
+    invoiceGroups[item.goods_return_id] = {
+      items: [],
+      invoice_code: header?.tran_no || '',
+      invoice_date: header?.tran_date || '',
+      headerData: header || {}
+    };
+  }
+
+  invoiceGroups[item.goods_return_id].items.push(item);
+});
     // Create content for each invoice
     const allContent = [];
     const invoiceIds = Object.keys(invoiceGroups);
@@ -111,14 +117,13 @@ const PdfGoodsReturnList = ({ id }) => {
       const currentSalesOrder = salesOrders.find(order => String(order.goods_return_id) === invoiceId) || salesOrders[0] || {};
       
       // Calculate subtotal for this invoice
-      let invoiceSubtotal = 0;
-      invoiceItems.forEach(item => {
-        invoiceSubtotal += item.total || 0;
-      });
-      
-      const invoiceGst = invoiceSubtotal * taxRate;
-      const invoiceTotalWithGst = invoiceSubtotal + invoiceGst;
+     const invoiceSubtotal = invoiceItems.reduce(
+  (sum, item) => sum + Number(item.total || 0),
+  0
+);
 
+const invoiceGst = Number((invoiceSubtotal * taxRate).toFixed(2));
+const invoiceTotalWithGst = Number((invoiceSubtotal + invoiceGst).toFixed(2));
       // Create table rows for this invoice's items
       const productItems = [
         [
@@ -144,7 +149,7 @@ const PdfGoodsReturnList = ({ id }) => {
           { text: `${item.foc || ''}`, style: 'tableBody' },
           { text: `${item.carton_price || ''}`, style: 'tableBody' },
           { text: `${item.wholesale_price || ''}`, style: 'tableBody' },
-          { text: `${item.total || ''}`, style: 'tableBody' },
+          { text: Number(item.total || 0).toFixed(2), style: 'tableBody' },
         ]);
       });
 
@@ -199,13 +204,22 @@ const PdfGoodsReturnList = ({ id }) => {
                   [
                     {
                       text: [
-                        currentSalesOrder.company_name || '', '\n',
-                        currentSalesOrder.address_street || '', '\n',
-                        currentSalesOrder.address_down || '', '\n',
-                        currentSalesOrder.address_country || '', '\n',
-                        currentSalesOrder.address_po_code || '', '\n',
-                        'TEL: 6789098765', '\n', '\n','\n',
-                      ],
+  invoiceData.headerData.company_name ||
+  invoiceData.headerData.supplier_name ||
+  '', '\n',
+  invoiceData.headerData.contact_address1 ||
+  invoiceData.headerData.address_street ||
+  '', '\n',
+  invoiceData.headerData.contact_address2 ||
+  invoiceData.headerData.address_down ||
+  '', '\n',
+  invoiceData.headerData.country ||
+  invoiceData.headerData.address_country ||
+  '', '\n',
+  invoiceData.headerData.postal_code ||
+  invoiceData.headerData.address_po_code ||
+  '', '\n',
+],
                       margin: [8, 4, 0, 4],
                     }
                   ]
