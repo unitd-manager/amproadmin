@@ -121,7 +121,9 @@ const PurchaseInvoice = () => {
     })
       .then(() => {
         message('Purchase invoices repeated successfully', 'success');
-        fetchData();
+        setTimeout(()=>{
+          window.location.reload();
+        },300)
       })
       .catch(() => alert('Repeat failed'));
   };

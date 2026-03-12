@@ -53,8 +53,8 @@ const PdfGoodsReceiptList = ({ id }) => {
         return items.map(item => ({
           ...item,
           goods_receipt_id: id[index],
-          invoice_code: allSalesOrders[index]?.invoice_code || '',
-          invoice_date: allSalesOrders[index]?.invoice_date || ''
+          invoice_code: allSalesOrders[index]?.tran_no || '',
+          invoice_date: allSalesOrders[index]?.tran_date || ''
         }));
       }).flat();
 
@@ -62,9 +62,9 @@ const PdfGoodsReceiptList = ({ id }) => {
       setLineItems(allLineItems);
 
       let grandTotal = 0;
-      allLineItems.forEach((elem) => {
-        grandTotal += elem.total || 0;
-      });
+     allLineItems.forEach((elem) => {
+  grandTotal += Number(elem.total) || 0;
+});
       setGtotal(grandTotal);
       setLoading(false);
     } catch (error) {
@@ -111,12 +111,11 @@ const PdfGoodsReceiptList = ({ id }) => {
       const currentSalesOrder = salesOrders.find(order => String(order.goods_receipt_id) === invoiceId) || salesOrders[0] || {};
       
       // Calculate subtotal for this invoice
-      let invoiceSubtotal = 0;
-      invoiceItems.forEach(item => {
-        invoiceSubtotal += item.total || 0;
-      });
-      
-      const invoiceGst = invoiceSubtotal * taxRate;
+    let invoiceSubtotal = 0;
+invoiceItems.forEach(item => {
+  invoiceSubtotal += Number(item.total) || 0;
+});
+      const invoiceGst = Number(invoiceSubtotal) * Number(taxRate);
       const invoiceTotalWithGst = invoiceSubtotal + invoiceGst;
 
       // Create table rows for this invoice's items
@@ -142,9 +141,9 @@ const PdfGoodsReceiptList = ({ id }) => {
           { text: `${item.carton_qty || ''}`, style: 'tableBody' },
           { text: `${item.loose_qty || ''}`, style: 'tableBody' },
           { text: `${item.foc || ''}`, style: 'tableBody' },
-          { text: `${item.carton_price || ''}`, style: 'tableBody' },
-          { text: `${item.wholesale_price || ''}`, style: 'tableBody' },
-          { text: `${item.total || ''}`, style: 'tableBody' },
+        { text: Number(item.carton_price || 0).toFixed(2), style: 'tableBody' },
+{ text: Number(item.wholesale_price || 0).toFixed(2), style: 'tableBody' },
+{ text: Number(item.total || 0).toFixed(2), style: 'tableBody' },
         ]);
       });
 
@@ -233,7 +232,7 @@ const PdfGoodsReceiptList = ({ id }) => {
                       ],
                       [
                         { text: 'TRAN DATE', margin: [5, 3, 5, 3] },
-                        { text: invoiceData.invoice_date ? moment(invoiceData.invoice_date).format('DD-MM-YYYY') : '', margin: [5, 3, 5, 3] }
+                        { text: invoiceData.tran_date ? moment(invoiceData.invoice_date).format('DD-MM-YYYY') : '', margin: [5, 3, 5, 3] }
                       ],
                       [
                         { text: 'TERMS', margin: [5, 3, 5, 3] },

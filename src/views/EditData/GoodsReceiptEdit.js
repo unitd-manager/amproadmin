@@ -1161,7 +1161,7 @@ useEffect(() => {
                   <Input
                     type="number"
                     bsSize="sm"
-                    value={Number(p.qty * p.price)}
+                    value={Number(p.total || 0).toFixed(2)}
                     onChange={(e) => handleRowChange(p.po_product_id, 'total', e.target.value)}
                     style={{ width: '80px' }}
                     readOnly

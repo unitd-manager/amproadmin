@@ -86,7 +86,9 @@ const handleSelectAll = (e) => {
           api.post('/purchaseorder/deleteGoodsReceipt', { goods_receipt_id: purchaseInvoiceId })
         ));
         message('Goods Receipt deleted successfully!','success');
-        setSelectedIds([]);
+         setTimeout(()=>{
+          window.location.reload();
+        },300)
         fetchData();
       } catch (err) {
         console.error(err);
@@ -112,7 +114,9 @@ const handleSelectAll = (e) => {
     api.post("/purchaseorder/ConvertToPurchaseInvoice", { goods_receipt_ids: selectedIds })
       .then(() => {
         message("Converted to Purchase Invoice successfully",'success');
-        setSelectedIds([]);
+          setTimeout(()=>{
+          window.location.reload();
+        },300)
       })
       .catch(() => message.error("Conversion failed"));
   };
@@ -126,7 +130,9 @@ const handleSelectAll = (e) => {
     api.post("/purchaseorder/repeatGoodsReceipt", { goods_receipt_ids: selectedIds })
       .then(() => {
         message("Goods Receipts repeated successfully",'success');
-        setSelectedIds([]);
+         setTimeout(()=>{
+          window.location.reload();
+        },300)
       })
       .catch(() => message.error("Repeat failed"));
   };

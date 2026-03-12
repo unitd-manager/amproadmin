@@ -1137,7 +1137,7 @@ console.log('formData', payloadForm);
                   <Input
                     type="number"
                     bsSize="sm"
-                    value={Number(p?.qty * p?.price).toFixed(2)}
+                    value={Number(p.total || 0).toFixed(2)}
                     onChange={(e) => handleRowChange(p.pd_product_id, 'total', e.target.value)}
                     style={{ width: '80px' }}
                     readOnly
@@ -1335,8 +1335,8 @@ console.log('formData', payloadForm);
   <Container fluid>
     {/* === Top Row === */}
     <Row className="align-items-center mb-1 text-muted small">
-        <Col><strong>UOM:</strong> {selectedProduct ? Number(selectedProduct.uom): ''}</Col>
-      <Col>Pieces/Carton: <span className="text-primary">{selectedProduct ? Number(selectedProduct.carton_qty).toFixed(2) : '0.00'}</span></Col>
+         <Col><strong>UOM:</strong> {selectedUOM || (selectedProduct ? (selectedProduct.unit || selectedProduct.UOM || '') : '')}</Col>
+         <Col>Pieces/Carton: <span className="text-primary">{selectedProduct ? Number(selectedProduct.pcs_per_carton || selectedProduct.pieces_per_carton || selectedProduct.carton_qty || (() => { const u = String(selectedProduct.unit||selectedProduct.UOM||''); const m = u.match(/x\s*(\d+)/i); return m ? Number(m[1]) : 0; })()).toFixed(2) : '0.00'}</span></Col>
       <Col>Purchase UnitCost: <span className="text-primary">{selectedProduct ? Number(selectedProduct.price).toFixed(2) : '0.00'}</span></Col>
       <Col>Wholesale Price: <span className="text-primary">{selectedProduct ? Number(selectedProduct.price).toFixed(2) : '0.00'}</span></Col>
       <Col>Carton Price: <span className="text-primary">{selectedProduct ? Number(selectedProduct.carton_price).toFixed(2) : '0.00'}</span></Col>
