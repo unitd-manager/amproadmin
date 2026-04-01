@@ -134,19 +134,38 @@ const PdfPurchaseOrderList = ({ id }) => {
         ],
       ];
 
-      invoiceItems.forEach((item, itemIndex) => {
-        productItems.push([
-          { text: `${itemIndex + 1}`, style: 'tableBody' },
-          { text: `${item.product_name || ''}`, style: 'tableBody' },
-          { text: `${item.unit || ''}`, style: 'tableBody' },
-          { text: `${item.carton_qty || ''}`, style: 'tableBody' },
-          { text: `${item.loose_qty || ''}`, style: 'tableBody' },
-          { text: `${item.foc || ''}`, style: 'tableBody' },
-          { text: `${item.carton_price || ''}`, style: 'tableBody' },
-          { text: `${item.wholesale_price || ''}`, style: 'tableBody' },
-          { text: `${item.total || ''}`, style: 'tableBody' },
-        ]);
-      });
+     invoiceItems.forEach((item, itemIndex) => {
+  try {
+    productItems.push([
+      { text: String(itemIndex + 1), style: 'tableBody' },
+
+      { text: String(item?.product_name || ''), style: 'tableBody' },
+
+      // ✅ UOM
+      { text: String(item?.UOM|| item?.unit || ''), style: 'tableBody' },
+
+      // ✅ CTN
+      { text: String(item?.carton_qty ?? 0), style: 'tableBody' },
+
+      // ✅ PCS
+      { text: String(item?.loose_qty ?? 0), style: 'tableBody' },
+
+      // ✅ FOC
+      { text: String(item?.foc_qty ?? item?.foc ?? 0), style: 'tableBody' },
+
+      // ✅ Carton Price
+      { text: String(item?.carton_price ?? 0), style: 'tableBody' },
+
+      // ✅ Unit Price
+      { text: String(item?.price ?? item?.wholesale_price ?? 0), style: 'tableBody' },
+
+      // ✅ Total
+      { text: String(item?.total ?? 0), style: 'tableBody' },
+    ]);
+  } catch (err) {
+    console.error('PDF row error:', err, item);
+  }
+});
 
       // Add page break between invoices, except for the first one
       if (index > 0) {
