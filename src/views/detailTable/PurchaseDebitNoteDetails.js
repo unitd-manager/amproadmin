@@ -86,7 +86,7 @@ const { id } = useParams();
     sub_total:"",
     net_total:"",
      tax_percent:"",
-      tax_amount:""
+      gst:""
   });
  const [currency, setCurrency] = useState({
     currency_code: "",
@@ -362,7 +362,7 @@ console.log('formData',formData);
       tran_no: code,
       bill_discount: billDiscount,
       sub_total: subTotalAfterBill,
-      tax_amount: taxAmount,
+      gst: taxAmount,
       net_total: netTotal,
       grand_total: netTotal,
       status: 'open'

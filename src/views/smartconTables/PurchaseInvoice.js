@@ -284,10 +284,9 @@ const PurchaseInvoice = () => {
               <i className="fa fa-search" />
             </Button>
 
-            <Button color="secondary" style={{ display: 'inline-flex' }}>
-              <i className="fa fa-print" />
-              <PdfPurchaseInvoiceList ids={selectedPurchaseInvoiceIds} />
-            </Button>
+            <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+              <PdfPurchaseInvoiceList id={selectedPurchaseInvoiceIds} />
+            </div>
 
             <Button color="danger" onClick={handleDeleteSelected} style={{ display: 'inline-flex' }}>
               <i className="fa fa-trash" />
@@ -355,6 +354,7 @@ const PurchaseInvoice = () => {
             <th>Date</th>
             <th>Supplier</th>
             <th>Invoice</th>
+            <th>Tax</th>
             <th>Net Total</th>
             <th>Paid</th>
             <th>Balance</th>
@@ -388,6 +388,7 @@ const PurchaseInvoice = () => {
 
               <td>{item.company_name}</td>
               <td>{item.invoice_no}</td>
+              <td>{item.gst}</td>
               <td>{item.net_total}</td>
               <td>{item.paid_amount}</td>
               <td>{item.balance_amount}</td>
