@@ -95,41 +95,45 @@ const { id } = useParams();
   });
   const [supplierOptions, setSupplierOptions] = useState([]);
   const [rows, setRows] = useState([
-    {
-      po_product_id: 1,
-      product_code: "",
-      product_name: "",
-      carton_qty: 0,
-      loose_qty: 0,
-      carton_price: 0,
-      qty: 0,
-      pieces_per_carton: 0,
-      price: 0,
-      total: 0,
-      discount: 0,
-      total_price: 0,
-      discount_percentage: 0,
-      discount_amount: 0,
-      grossTotal: 0,
-    },
-    {
-      po_product_id: 2,
-      product_code: "",
-      product_name: "",
-      carton_qty: 0,
-      loose_qty: 0,
-      carton_price: 0,
-      qty: 0,
-      pieces_per_carton: 0,
-      price: 0,
-      total: 0,
-      discount: 0,
-      total_price: 0,
-      discount_percentage: 0,
-      discount_amount: 0,
-      grossTotal: 0,
-    },
-  ]);
+  {
+    po_product_id: 1,
+    product_id: "",
+    product_code: "",
+    product_name: "",
+    carton_qty: 0,
+    loose_qty: 0,
+    carton_price: 0,
+    qty: 0,
+    pieces_per_carton: 0,
+    price: 0,
+    total: 0,
+    discount: 0,
+    total_price: 0,
+    discount_percentage: 0,
+    discount_amount: 0,
+    grossTotal: 0,
+    UOM: "",   // ✅ REQUIRED
+  },
+  {
+    po_product_id: 2,
+    product_id: "",
+    product_code: "",
+    product_name: "",
+    carton_qty: 0,
+    loose_qty: 0,
+    carton_price: 0,
+    qty: 0,
+    pieces_per_carton: 0,
+    price: 0,
+    total: 0,
+    discount: 0,
+    total_price: 0,
+    discount_percentage: 0,
+    discount_amount: 0,
+    grossTotal: 0,
+    UOM: "",   // ✅ REQUIRED
+  },
+]);
  const [billDiscount, setBillDiscount] = React.useState(0);
   useEffect(() => {
     productCodeRefs.current = rows.map(
@@ -300,60 +304,108 @@ useEffect(() => {
   };
   
   
-    // Handle product selection
-    const handleProductSelect = (index, selectedProduct) => {
-      console.log("Selected Product:", selectedProduct);
-      const updatedRows = [...rows];
-          // find original product object (from products list) to read real fields
-          const prod = products.find(p => Number(p.product_id) === Number(selectedProduct.value)) || {};
-          updatedRows[index].product_id = selectedProduct.value;
-          updatedRows[index].product_code = prod.product_code || selectedProduct.product_code || '';
-          updatedRows[index].product_name = prod.product_name || selectedProduct.product_name || '';
+  const handleProductSelect = (index, selectedOption) => {
+  const updatedRows = [...rows];
 
-          // determine pieces per carton: prefer explicit fields, else try parsing unit like '1 x 10'
-          let piecesPerCarton = Number(prod.pcs_per_carton || prod.pieces_per_carton || prod.carton_qty || selectedProduct.pcs_per_carton || selectedProduct.pieces_per_carton || 0);
-          if (!piecesPerCarton) {
-            const unitStr = prod.unit || prod.UOM || prod.unit_name || '';
-            const m = String(unitStr).match(/x\s*(\d+)/i);
-            if (m) piecesPerCarton = Number(m[1]);
-          }
-          updatedRows[index].pieces_per_carton = piecesPerCarton;
-          updatedRows[index].pcs_per_carton = piecesPerCarton;
+  // Get full product data
+  const prod =
+    products.find(
+      (p) =>
+        Number(p.product_id) ===
+        Number(selectedOption.value)
+    ) || {};
 
-          // set pricing: prefer wholesale_price, then unit_price, then price
-          const unitPrice = Number(prod.wholesale_price || prod.unit_price || prod.price || 0);
-          updatedRows[index].price = unitPrice;
+  // Set product details
+  updatedRows[index].product_id =
+    selectedOption.value;
 
-          // carton_price: prefer explicit carton_price on product, else unitPrice * piecesPerCarton
-          const cartonPrice = Number(prod.carton_price || (unitPrice && piecesPerCarton ? unitPrice * piecesPerCarton : 0));
-          updatedRows[index].carton_price = cartonPrice;
+  updatedRows[index].product_code =
+    prod.product_code || "";
 
-          // Do not auto-fill carton_qty, loose_qty or qty here — leave those to user input.
-          // pieces_per_carton and pricing are set above; qty will be computed later when user enters carton/loose quantities.
+  updatedRows[index].product_name =
+    prod.product_name || "";
 
-          // reset discounts to zero for new product selection
-          updatedRows[index].discount = 0;
-          updatedRows[index].discount_percentage = 0;
-          updatedRows[index].discount_amount = 0;
+  // ✅ IMPORTANT — SAVE UOM
+  updatedRows[index].UOM =
+    prod.unit ||
+    prod.UOM ||
+    prod.uom ||
+    prod.unit_name ||
+    "";
 
-          // compute totals for the row using same logic as handleRowChange
-          const cartonTotal = Number(updatedRows[index].carton_qty || 0) * Number(updatedRows[index].carton_price || 0);
-          const looseTotal = Number(updatedRows[index].loose_qty || 0) * (Number(updatedRows[index].carton_price || 0) / (piecesPerCarton || 1));
-          const totalBeforeDiscount = cartonTotal + looseTotal + (Number(updatedRows[index].qty || 0) * Number(updatedRows[index].price || 0));
-          const grossTotal = totalBeforeDiscount - Number(updatedRows[index].discount_amount || 0);
-          updatedRows[index].total = parseFloat(totalBeforeDiscount.toFixed(2));
-          updatedRows[index].grossTotal = parseFloat(grossTotal.toFixed(2));
-          updatedRows[index].total_price = parseFloat(grossTotal.toFixed(2));
+  // Pieces per carton
+  let piecesPerCarton = Number(
+    prod.pcs_per_carton ||
+      prod.pieces_per_carton ||
+      prod.carton_qty ||
+      0
+  );
 
-          // update selected product for footer display
-          setSelectedProduct(prod);
-          // update selected UOM (try UOM/unit fields, fallback to piecesPerCarton)
-          const uomLabel = prod.unit || prod.UOM || prod.unit_name || `${piecesPerCarton}`;
-          setSelectedUOM(uomLabel);
+  if (!piecesPerCarton) {
+    const unitStr =
+      prod.unit ||
+      prod.UOM ||
+      "";
 
-        setRows(updatedRows);
-      console.log("Updated Rows:", updatedRows);
-    };
+    const match =
+      String(unitStr).match(
+        /x\s*(\d+)/i
+      );
+
+    if (match)
+      piecesPerCarton =
+        Number(match[1]);
+  }
+
+  updatedRows[index].pieces_per_carton =
+    piecesPerCarton;
+
+  // Price setup
+  const unitPrice = Number(
+    prod.wholesale_price ||
+      prod.unit_price ||
+      prod.price ||
+      0
+  );
+
+  updatedRows[index].price =
+    unitPrice;
+
+  const cartonPrice = Number(
+    prod.carton_price ||
+      (unitPrice *
+        piecesPerCarton)
+  );
+
+  updatedRows[index].carton_price =
+    cartonPrice;
+
+  // Reset qty
+  updatedRows[index].carton_qty = 0;
+  updatedRows[index].loose_qty = 0;
+  updatedRows[index].qty = 0;
+
+  updatedRows[index].total = 0;
+  updatedRows[index].grossTotal = 0;
+  updatedRows[index].total_price = 0;
+
+  // Footer update
+  setSelectedProduct(prod);
+
+  setSelectedUOM(
+    prod.unit ||
+      prod.UOM ||
+      prod.uom ||
+      ""
+  );
+
+  setRows(updatedRows);
+
+  console.log(
+    "UOM Stored:",
+    updatedRows[index].UOM
+  );
+};
   // Handle form submit (example API call structure)
   const handleSubmit = async (code) => {
     const baseSubTotal = rows.reduce((sum, row) => sum + Number(row.total_price || 0), 0);
@@ -572,22 +624,24 @@ console.log('formData', payloadForm);
   const addRow = (insertAfterIndex) => {
     // insertAfterIndex is the index after which the new row will be inserted
     const newRow = {
-      po_product_id: `new-${rows.length}`,
-      product_code: "",
-      product_name: "",
-      carton_qty: 0,
-      loose_qty: 0,
-      carton_price: 0,
-      qty: 0,
-      pieces_per_carton: 0,
-      price: 0,
-      total: 0,
-      discount: 0,
-      total_price: 0,
-      discount_percentage: 0,
-      discount_amount: 0,
-      grossTotal: 0,
-    };
+  po_product_id: `new-${rows.length}`,
+  product_id: "",
+  product_code: "",
+  product_name: "",
+  carton_qty: 0,
+  loose_qty: 0,
+  carton_price: 0,
+  qty: 0,
+  pieces_per_carton: 0,
+  price: 0,
+  total: 0,
+  discount: 0,
+  total_price: 0,
+  discount_percentage: 0,
+  discount_amount: 0,
+  grossTotal: 0,
+  UOM: "", // ✅ REQUIRED
+};
     setRows((prevRows) => {
       const updatedRows = [...prevRows];
       updatedRows.splice(insertAfterIndex + 1, 0, newRow);
@@ -1268,10 +1322,11 @@ console.log('formData', payloadForm);
                       value={p.UOM || ''}
                       onChange={(e) => handleRowChange(p.po_product_id, 'UOM', e.target.value)}
                     >
-                      <option>Uom</option>
-                      {/* You might want to populate these options dynamically based on your product data */}
-                      <option value="Pcs">Pcs</option>
-                      <option value="Kg">Kg</option>
+                     <option value="">Select UOM</option>
+<option value="PCS">PCS</option>
+<option value="KG">KG</option>
+<option value="BOX">BOX</option>
+<option value="LTR">LTR</option>
                     </Input>
                   </td>
                   <td colSpan={1} style={{ padding: '0.3rem' }}>

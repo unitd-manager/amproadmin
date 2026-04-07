@@ -50,6 +50,7 @@ const PdfPurchaseOrderList = ({ id }) => {
       const allLineItems = lineItemResponses.map((res, index) => {
         // Add the invoice information to each line item for grouping
         const items = res.data.data || [];
+        console.log("LINE ITEMS FROM API:", items); // ✅ ADD HERE
         return items.map(item => ({
           ...item,
           purchase_order_id: id[index],
@@ -135,6 +136,7 @@ const PdfPurchaseOrderList = ({ id }) => {
       ];
 
      invoiceItems.forEach((item, itemIndex) => {
+      console.log("PDF ITEM DATA:", item); // ✅ ADD THIS
   try {
     productItems.push([
       { text: String(itemIndex + 1), style: 'tableBody' },
@@ -142,7 +144,17 @@ const PdfPurchaseOrderList = ({ id }) => {
       { text: String(item?.product_name || ''), style: 'tableBody' },
 
       // ✅ UOM
-      { text: String(item?.UOM|| item?.unit || ''), style: 'tableBody' },
+      {
+  text: String(
+    item?.UOM ||
+    item?.uom ||
+    item?.unit ||
+    item?.unit_name ||
+    item?.uom_name ||
+    "PCS"   // default fallback
+  ),
+  style: 'tableBody'
+},
 
       // ✅ CTN
       { text: String(item?.carton_qty ?? 0), style: 'tableBody' },
