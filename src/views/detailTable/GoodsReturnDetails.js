@@ -86,7 +86,7 @@ const { id } = useParams();
     sub_total:"",
     net_total:"",
      tax_percent:"",
-      tax_amount:""
+      gst:""
   });
  const [currency, setCurrency] = useState({
     currency_code: "",
@@ -367,7 +367,7 @@ console.log('formData',formData);
       tran_no: code,
       bill_discount: billDiscount,
       sub_total: subTotalAfterBill,
-      tax_amount: taxAmount,
+      gst: taxAmount,
       net_total: netTotal,
       grand_total: netTotal,
       status: 'open'
@@ -1338,13 +1338,13 @@ console.log('formData', payloadForm);
   <Container fluid>
     {/* === Top Row === */}
     <Row className="align-items-center mb-1 text-muted small">
-        <Col><strong>UOM:</strong> {selectedProduct ? Number(selectedProduct.uom): ''}</Col>
-      <Col>Pieces/Carton: <span className="text-primary">{selectedProduct ? Number(selectedProduct.carton_qty).toFixed(2) : '0.00'}</span></Col>
+        <Col><strong>UOM:</strong> {selectedUOM || ''}</Col>
+      <Col>Pieces/Carton: <span className="text-primary">{selectedProduct ? Number(selectedProduct.pcs_per_carton || selectedProduct.pieces_per_carton || selectedProduct.carton_qty || 0).toFixed(2) : '0.00'}</span></Col>
       <Col>Purchase UnitCost: <span className="text-primary">{selectedProduct ? Number(selectedProduct.price).toFixed(2) : '0.00'}</span></Col>
       <Col>Wholesale Price: <span className="text-primary">{selectedProduct ? Number(selectedProduct.price).toFixed(2) : '0.00'}</span></Col>
       <Col>Carton Price: <span className="text-primary">{selectedProduct ? Number(selectedProduct.carton_price).toFixed(2) : '0.00'}</span></Col>
-      <Col>CQty: <span className="text-primary">{selectedProduct ? Number(selectedProduct.carton_qty).toFixed(2) : '0.00'}</span></Col>
-      <Col>Qty On Hand: <span className="text-primary">{selectedProduct ? Number(selectedProduct.qty).toFixed(2) : '0.00'}</span></Col>
+      <Col>CQty: <span className="text-primary">{selectedProduct ? Number(selectedProduct.pcs_per_carton || selectedProduct.pieces_per_carton || selectedProduct.carton_qty || 0).toFixed(2) : '0.00'}</span></Col>
+      <Col>Qty On Hand: <span className="text-primary">{selectedProduct ? Number(selectedProduct.qty || selectedProduct.qty_in_stock || 0).toFixed(2) : '0.00'}</span></Col>
     </Row>
 
     {/* === Middle Row === */}

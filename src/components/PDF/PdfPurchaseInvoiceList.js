@@ -10,16 +10,14 @@ import message from '../Message';
 import PdfFooter from './PdfFooter'; // Assuming you have a footer component
 import PdfHeader from './PdfHeader'; // Assuming you have a header component
 
-const PdfPurchaseInvoiceList = ({ id }) => {
-  PdfPurchaseInvoiceList.propTypes = {
-    id: PropTypes.arrayOf(PropTypes.any).isRequired,
-  };
-  console.log(id, "wsed");
+const PdfPurchaseInvoiceList = ({ id = [] }) => {
+  const invoiceIds = Array.isArray(id) ? id : [];
   const [salesOrders, setSalesOrders] = useState([]);
   const [lineItems, setLineItems] = useState([]);
   const [hfdata, setHeaderFooterData] = useState();
   const [ setGtotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const hasInvoices = invoiceIds.length > 0;
 
   useEffect(() => {
     api.get('/setting/getSettingsForCompany').then((res) => {
@@ -36,11 +34,11 @@ const PdfPurchaseInvoiceList = ({ id }) => {
     try {
       setLoading(true);
       // Fetch sales order data for all IDs
-      const salesOrderPromises = id.map(orderId =>
+      const salesOrderPromises = invoiceIds.map(orderId =>
         api.post('/purchaseorder/getPurchaseInvoiceById', { purchase_invoice_id: orderId })
       );
-      const lineItemPromises = id.map(orderId =>
-        api.post('/purchaseorder/getPiProductsByPurchaseInvoiceId', { purchase_invoice_id: orderId })
+      const lineItemPromises = invoiceIds.map(orderId =>
+        api.post('/purchaseorder/getPiProductByPurchaseInvoiceId', { purchase_invoice_id: orderId })
       );
 
       const salesOrderResponses = await Promise.all(salesOrderPromises);
@@ -52,7 +50,7 @@ const PdfPurchaseInvoiceList = ({ id }) => {
         const items = res.data.data || [];
         return items.map(item => ({
           ...item,
-          purchase_invoice_id: id[index],
+          purchase_invoice_id: invoiceIds[index],
           invoice_code: allSalesOrders[index]?.invoice_code || '',
           invoice_date: allSalesOrders[index]?.invoice_date || ''
         }));
@@ -76,10 +74,13 @@ const PdfPurchaseInvoiceList = ({ id }) => {
   const [taxRate] = React.useState(0.09); // Set default tax rate to 9%
 
   useEffect(() => {
-    if (id) {
-      fetchSalesOrderData();
+    if (!hasInvoices) {
+      setLoading(false);
+      return;
     }
-  }, [id]);
+
+    fetchSalesOrderData();
+  }, [hasInvoices]);
 
   const GetPdf = () => {
     if (!lineItems || lineItems.length === 0) {
@@ -102,10 +103,10 @@ const PdfPurchaseInvoiceList = ({ id }) => {
 
     // Create content for each invoice
     const allContent = [];
-    const invoiceIds = Object.keys(invoiceGroups);
+    const invoiceGroupIds = Object.keys(invoiceGroups);
 
     // For each invoice, create a separate section in the PDF
-    invoiceIds.forEach((invoiceId, index) => {
+    invoiceGroupIds.forEach((invoiceId, index) => {
       const invoiceData = invoiceGroups[invoiceId];
       const invoiceItems = invoiceData.items;
       const currentSalesOrder = salesOrders.find(order => String(order.purchase_invoice_id) === invoiceId) || salesOrders[0] || {};
@@ -403,6 +404,10 @@ const PdfPurchaseInvoiceList = ({ id }) => {
       )}
     </div>
   );
+};
+
+PdfPurchaseInvoiceList.propTypes = {
+  id: PropTypes.arrayOf(PropTypes.any),
 };
 
 export default PdfPurchaseInvoiceList;
