@@ -27,6 +27,8 @@ const GoodsReturnList = () => {
 const [selectedIds, setSelectedIds] = useState([]);
 const [selectAll, setSelectAll] = useState(false);
 
+  const [statusOptions, setStatusOptions] = useState(['Open', 'Closed', 'Returned', 'Repeated', 'Cancelled']);
+
 const [supplierOptions, setSupplierOptions] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 const navigate =useNavigate();
@@ -114,9 +116,9 @@ const handleSelectAll = (e) => {
     api.post("/purchaseorder/ConvertToPurchaseInvoice", { goods_receipt_ids: selectedIds })
       .then(() => {
         message("Converted to Purchase Invoice successfully",'success');
-          setTimeout(()=>{
-          window.location.reload();
-        },300)
+        //   setTimeout(()=>{
+        //   window.location.reload();
+        // },300)
       })
       .catch(() => message.error("Conversion failed"));
   };
@@ -130,9 +132,9 @@ const handleSelectAll = (e) => {
     api.post("/purchaseorder/repeatGoodsReceipt", { goods_receipt_ids: selectedIds })
       .then(() => {
         message("Goods Receipts repeated successfully",'success');
-         setTimeout(()=>{
-          window.location.reload();
-        },300)
+        //  setTimeout(()=>{
+        //   window.location.reload();
+        // },300)
       })
       .catch(() => message.error("Repeat failed"));
   };
@@ -145,14 +147,14 @@ const handleSelectAll = (e) => {
         <Col md={2}><Input name="tran_no" placeholder="Tran No" value={filters.tran_no} onChange={handleFilterChange} /></Col>
         <Col md={2}><Input type="date" name="from_date" value={filters.from_date} onChange={handleFilterChange} /></Col>
         <Col md={2}><Input type="date" name="to_date" value={filters.to_date} onChange={handleFilterChange} /></Col>
-        <Col md={2}>
-          <Input type="select" name="status" value={filters.status} onChange={handleFilterChange}>
-          <option></option>
-            <option>Open</option>
-            <option>Closed</option>
-            <option>Cancelled</option>
-          </Input>
-        </Col>
+         <Col md={2}>
+                  <Input type="select" name="status" placeholder="Status" value={filters.status} onChange={handleFilterChange}>
+                    <option value="">All</option>
+                    {statusOptions.map((s, idx) => (
+                      <option key={idx} value={s}>{s}</option>
+                    ))}
+                  </Input>
+                </Col>
         <Col md={2}>
         {/* <Input name="supplier" placeholder="Select All Supplier" value={filters.supplier} onChange={handleFilterChange} /> */}
          <Input
@@ -164,7 +166,7 @@ const handleSelectAll = (e) => {
                              <option value="">Select Supplier</option>
                              {supplierOptions.map((supplier, index) => (
                                <option key={index} value={supplier.supplier_id}>
-                                 {supplier.company_name}
+                                 {supplier.supplier_name}
                                </option>
                              ))}
                            </Input>

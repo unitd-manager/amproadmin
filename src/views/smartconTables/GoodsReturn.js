@@ -22,6 +22,7 @@ const GoodsReturnList = () => {
   });
 
   const [goodsReturns, setGoodsReturns] = useState([]);
+  const [statusOptions, setStatusOptions] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState([]);
@@ -48,6 +49,23 @@ const [supplierOptions, setSupplierOptions] = useState([]);
       });
   
       setGoodsReturns(res.data.data);
+      // derive unique status options from returned data
+      try {
+        const defaultStatuses = ['Open', 'Closed', 'Returned', 'Repeated', 'Cancelled'];
+        const rawFetched = (res.data.data || []).map(i => (i.status || '').toString().trim()).filter(Boolean);
+        // normalize and dedupe case-insensitively while preserving a readable format
+        const seen = new Map();
+        // add defaults first
+        defaultStatuses.forEach(s => seen.set(s.toLowerCase().trim(), s.trim()));
+        rawFetched.forEach(s => {
+          const key = s.toLowerCase().trim();
+          if (!seen.has(key)) seen.set(key, s.trim());
+        });
+        const combined = Array.from(seen.values());
+        setStatusOptions(combined.sort((a, b) => a.localeCompare(b)));
+      } catch (e) {
+        setStatusOptions(['Open', 'Closed', 'Returned', 'Repeated', 'Cancelled']);
+      }
       setTotalRecords(res.data.total);
     } catch (err) {
       console.error(err);
@@ -163,10 +181,10 @@ const handleRepeatGoodsReturn = async () => {
         <Col md={2}><Input type="date" name="to_date" value={filters.to_date} onChange={handleFilterChange} /></Col>
         <Col md={2}>
           <Input type="select" name="status" placeholder="Status" value={filters.status} onChange={handleFilterChange}>
-          <option></option>
-            <option>Open</option>
-            <option>Closed</option>
-            <option>Cancelled</option>
+            <option value="">All</option>
+            {statusOptions.map((s, idx) => (
+              <option key={idx} value={s}>{s}</option>
+            ))}
           </Input>
         </Col>
         <Col md={2}>
@@ -180,7 +198,7 @@ const handleRepeatGoodsReturn = async () => {
                      <option value="">Select Supplier</option>
                      {supplierOptions.map((supplier, index) => (
                        <option key={index} value={supplier.supplier_id}>
-                         {supplier.company_name}
+                         {supplier.supplier_name}
                        </option>
                      ))}
                    </Input>

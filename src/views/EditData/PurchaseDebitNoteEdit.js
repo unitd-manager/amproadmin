@@ -394,28 +394,34 @@ useEffect(() => {
     }
 console.log('formdata',payloadForm);
     api
-    .post('/purchaseorder/editPurchaseDebitNote', payloadForm)
-    .then(() => {
-      const purchaseOrderId = id;
-      rows?.forEach((el) => {
-        if (!el.product_id) return;
-        el.gross_total = el.total_price;
-        const isNewRow = String(el.pd_product_id || '').startsWith('new-');
-        if (isNewRow) {
-          const insertPayload = { ...el, purchase_debit_note_id: purchaseOrderId };
-          api.post('/purchaseorder/insertPdProduct', insertPayload).then(() => {});
-        } else {
-          api.post('/purchaseorder/editPdProduct', el).then(() => {});
-           setTimeout(() => {
-                      navigate('/PurchaseDebitNote');
-                    }, 1100);
-        }
+      .post('/purchaseorder/editPurchaseDebitNote', payloadForm)
+      .then(() => {
+        const purchaseOrderId = id;
+        const promises = rows
+          .filter((el) => el.product_id)
+          .map((el) => {
+            el.gross_total = el.total_price;
+            const isNewRow = String(el.pd_product_id || '').startsWith('new-');
+            if (isNewRow) {
+              const insertPayload = { ...el, purchase_debit_note_id: purchaseOrderId };
+              return api.post('/purchaseorder/insertPdProduct', insertPayload);
+            }
+            return api.post('/purchaseorder/editPdProduct', el);
+          });
+
+        const waitFor = promises.length ? Promise.all(promises) : Promise.resolve();
+        waitFor
+          .then(() => {
+            message('Record edited successfully.', 'success');
+            navigate('/PurchaseDebitNote');
+          })
+          .catch(() => {
+            message('Network connection error while saving line items.', 'error');
+          });
+      })
+      .catch(() => {
+        message('Network connection error.', 'error');
       });
-      message('Record edited successfully.', 'success');
-    })
-    .catch(() => {
-      message('Network connection error.', 'error');
-    });
   };
   
   const handleRowChange = (id, field, value) => {

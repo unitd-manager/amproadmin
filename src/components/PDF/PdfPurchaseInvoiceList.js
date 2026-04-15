@@ -10,11 +10,11 @@ import message from '../Message';
 import PdfFooter from './PdfFooter'; // Assuming you have a footer component
 import PdfHeader from './PdfHeader'; // Assuming you have a header component
 
-const PdfPurchaseInvoiceList = ({ id }) => {
+const PdfPurchaseInvoiceList = ({ ids }) => {
   PdfPurchaseInvoiceList.propTypes = {
-    id: PropTypes.arrayOf(PropTypes.any).isRequired,
+    ids: PropTypes.arrayOf(PropTypes.any).isRequired,
   };
-  console.log(id, "wsed");
+  console.log(ids, "wsed");
   const [salesOrders, setSalesOrders] = useState([]);
   const [lineItems, setLineItems] = useState([]);
   const [hfdata, setHeaderFooterData] = useState();
@@ -36,11 +36,11 @@ const PdfPurchaseInvoiceList = ({ id }) => {
     try {
       setLoading(true);
       // Fetch sales order data for all IDs
-      const salesOrderPromises = id.map(orderId =>
+      const salesOrderPromises = ids.map(orderId =>
         api.post('/purchaseorder/getPurchaseInvoiceById', { purchase_invoice_id: orderId })
       );
-      const lineItemPromises = id.map(orderId =>
-        api.post('/purchaseorder/getPiProductsByPurchaseInvoiceId', { purchase_invoice_id: orderId })
+      const lineItemPromises = ids.map(orderId =>
+        api.post('/purchaseorder/getPiProductByPurchaseInvoiceId', { purchase_invoice_id: orderId })
       );
 
       const salesOrderResponses = await Promise.all(salesOrderPromises);
@@ -52,7 +52,7 @@ const PdfPurchaseInvoiceList = ({ id }) => {
         const items = res.data.data || [];
         return items.map(item => ({
           ...item,
-          purchase_invoice_id: id[index],
+          purchase_invoice_id: ids[index],
           invoice_code: allSalesOrders[index]?.invoice_code || '',
           invoice_date: allSalesOrders[index]?.invoice_date || ''
         }));
@@ -68,7 +68,7 @@ const PdfPurchaseInvoiceList = ({ id }) => {
       setGtotal(grandTotal);
       setLoading(false);
     } catch (error) {
-      message('Error fetching sales order data', 'error');
+      //message('Error fetching sales order data', 'error');
       setLoading(false);
     }
   };
@@ -76,10 +76,10 @@ const PdfPurchaseInvoiceList = ({ id }) => {
   const [taxRate] = React.useState(0.09); // Set default tax rate to 9%
 
   useEffect(() => {
-    if (id) {
+    if (ids) {
       fetchSalesOrderData();
     }
-  }, [id]);
+  }, [ids]);
 
   const GetPdf = () => {
     if (!lineItems || lineItems.length === 0) {

@@ -30,6 +30,7 @@ import { FaTrashAlt, FaPlusCircle } from "react-icons/fa";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarAlt, faPlus, faPrint } from '@fortawesome/free-solid-svg-icons';
 import api from "../../constants/api";
+import moment from 'moment';
 // import PurchaseOrderProductInfoModal from "../../components/PurchaseOrder/PurchaseOrderProductInfoModal";
 import PurchaseOrderProductInfoModal from "../../components/PurchaseOrder/PurchaseOrderProductInfoModal";
 // import PdfPurchaseInvoice from "../../components/PDF/PdfPurchaseInvoice";
@@ -210,7 +211,11 @@ const navigate=useNavigate();
 
     // Fetch supplier options for dropdown
     api.post("/purchaseorder/getGoodsReturnById",{goods_return_id:id}).then((response) => {
-      const initial = response.data.data[0] || {};
+      const raw = response.data.data[0] || {};
+      const initial = {
+        ...raw,
+        tran_date: raw?.tran_date ? moment(raw.tran_date).format('YYYY-MM-DD') : (raw?.tran_date || ''),
+      };
       initialFormRef.current = initial;
       setFormData(initial);
       setBillDiscount(initial?.bill_discount || 0);

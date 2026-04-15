@@ -249,18 +249,18 @@ const invoiceTotalWithGst = Number((invoiceSubtotal + invoiceGst).toFixed(2));
                         { text: 'TRAN DATE', margin: [5, 3, 5, 3] },
                         { text: invoiceData.invoice_date ? moment(invoiceData.invoice_date).format('DD-MM-YYYY') : '', margin: [5, 3, 5, 3] }
                       ],
-                      [
-                        { text: 'TERMS', margin: [5, 3, 5, 3] },
-                        { text: currentSalesOrder.terms || '', margin: [5, 3, 5, 3] }
-                      ],
-                      [
-                        { text: 'PAGE', margin: [5, 3, 5, 3] },
-                        { text: currentSalesOrder.order_no || '', margin: [5, 3, 5, 3] }
-                      ],
-                      [
-                        { text: 'AGENT NAME', margin: [5, 3, 5, 3] },
-                        { text: currentSalesOrder.gst_reg_no || '', margin: [5, 3, 5, 3] }
-                      ],
+                     [
+  { text: 'TERMS', margin: [5, 3, 5, 3] },
+  { text: invoiceData.headerData.delivery_terms || currentSalesOrder.terms || '', margin: [5, 3, 5, 3] }
+],
+[
+  { text: 'PAGE', margin: [5, 3, 5, 3] },
+  { text: `${index + 1} of ${invoiceIds.length}`, margin: [5, 3, 5, 3] }
+],
+[
+  { text: 'AGENT NAME', margin: [5, 3, 5, 3] },
+  { text: invoiceData.headerData.company_name || invoiceData.headerData.salesman_name || currentSalesOrder.agent_name || '', margin: [5, 3, 5, 3] }
+],
                     ]
                   },
                   layout: {
