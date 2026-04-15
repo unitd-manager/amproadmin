@@ -20,6 +20,7 @@ const PdfPurchaseInvoiceList = ({ ids }) => {
   const [hfdata, setHeaderFooterData] = useState();
   const [ setGtotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const hasInvoices = invoiceIds.length > 0;
 
   useEffect(() => {
     api.get('/setting/getSettingsForCompany').then((res) => {
@@ -102,10 +103,10 @@ const PdfPurchaseInvoiceList = ({ ids }) => {
 
     // Create content for each invoice
     const allContent = [];
-    const invoiceIds = Object.keys(invoiceGroups);
+    const invoiceGroupIds = Object.keys(invoiceGroups);
 
     // For each invoice, create a separate section in the PDF
-    invoiceIds.forEach((invoiceId, index) => {
+    invoiceGroupIds.forEach((invoiceId, index) => {
       const invoiceData = invoiceGroups[invoiceId];
       const invoiceItems = invoiceData.items;
       const currentSalesOrder = salesOrders.find(order => String(order.purchase_invoice_id) === invoiceId) || salesOrders[0] || {};
@@ -403,6 +404,10 @@ const PdfPurchaseInvoiceList = ({ ids }) => {
       )}
     </div>
   );
+};
+
+PdfPurchaseInvoiceList.propTypes = {
+  id: PropTypes.arrayOf(PropTypes.any),
 };
 
 export default PdfPurchaseInvoiceList;

@@ -347,7 +347,7 @@ const PurchaseOrder = () => {
             <th>Status</th>
             <th>SubTotal</th>
             <th>Tax</th>
-            <th>NetTotal</th>
+            <th>Net Total</th>
           </tr>
         </thead>
         <tbody>
